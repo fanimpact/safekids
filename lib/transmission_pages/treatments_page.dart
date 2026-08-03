@@ -1,0 +1,725 @@
+import 'package:flutter/material.dart';
+
+import '../controllers/transmission_controller.dart';
+import '../widgets/questionnaire_page.dart';
+import '../widgets/sk_text_field.dart';
+import '../widgets/sk_yes_no_field.dart';
+import 'contacts_page.dart';
+
+class TreatmentsPage extends StatefulWidget {
+  final TransmissionController transmissionController;
+
+  const TreatmentsPage({
+    super.key,
+    required this.transmissionController,
+  });
+
+  @override
+  State<TreatmentsPage> createState() => _TreatmentsPageState();
+}
+
+class _TreatmentsPageState extends State<TreatmentsPage> {
+  bool? _hasDailyTreatments;
+  bool? _hasEmergencyTreatments;
+  bool? _hasAllergies;
+  bool? _hasMedicalDevices;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final draft = widget.transmissionController.formData;
+
+    if (draft.dailyTreatments.isNotEmpty) {
+      _hasDailyTreatments = true;
+    }
+
+    if (draft.emergencyTreatments.isNotEmpty) {
+      _hasEmergencyTreatments = true;
+    }
+
+    if (draft.allergies.isNotEmpty) {
+      _hasAllergies = true;
+    }
+
+    if (draft.medicalDevices.isNotEmpty) {
+      _hasMedicalDevices = true;
+    }
+  }
+
+  void _updateHasDailyTreatments(bool value) {
+    setState(() {
+      _hasDailyTreatments = value;
+
+      if (value) {
+        widget.transmissionController.ensureFirstDailyTreatment();
+      } else {
+        widget.transmissionController.formData.dailyTreatments.clear();
+      }
+    });
+  }
+
+  void _updateHasEmergencyTreatments(bool value) {
+    setState(() {
+      _hasEmergencyTreatments = value;
+
+      if (value) {
+        widget.transmissionController.ensureFirstEmergencyTreatment();
+      } else {
+        widget.transmissionController.formData.emergencyTreatments.clear();
+      }
+    });
+  }
+
+  void _updateHasAllergies(bool value) {
+    setState(() {
+      _hasAllergies = value;
+
+      if (value) {
+        widget.transmissionController.ensureFirstAllergy();
+      } else {
+        widget.transmissionController.formData.allergies.clear();
+      }
+    });
+  }
+
+  void _updateHasMedicalDevices(bool value) {
+    setState(() {
+      _hasMedicalDevices = value;
+
+      if (value) {
+        widget.transmissionController.ensureFirstMedicalDevice();
+      } else {
+        widget.transmissionController.formData.medicalDevices.clear();
+      }
+    });
+  }
+
+  void _addDailyTreatment() {
+    setState(() {
+      widget.transmissionController.addDailyTreatment();
+    });
+  }
+
+  void _removeDailyTreatment(int index) {
+    setState(() {
+      widget.transmissionController.removeDailyTreatment(index);
+    });
+  }
+
+  void _addEmergencyTreatment() {
+    setState(() {
+      widget.transmissionController.addEmergencyTreatment();
+    });
+  }
+
+  void _removeEmergencyTreatment(int index) {
+    setState(() {
+      widget.transmissionController.removeEmergencyTreatment(index);
+    });
+  }
+
+  void _addAllergy() {
+    setState(() {
+      widget.transmissionController.addAllergy();
+    });
+  }
+
+  void _removeAllergy(int index) {
+    setState(() {
+      widget.transmissionController.removeAllergy(index);
+    });
+  }
+
+  void _updateAllergyHasDailyTreatment(
+    int index,
+    bool value,
+  ) {
+    setState(() {
+      widget.transmissionController
+          .updateAllergyHasDailyTreatment(index, value);
+    });
+  }
+
+  void _updateAllergyHasEmergencyTreatment(
+    int index,
+    bool value,
+  ) {
+    setState(() {
+      widget.transmissionController
+          .updateAllergyHasEmergencyTreatment(index, value);
+    });
+  }
+
+  void _addMedicalDevice() {
+    setState(() {
+      widget.transmissionController.addMedicalDevice();
+    });
+  }
+
+  void _removeMedicalDevice(int index) {
+    setState(() {
+      widget.transmissionController.removeMedicalDevice(index);
+    });
+  }
+
+  void _continue() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ContactsPage(
+          transmissionController: widget.transmissionController,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final draft = widget.transmissionController.formData;
+
+    final dailyTreatments = draft.dailyTreatments;
+    final emergencyTreatments = draft.emergencyTreatments;
+    final allergies = draft.allergies;
+    final medicalDevices = draft.medicalDevices;
+
+    return QuestionnairePage(
+      title: "",
+      subtitle:
+          "Quels sont les traitements actuellement prescrits à votre enfant ?",
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            "Traitements réguliers",
+            style: TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          SkYesNoField(
+            label:
+                "En dehors des traitements ponctuels (antibiotiques, Doliprane...), votre enfant suit-il un ou plusieurs traitements quotidiens prescrits ?",
+            value: _hasDailyTreatments,
+            onChanged: _updateHasDailyTreatments,
+          ),
+
+          if (_hasDailyTreatments == true) ...[
+            const SizedBox(height: 28),
+
+            for (
+              int index = 0;
+              index < dailyTreatments.length;
+              index++
+            ) ...[
+              Text(
+                "Traitement quotidien n°${index + 1}",
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              SkTextField(
+                label: "Nom du traitement",
+                controller: TextEditingController(
+                  text:
+                      dailyTreatments[index].medicationName ?? '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateDailyTreatmentName(index, value);
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              SkTextField(
+                label: "Posologie",
+                controller: TextEditingController(
+                  text: dailyTreatments[index].dosage ?? '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateDailyTreatmentDosage(index, value);
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              SkTextField(
+                label:
+                    "À quelle(s) heure(s) est-il habituellement administré ?",
+                controller: TextEditingController(
+                  text:
+                      dailyTreatments[index].administrationTimes ??
+                          '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateDailyTreatmentTimes(index, value);
+                },
+              ),
+
+              if (dailyTreatments.length > 1) ...[
+                const SizedBox(height: 12),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () =>
+                        _removeDailyTreatment(index),
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text("Supprimer"),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 28),
+            ],
+
+            OutlinedButton.icon(
+              onPressed: _addDailyTreatment,
+              icon: const Icon(Icons.add),
+              label: const Text(
+                "Ajouter un traitement quotidien",
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 40),
+
+          const Divider(),
+
+          const SizedBox(height: 30),
+
+          const Text(
+            "Traitements d’urgence",
+            style: TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          SkYesNoField(
+            label:
+                "Votre enfant dispose-t-il d’un ou plusieurs traitements d’urgence prescrits ?",
+            value: _hasEmergencyTreatments,
+            onChanged: _updateHasEmergencyTreatments,
+          ),
+
+          if (_hasEmergencyTreatments == true) ...[
+            const SizedBox(height: 28),
+
+            for (
+              int index = 0;
+              index < emergencyTreatments.length;
+              index++
+            ) ...[
+              Text(
+                "Traitement d’urgence n°${index + 1}",
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              SkTextField(
+                label: "Nom du traitement",
+                controller: TextEditingController(
+                  text: emergencyTreatments[index]
+                          .medicationName ??
+                      '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateEmergencyTreatmentName(index, value);
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              SkTextField(
+                label:
+                    "Dans quelle situation doit-il être administré ?",
+                controller: TextEditingController(
+                  text: emergencyTreatments[index]
+                          .administrationCondition ??
+                      '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateEmergencyTreatmentCondition(
+                    index,
+                    value,
+                  );
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              SkTextField(
+                label: "Posologie",
+                controller: TextEditingController(
+                  text: emergencyTreatments[index].dosage ?? '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateEmergencyTreatmentDosage(
+                    index,
+                    value,
+                  );
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              SkTextField(
+                label: "Mode d’administration",
+                controller: TextEditingController(
+                  text: emergencyTreatments[index]
+                          .administrationMethod ??
+                      '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateEmergencyTreatmentMethod(
+                    index,
+                    value,
+                  );
+                },
+              ),
+
+              if (emergencyTreatments.length > 1) ...[
+                const SizedBox(height: 12),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () =>
+                        _removeEmergencyTreatment(index),
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text("Supprimer"),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 28),
+            ],
+
+            OutlinedButton.icon(
+              onPressed: _addEmergencyTreatment,
+              icon: const Icon(Icons.add),
+              label: const Text(
+                "Ajouter un traitement d’urgence",
+              ),
+            ),
+          ],
+                    const SizedBox(height: 40),
+
+          const Divider(),
+
+          const SizedBox(height: 30),
+
+          const Text(
+            "Allergies",
+            style: TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          SkYesNoField(
+            label:
+                "Votre enfant présente-t-il une ou plusieurs allergies importantes ?",
+            value: _hasAllergies,
+            onChanged: _updateHasAllergies,
+          ),
+
+          if (_hasAllergies == true) ...[
+            const SizedBox(height: 28),
+
+            for (
+              int index = 0;
+              index < allergies.length;
+              index++
+            ) ...[
+              Text(
+                "Allergie n°${index + 1}",
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              SkTextField(
+                label:
+                    "À quoi votre enfant est-il allergique ?",
+                controller: TextEditingController(
+                  text: allergies[index].allergen ?? '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateAllergen(index, value);
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              SkTextField(
+                label: "Réaction déjà observée",
+                controller: TextEditingController(
+                  text:
+                      allergies[index].observedReaction ?? '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateAllergyObservedReaction(
+                    index,
+                    value,
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              SkYesNoField(
+                label:
+                    "Votre enfant suit-il un traitement quotidien pour cette allergie ?",
+                value: allergies[index].hasDailyTreatment,
+                onChanged: (value) {
+                  _updateAllergyHasDailyTreatment(
+                    index,
+                    value,
+                  );
+                },
+              ),
+
+              if (allergies[index].hasDailyTreatment == true) ...[
+                const SizedBox(height: 20),
+
+                SkTextField(
+                  label: "Nom du traitement quotidien",
+                  controller: TextEditingController(
+                    text:
+                        allergies[index].dailyTreatmentName ??
+                            '',
+                  ),
+                  onChanged: (value) {
+                    widget.transmissionController
+                        .updateAllergyDailyTreatmentName(
+                      index,
+                      value,
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 20),
+
+                SkTextField(
+                  label: "Posologie",
+                  controller: TextEditingController(
+                    text: allergies[index]
+                            .dailyTreatmentDosage ??
+                        '',
+                  ),
+                  onChanged: (value) {
+                    widget.transmissionController
+                        .updateAllergyDailyTreatmentDosage(
+                      index,
+                      value,
+                    );
+                  },
+                ),
+              ],
+
+              const SizedBox(height: 24),
+
+              SkYesNoField(
+                label:
+                    "Votre enfant dispose-t-il d’un traitement d’urgence pour cette allergie ?",
+                value:
+                    allergies[index].hasEmergencyTreatment,
+                onChanged: (value) {
+                  _updateAllergyHasEmergencyTreatment(
+                    index,
+                    value,
+                  );
+                },
+              ),
+
+              if (allergies[index].hasEmergencyTreatment ==
+                  true) ...[
+                const SizedBox(height: 20),
+
+                SkTextField(
+                  label: "Nom du traitement d’urgence",
+                  controller: TextEditingController(
+                    text: allergies[index]
+                            .emergencyTreatmentName ??
+                        '',
+                  ),
+                  onChanged: (value) {
+                    widget.transmissionController
+                        .updateAllergyEmergencyTreatmentName(
+                      index,
+                      value,
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 20),
+
+                SkTextField(
+                  label: "Posologie",
+                  controller: TextEditingController(
+                    text: allergies[index]
+                            .emergencyTreatmentDosage ??
+                        '',
+                  ),
+                  onChanged: (value) {
+                    widget.transmissionController
+                        .updateAllergyEmergencyTreatmentDosage(
+                      index,
+                      value,
+                    );
+                  },
+                ),
+              ],
+
+              if (allergies.length > 1) ...[
+                const SizedBox(height: 12),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => _removeAllergy(index),
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text("Supprimer"),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 28),
+            ],
+
+            OutlinedButton.icon(
+              onPressed: _addAllergy,
+              icon: const Icon(Icons.add),
+              label: const Text("Ajouter une allergie"),
+            ),
+          ],
+
+          const SizedBox(height: 40),
+
+          const Divider(),
+
+          const SizedBox(height: 30),
+
+          const Text(
+            "Dispositifs médicaux",
+            style: TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          SkYesNoField(
+            label:
+                "Votre enfant utilise-t-il un ou plusieurs dispositifs médicaux ?",
+            value: _hasMedicalDevices,
+            onChanged: _updateHasMedicalDevices,
+          ),
+
+          if (_hasMedicalDevices == true) ...[
+            const SizedBox(height: 28),
+
+            for (
+              int index = 0;
+              index < medicalDevices.length;
+              index++
+            ) ...[
+              Text(
+                "Dispositif n°${index + 1}",
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              SkTextField(
+                label: "Nom du dispositif",
+                controller: TextEditingController(
+                  text: medicalDevices[index].deviceName ?? '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateMedicalDeviceName(index, value);
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              SkTextField(
+                label: "À quoi sert-il ?",
+                controller: TextEditingController(
+                  text: medicalDevices[index].mainUse ?? '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateMedicalDeviceUse(index, value);
+                },
+              ),
+
+              if (medicalDevices.length > 1) ...[
+                const SizedBox(height: 12),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () =>
+                        _removeMedicalDevice(index),
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text("Supprimer"),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 28),
+            ],
+
+            OutlinedButton.icon(
+              onPressed: _addMedicalDevice,
+              icon: const Icon(Icons.add),
+              label: const Text("Ajouter un dispositif"),
+            ),
+          ],
+
+          const SizedBox(height: 30),
+
+          FilledButton(
+            onPressed: _continue,
+            child: const Text("Continuer"),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -5,6 +5,8 @@ import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_number_field.dart';
 import '../widgets/sk_text_field.dart';
 import '../widgets/sk_yes_no_field.dart';
+import 'diagnosed_pathologies_page.dart';
+import 'medical_events_page.dart';
 
 class IdentityPage extends StatefulWidget {
   final TransmissionController transmissionController;
@@ -93,16 +95,46 @@ class _IdentityPageState extends State<IdentityPage> {
     return '$day/$month/${date.year}';
   }
 
-  void _updateDiagnosedPathologies(bool? value) {
-    if (value == null) {
-      return;
-    }
-
+  void _updateDiagnosedPathologies(bool value) {
     setState(() {
       _hasDiagnosedPathologies = value;
     });
 
     widget.transmissionController.updateHasDiagnosedPathologies(value);
+  }
+
+  void _continue() {
+    if (_hasDiagnosedPathologies == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Répondez à la question sur les pathologies diagnostiquées.",
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (_hasDiagnosedPathologies == true) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DiagnosedPathologiesPage(
+            transmissionController: widget.transmissionController,
+          ),
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MedicalEventsPage(
+          transmissionController: widget.transmissionController,
+        ),
+      ),
+    );
   }
 
   @override
@@ -119,17 +151,13 @@ class _IdentityPageState extends State<IdentityPage> {
               controller: _lastNameController,
               onChanged: widget.transmissionController.updateLastName,
             ),
-
             const SizedBox(height: 20),
-
             SkTextField(
               label: "Prénom de l’enfant",
               controller: _firstNameController,
               onChanged: widget.transmissionController.updateFirstName,
             ),
-
             const SizedBox(height: 20),
-
             InkWell(
               onTap: _selectDateOfBirth,
               child: InputDecorator(
@@ -145,30 +173,29 @@ class _IdentityPageState extends State<IdentityPage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-
             SkNumberField(
               label: "Taille de l’enfant en cm",
               controller: _heightController,
               onChanged: widget.transmissionController.updateHeightCm,
             ),
-
             const SizedBox(height: 20),
-
             SkNumberField(
               label: "Poids de l’enfant en kg",
               controller: _weightController,
               onChanged: widget.transmissionController.updateWeightKg,
             ),
-
             const SizedBox(height: 30),
-
             SkYesNoField(
               label:
                   "Un professionnel de santé a-t-il diagnostiqué une ou plusieurs pathologies chez votre enfant ?",
               value: _hasDiagnosedPathologies,
               onChanged: _updateDiagnosedPathologies,
+            ),
+            const SizedBox(height: 30),
+            FilledButton(
+              onPressed: _continue,
+              child: const Text("Continuer"),
             ),
           ],
         ),

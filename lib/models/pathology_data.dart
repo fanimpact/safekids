@@ -1,11 +1,19 @@
+import 'medical_professional_data.dart';
+
 class PathologyData {
   String? name;
+
+  /// Date ou période approximative
   String? approximateDiagnosisDate;
-  String? healthcareProfessional;
+
+  bool hasReferringProfessional;
+
+  MedicalProfessionalData? referringProfessional;
 
   PathologyData({
     this.name,
     this.approximateDiagnosisDate,
-    this.healthcareProfessional,
+    this.hasReferringProfessional = false,
+    this.referringProfessional,
   });
 }

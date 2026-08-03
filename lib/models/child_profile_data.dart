@@ -1,23 +1,32 @@
-import 'identity_data.dart';
-import 'pathology_data.dart';
-import 'medical_event_data.dart';
-import 'treatment_data.dart';
 import 'allergy_data.dart';
-import 'medical_device_data.dart';
-import 'contact_data.dart';
 import 'child_profile_draft.dart';
+import 'contact_data.dart';
+import 'daily_treatment_data.dart';
+import 'emergency_treatment_data.dart';
+import 'identity_data.dart';
+import 'medical_device_data.dart';
+import 'medical_event_data.dart';
+import 'medical_professional_data.dart';
+import 'pathology_data.dart';
+import 'primary_care_doctor_data.dart';
 
 class ChildProfileData {
   final String? userId;
   final String? childId;
 
   final IdentityData identity;
+
   final List<PathologyData> pathologies;
   final List<MedicalEventData> medicalEvents;
-  final List<TreatmentData> treatments;
+
+  final List<DailyTreatmentData> dailyTreatments;
+  final List<EmergencyTreatmentData> emergencyTreatments;
+
   final List<AllergyData> allergies;
   final List<MedicalDeviceData> medicalDevices;
   final List<ContactData> contacts;
+
+  final PrimaryCareDoctorData primaryCareDoctor;
 
   ChildProfileData({
     this.userId,
@@ -25,10 +34,12 @@ class ChildProfileData {
     required this.identity,
     required this.pathologies,
     required this.medicalEvents,
-    required this.treatments,
+    required this.dailyTreatments,
+    required this.emergencyTreatments,
     required this.allergies,
     required this.medicalDevices,
     required this.contacts,
+    required this.primaryCareDoctor,
   });
 
   factory ChildProfileData.fromDraft(ChildProfileDraft draft) {
@@ -46,41 +57,68 @@ class ChildProfileData {
             draft.identity.hasDiagnosedPathologies,
       ),
 
-      pathologies: draft.pathologies
-          .map(
-            (pathology) => PathologyData(
-              name: pathology.name,
-              approximateDiagnosisDate:
-                  pathology.approximateDiagnosisDate,
-              healthcareProfessional:
-                  pathology.healthcareProfessional,
-            ),
-          )
-          .toList(),
+      pathologies: draft.pathologies.map((pathology) {
+        final professional = pathology.referringProfessional;
+
+        return PathologyData(
+          name: pathology.name,
+          approximateDiagnosisDate:
+              pathology.approximateDiagnosisDate,
+          hasReferringProfessional:
+              pathology.hasReferringProfessional,
+          referringProfessional: professional == null
+              ? null
+              : MedicalProfessionalData(
+                  name: professional.name,
+                  specialty: professional.specialty,
+                  workplace: professional.workplace,
+                  phoneNumber: professional.phoneNumber,
+                ),
+        );
+      }).toList(),
 
       medicalEvents: draft.medicalEvents
           .map(
             (event) => MedicalEventData(
-              approximateDate: event.approximateDate,
               description: event.description,
+              approximateDate: event.approximateDate,
               emergencyServicesCalled:
                   event.emergencyServicesCalled,
               hospitalized: event.hospitalized,
               hospitalizationDuration:
                   event.hospitalizationDuration,
+              importantExaminationsPerformed:
+                  event.importantExaminationsPerformed,
               importantExaminations:
                   event.importantExaminations,
+              hasOngoingConsequences:
+                  event.hasOngoingConsequences,
+              ongoingConsequences:
+                  event.ongoingConsequences,
             ),
           )
           .toList(),
 
-      treatments: draft.treatments
+      dailyTreatments: draft.dailyTreatments
           .map(
-            (treatment) => TreatmentData(
-              type: treatment.type,
+            (treatment) => DailyTreatmentData(
               medicationName: treatment.medicationName,
               dosage: treatment.dosage,
-              usualIntakeTime: treatment.usualIntakeTime,
+              administrationTimes:
+                  treatment.administrationTimes,
+            ),
+          )
+          .toList(),
+
+      emergencyTreatments: draft.emergencyTreatments
+          .map(
+            (treatment) => EmergencyTreatmentData(
+              medicationName: treatment.medicationName,
+              administrationCondition:
+                  treatment.administrationCondition,
+              dosage: treatment.dosage,
+              administrationMethod:
+                  treatment.administrationMethod,
             ),
           )
           .toList(),
@@ -89,11 +127,19 @@ class ChildProfileData {
           .map(
             (allergy) => AllergyData(
               allergen: allergy.allergen,
-              type: allergy.type,
               observedReaction: allergy.observedReaction,
-              prescribedMedication:
-                  allergy.prescribedMedication,
-              prescribedDosage: allergy.prescribedDosage,
+              hasDailyTreatment:
+                  allergy.hasDailyTreatment,
+              dailyTreatmentName:
+                  allergy.dailyTreatmentName,
+              dailyTreatmentDosage:
+                  allergy.dailyTreatmentDosage,
+              hasEmergencyTreatment:
+                  allergy.hasEmergencyTreatment,
+              emergencyTreatmentName:
+                  allergy.emergencyTreatmentName,
+              emergencyTreatmentDosage:
+                  allergy.emergencyTreatmentDosage,
             ),
           )
           .toList(),
@@ -113,10 +159,18 @@ class ChildProfileData {
               fullName: contact.fullName,
               relationship: contact.relationship,
               phoneNumber: contact.phoneNumber,
-              isPrimaryContact: contact.isPrimaryContact,
+              isPrimaryContact:
+                  contact.isPrimaryContact,
             ),
           )
           .toList(),
+
+      primaryCareDoctor: PrimaryCareDoctorData(
+        name: draft.primaryCareDoctor.name,
+        workplace: draft.primaryCareDoctor.workplace,
+        phoneNumber:
+            draft.primaryCareDoctor.phoneNumber,
+      ),
     );
   }
 }

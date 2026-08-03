@@ -16,7 +16,7 @@ class QuestionnairePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Fiche de télétransmission"),
+        title: const Text("Profil de l’enfant"),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -31,18 +31,14 @@ class QuestionnairePage extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 12),
-
               Text(
                 subtitle,
                 style: const TextStyle(
                   fontSize: 16,
                 ),
               ),
-
               const SizedBox(height: 30),
-
               child,
             ],
           ),

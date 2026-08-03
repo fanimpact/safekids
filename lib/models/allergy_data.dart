@@ -1,22 +1,24 @@
-enum AllergyType {
-  medication,
-  food,
-  insect,
-  other,
-}
-
 class AllergyData {
   String? allergen;
-  AllergyType? type;
+
   String? observedReaction;
-  String? prescribedMedication;
-  String? prescribedDosage;
+
+  bool? hasDailyTreatment;
+  String? dailyTreatmentName;
+  String? dailyTreatmentDosage;
+
+  bool? hasEmergencyTreatment;
+  String? emergencyTreatmentName;
+  String? emergencyTreatmentDosage;
 
   AllergyData({
     this.allergen,
-    this.type,
     this.observedReaction,
-    this.prescribedMedication,
-    this.prescribedDosage,
+    this.hasDailyTreatment,
+    this.dailyTreatmentName,
+    this.dailyTreatmentDosage,
+    this.hasEmergencyTreatment,
+    this.emergencyTreatmentName,
+    this.emergencyTreatmentDosage,
   });
 }

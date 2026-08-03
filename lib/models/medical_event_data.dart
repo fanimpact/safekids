@@ -1,19 +1,27 @@
 class MedicalEventData {
-  String? approximateDate;
   String? description;
+  String? approximateDate;
 
-  bool emergencyServicesCalled;
-  bool hospitalized;
+  bool? emergencyServicesCalled;
 
+  bool? hospitalized;
   String? hospitalizationDuration;
+
+  bool? importantExaminationsPerformed;
   String? importantExaminations;
 
+  bool? hasOngoingConsequences;
+  String? ongoingConsequences;
+
   MedicalEventData({
-    this.approximateDate,
     this.description,
-    this.emergencyServicesCalled = false,
-    this.hospitalized = false,
+    this.approximateDate,
+    this.emergencyServicesCalled,
+    this.hospitalized,
     this.hospitalizationDuration,
+    this.importantExaminationsPerformed,
     this.importantExaminations,
+    this.hasOngoingConsequences,
+    this.ongoingConsequences,
   });
 }

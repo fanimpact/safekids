@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'demo_page.dart';
+
+import 'controllers/transmission_controller.dart';
 import 'create_child_profile_page.dart';
+import 'demo_page.dart';
 import 'login_page.dart';
+import 'transmission_pages/identity_page.dart';
 
 class ParticulierHomePage extends StatelessWidget {
   const ParticulierHomePage({super.key});
@@ -13,11 +16,12 @@ class ParticulierHomePage extends StatelessWidget {
         title: const Text('Espace particulier'),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const SizedBox(height: 40),
+
               const Text(
                 'Que souhaitez-vous faire ?',
                 textAlign: TextAlign.center,
@@ -26,6 +30,7 @@ class ParticulierHomePage extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               const SizedBox(height: 40),
 
               SizedBox(
@@ -59,13 +64,14 @@ class ParticulierHomePage extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const CreateChildProfilePage(),
-    ),
-  );
-},
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const CreateChildProfilePage(),
+                      ),
+                    );
+                  },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
@@ -82,15 +88,48 @@ class ParticulierHomePage extends StatelessWidget {
 
               const SizedBox(height: 16),
 
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    final transmissionController =
+                        TransmissionController();
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => IdentityPage(
+                          transmissionController:
+                              transmissionController,
+                        ),
+                      ),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 18,
+                    ),
+                  ),
+                  child: const Text(
+                    'Tester le questionnaire de télétransmission',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
               TextButton(
                 onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const LoginPage(),
-    ),
-  );
-},
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LoginPage(),
+                    ),
+                  );
+                },
                 child: const Text(
                   'Se connecter',
                   style: TextStyle(fontSize: 17),
