@@ -8,58 +8,64 @@ class ConceptPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const Spacer(),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                const SizedBox(height: 30),
 
-              const Icon(
-                Icons.child_care,
-                size: 80,
-              ),
-
-              const SizedBox(height: 30),
-
-              const Text(
-                "Parce que chaque enfant est unique, son accompagnement devrait l’être aussi.",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
+                const Icon(
+                  Icons.child_care,
+                  size: 80,
                 ),
-              ),
 
-              const SizedBox(height: 30),
+                const SizedBox(height: 30),
 
-              const Text(
-                "Votre enfant a des besoins spécifiques ou une pathologie nécessitant une attention particulière.\n\n"
-                "Cette application a été conçue pour que chaque personne qui l’accompagne — famille, école, centre de loisirs, club sportif ou professionnel — puisse accéder facilement aux informations importantes le concernant.\n\n"
-                "Notre objectif est de faciliter l’accès de votre enfant aux activités du quotidien, tout en aidant les adultes à l’accompagner avec confiance et en rassurant les parents.",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 17,
-                  height: 1.5,
+                const Text(
+                  "Parce que chaque enfant est unique, son accompagnement devrait l’être aussi.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
 
-              const Spacer(),
+                const SizedBox(height: 30),
 
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const ProfileChoicePage(),
-    ),
-  );
-},
-                  child: const Text("Continuer"),
+                const Text(
+                  "Certains enfants vivent avec une pathologie, un trouble du neurodéveloppement (TSA, TDAH, troubles Dys…), un handicap, un appareillage ou toute autre situation nécessitant une attention particulière.\n\n"
+                  "Les informations renseignées par la famille permettent aux accompagnants d’accéder rapidement aux éléments importants concernant chaque enfant et de préparer leurs activités en tenant compte de ses besoins.\n\n"
+                  "Un mode Urgence a été conçu pour faciliter la prise en charge de l’enfant lorsqu’une intervention est nécessaire.\n\n"
+                  "Notre objectif : réduire la charge mentale des accompagnants et rassurer les familles en facilitant l’accès aux bonnes informations, au bon moment.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 17,
+                    height: 1.5,
+                  ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 40),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const ProfileChoicePage(),
+                        ),
+                      );
+                    },
+                    child: const Text("Continuer"),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),

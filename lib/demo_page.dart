@@ -109,25 +109,9 @@ class _DemoPageState extends State<DemoPage> {
 ),
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      Text(
-                        page['title']!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        page['text']!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+     
+                     
+                      
                     ],
                   ),
                 );
