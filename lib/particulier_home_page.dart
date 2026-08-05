@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 
+import 'activity_profile_pages/activity_profile_entry_page.dart';
 import 'controllers/transmission_controller.dart';
-import 'create_child_profile_page.dart';
 import 'demo_page.dart';
 import 'login_page.dart';
+import 'register_page.dart';
 import 'transmission_pages/identity_page.dart';
 
 class ParticulierHomePage extends StatelessWidget {
-  const ParticulierHomePage({super.key});
+  const ParticulierHomePage({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Espace particulier'),
+        title: const Text(
+          'Espace particulier',
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -40,7 +45,8 @@ class ParticulierHomePage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const DemoPage(),
+                        builder: (context) =>
+                            const DemoPage(),
                       ),
                     );
                   },
@@ -53,7 +59,9 @@ class ParticulierHomePage extends StatelessWidget {
                   child: const Text(
                     'Découvrir ce que SafeKids peut faire',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 17),
+                    style: TextStyle(
+                      fontSize: 17,
+                    ),
                   ),
                 ),
               ),
@@ -62,27 +70,64 @@ class ParticulierHomePage extends StatelessWidget {
 
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton(
+                child: FilledButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
-                            const CreateChildProfilePage(),
+                            const RegisterPage(),
                       ),
                     );
                   },
-                  style: OutlinedButton.styleFrom(
+                  style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 18,
                     ),
                   ),
                   child: const Text(
-                    'Créer gratuitement la fiche de mon enfant',
+                    'Créer un compte',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 17),
+                    style: TextStyle(
+                      fontSize: 17,
+                    ),
                   ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const LoginPage(),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'Se connecter',
+                  style: TextStyle(
+                    fontSize: 17,
+                  ),
+                ),
+              ),
+
+              // -------- Développement uniquement --------
+
+              const SizedBox(height: 40),
+
+              const Divider(),
+
+              const SizedBox(height: 16),
+
+              const Text(
+                'Outils de développement',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
 
@@ -98,41 +143,37 @@ class ParticulierHomePage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => IdentityPage(
+                        builder: (context) =>
+                            IdentityPage(
                           transmissionController:
                               transmissionController,
                         ),
                       ),
                     );
                   },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 18,
-                    ),
-                  ),
                   child: const Text(
-                    'Tester le questionnaire de télétransmission',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 17),
+                    'Tester le questionnaire Télétransmission',
                   ),
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LoginPage(),
-                    ),
-                  );
-                },
-                child: const Text(
-                  'Se connecter',
-                  style: TextStyle(fontSize: 17),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const ActivityProfileEntryPage(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Tester le questionnaire Activités',
+                  ),
                 ),
               ),
             ],

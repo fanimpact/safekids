@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../activity_profile_pages/activity_profile_entry_page.dart';
+import '../children/children_page.dart';
+import '../controllers/activity_profile_controller.dart';
 import '../controllers/transmission_controller.dart';
-import '../particulier_home_page.dart';
+import '../models/child_profile_data.dart';
+import '../repositories/child_repository.dart';
 
 class TransitionToActivitiesPage extends StatelessWidget {
   final TransmissionController transmissionController;
@@ -11,21 +15,45 @@ class TransitionToActivitiesPage extends StatelessWidget {
     required this.transmissionController,
   });
 
+  ChildProfileData _saveChild() {
+    final profile =
+        transmissionController.validateAndGetProfile();
+
+    ChildRepository.instance.addChild(profile);
+
+    return profile;
+  }
+
   void _finishForNow(BuildContext context) {
+    _saveChild();
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (context) => const ParticulierHomePage(),
+        builder: (context) => const ChildrenPage(),
       ),
       (route) => false,
     );
   }
 
   void _continueToActivities(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Le profil Activités sera créé à l’étape suivante.",
+    final childProfile = _saveChild();
+
+    final activityProfileController =
+        ActivityProfileController();
+
+    activityProfileController.draft.userId =
+        childProfile.userId;
+
+    activityProfileController.draft.childId =
+        childProfile.childId;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ActivityProfileEntryPage(
+          activityProfileController:
+              activityProfileController,
         ),
       ),
     );
@@ -35,13 +63,17 @@ class TransitionToActivitiesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Profil de l'enfant"),
+        title: const Text(
+          "Profil de l'enfant",
+        ),
+        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment:
+                CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 30),
 
@@ -53,7 +85,7 @@ class TransitionToActivitiesPage extends StatelessWidget {
               const SizedBox(height: 24),
 
               const Text(
-                "Les informations essentielles ont été enregistrées.",
+                "Les informations essentielles de votre enfant sont enregistrées.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 26,
@@ -64,9 +96,7 @@ class TransitionToActivitiesPage extends StatelessWidget {
               const SizedBox(height: 24),
 
               const Text(
-                "Les informations que vous venez de renseigner permettront "
-                "de préparer une fiche qui pourra être transmise aux "
-                "services de secours en cas d'urgence.",
+                "Vous venez de terminer la première partie de son profil.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 17,
@@ -77,11 +107,29 @@ class TransitionToActivitiesPage extends StatelessWidget {
               const SizedBox(height: 20),
 
               const Text(
-                "Vous pourrez compléter plus tard le profil de votre enfant "
-                "afin de préparer les activités de votre enfant. Les "
-                "informations déjà renseignées seront automatiquement "
-                "réutilisées : vous n'aurez pas besoin de les saisir une "
-                "seconde fois.",
+                "Ces informations permettront notamment de générer une fiche destinée aux services de secours et seront disponibles dans le Mode Urgence.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 17,
+                  height: 1.5,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                "Vous pouvez poursuivre maintenant en complétant le profil Activités ou revenir plus tard.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 17,
+                  height: 1.5,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                "Le profil Activités permettra d’adapter automatiquement les recommandations en fonction des activités réalisées par votre enfant.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 17,
@@ -92,22 +140,26 @@ class TransitionToActivitiesPage extends StatelessWidget {
               const SizedBox(height: 40),
 
               FilledButton(
-                onPressed: () => _continueToActivities(context),
+                onPressed: () =>
+                    _continueToActivities(context),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     vertical: 18,
                   ),
                 ),
                 child: const Text(
-                  "Compléter le profil Activités",
-                  style: TextStyle(fontSize: 17),
+                  "Continuer le profil Activités",
+                  style: TextStyle(
+                    fontSize: 17,
+                  ),
                 ),
               ),
 
               const SizedBox(height: 16),
 
               OutlinedButton(
-                onPressed: () => _finishForNow(context),
+                onPressed: () =>
+                    _finishForNow(context),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     vertical: 18,
@@ -115,7 +167,9 @@ class TransitionToActivitiesPage extends StatelessWidget {
                 ),
                 child: const Text(
                   "Terminer pour le moment",
-                  style: TextStyle(fontSize: 17),
+                  style: TextStyle(
+                    fontSize: 17,
+                  ),
                 ),
               ),
             ],

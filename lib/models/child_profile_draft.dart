@@ -7,6 +7,7 @@ import 'medical_device_data.dart';
 import 'medical_event_data.dart';
 import 'pathology_data.dart';
 import 'primary_care_doctor_data.dart';
+import 'trigger_factor_data.dart';
 
 class ChildProfileDraft {
   String? userId;
@@ -16,6 +17,8 @@ class ChildProfileDraft {
 
   final List<PathologyData> pathologies;
   final List<MedicalEventData> medicalEvents;
+
+  final TriggerFactorData triggerFactors;
 
   final List<DailyTreatmentData> dailyTreatments;
   final List<EmergencyTreatmentData> emergencyTreatments;
@@ -32,6 +35,7 @@ class ChildProfileDraft {
     IdentityData? identity,
     List<PathologyData>? pathologies,
     List<MedicalEventData>? medicalEvents,
+    TriggerFactorData? triggerFactors,
     List<DailyTreatmentData>? dailyTreatments,
     List<EmergencyTreatmentData>? emergencyTreatments,
     List<AllergyData>? allergies,
@@ -41,6 +45,7 @@ class ChildProfileDraft {
   })  : identity = identity ?? IdentityData(),
         pathologies = pathologies ?? [],
         medicalEvents = medicalEvents ?? [],
+        triggerFactors = triggerFactors ?? TriggerFactorData(),
         dailyTreatments = dailyTreatments ?? [],
         emergencyTreatments = emergencyTreatments ?? [],
         allergies = allergies ?? [],

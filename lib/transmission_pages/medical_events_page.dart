@@ -4,7 +4,7 @@ import '../controllers/transmission_controller.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_text_field.dart';
 import '../widgets/sk_yes_no_field.dart';
-import 'treatments_page.dart';
+import 'trigger_factors_page.dart';
 
 class MedicalEventsPage extends StatefulWidget {
   final TransmissionController transmissionController;
@@ -82,8 +82,9 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TreatmentsPage(
-          transmissionController: widget.transmissionController,
+        builder: (context) => TriggerFactorsPage(
+          transmissionController:
+              widget.transmissionController,
         ),
       ),
     );
@@ -139,7 +140,10 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
               ),
               onChanged: (value) {
                 widget.transmissionController
-                    .updateMedicalEventDescription(index, value);
+                    .updateMedicalEventDescription(
+                  index,
+                  value,
+                );
               },
             ),
 
@@ -148,11 +152,15 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
             SkTextField(
               label: "Date ou année approximative",
               controller: TextEditingController(
-                text: medicalEvents[index].approximateDate ?? '',
+                text:
+                    medicalEvents[index].approximateDate ?? '',
               ),
               onChanged: (value) {
                 widget.transmissionController
-                    .updateMedicalEventDate(index, value);
+                    .updateMedicalEventDate(
+                  index,
+                  value,
+                );
               },
             ),
 
@@ -163,7 +171,10 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
               value:
                   medicalEvents[index].emergencyServicesCalled,
               onChanged: (value) {
-                _updateEmergencyServicesCalled(index, value);
+                _updateEmergencyServicesCalled(
+                  index,
+                  value,
+                );
               },
             ),
 
@@ -173,7 +184,10 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
               label: "L’enfant a-t-il été hospitalisé ?",
               value: medicalEvents[index].hospitalized,
               onChanged: (value) {
-                _updateHospitalized(index, value);
+                _updateHospitalized(
+                  index,
+                  value,
+                );
               },
             ),
 
@@ -234,8 +248,7 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
                 },
               ),
             ],
-
-            const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
             SkYesNoField(
               label:

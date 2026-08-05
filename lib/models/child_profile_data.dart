@@ -9,6 +9,7 @@ import 'medical_event_data.dart';
 import 'medical_professional_data.dart';
 import 'pathology_data.dart';
 import 'primary_care_doctor_data.dart';
+import 'trigger_factor_data.dart';
 
 class ChildProfileData {
   final String? userId;
@@ -18,6 +19,8 @@ class ChildProfileData {
 
   final List<PathologyData> pathologies;
   final List<MedicalEventData> medicalEvents;
+
+  final TriggerFactorData triggerFactors;
 
   final List<DailyTreatmentData> dailyTreatments;
   final List<EmergencyTreatmentData> emergencyTreatments;
@@ -34,6 +37,7 @@ class ChildProfileData {
     required this.identity,
     required this.pathologies,
     required this.medicalEvents,
+    required this.triggerFactors,
     required this.dailyTreatments,
     required this.emergencyTreatments,
     required this.allergies,
@@ -42,7 +46,9 @@ class ChildProfileData {
     required this.primaryCareDoctor,
   });
 
-  factory ChildProfileData.fromDraft(ChildProfileDraft draft) {
+  factory ChildProfileData.fromDraft(
+    ChildProfileDraft draft,
+  ) {
     return ChildProfileData(
       userId: draft.userId,
       childId: draft.childId,
@@ -58,7 +64,8 @@ class ChildProfileData {
       ),
 
       pathologies: draft.pathologies.map((pathology) {
-        final professional = pathology.referringProfessional;
+        final professional =
+            pathology.referringProfessional;
 
         return PathologyData(
           name: pathology.name,
@@ -72,7 +79,8 @@ class ChildProfileData {
                   name: professional.name,
                   specialty: professional.specialty,
                   workplace: professional.workplace,
-                  phoneNumber: professional.phoneNumber,
+                  phoneNumber:
+                      professional.phoneNumber,
                 ),
         );
       }).toList(),
@@ -81,7 +89,8 @@ class ChildProfileData {
           .map(
             (event) => MedicalEventData(
               description: event.description,
-              approximateDate: event.approximateDate,
+              approximateDate:
+                  event.approximateDate,
               emergencyServicesCalled:
                   event.emergencyServicesCalled,
               hospitalized: event.hospitalized,
@@ -99,35 +108,102 @@ class ChildProfileData {
           )
           .toList(),
 
-      dailyTreatments: draft.dailyTreatments
+      triggerFactors: TriggerFactorData(
+        hasTriggerFactors:
+            draft.triggerFactors.hasTriggerFactors,
+
+        flashingLights:
+            draft.triggerFactors.flashingLights,
+
+        heat:
+            draft.triggerFactors.heat,
+
+        fatigueOrLackOfSleep:
+            draft.triggerFactors.fatigueOrLackOfSleep,
+
+        noise:
+            draft.triggerFactors.noise,
+
+        crowd:
+            draft.triggerFactors.crowd,
+
+        confinedSpaces:
+            draft.triggerFactors.confinedSpaces,
+
+        physicalEffort:
+            draft.triggerFactors.physicalEffort,
+
+        stressOrStrongEmotions:
+            draft.triggerFactors.stressOrStrongEmotions,
+
+        waterContact:
+            draft.triggerFactors.waterContact,
+
+        waterVigilance:
+            draft.triggerFactors.waterVigilance,
+
+        otherWaterVigilance:
+            draft.triggerFactors.otherWaterVigilance,
+
+        animals:
+            draft.triggerFactors.animals,
+
+        animalVigilance:
+            draft.triggerFactors.animalVigilance,
+
+        otherAnimalVigilance:
+            draft.triggerFactors.otherAnimalVigilance,
+
+        height:
+            draft.triggerFactors.height,
+
+        heightVigilance:
+            draft.triggerFactors.heightVigilance,
+
+        otherHeightVigilance:
+            draft.triggerFactors.otherHeightVigilance,
+
+        other:
+            draft.triggerFactors.other,
+      ),
+            dailyTreatments: draft.dailyTreatments
           .map(
             (treatment) => DailyTreatmentData(
-              medicationName: treatment.medicationName,
-              dosage: treatment.dosage,
+              medicationName:
+                  treatment.medicationName,
+              dosage:
+                  treatment.dosage,
               administrationTimes:
                   treatment.administrationTimes,
             ),
           )
           .toList(),
 
-      emergencyTreatments: draft.emergencyTreatments
-          .map(
-            (treatment) => EmergencyTreatmentData(
-              medicationName: treatment.medicationName,
-              administrationCondition:
-                  treatment.administrationCondition,
-              dosage: treatment.dosage,
-              administrationMethod:
-                  treatment.administrationMethod,
-            ),
-          )
-          .toList(),
+      emergencyTreatments:
+          draft.emergencyTreatments
+              .map(
+                (treatment) =>
+                    EmergencyTreatmentData(
+                  medicationName:
+                      treatment.medicationName,
+                  administrationCondition:
+                      treatment
+                          .administrationCondition,
+                  dosage:
+                      treatment.dosage,
+                  administrationMethod:
+                      treatment.administrationMethod,
+                ),
+              )
+              .toList(),
 
       allergies: draft.allergies
           .map(
             (allergy) => AllergyData(
-              allergen: allergy.allergen,
-              observedReaction: allergy.observedReaction,
+              allergen:
+                  allergy.allergen,
+              observedReaction:
+                  allergy.observedReaction,
               hasDailyTreatment:
                   allergy.hasDailyTreatment,
               dailyTreatmentName:
@@ -147,8 +223,10 @@ class ChildProfileData {
       medicalDevices: draft.medicalDevices
           .map(
             (device) => MedicalDeviceData(
-              deviceName: device.deviceName,
-              mainUse: device.mainUse,
+              deviceName:
+                  device.deviceName,
+              mainUse:
+                  device.mainUse,
             ),
           )
           .toList(),
@@ -156,9 +234,12 @@ class ChildProfileData {
       contacts: draft.contacts
           .map(
             (contact) => ContactData(
-              fullName: contact.fullName,
-              relationship: contact.relationship,
-              phoneNumber: contact.phoneNumber,
+              fullName:
+                  contact.fullName,
+              relationship:
+                  contact.relationship,
+              phoneNumber:
+                  contact.phoneNumber,
               isPrimaryContact:
                   contact.isPrimaryContact,
             ),
@@ -166,8 +247,10 @@ class ChildProfileData {
           .toList(),
 
       primaryCareDoctor: PrimaryCareDoctorData(
-        name: draft.primaryCareDoctor.name,
-        workplace: draft.primaryCareDoctor.workplace,
+        name:
+            draft.primaryCareDoctor.name,
+        workplace:
+            draft.primaryCareDoctor.workplace,
         phoneNumber:
             draft.primaryCareDoctor.phoneNumber,
       ),

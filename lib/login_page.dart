@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'register_page.dart';
+
 import 'forgot_password_page.dart';
+import 'home/home_page.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -14,7 +16,8 @@ class LoginPage extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment:
+              CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 20),
 
@@ -38,34 +41,51 @@ class LoginPage extends StatelessWidget {
             const SizedBox(height: 30),
 
             FilledButton(
-              onPressed: () {},
-              child: const Text('Se connecter'),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const HomePage(),
+                  ),
+                );
+              },
+              child: const Text(
+                'Se connecter',
+              ),
             ),
 
             const SizedBox(height: 15),
-TextButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const ForgotPasswordPage(),
-      ),
-    );
-  },
-  child: const Text('Mot de passe oublié ?'),
-),
 
- TextButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const RegisterPage(),
-      ),
-    );
-  },
-  child: const Text('Créer un compte'),
-),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const ForgotPasswordPage(),
+                  ),
+                );
+              },
+              child: const Text(
+                'Mot de passe oublié ?',
+              ),
+            ),
+
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const RegisterPage(),
+                  ),
+                );
+              },
+              child: const Text(
+                'Créer un compte',
+              ),
+            ),
           ],
         ),
       ),
