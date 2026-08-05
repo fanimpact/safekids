@@ -1,6 +1,7 @@
 import 'aquatic_activity_data.dart';
 import 'clothing_data.dart';
 import 'communication_data.dart';
+import 'other_information_data.dart';
 import 'overnight_stay_data.dart';
 import 'safety_data.dart';
 import 'toilets_data.dart';
@@ -27,6 +28,8 @@ class ActivityProfileData {
 
   final SafetyData safety;
 
+  final OtherInformationData otherInformation;
+
   ActivityProfileData({
     required this.aquaticActivity,
     required this.transport,
@@ -37,5 +40,6 @@ class ActivityProfileData {
     required this.communication,
     required this.transitions,
     required this.safety,
+    required this.otherInformation,
   });
 }

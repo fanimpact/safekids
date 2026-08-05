@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../child_profile_pages/create_child_profile_intro_page.dart';
-import '../models/child_profile_data.dart';
+import '../controllers/transmission_controller.dart';
+import '../models/complete_child_profile_data.dart';
 import '../repositories/child_repository.dart';
+import '../transmission_pages/identity_page.dart';
+import 'child_profile_page.dart';
 
 class ChildrenPage extends StatelessWidget {
   const ChildrenPage({
     super.key,
   });
 
-  void _openCreateProfile(
+  void _openFirstChildProfile(
     BuildContext context,
   ) {
     Navigator.push(
@@ -21,11 +24,46 @@ class ChildrenPage extends StatelessWidget {
     );
   }
 
+  void _openAnotherChildProfile(
+    BuildContext context,
+  ) {
+    final transmissionController =
+        TransmissionController();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => IdentityPage(
+          transmissionController:
+              transmissionController,
+        ),
+      ),
+    );
+  }
+
+  void _openChildProfile(
+    BuildContext context,
+    CompleteChildProfileData child,
+  ) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChildProfilePage(
+          child: child,
+        ),
+      ),
+    );
+  }
+
   String _childFirstName(
-    ChildProfileData child,
+    CompleteChildProfileData child,
     int index,
   ) {
-    final firstName = child.identity.firstName?.trim();
+    final firstName = child
+        .essentialInformation
+        .identity
+        .firstName
+        ?.trim();
 
     if (firstName != null && firstName.isNotEmpty) {
       return firstName;
@@ -35,11 +73,14 @@ class ChildrenPage extends StatelessWidget {
   }
 
   String _childHealthSummary(
-    ChildProfileData child,
+    CompleteChildProfileData child,
   ) {
+    final essentialInformation =
+        child.essentialInformation;
+
     final information = <String>[];
 
-    final pathologyNames = child.pathologies
+    final pathologyNames = essentialInformation.pathologies
         .map(
           (pathology) => pathology.name?.trim(),
         )
@@ -53,7 +94,7 @@ class ChildrenPage extends StatelessWidget {
       information.addAll(pathologyNames);
     }
 
-    final allergyNames = child.allergies
+    final allergyNames = essentialInformation.allergies
         .map(
           (allergy) => allergy.allergen?.trim(),
         )
@@ -81,6 +122,186 @@ class ChildrenPage extends StatelessWidget {
     return information.join(' • ');
   }
 
+  Widget _buildCompletionLine({
+    required bool completed,
+    required String completedText,
+    required String incompleteText,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          completed
+              ? Icons.check_circle
+              : Icons.hourglass_top,
+          size: 18,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            completed
+                ? completedText
+                : incompleteText,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChildCard({
+    required BuildContext context,
+    required CompleteChildProfileData child,
+    required int index,
+  }) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
+          leading: const CircleAvatar(
+            child: Icon(
+              Icons.child_care,
+            ),
+          ),
+          title: Text(
+            _childFirstName(
+              child,
+              index,
+            ),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(
+              top: 6,
+            ),
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _childHealthSummary(child),
+                ),
+                const SizedBox(height: 12),
+                _buildCompletionLine(
+                  completed:
+                      child.essentialInformationCompleted,
+                  completedText:
+                      'Informations essentielles : complétées',
+                  incompleteText:
+                      'Informations essentielles : à compléter',
+                ),
+                const SizedBox(height: 6),
+                _buildCompletionLine(
+                  completed:
+                      child.activityProfileCompleted,
+                  completedText:
+                      'Profil Activités : complété',
+                  incompleteText:
+                      'Profil Activités : à compléter',
+                ),
+              ],
+            ),
+          ),
+          trailing: const Icon(
+            Icons.chevron_right,
+          ),
+          onTap: () => _openChildProfile(
+            context,
+            child,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(
+    BuildContext context,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.stretch,
+        children: [
+          const Spacer(),
+          const Icon(
+            Icons.child_care,
+            size: 72,
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Vous n’avez encore aucun enfant enregistré.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 32),
+          FilledButton.icon(
+            onPressed: () =>
+                _openFirstChildProfile(context),
+            icon: const Icon(
+              Icons.add,
+            ),
+            label: const Text(
+              'Créer le profil de mon enfant',
+              style: TextStyle(
+                fontSize: 17,
+              ),
+            ),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                vertical: 18,
+              ),
+            ),
+          ),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChildrenList(
+    BuildContext context,
+    List<CompleteChildProfileData> children,
+  ) {
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        for (
+          int index = 0;
+          index < children.length;
+          index++
+        ) ...[
+          _buildChildCard(
+            context: context,
+            child: children[index],
+            index: index,
+          ),
+          const SizedBox(height: 12),
+        ],
+        const SizedBox(height: 12),
+        FilledButton.icon(
+          onPressed: () =>
+              _openAnotherChildProfile(context),
+          icon: const Icon(
+            Icons.add,
+          ),
+          label: const Text(
+            'Créer un autre profil enfant',
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final children =
@@ -94,148 +315,10 @@ class ChildrenPage extends StatelessWidget {
       ),
       body: SafeArea(
         child: children.isEmpty
-            ? Padding(
-                padding:
-                    const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.stretch,
-                  children: [
-                    const Spacer(),
-
-                    const Icon(
-                      Icons.child_care,
-                      size: 72,
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    const Text(
-                      'Vous n’avez encore aucun enfant enregistré.',
-                      textAlign:
-                          TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight:
-                            FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    FilledButton.icon(
-                      onPressed: () =>
-                          _openCreateProfile(
-                        context,
-                      ),
-                      icon:
-                          const Icon(Icons.add),
-                      label: const Text(
-                        'Créer le profil de mon enfant',
-                        style: TextStyle(
-                          fontSize: 17,
-                        ),
-                      ),
-                      style:
-                          FilledButton.styleFrom(
-                        padding:
-                            const EdgeInsets.symmetric(
-                          vertical: 18,
-                        ),
-                      ),
-                    ),
-
-                    const Spacer(),
-                  ],
-                ),
-              )
-            : ListView(
-                padding:
-                    const EdgeInsets.all(24),
-                children: [
-                  for (
-                    int index = 0;
-                    index < children.length;
-                    index++
-                  ) ...[
-                    Card(
-                      child: ListTile(
-                        leading:
-                            const CircleAvatar(
-                          child: Icon(
-                            Icons.child_care,
-                          ),
-                        ),
-                        title: Text(
-                          _childFirstName(
-                            children[index],
-                            index,
-                          ),
-                          style:
-                              const TextStyle(
-                            fontSize: 18,
-                            fontWeight:
-                                FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(
-                              height: 4,
-                            ),
-                            Text(
-                              _childHealthSummary(
-                                children[index],
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            const Text(
-                              'Informations essentielles : complétées',
-                            ),
-                            const Text(
-                              'Profil Activités : à compléter',
-                            ),
-                          ],
-                        ),
-                        trailing:
-                            const Icon(
-                          Icons.chevron_right,
-                        ),
-                        onTap: () {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'L’ouverture complète de la fiche sera ajoutée ensuite.',
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-                  ],
-
-                  const SizedBox(height: 12),
-
-                  FilledButton.icon(
-                    onPressed: () =>
-                        _openCreateProfile(
-                      context,
-                    ),
-                    icon:
-                        const Icon(Icons.add),
-                    label: const Text(
-                      'Ajouter un enfant',
-                    ),
-                  ),
-                ],
+            ? _buildEmptyState(context)
+            : _buildChildrenList(
+                context,
+                children,
               ),
       ),
     );

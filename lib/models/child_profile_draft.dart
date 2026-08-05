@@ -11,7 +11,7 @@ import 'trigger_factor_data.dart';
 
 class ChildProfileDraft {
   String? userId;
-  String? childId;
+  String childId;
 
   final IdentityData identity;
 
@@ -31,7 +31,7 @@ class ChildProfileDraft {
 
   ChildProfileDraft({
     this.userId,
-    this.childId,
+    String? childId,
     IdentityData? identity,
     List<PathologyData>? pathologies,
     List<MedicalEventData>? medicalEvents,
@@ -42,15 +42,23 @@ class ChildProfileDraft {
     List<MedicalDeviceData>? medicalDevices,
     List<ContactData>? contacts,
     PrimaryCareDoctorData? primaryCareDoctor,
-  })  : identity = identity ?? IdentityData(),
+  })  : childId = childId ?? _createChildId(),
+        identity = identity ?? IdentityData(),
         pathologies = pathologies ?? [],
         medicalEvents = medicalEvents ?? [],
-        triggerFactors = triggerFactors ?? TriggerFactorData(),
+        triggerFactors =
+            triggerFactors ?? TriggerFactorData(),
         dailyTreatments = dailyTreatments ?? [],
-        emergencyTreatments = emergencyTreatments ?? [],
+        emergencyTreatments =
+            emergencyTreatments ?? [],
         allergies = allergies ?? [],
         medicalDevices = medicalDevices ?? [],
         contacts = contacts ?? [],
         primaryCareDoctor =
-            primaryCareDoctor ?? PrimaryCareDoctorData();
+            primaryCareDoctor ??
+                PrimaryCareDoctorData();
+
+  static String _createChildId() {
+    return 'child_${DateTime.now().microsecondsSinceEpoch}';
+  }
 }

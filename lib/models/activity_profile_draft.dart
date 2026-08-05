@@ -2,6 +2,7 @@ import 'activity_profile_data.dart';
 import 'aquatic_activity_data.dart';
 import 'clothing_data.dart';
 import 'communication_data.dart';
+import 'other_information_data.dart';
 import 'overnight_stay_data.dart';
 import 'safety_data.dart';
 import 'toilets_data.dart';
@@ -40,6 +41,9 @@ class ActivityProfileDraft {
   final SafetyData safety =
       SafetyData();
 
+  final OtherInformationData otherInformation =
+      OtherInformationData();
+
   ActivityProfileData toProfile() {
     return ActivityProfileData(
       aquaticActivity: aquaticActivity,
@@ -51,6 +55,7 @@ class ActivityProfileDraft {
       communication: communication,
       transitions: transitions,
       safety: safety,
+      otherInformation: otherInformation,
     );
   }
 }

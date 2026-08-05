@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../children/children_page.dart';
 import '../controllers/activity_profile_controller.dart';
-import '../particulier_home_page.dart';
+import '../repositories/child_repository.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_text_field.dart';
 import '../widgets/sk_yes_no_field.dart';
@@ -21,7 +22,7 @@ class OtherInformationPage extends StatefulWidget {
 
 class _OtherInformationPageState
     extends State<OtherInformationPage> {
-  bool _hasOtherInformation = false;
+  late bool _hasOtherInformation;
 
   late final TextEditingController
       _otherInformationController;
@@ -30,8 +31,18 @@ class _OtherInformationPageState
   void initState() {
     super.initState();
 
+    final data = widget
+        .activityProfileController
+        .draft
+        .otherInformation;
+
+    _hasOtherInformation =
+        data.hasOtherInformation;
+
     _otherInformationController =
-        TextEditingController();
+        TextEditingController(
+      text: data.details ?? '',
+    );
   }
 
   @override
@@ -41,6 +52,11 @@ class _OtherInformationPageState
   }
 
   void _updateHasOtherInformation(bool value) {
+    final data = widget
+        .activityProfileController
+        .draft
+        .otherInformation;
+
     setState(() {
       _hasOtherInformation = value;
 
@@ -48,16 +64,60 @@ class _OtherInformationPageState
         _otherInformationController.clear();
       }
     });
+
+    data.hasOtherInformation = value;
+
+    if (!value) {
+      data.details = null;
+    }
+  }
+
+  void _updateOtherInformation(
+    String value,
+  ) {
+    final trimmedValue = value.trim();
+
+    widget
+            .activityProfileController
+            .draft
+            .otherInformation
+            .details =
+        trimmedValue.isEmpty ? null : trimmedValue;
   }
 
   void _finish() {
-    widget.activityProfileController.validateDraft();
+    final activityProfileController =
+        widget.activityProfileController;
+
+    final childId =
+        activityProfileController.draft.childId;
+
+    final activityProfile =
+        activityProfileController
+            .validateAndGetProfile();
+
+    if (childId == null || childId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Impossible de retrouver le profil de l’enfant.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    ChildRepository.instance.saveActivityProfile(
+      childId: childId,
+      activityProfile: activityProfile,
+    );
 
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
         builder: (context) =>
-            const ParticulierHomePage(),
+            const ChildrenPage(),
       ),
       (route) => false,
     );
@@ -89,6 +149,8 @@ class _OtherInformationPageState
                   'Précisez cette information',
               controller:
                   _otherInformationController,
+              onChanged:
+                  _updateOtherInformation,
             ),
 
             const SizedBox(height: 12),
