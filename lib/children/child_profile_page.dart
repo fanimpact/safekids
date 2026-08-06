@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
 
+import '../activity_pages/activities_home_page.dart';
 import '../models/complete_child_profile_data.dart';
 
 class ChildProfilePage extends StatelessWidget {
@@ -18,17 +18,14 @@ class ChildProfilePage extends StatelessWidget {
         .firstName;
 
     if (value == null || value.trim().isEmpty) {
-      return "Enfant";
+      return 'Enfant';
     }
 
     return value;
   }
 
   String get _age {
-    // L'âge sera calculé automatiquement
-    // à partir de la date de naissance
-    // dans une prochaine étape.
-    return "";
+    return '';
   }
 
   List<String> get _pathologies {
@@ -36,16 +33,16 @@ class ChildProfilePage extends StatelessWidget {
         .essentialInformation
         .pathologies
         .map(
-          (e) => e.name?.trim(),
+          (pathology) => pathology.name?.trim(),
         )
         .where(
-          (e) => e != null && e.isNotEmpty,
+          (name) => name != null && name.isNotEmpty,
         )
         .cast<String>()
         .toList();
 
     if (values.isEmpty) {
-      return ["Aucune"];
+      return ['Aucune'];
     }
 
     return values;
@@ -56,35 +53,47 @@ class ChildProfilePage extends StatelessWidget {
         .essentialInformation
         .allergies
         .map(
-          (e) => e.allergen?.trim(),
+          (allergy) => allergy.allergen?.trim(),
         )
         .where(
-          (e) => e != null && e.isNotEmpty,
+          (allergen) =>
+              allergen != null && allergen.isNotEmpty,
         )
         .cast<String>()
         .toList();
 
     if (values.isEmpty) {
-      return ["Aucune"];
+      return ['Aucune'];
     }
 
     return values;
+  }
+
+  void _openActivities(
+    BuildContext context,
+  ) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ActivitiesHomePage(
+          selectedChild: child,
+        ),
+      ),
+    );
   }
 
   Widget _sectionTitle(
     String title,
   ) {
     return Padding(
-      padding:
-          const EdgeInsets.only(
+      padding: const EdgeInsets.only(
         bottom: 12,
       ),
       child: Text(
         title,
         style: const TextStyle(
           fontSize: 22,
-          fontWeight:
-              FontWeight.bold,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -99,14 +108,12 @@ class ChildProfilePage extends StatelessWidget {
       children: values
           .map(
             (value) => Padding(
-              padding:
-                  const EdgeInsets.only(
+              padding: const EdgeInsets.only(
                 bottom: 6,
               ),
               child: Text(
-                "• $value",
-                style:
-                    const TextStyle(
+                value,
+                style: const TextStyle(
                   fontSize: 17,
                 ),
               ),
@@ -115,11 +122,15 @@ class ChildProfilePage extends StatelessWidget {
           .toList(),
     );
   }
-    Widget _statusLine({
+
+  Widget _statusLine({
     required bool completed,
-    required String title,
+    required String completedText,
+    required String incompleteText,
   }) {
     return Row(
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         Icon(
           completed
@@ -132,7 +143,9 @@ class ChildProfilePage extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Text(
-            title,
+            completed
+                ? completedText
+                : incompleteText,
             style: const TextStyle(
               fontSize: 17,
             ),
@@ -162,8 +175,7 @@ class ChildProfilePage extends StatelessWidget {
         title: Text(
           title,
           style: const TextStyle(
-            fontWeight:
-                FontWeight.bold,
+            fontWeight: FontWeight.bold,
           ),
         ),
         subtitle: Text(
@@ -173,6 +185,19 @@ class ChildProfilePage extends StatelessWidget {
           Icons.chevron_right,
         ),
         onTap: onPressed,
+      ),
+    );
+  }
+
+  void _showTemporaryMessage({
+    required BuildContext context,
+    required String message,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+        ),
       ),
     );
   }
@@ -189,111 +214,84 @@ class ChildProfilePage extends StatelessWidget {
       ),
       body: SafeArea(
         child: ListView(
-          padding:
-              const EdgeInsets.all(
-            24,
-          ),
+          padding: const EdgeInsets.all(24),
           children: [
             const Icon(
               Icons.child_care,
               size: 72,
             ),
 
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
 
             Center(
               child: Text(
                 _firstName,
-                style:
-                    const TextStyle(
+                style: const TextStyle(
                   fontSize: 28,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
 
             if (_age.isNotEmpty) ...[
-              const SizedBox(
-                height: 6,
-              ),
+              const SizedBox(height: 6),
               Center(
                 child: Text(
                   _age,
-                  style:
-                      const TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                   ),
                 ),
               ),
             ],
 
-            const SizedBox(
-              height: 30,
-            ),
+            const SizedBox(height: 30),
 
             _sectionTitle(
-              "Pathologies",
+              'Pathologies',
             ),
 
             _bulletList(
               _pathologies,
             ),
 
-            const SizedBox(
-              height: 24,
-            ),
+            const SizedBox(height: 24),
 
             _sectionTitle(
-              "Allergies",
+              'Allergies',
             ),
 
             _bulletList(
               _allergies,
             ),
 
-            const SizedBox(
-              height: 36,
-            ),
-                        _sectionTitle(
-              "Utiliser ce profil",
+            const SizedBox(height: 36),
+
+            _sectionTitle(
+              'Utiliser ce profil',
             ),
 
             _actionButton(
               icon: Icons.event,
               color: Colors.blue,
-              title:
-                  "Préparer une activité",
+              title: 'Préparer une activité',
               subtitle:
-                  "Créer une préparation adaptée à cet enfant.",
-              onPressed: () {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      "La préparation des activités sera reliée ici.",
-                    ),
-                  ),
-                );
-              },
+                  'Créer une préparation adaptée à cet enfant.',
+              onPressed: () =>
+                  _openActivities(context),
             ),
 
             _actionButton(
               icon: Icons.warning,
               color: Colors.red,
-              title: "Mode Urgence",
+              title: 'Mode Urgence',
               subtitle:
-                  "Accéder immédiatement au protocole d'urgence.",
+                  'Accéder immédiatement au protocole d’urgence.',
               onPressed: () {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      "Le Mode Urgence sera relié ici.",
-                    ),
-                  ),
+                _showTemporaryMessage(
+                  context: context,
+                  message:
+                      'Le Mode Urgence sera relié ici.',
                 );
               },
             ),
@@ -302,52 +300,48 @@ class ChildProfilePage extends StatelessWidget {
               icon: Icons.description,
               color: Colors.green,
               title:
-                  "Informations pour les secours",
+                  'Informations pour les secours',
               subtitle:
-                  "Afficher la fiche destinée aux services de secours.",
+                  'Afficher la fiche destinée aux services de secours.',
               onPressed: () {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      "La fiche de transmission sera reliée ici.",
-                    ),
-                  ),
+                _showTemporaryMessage(
+                  context: context,
+                  message:
+                      'La fiche destinée aux secours sera reliée ici.',
                 );
               },
             ),
 
-            const SizedBox(
-              height: 36,
-            ),
+            const SizedBox(height: 36),
 
             _sectionTitle(
-              "État du profil",
+              'État du profil',
             ),
 
             _statusLine(
-              completed: child
-                  .essentialInformationCompleted,
-              title:
-                  "Informations essentielles : complétées",
+              completed:
+                  child.essentialInformationCompleted,
+              completedText:
+                  'Informations essentielles : complétées',
+              incompleteText:
+                  'Informations essentielles : à compléter',
             ),
 
-            const SizedBox(
-              height: 12,
-            ),
+            const SizedBox(height: 12),
 
             _statusLine(
-              completed: child
-                  .activityProfileCompleted,
-              title:
-                  "Profil Activités : complété",
+              completed:
+                  child.activityProfileCompleted,
+              completedText:
+                  'Profil Activités : complété',
+              incompleteText:
+                  'Profil Activités : à compléter',
             ),
 
-            const SizedBox(
-              height: 36,
-            ),
-                        _sectionTitle(
-              "Partages",
+            const SizedBox(height: 36),
+
+            _sectionTitle(
+              'Partages',
             ),
 
             Card(
@@ -358,56 +352,45 @@ class ChildProfilePage extends StatelessWidget {
                   ),
                 ),
                 title: const Text(
-                  "Aucun partage actif",
+                  'Aucun partage actif',
                   style: TextStyle(
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 subtitle: const Text(
-                  "Vous pourrez partager le profil de votre enfant avec les personnes de votre choix.",
+                  'Vous pourrez partager le profil de votre enfant avec les personnes de votre choix.',
                 ),
                 trailing: const Icon(
                   Icons.chevron_right,
                 ),
                 onTap: () {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "La gestion des partages sera ajoutée prochainement.",
-                      ),
-                    ),
+                  _showTemporaryMessage(
+                    context: context,
+                    message:
+                        'La gestion des partages sera ajoutée prochainement.',
                   );
                 },
               ),
             ),
 
-            const SizedBox(
-              height: 36,
-            ),
+            const SizedBox(height: 36),
 
             _sectionTitle(
-              "Modifier le profil",
+              'Modifier le profil',
             ),
 
             _actionButton(
               icon: Icons.edit_document,
               color: Colors.orange,
               title:
-                  "Informations essentielles",
+                  'Informations essentielles',
               subtitle:
-                  "Modifier les informations destinées aux secours.",
+                  'Modifier les informations destinées aux secours.',
               onPressed: () {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      "La modification des informations essentielles sera reliée ici.",
-                    ),
-                  ),
+                _showTemporaryMessage(
+                  context: context,
+                  message:
+                      'La modification des informations essentielles sera reliée ici.',
                 );
               },
             ),
@@ -415,28 +398,22 @@ class ChildProfilePage extends StatelessWidget {
             _actionButton(
               icon: Icons.edit,
               color: Colors.deepPurple,
-              title:
-                  "Profil Activités",
+              title: 'Profil Activités',
               subtitle:
-                  "Modifier les informations utilisées pour préparer les activités.",
+                  'Modifier les informations utilisées pour préparer les activités.',
               onPressed: () {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      "La modification du profil Activités sera reliée ici.",
-                    ),
-                  ),
+                _showTemporaryMessage(
+                  context: context,
+                  message:
+                      'La modification du profil Activités sera reliée ici.',
                 );
               },
             ),
 
-            const SizedBox(
-              height: 36,
-            ),
-                        _sectionTitle(
-              "Gestion",
+            const SizedBox(height: 36),
+
+            _sectionTitle(
+              'Gestion',
             ),
 
             Card(
@@ -447,35 +424,28 @@ class ChildProfilePage extends StatelessWidget {
                   ),
                 ),
                 title: const Text(
-                  "Supprimer le profil",
+                  'Supprimer le profil',
                   style: TextStyle(
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 subtitle: const Text(
-                  "Cette action supprimera définitivement le profil de cet enfant.",
+                  'Cette action supprimera définitivement le profil de cet enfant.',
                 ),
                 trailing: const Icon(
                   Icons.chevron_right,
                 ),
                 onTap: () {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "La suppression du profil sera ajoutée ultérieurement.",
-                      ),
-                    ),
+                  _showTemporaryMessage(
+                    context: context,
+                    message:
+                        'La suppression du profil sera ajoutée ultérieurement.',
                   );
                 },
               ),
             ),
 
-            const SizedBox(
-              height: 40,
-            ),
+            const SizedBox(height: 40),
           ],
         ),
       ),

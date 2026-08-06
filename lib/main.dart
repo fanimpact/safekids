@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
+import 'demo/demo_children.dart';
 import 'welcome_page.dart';
 
 void main() {
-  runApp(const SafeKidsApp());
+  DemoChildren.load();
+
+  runApp(
+    const SafeKidsApp(),
+  );
 }
 
 class SafeKidsApp extends StatelessWidget {
