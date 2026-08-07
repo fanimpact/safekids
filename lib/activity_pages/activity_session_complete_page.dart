@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../models/activity_session/activity_session_data.dart';
-import '../repositories/activity_session_repository.dart';
-import 'activities_home_page.dart';
+import 'activity_child_selection_page.dart';
 
-class ActivitySessionCompletePage extends StatelessWidget {
+class ActivitySessionCompletePage
+    extends StatelessWidget {
   final ActivitySessionData sessionData;
 
   const ActivitySessionCompletePage({
@@ -12,18 +12,17 @@ class ActivitySessionCompletePage extends StatelessWidget {
     required this.sessionData,
   });
 
-  void _finish(BuildContext context) {
-    ActivitySessionRepository.instance.addActivity(
-      sessionData,
-    );
-
-    Navigator.pushAndRemoveUntil(
+  void _continue(
+    BuildContext context,
+  ) {
+    Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) =>
-            const ActivitiesHomePage(),
+            ActivityChildSelectionPage(
+          sessionData: sessionData,
+        ),
       ),
-      (route) => route.isFirst,
     );
   }
 
@@ -62,7 +61,8 @@ class ActivitySessionCompletePage extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              if (sessionData.activityName != null &&
+              if (sessionData.activityName !=
+                      null &&
                   sessionData.activityName!
                       .isNotEmpty)
                 Text(
@@ -76,7 +76,7 @@ class ActivitySessionCompletePage extends StatelessWidget {
               const SizedBox(height: 12),
 
               const Text(
-                'Cette activité sera enregistrée lorsque vous appuierez sur Terminer.',
+                'Vous allez maintenant sélectionner les enfants concernés par cette activité.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -86,9 +86,10 @@ class ActivitySessionCompletePage extends StatelessWidget {
               const Spacer(),
 
               FilledButton(
-                onPressed: () => _finish(context),
+                onPressed: () =>
+                    _continue(context),
                 child: const Text(
-                  'Terminer',
+                  'Choisir les enfants',
                 ),
               ),
             ],

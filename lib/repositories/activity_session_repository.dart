@@ -13,11 +13,13 @@ class ActivitySessionRepository {
       List.unmodifiable(_activities);
 
   void addActivity(
-    ActivitySessionData activity,
-  ) {
+    ActivitySessionData activity, {
+    List<String> childIds = const [],
+  }) {
     _activities.add(
       CompleteActivitySessionData(
         activity: activity,
+        childIds: List.unmodifiable(childIds),
       ),
     );
   }
