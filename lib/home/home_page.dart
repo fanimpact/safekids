@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../activity_pages/activity_session_start_page.dart';
 import '../children/children_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -18,19 +19,32 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  void _openActivityCreation(
+    BuildContext context,
+  ) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            const ActivitySessionStartPage(),
+      ),
+    );
+  }
+
   void _openChildrenPage(BuildContext context) {
     Navigator.pop(context);
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const ChildrenPage(),
+        builder: (context) =>
+            const ChildrenPage(),
       ),
     );
   }
 
   void _openMenu(BuildContext context) {
-    showModalBottomSheet<void>(
+    showModalBottomSheet(
       context: context,
       showDragHandle: true,
       builder: (context) {
@@ -52,20 +66,25 @@ class HomePage extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
                 ListTile(
-                  leading: const Icon(Icons.child_care),
-                  title: const Text('Mes enfants'),
+                  leading: const Icon(
+                    Icons.child_care,
+                  ),
+                  title: const Text(
+                    'Mes enfants',
+                  ),
                   onTap: () {
                     _openChildrenPage(context);
                   },
                 ),
-
                 ListTile(
-                  leading: const Icon(Icons.share_outlined),
-                  title: const Text('Partages actifs'),
+                  leading: const Icon(
+                    Icons.share_outlined,
+                  ),
+                  title: const Text(
+                    'Partages actifs',
+                  ),
                   onTap: () {
                     Navigator.pop(context);
 
@@ -75,10 +94,13 @@ class HomePage extends StatelessWidget {
                     );
                   },
                 ),
-
                 ListTile(
-                  leading: const Icon(Icons.settings_outlined),
-                  title: const Text('Paramètres'),
+                  leading: const Icon(
+                    Icons.settings_outlined,
+                  ),
+                  title: const Text(
+                    'Paramètres',
+                  ),
                   onTap: () {
                     Navigator.pop(context);
 
@@ -103,7 +125,8 @@ class HomePage extends StatelessWidget {
     bool outlined = false,
   }) {
     final child = Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment:
+          MainAxisAlignment.center,
       children: [
         Icon(icon),
         const SizedBox(width: 12),
@@ -161,7 +184,8 @@ class HomePage extends StatelessWidget {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment:
+                CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 28),
 
@@ -178,12 +202,10 @@ class HomePage extends StatelessWidget {
 
               _buildMainButton(
                 label: 'Préparer une activité',
-                icon: Icons.event_available_outlined,
+                icon:
+                    Icons.event_available_outlined,
                 onPressed: () {
-                  _showComingSoon(
-                    context,
-                    'La préparation d’une activité',
-                  );
+                  _openActivityCreation(context);
                 },
               ),
 
@@ -203,8 +225,10 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 18),
 
               _buildMainButton(
-                label: 'Informations pour les secours',
-                icon: Icons.medical_information_outlined,
+                label:
+                    'Informations pour les secours',
+                icon:
+                    Icons.medical_information_outlined,
                 onPressed: () {
                   _showComingSoon(
                     context,

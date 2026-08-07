@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/complete_child_profile_data.dart';
-import 'new_activity_page.dart';
+import 'activity_session_start_page.dart';
 import 'saved_activities_info_page.dart';
 
 class ActivitiesHomePage extends StatelessWidget {
@@ -32,9 +32,8 @@ class ActivitiesHomePage extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => NewActivityPage(
-          selectedChild: selectedChild,
-        ),
+        builder: (context) =>
+            const ActivitySessionStartPage(),
       ),
     );
   }
