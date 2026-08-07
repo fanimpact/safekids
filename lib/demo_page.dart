@@ -9,6 +9,7 @@ class DemoPage extends StatefulWidget {
 
 class _DemoPageState extends State<DemoPage> {
   final PageController _pageController = PageController();
+
   int _currentPage = 0;
 
   final List<Map<String, String>> _pages = [
@@ -72,7 +73,9 @@ class _DemoPageState extends State<DemoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Découvrir SafeKids'),
+        title: const Text(
+          'Découvrir SafeKids',
+        ),
       ),
       body: Column(
         children: [
@@ -86,8 +89,6 @@ class _DemoPageState extends State<DemoPage> {
                 });
               },
               itemBuilder: (context, index) {
-                final page = _pages[index];
-
                 return Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
@@ -97,21 +98,24 @@ class _DemoPageState extends State<DemoPage> {
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius:
+                                BorderRadius.circular(
+                              20,
+                            ),
                           ),
-  child: ClipRRect(
-  borderRadius: BorderRadius.circular(20),
-  child: Image.asset(
-    'lib/assets/story_${index + 1}.png.png',
-    fit: BoxFit.contain,
-    width: double.infinity,
-  ),
-),
+                          child: ClipRRect(
+                            borderRadius:
+                                BorderRadius.circular(
+                              20,
+                            ),
+                            child: Image.asset(
+                              'lib/assets/story_${index + 1}.png.png',
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                            ),
+                          ),
                         ),
                       ),
-     
-                     
-                      
                     ],
                   ),
                 );
@@ -119,18 +123,24 @@ class _DemoPageState extends State<DemoPage> {
             ),
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment:
+                MainAxisAlignment.center,
             children: List.generate(
               _pages.length,
               (index) => Container(
-                width: index == _currentPage ? 22 : 8,
+                width:
+                    index == _currentPage ? 22 : 8,
                 height: 8,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
+                margin:
+                    const EdgeInsets.symmetric(
+                  horizontal: 4,
+                ),
                 decoration: BoxDecoration(
                   color: index == _currentPage
                       ? Colors.blue
                       : Colors.grey.shade400,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius:
+                      BorderRadius.circular(10),
                 ),
               ),
             ),
@@ -143,17 +153,23 @@ class _DemoPageState extends State<DemoPage> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _previousPage,
-                      child: const Text('Précédent'),
+                      child: const Text(
+                        'Précédent',
+                      ),
                     ),
                   ),
-                if (_currentPage > 0) const SizedBox(width: 12),
+                if (_currentPage > 0)
+                  const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton(
-                    onPressed: _currentPage == _pages.length - 1
-                        ? () {}
-                        : _nextPage,
+                    onPressed:
+                        _currentPage ==
+                                _pages.length - 1
+                            ? () {}
+                            : _nextPage,
                     child: Text(
-                      _currentPage == _pages.length - 1
+                      _currentPage ==
+                              _pages.length - 1
                           ? 'Créer gratuitement la fiche de mon enfant'
                           : 'Suivant',
                       textAlign: TextAlign.center,

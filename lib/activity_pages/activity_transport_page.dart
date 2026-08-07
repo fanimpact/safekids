@@ -26,7 +26,8 @@ class _ActivityTransportPageState
   void initState() {
     super.initState();
 
-    _hasTransport = widget.sessionData.hasTransport;
+    _hasTransport =
+        widget.sessionData.hasTransport;
 
     _transportTypes.addAll(
       widget.sessionData.transportTypes,
@@ -125,27 +126,31 @@ class _ActivityTransportPageState
               ),
             ),
 
-            RadioListTile<bool>(
-              title: const Text('Oui'),
-              value: true,
-              groupValue: _hasTransport,
-              onChanged: (value) {
-                setState(() {
-                  _hasTransport = value;
-                });
-              },
-            ),
+            const SizedBox(height: 8),
 
-            RadioListTile<bool>(
-              title: const Text('Non'),
-              value: false,
+            RadioGroup<bool>(
               groupValue: _hasTransport,
               onChanged: (value) {
                 setState(() {
                   _hasTransport = value;
-                  _transportTypes.clear();
+
+                  if (value != true) {
+                    _transportTypes.clear();
+                  }
                 });
               },
+              child: const Column(
+                children: [
+                  RadioListTile<bool>(
+                    title: Text('Oui'),
+                    value: true,
+                  ),
+                  RadioListTile<bool>(
+                    title: Text('Non'),
+                    value: false,
+                  ),
+                ],
+              ),
             ),
 
             if (_hasTransport == true) ...[

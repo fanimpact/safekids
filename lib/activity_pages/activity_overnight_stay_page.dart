@@ -116,17 +116,22 @@ class _ActivityOvernightStayPageState
             fontWeight: FontWeight.bold,
           ),
         ),
-        RadioListTile<bool>(
-          title: const Text('Oui'),
-          value: true,
+        const SizedBox(height: 8),
+        RadioGroup<bool>(
           groupValue: value,
           onChanged: onChanged,
-        ),
-        RadioListTile<bool>(
-          title: const Text('Non'),
-          value: false,
-          groupValue: value,
-          onChanged: onChanged,
+          child: const Column(
+            children: [
+              RadioListTile<bool>(
+                title: Text('Oui'),
+                value: true,
+              ),
+              RadioListTile<bool>(
+                title: Text('Non'),
+                value: false,
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -148,23 +153,26 @@ class _ActivityOvernightStayPageState
             fontWeight: FontWeight.bold,
           ),
         ),
-        RadioListTile<ActivityThreeStateAnswer>(
-          title: const Text('Oui'),
-          value: ActivityThreeStateAnswer.yes,
+        const SizedBox(height: 8),
+        RadioGroup<ActivityThreeStateAnswer>(
           groupValue: value,
           onChanged: onChanged,
-        ),
-        RadioListTile<ActivityThreeStateAnswer>(
-          title: const Text('Non'),
-          value: ActivityThreeStateAnswer.no,
-          groupValue: value,
-          onChanged: onChanged,
-        ),
-        RadioListTile<ActivityThreeStateAnswer>(
-          title: const Text('Je ne sais pas'),
-          value: ActivityThreeStateAnswer.unknown,
-          groupValue: value,
-          onChanged: onChanged,
+          child: const Column(
+            children: [
+              RadioListTile<ActivityThreeStateAnswer>(
+                title: Text('Oui'),
+                value: ActivityThreeStateAnswer.yes,
+              ),
+              RadioListTile<ActivityThreeStateAnswer>(
+                title: Text('Non'),
+                value: ActivityThreeStateAnswer.no,
+              ),
+              RadioListTile<ActivityThreeStateAnswer>(
+                title: Text('Je ne sais pas'),
+                value: ActivityThreeStateAnswer.unknown,
+              ),
+            ],
+          ),
         ),
       ],
     );

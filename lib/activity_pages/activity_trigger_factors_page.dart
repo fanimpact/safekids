@@ -86,17 +86,22 @@ class _ActivityTriggerFactorsPageState
             fontWeight: FontWeight.bold,
           ),
         ),
-        RadioListTile<bool>(
-          title: const Text('Oui'),
-          value: true,
+        const SizedBox(height: 8),
+        RadioGroup<bool>(
           groupValue: value,
           onChanged: onChanged,
-        ),
-        RadioListTile<bool>(
-          title: const Text('Non'),
-          value: false,
-          groupValue: value,
-          onChanged: onChanged,
+          child: const Column(
+            children: [
+              RadioListTile<bool>(
+                title: Text('Oui'),
+                value: true,
+              ),
+              RadioListTile<bool>(
+                title: Text('Non'),
+                value: false,
+              ),
+            ],
+          ),
         ),
       ],
     );

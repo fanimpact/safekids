@@ -61,8 +61,7 @@ class _ActivityWaterPageState
     }
 
     if (_childrenWillEnterWater == true &&
-        _swimmingSupervisedByLifeguard ==
-            null) {
+        _swimmingSupervisedByLifeguard == null) {
       _showMissingAnswer();
       return;
     }
@@ -110,18 +109,23 @@ class _ActivityWaterPageState
           ),
         ),
 
-        RadioListTile<bool>(
-          title: const Text('Oui'),
-          value: true,
-          groupValue: value,
-          onChanged: onChanged,
-        ),
+        const SizedBox(height: 8),
 
-        RadioListTile<bool>(
-          title: const Text('Non'),
-          value: false,
+        RadioGroup<bool>(
           groupValue: value,
           onChanged: onChanged,
+          child: const Column(
+            children: [
+              RadioListTile<bool>(
+                title: Text('Oui'),
+                value: true,
+              ),
+              RadioListTile<bool>(
+                title: Text('Non'),
+                value: false,
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -148,8 +152,7 @@ class _ActivityWaterPageState
                   _hasWaterNearby = value;
 
                   if (value != true) {
-                    _childrenWillEnterWater =
-                        null;
+                    _childrenWillEnterWater = null;
 
                     _swimmingSupervisedByLifeguard =
                         null;

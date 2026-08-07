@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/activity_session/activity_session_data.dart';
+import '../repositories/activity_session_repository.dart';
+import 'activities_home_page.dart';
 
 class ActivitySessionCompletePage extends StatelessWidget {
   final ActivitySessionData sessionData;
@@ -11,7 +13,16 @@ class ActivitySessionCompletePage extends StatelessWidget {
   });
 
   void _finish(BuildContext context) {
-    Navigator.of(context).popUntil(
+    ActivitySessionRepository.instance.addActivity(
+      sessionData,
+    );
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            const ActivitiesHomePage(),
+      ),
       (route) => route.isFirst,
     );
   }
@@ -61,6 +72,16 @@ class ActivitySessionCompletePage extends StatelessWidget {
                     fontSize: 18,
                   ),
                 ),
+
+              const SizedBox(height: 12),
+
+              const Text(
+                'Cette activité sera enregistrée lorsque vous appuierez sur Terminer.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                ),
+              ),
 
               const Spacer(),
 

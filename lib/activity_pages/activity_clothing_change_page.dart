@@ -74,26 +74,27 @@ class _ActivityClothingChangePageState
               ),
             ),
 
-            RadioListTile<bool>(
-              title: const Text('Oui'),
-              value: true,
-              groupValue: _hasClothingChange,
-              onChanged: (value) {
-                setState(() {
-                  _hasClothingChange = value;
-                });
-              },
-            ),
+            const SizedBox(height: 8),
 
-            RadioListTile<bool>(
-              title: const Text('Non'),
-              value: false,
+            RadioGroup<bool>(
               groupValue: _hasClothingChange,
               onChanged: (value) {
                 setState(() {
                   _hasClothingChange = value;
                 });
               },
+              child: const Column(
+                children: [
+                  RadioListTile<bool>(
+                    title: Text('Oui'),
+                    value: true,
+                  ),
+                  RadioListTile<bool>(
+                    title: Text('Non'),
+                    value: false,
+                  ),
+                ],
+              ),
             ),
 
             const SizedBox(height: 36),
