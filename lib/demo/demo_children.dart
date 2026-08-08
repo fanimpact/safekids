@@ -164,11 +164,12 @@ class DemoChildren {
       ),
       overnightStay:
           OvernightStayData(
-        requiresAdaptations: false,
-        usesNightDevice: false,
-        nightDeviceDetails: null,
-        requiresElectricity: false,
-        powerFailureIsCritical: false,
+        requiresAdaptations: true,
+        usesNightDevice: true,
+        nightDeviceDetails:
+            'Machine pour l’apnée du sommeil',
+        requiresElectricity: true,
+        powerFailureIsCritical: true,
         requiresNightSupervision: false,
         nightSupervisionDetails: null,
       ),
@@ -345,10 +346,11 @@ class DemoChildren {
       ),
       overnightStay:
           OvernightStayData(
-        requiresAdaptations: false,
-        usesNightDevice: false,
-        nightDeviceDetails: null,
-        requiresElectricity: false,
+        requiresAdaptations: true,
+        usesNightDevice: true,
+        nightDeviceDetails:
+            'Machine pour l’apnée du sommeil',
+        requiresElectricity: true,
         powerFailureIsCritical: false,
         requiresNightSupervision: false,
         nightSupervisionDetails: null,

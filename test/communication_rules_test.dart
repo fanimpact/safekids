@@ -1,0 +1,211 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:safekids/models/activity_profile_data.dart';
+import 'package:safekids/models/aquatic_activity_data.dart';
+import 'package:safekids/models/child_profile_data.dart';
+import 'package:safekids/models/clothing_data.dart';
+import 'package:safekids/models/communication_data.dart';
+import 'package:safekids/models/complete_child_profile_data.dart';
+import 'package:safekids/models/identity_data.dart';
+import 'package:safekids/models/other_information_data.dart';
+import 'package:safekids/models/overnight_stay_data.dart';
+import 'package:safekids/models/primary_care_doctor_data.dart';
+import 'package:safekids/models/safety_data.dart';
+import 'package:safekids/models/toilets_data.dart';
+import 'package:safekids/models/transitions_data.dart';
+import 'package:safekids/models/transport_data.dart';
+import 'package:safekids/models/trigger_factor_data.dart';
+import 'package:safekids/models/walking_effort_data.dart';
+import 'package:safekids/recommendation_engine/rules/communication_rules.dart';
+
+CompleteChildProfileData _createTestChild({
+  required String childId,
+  bool useSimpleInstructions = false,
+  bool mayAppearToUnderstand = false,
+  bool verifyUnderstandingIndividually = false,
+  bool usesCommunicationSupport = false,
+  String? communicationSupportDetails,
+}) {
+  return CompleteChildProfileData(
+    essentialInformation: ChildProfileData(
+      childId: childId,
+      userId: 'test-family',
+      identity: IdentityData(
+        firstName: 'Test',
+        lastName: 'Enfant',
+        dateOfBirth: null,
+        heightCm: null,
+        weightKg: null,
+        hasDiagnosedPathologies: false,
+      ),
+      pathologies: [],
+      medicalEvents: [],
+      triggerFactors: TriggerFactorData(),
+      dailyTreatments: [],
+      emergencyTreatments: [],
+      allergies: [],
+      medicalDevices: [],
+      contacts: [],
+      primaryCareDoctor: PrimaryCareDoctorData(
+        name: null,
+        workplace: null,
+        phoneNumber: null,
+      ),
+    ),
+    activityProfile: ActivityProfileData(
+      aquaticActivity: AquaticActivityData(),
+      transport: TransportData(),
+      walkingEffort: WalkingEffortData(),
+      overnightStay: OvernightStayData(),
+      clothing: ClothingData(),
+      toilets: ToiletsData(),
+      communication: CommunicationData(
+        requiresAdaptations: true,
+        useSimpleInstructions: useSimpleInstructions,
+        mayAppearToUnderstand: mayAppearToUnderstand,
+        verifyUnderstandingIndividually:
+            verifyUnderstandingIndividually,
+        usesCommunicationSupport: usesCommunicationSupport,
+        communicationSupportDetails:
+            communicationSupportDetails,
+      ),
+      transitions: TransitionsData(),
+      safety: SafetyData(),
+      otherInformation: OtherInformationData(),
+    ),
+  );
+}
+
+void main() {
+  const rules = CommunicationRules();
+
+  test(
+    'Communication - consignes simples',
+    () {
+      final child = _createTestChild(
+        childId: 'test-simple-instructions',
+        useSimpleInstructions: true,
+      );
+
+      final recommendations = rules.evaluate(child);
+
+      final ids = recommendations
+          .map((recommendation) => recommendation.id)
+          .toSet();
+
+      expect(
+        ids,
+        contains('communication_simple_instructions'),
+      );
+    },
+  );
+
+  test(
+    'Communication - enfant pouvant sembler avoir compris',
+    () {
+      final child = _createTestChild(
+        childId: 'test-may-understand',
+        mayAppearToUnderstand: true,
+      );
+
+      final recommendations = rules.evaluate(child);
+
+      final ids = recommendations
+          .map((recommendation) => recommendation.id)
+          .toSet();
+
+      expect(
+        ids,
+        contains(
+          'communication_may_appear_to_understand',
+        ),
+      );
+    },
+  );
+
+  test(
+    'Communication - vérifier individuellement la compréhension',
+    () {
+      final child = _createTestChild(
+        childId: 'test-verify-understanding',
+        verifyUnderstandingIndividually: true,
+      );
+
+      final recommendations = rules.evaluate(child);
+
+      final ids = recommendations
+          .map((recommendation) => recommendation.id)
+          .toSet();
+
+      expect(
+        ids,
+        contains(
+          'communication_verify_understanding',
+        ),
+      );
+    },
+  );
+
+  test(
+    'Communication - support spécifique repris tel quel',
+    () {
+      final child = _createTestChild(
+        childId: 'test-support',
+        usesCommunicationSupport: true,
+        communicationSupportDetails:
+            'Tablette avec pictogrammes',
+      );
+
+      final recommendations = rules.evaluate(child);
+
+      final support = recommendations.firstWhere(
+        (recommendation) =>
+            recommendation.id == 'communication_support',
+      );
+
+      expect(
+        support.text,
+        'Tablette avec pictogrammes',
+      );
+    },
+  );
+
+  test(
+    'Communication - support vide ne génère rien',
+    () {
+      final child = _createTestChild(
+        childId: 'test-empty-support',
+        usesCommunicationSupport: true,
+        communicationSupportDetails: '   ',
+      );
+
+      final recommendations = rules.evaluate(child);
+
+      final supportRecommendations =
+          recommendations.where(
+        (recommendation) =>
+            recommendation.id == 'communication_support',
+      );
+
+      expect(
+        supportRecommendations,
+        isEmpty,
+      );
+    },
+  );
+
+  test(
+    'Communication - aucune donnée ne génère aucune recommandation',
+    () {
+      final child = _createTestChild(
+        childId: 'test-no-communication',
+      );
+
+      final recommendations = rules.evaluate(child);
+
+      expect(
+        recommendations,
+        isEmpty,
+      );
+    },
+  );
+}
