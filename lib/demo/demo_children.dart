@@ -65,7 +65,10 @@ class DemoChildren {
       medicalEvents: [],
       triggerFactors: TriggerFactorData(
         hasTriggerFactors: true,
-        flashingLights: false,
+
+        flashingLights: true,
+        requiresGlassesOutdoors: true,
+
         heat: true,
         fatigueOrLackOfSleep: true,
         noise: false,
@@ -73,16 +76,20 @@ class DemoChildren {
         confinedSpaces: false,
         physicalEffort: false,
         stressOrStrongEmotions: true,
+
         waterContact: true,
         waterVigilance:
             WaterVigilance.cannotSwim,
         otherWaterVigilance: null,
+
         animals: false,
         animalVigilance: null,
         otherAnimalVigilance: null,
+
         height: false,
         heightVigilance: null,
         otherHeightVigilance: null,
+
         other: null,
       ),
       dailyTreatments: [],
@@ -115,6 +122,12 @@ class DemoChildren {
       aquaticActivity:
           AquaticActivityData(
         requiresAdaptations: true,
+        mayJumpIntoWater: false,
+        canSwim: true,
+        requiresFlotationVestNearWater:
+            false,
+        requiresDedicatedAdultNearWater:
+            true,
         requiresSpecialEquipment: false,
         specialEquipmentDetails: null,
         requiresAdaptedSupervision: true,
@@ -134,9 +147,10 @@ class DemoChildren {
       ),
       walkingEffort:
           WalkingEffortData(
-        requiresAdaptations: false,
-        requiresActivityAdjustment: false,
-        activityAdjustmentDetails: null,
+        prolongedWalkingRequiresVigilance:
+            false,
+        intensePhysicalEffortRequiresVigilance:
+            true,
       ),
       overnightStay:
           OvernightStayData(
@@ -172,8 +186,6 @@ class DemoChildren {
       safety: SafetyData(
         requiresAdaptations: true,
         mayLeaveGroupSuddenly: false,
-        cannotSwim: true,
-        waterDanger: true,
         requiresSafetyEquipment: false,
         safetyEquipmentDetails: null,
       ),
@@ -212,7 +224,10 @@ class DemoChildren {
       medicalEvents: [],
       triggerFactors: TriggerFactorData(
         hasTriggerFactors: true,
+
         flashingLights: false,
+        requiresGlassesOutdoors: false,
+
         heat: false,
         fatigueOrLackOfSleep: false,
         noise: false,
@@ -220,16 +235,20 @@ class DemoChildren {
         confinedSpaces: false,
         physicalEffort: false,
         stressOrStrongEmotions: false,
+
         waterContact: true,
         waterVigilance:
             WaterVigilance.cannotSwim,
         otherWaterVigilance: null,
+
         animals: false,
         animalVigilance: null,
         otherAnimalVigilance: null,
+
         height: false,
         heightVigilance: null,
         otherHeightVigilance: null,
+
         other: null,
       ),
       dailyTreatments: [],
@@ -275,6 +294,12 @@ class DemoChildren {
       aquaticActivity:
           AquaticActivityData(
         requiresAdaptations: false,
+        mayJumpIntoWater: false,
+        canSwim: true,
+        requiresFlotationVestNearWater:
+            false,
+        requiresDedicatedAdultNearWater:
+            false,
         requiresSpecialEquipment: false,
         specialEquipmentDetails: null,
         requiresAdaptedSupervision: false,
@@ -294,9 +319,10 @@ class DemoChildren {
       ),
       walkingEffort:
           WalkingEffortData(
-        requiresAdaptations: false,
-        requiresActivityAdjustment: false,
-        activityAdjustmentDetails: null,
+        prolongedWalkingRequiresVigilance:
+            false,
+        intensePhysicalEffortRequiresVigilance:
+            false,
       ),
       overnightStay:
           OvernightStayData(
@@ -332,8 +358,6 @@ class DemoChildren {
       safety: SafetyData(
         requiresAdaptations: true,
         mayLeaveGroupSuddenly: false,
-        cannotSwim: true,
-        waterDanger: true,
         requiresSafetyEquipment: false,
         safetyEquipmentDetails: null,
       ),

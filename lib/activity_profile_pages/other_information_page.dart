@@ -51,7 +51,9 @@ class _OtherInformationPageState
     super.dispose();
   }
 
-  void _updateHasOtherInformation(bool value) {
+  void _updateHasOtherInformation(
+    bool value,
+  ) {
     final data = widget
         .activityProfileController
         .draft
@@ -82,7 +84,9 @@ class _OtherInformationPageState
             .draft
             .otherInformation
             .details =
-        trimmedValue.isEmpty ? null : trimmedValue;
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
   }
 
   void _finish() {
@@ -90,14 +94,18 @@ class _OtherInformationPageState
         widget.activityProfileController;
 
     final childId =
-        activityProfileController.draft.childId;
+        activityProfileController
+            .draft
+            .childId;
 
     final activityProfile =
         activityProfileController
             .validateAndGetProfile();
 
-    if (childId == null || childId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+    if (childId == null ||
+        childId.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             'Impossible de retrouver le profil de l’enfant.',
@@ -108,7 +116,8 @@ class _OtherInformationPageState
       return;
     }
 
-    ChildRepository.instance.saveActivityProfile(
+    ChildRepository.instance
+        .saveActivityProfile(
       childId: childId,
       activityProfile: activityProfile,
     );
@@ -136,7 +145,8 @@ class _OtherInformationPageState
           SkYesNoField(
             label:
                 "Y a-t-il une autre information importante concernant l'accompagnement de votre enfant que nous n'avons pas abordée ?",
-            value: _hasOtherInformation,
+            value:
+                _hasOtherInformation,
             onChanged:
                 _updateHasOtherInformation,
           ),
@@ -162,6 +172,16 @@ class _OtherInformationPageState
               ),
             ),
           ],
+
+          const SizedBox(height: 32),
+
+          const Text(
+            "Important : tout matériel ou équipement spécifique indiqué dans ce questionnaire doit être fourni par le parent ou le responsable légal. Il n'est pas à la charge de l'accompagnant.",
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
 
           const SizedBox(height: 32),
 

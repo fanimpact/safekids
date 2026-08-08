@@ -1,6 +1,13 @@
 class AquaticActivityData {
   bool requiresAdaptations;
 
+  // À proximité d'un point d'eau
+  bool mayJumpIntoWater;
+  bool canSwim;
+  bool requiresFlotationVestNearWater;
+  bool requiresDedicatedAdultNearWater;
+
+  // Baignade
   bool requiresSpecialEquipment;
   String? specialEquipmentDetails;
 
@@ -14,6 +21,10 @@ class AquaticActivityData {
 
   AquaticActivityData({
     this.requiresAdaptations = false,
+    this.mayJumpIntoWater = false,
+    this.canSwim = false,
+    this.requiresFlotationVestNearWater = false,
+    this.requiresDedicatedAdultNearWater = false,
     this.requiresSpecialEquipment = false,
     this.specialEquipmentDetails,
     this.requiresAdaptedSupervision = false,

@@ -23,6 +23,11 @@ class _AquaticActivityPageState
     extends State<AquaticActivityPage> {
   late bool _requiresAdaptations;
 
+  late bool _mayJumpIntoWater;
+  late bool _canSwim;
+  late bool _requiresFlotationVestNearWater;
+  late bool _requiresDedicatedAdultNearWater;
+
   late bool _requiresSpecialEquipment;
   late bool _requiresAdaptedSupervision;
   late bool _notifyLifeguard;
@@ -47,7 +52,20 @@ class _AquaticActivityPageState
         .draft
         .aquaticActivity;
 
-    _requiresAdaptations = data.requiresAdaptations;
+    _requiresAdaptations =
+        data.requiresAdaptations;
+
+    _mayJumpIntoWater =
+        data.mayJumpIntoWater;
+
+    _canSwim =
+        data.canSwim;
+
+    _requiresFlotationVestNearWater =
+        data.requiresFlotationVestNearWater;
+
+    _requiresDedicatedAdultNearWater =
+        data.requiresDedicatedAdultNearWater;
 
     _requiresSpecialEquipment =
         data.requiresSpecialEquipment;
@@ -55,7 +73,8 @@ class _AquaticActivityPageState
     _requiresAdaptedSupervision =
         data.requiresAdaptedSupervision;
 
-    _notifyLifeguard = data.notifyLifeguard;
+    _notifyLifeguard =
+        data.notifyLifeguard;
 
     _requiresDedicatedAdult =
         data.requiresDedicatedAdult;
@@ -88,42 +107,89 @@ class _AquaticActivityPageState
     super.dispose();
   }
 
-  void _updateRequiresAdaptations(bool value) {
+  void _updateRequiresAdaptations(
+    bool value,
+  ) {
+    setState(() {
+      _requiresAdaptations = value;
+    });
+
+    widget
+        .activityProfileController
+        .draft
+        .aquaticActivity
+        .requiresAdaptations = value;
+  }
+
+  void _updateMayJumpIntoWater(
+    bool value,
+  ) {
+    setState(() {
+      _mayJumpIntoWater = value;
+    });
+
+    widget
+        .activityProfileController
+        .draft
+        .aquaticActivity
+        .mayJumpIntoWater = value;
+  }
+
+  void _updateCanSwim(
+    bool value,
+  ) {
     final data = widget
         .activityProfileController
         .draft
         .aquaticActivity;
 
     setState(() {
-      _requiresAdaptations = value;
+      _canSwim = value;
 
-      if (!value) {
-        _requiresSpecialEquipment = false;
-        _requiresAdaptedSupervision = false;
-        _notifyLifeguard = false;
-        _requiresDedicatedAdult = false;
-        _requiresOtherAdaptation = false;
-
-        _specialEquipmentController.clear();
-        _otherSupervisionController.clear();
-        _otherAdaptationController.clear();
+      if (value) {
+        _requiresFlotationVestNearWater =
+            false;
       }
     });
 
-    data.requiresAdaptations = value;
+    data.canSwim = value;
 
-    if (!value) {
-      data.requiresSpecialEquipment = false;
-      data.specialEquipmentDetails = null;
-
-      data.requiresAdaptedSupervision = false;
-      data.notifyLifeguard = false;
-      data.requiresDedicatedAdult = false;
-      data.otherSupervisionDetails = null;
-
-      data.requiresOtherAdaptation = false;
-      data.otherAdaptationDetails = null;
+    if (value) {
+      data.requiresFlotationVestNearWater =
+          false;
     }
+  }
+
+  void _updateRequiresFlotationVestNearWater(
+    bool value,
+  ) {
+    setState(() {
+      _requiresFlotationVestNearWater =
+          value;
+    });
+
+    widget
+            .activityProfileController
+            .draft
+            .aquaticActivity
+            .requiresFlotationVestNearWater =
+        value;
+  }
+
+  void _updateRequiresDedicatedAdultNearWater(
+    bool value,
+  ) {
+    setState(() {
+      _requiresDedicatedAdultNearWater =
+          value;
+    });
+
+    widget
+            .activityProfileController
+            .draft
+            .aquaticActivity
+            .requiresDedicatedAdultNearWater =
+        value;
   }
 
   void _updateRequiresSpecialEquipment(
@@ -159,7 +225,9 @@ class _AquaticActivityPageState
             .draft
             .aquaticActivity
             .specialEquipmentDetails =
-        trimmedValue.isEmpty ? null : trimmedValue;
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
   }
 
   void _updateRequiresAdaptedSupervision(
@@ -189,7 +257,9 @@ class _AquaticActivityPageState
     }
   }
 
-  void _updateNotifyLifeguard(bool? value) {
+  void _updateNotifyLifeguard(
+    bool? value,
+  ) {
     final newValue = value ?? false;
 
     setState(() {
@@ -229,7 +299,9 @@ class _AquaticActivityPageState
             .draft
             .aquaticActivity
             .otherSupervisionDetails =
-        trimmedValue.isEmpty ? null : trimmedValue;
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
   }
 
   void _updateRequiresOtherAdaptation(
@@ -265,18 +337,23 @@ class _AquaticActivityPageState
             .draft
             .aquaticActivity
             .otherAdaptationDetails =
-        trimmedValue.isEmpty ? null : trimmedValue;
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
   }
 
   void _continue() {
-    widget.activityProfileController.validateDraft();
+    widget.activityProfileController
+        .validateDraft();
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TransportPage(
+        builder: (context) =>
+            TransportPage(
           activityProfileController:
-              widget.activityProfileController,
+              widget
+                  .activityProfileController,
         ),
       ),
     );
@@ -302,10 +379,23 @@ class _AquaticActivityPageState
     );
   }
 
+  Widget _buildSectionTitle(
+    String title,
+  ) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
-      title: 'Activité aquatique',
+      title:
+          'Baignade / À proximité d’un point d’eau',
       subtitle:
           'Répondez aux questions concernant votre enfant.',
       child: Column(
@@ -314,112 +404,167 @@ class _AquaticActivityPageState
         children: [
           SkYesNoField(
             label:
-                'Votre enfant nécessite-t-il des adaptations particulières lors d’une activité aquatique, par rapport à un enfant de son âge ?',
+                'Votre enfant nécessite-t-il des adaptations particulières en présence d’un point d’eau (baignade ou hors baignade) ?',
             value: _requiresAdaptations,
             onChanged:
                 _updateRequiresAdaptations,
           ),
 
-          if (_requiresAdaptations) ...[
+          const SizedBox(height: 32),
+
+          _buildSectionTitle(
+            'À proximité d’un point d’eau',
+          ),
+
+          const SizedBox(height: 20),
+
+          SkYesNoField(
+            label:
+                'Votre enfant risque-t-il de se jeter dans l’eau ?',
+            value: _mayJumpIntoWater,
+            onChanged:
+                _updateMayJumpIntoWater,
+          ),
+
+          const SizedBox(height: 24),
+
+          SkYesNoField(
+            label:
+                'Votre enfant sait-il nager ?',
+            value: _canSwim,
+            onChanged:
+                _updateCanSwim,
+          ),
+
+          if (!_canSwim) ...[
             const SizedBox(height: 24),
 
             SkYesNoField(
               label:
-                  'Votre enfant nécessite-t-il un équipement particulier ?',
+                  'Votre enfant doit-il disposer d’un gilet de flottaison lorsqu’il se trouve à proximité d’un point d’eau ?',
               value:
-                  _requiresSpecialEquipment,
+                  _requiresFlotationVestNearWater,
               onChanged:
-                  _updateRequiresSpecialEquipment,
+                  _updateRequiresFlotationVestNearWater,
             ),
+          ],
 
-            if (_requiresSpecialEquipment) ...[
-              const SizedBox(height: 12),
+          const SizedBox(height: 24),
 
-              SkTextField(
-                label:
-                    'Équipement nécessaire',
-                controller:
-                    _specialEquipmentController,
-                onChanged:
-                    _updateSpecialEquipmentDetails,
-              ),
+          SkYesNoField(
+            label:
+                'Votre enfant a-t-il besoin d’un adulte dédié à proximité d’un point d’eau pour assurer sa sécurité ?',
+            value:
+                _requiresDedicatedAdultNearWater,
+            onChanged:
+                _updateRequiresDedicatedAdultNearWater,
+          ),
 
-              const SizedBox(height: 8),
+          const SizedBox(height: 36),
 
-              const Text(
-                'Exemples : bouchons d’oreilles, bonnet, lunettes spécifiques…',
-                style: TextStyle(
-                  fontSize: 14,
-                ),
-              ),
-            ],
+          _buildSectionTitle(
+            'Baignade',
+          ),
 
-            const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-            SkYesNoField(
+          SkYesNoField(
+            label:
+                'Votre enfant nécessite-t-il un équipement particulier ?',
+            value:
+                _requiresSpecialEquipment,
+            onChanged:
+                _updateRequiresSpecialEquipment,
+          ),
+
+          if (_requiresSpecialEquipment) ...[
+            const SizedBox(height: 12),
+
+            SkTextField(
               label:
-                  'Une adaptation particulière de la surveillance est-elle nécessaire ?',
-              value:
-                  _requiresAdaptedSupervision,
+                  'Équipement nécessaire',
+              controller:
+                  _specialEquipmentController,
               onChanged:
-                  _updateRequiresAdaptedSupervision,
+                  _updateSpecialEquipmentDetails,
             ),
 
-            if (_requiresAdaptedSupervision) ...[
-              const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
-              _buildCheckbox(
-                label:
-                    'Prévenir le maître-nageur',
-                value: _notifyLifeguard,
-                onChanged:
-                    _updateNotifyLifeguard,
+            const Text(
+              'Exemples : bouchons d’oreilles, bonnet, lunettes spécifiques…',
+              style: TextStyle(
+                fontSize: 14,
               ),
+            ),
+          ],
 
-              _buildCheckbox(
-                label:
-                    'Prévoir un adulte référent',
-                value:
-                    _requiresDedicatedAdult,
-                onChanged:
-                    _updateRequiresDedicatedAdult,
-              ),
+          const SizedBox(height: 24),
 
-              const SizedBox(height: 12),
+          SkYesNoField(
+            label:
+                'Une adaptation particulière de la surveillance est-elle nécessaire ?',
+            value:
+                _requiresAdaptedSupervision,
+            onChanged:
+                _updateRequiresAdaptedSupervision,
+          ),
 
-              SkTextField(
-                label:
-                    'Autre adaptation de la surveillance',
-                controller:
-                    _otherSupervisionController,
-                onChanged:
-                    _updateOtherSupervisionDetails,
-              ),
-            ],
+          if (_requiresAdaptedSupervision) ...[
+            const SizedBox(height: 12),
 
-            const SizedBox(height: 24),
-
-            SkYesNoField(
+            _buildCheckbox(
               label:
-                  'Une autre adaptation importante est-elle nécessaire ?',
+                  'Prévenir le maître-nageur',
               value:
-                  _requiresOtherAdaptation,
+                  _notifyLifeguard,
               onChanged:
-                  _updateRequiresOtherAdaptation,
+                  _updateNotifyLifeguard,
             ),
 
-            if (_requiresOtherAdaptation) ...[
-              const SizedBox(height: 12),
+            _buildCheckbox(
+              label:
+                  'Prévoir un adulte dédié',
+              value:
+                  _requiresDedicatedAdult,
+              onChanged:
+                  _updateRequiresDedicatedAdult,
+            ),
 
-              SkTextField(
-                label:
-                    'Précisez cette adaptation',
-                controller:
-                    _otherAdaptationController,
-                onChanged:
-                    _updateOtherAdaptationDetails,
-              ),
-            ],
+            const SizedBox(height: 12),
+
+            SkTextField(
+              label:
+                  'Autre adaptation de la surveillance',
+              controller:
+                  _otherSupervisionController,
+              onChanged:
+                  _updateOtherSupervisionDetails,
+            ),
+          ],
+
+          const SizedBox(height: 24),
+
+          SkYesNoField(
+            label:
+                'Une autre adaptation importante est-elle nécessaire ?',
+            value:
+                _requiresOtherAdaptation,
+            onChanged:
+                _updateRequiresOtherAdaptation,
+          ),
+
+          if (_requiresOtherAdaptation) ...[
+            const SizedBox(height: 12),
+
+            SkTextField(
+              label:
+                  'Précisez cette adaptation',
+              controller:
+                  _otherAdaptationController,
+              onChanged:
+                  _updateOtherAdaptationDetails,
+            ),
           ],
 
           const SizedBox(height: 30),

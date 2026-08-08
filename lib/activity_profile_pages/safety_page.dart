@@ -15,14 +15,13 @@ class SafetyPage extends StatefulWidget {
   });
 
   @override
-  State<SafetyPage> createState() => _SafetyPageState();
+  State<SafetyPage> createState() =>
+      _SafetyPageState();
 }
 
 class _SafetyPageState extends State<SafetyPage> {
   late bool _requiresAdaptations;
   late bool _mayLeaveGroupSuddenly;
-  late bool _cannotSwim;
-  late bool _waterDanger;
   late bool _requiresSafetyEquipment;
 
   late final TextEditingController
@@ -43,12 +42,6 @@ class _SafetyPageState extends State<SafetyPage> {
     _mayLeaveGroupSuddenly =
         data.mayLeaveGroupSuddenly;
 
-    _cannotSwim =
-        data.cannotSwim;
-
-    _waterDanger =
-        data.waterDanger;
-
     _requiresSafetyEquipment =
         data.requiresSafetyEquipment;
 
@@ -64,7 +57,9 @@ class _SafetyPageState extends State<SafetyPage> {
     super.dispose();
   }
 
-  void _updateRequiresAdaptations(bool value) {
+  void _updateRequiresAdaptations(
+    bool value,
+  ) {
     final data = widget
         .activityProfileController
         .draft
@@ -75,8 +70,6 @@ class _SafetyPageState extends State<SafetyPage> {
 
       if (!value) {
         _mayLeaveGroupSuddenly = false;
-        _cannotSwim = false;
-        _waterDanger = false;
         _requiresSafetyEquipment = false;
         _safetyEquipmentController.clear();
       }
@@ -86,8 +79,6 @@ class _SafetyPageState extends State<SafetyPage> {
 
     if (!value) {
       data.mayLeaveGroupSuddenly = false;
-      data.cannotSwim = false;
-      data.waterDanger = false;
       data.requiresSafetyEquipment = false;
       data.safetyEquipmentDetails = null;
     }
@@ -107,34 +98,6 @@ class _SafetyPageState extends State<SafetyPage> {
         .draft
         .safety
         .mayLeaveGroupSuddenly = newValue;
-  }
-
-  void _updateCannotSwim(bool? value) {
-    final newValue = value ?? false;
-
-    setState(() {
-      _cannotSwim = newValue;
-    });
-
-    widget
-        .activityProfileController
-        .draft
-        .safety
-        .cannotSwim = newValue;
-  }
-
-  void _updateWaterDanger(bool? value) {
-    final newValue = value ?? false;
-
-    setState(() {
-      _waterDanger = newValue;
-    });
-
-    widget
-        .activityProfileController
-        .draft
-        .safety
-        .waterDanger = newValue;
   }
 
   void _updateRequiresSafetyEquipment(
@@ -170,11 +133,14 @@ class _SafetyPageState extends State<SafetyPage> {
             .draft
             .safety
             .safetyEquipmentDetails =
-        trimmedValue.isEmpty ? null : trimmedValue;
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
   }
 
   void _continue() {
-    widget.activityProfileController.validateDraft();
+    widget.activityProfileController
+        .validateDraft();
 
     Navigator.push(
       context,
@@ -182,7 +148,8 @@ class _SafetyPageState extends State<SafetyPage> {
         builder: (context) =>
             OtherInformationPage(
           activityProfileController:
-              widget.activityProfileController,
+              widget
+                  .activityProfileController,
         ),
       ),
     );
@@ -221,7 +188,8 @@ class _SafetyPageState extends State<SafetyPage> {
           SkYesNoField(
             label:
                 'Votre enfant nécessite-t-il des adaptations particulières concernant sa sécurité, par rapport à un enfant de son âge ?',
-            value: _requiresAdaptations,
+            value:
+                _requiresAdaptations,
             onChanged:
                 _updateRequiresAdaptations,
           ),
@@ -236,20 +204,6 @@ class _SafetyPageState extends State<SafetyPage> {
                   _mayLeaveGroupSuddenly,
               onChanged:
                   _updateMayLeaveGroupSuddenly,
-            ),
-
-            _buildCheckbox(
-              label:
-                  'Votre enfant ne sait pas nager.',
-              value: _cannotSwim,
-              onChanged: _updateCannotSwim,
-            ),
-
-            _buildCheckbox(
-              label:
-                  'Votre enfant présente un risque particulier à proximité d’un point d’eau.',
-              value: _waterDanger,
-              onChanged: _updateWaterDanger,
             ),
 
             const SizedBox(height: 24),
@@ -278,7 +232,7 @@ class _SafetyPageState extends State<SafetyPage> {
               const SizedBox(height: 8),
 
               const Text(
-                'Exemples : gilet de flottaison spécifique, casque de protection, autre équipement indispensable à sa sécurité.',
+                'Exemples : casque de protection, autre équipement indispensable à sa sécurité.',
                 style: TextStyle(
                   fontSize: 14,
                 ),

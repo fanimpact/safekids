@@ -8,7 +8,8 @@ import '../widgets/sk_yes_no_field.dart';
 import 'treatments_page.dart';
 
 class TriggerFactorsPage extends StatefulWidget {
-  final TransmissionController transmissionController;
+  final TransmissionController
+      transmissionController;
 
   const TriggerFactorsPage({
     super.key,
@@ -25,6 +26,8 @@ class _TriggerFactorsPageState
   late bool _hasTriggerFactors;
 
   late bool _flashingLights;
+  late bool _requiresGlassesOutdoors;
+
   late bool _heat;
   late bool _fatigueOrLackOfSleep;
   late bool _noise;
@@ -51,14 +54,17 @@ class _TriggerFactorsPageState
   late final TextEditingController
       _otherHeightVigilanceController;
 
-  late final TextEditingController _otherController;
+  late final TextEditingController
+      _otherController;
 
   @override
   void initState() {
     super.initState();
 
-    final triggerFactors =
-        widget.transmissionController.formData.triggerFactors;
+    final triggerFactors = widget
+        .transmissionController
+        .formData
+        .triggerFactors;
 
     _hasTriggerFactors =
         triggerFactors.hasTriggerFactors;
@@ -66,17 +72,17 @@ class _TriggerFactorsPageState
     _flashingLights =
         triggerFactors.flashingLights;
 
-    _heat =
-        triggerFactors.heat;
+    _requiresGlassesOutdoors =
+        triggerFactors.requiresGlassesOutdoors;
+
+    _heat = triggerFactors.heat;
 
     _fatigueOrLackOfSleep =
         triggerFactors.fatigueOrLackOfSleep;
 
-    _noise =
-        triggerFactors.noise;
+    _noise = triggerFactors.noise;
 
-    _crowd =
-        triggerFactors.crowd;
+    _crowd = triggerFactors.crowd;
 
     _confinedSpaces =
         triggerFactors.confinedSpaces;
@@ -107,59 +113,81 @@ class _TriggerFactorsPageState
 
     _otherWaterVigilanceController =
         TextEditingController(
-      text: triggerFactors.otherWaterVigilance ?? '',
+      text:
+          triggerFactors
+              .otherWaterVigilance ??
+          '',
     );
 
     _otherAnimalVigilanceController =
         TextEditingController(
-      text: triggerFactors.otherAnimalVigilance ?? '',
+      text:
+          triggerFactors
+              .otherAnimalVigilance ??
+          '',
     );
 
     _otherHeightVigilanceController =
         TextEditingController(
-      text: triggerFactors.otherHeightVigilance ?? '',
+      text:
+          triggerFactors
+              .otherHeightVigilance ??
+          '',
     );
 
-    _otherController = TextEditingController(
+    _otherController =
+        TextEditingController(
       text: triggerFactors.other ?? '',
     );
   }
 
   @override
   void dispose() {
-    _otherWaterVigilanceController.dispose();
-    _otherAnimalVigilanceController.dispose();
-    _otherHeightVigilanceController.dispose();
+    _otherWaterVigilanceController
+        .dispose();
+    _otherAnimalVigilanceController
+        .dispose();
+    _otherHeightVigilanceController
+        .dispose();
     _otherController.dispose();
 
     super.dispose();
   }
 
-  void _updateHasTriggerFactors(bool value) {
+  void _updateHasTriggerFactors(
+    bool value,
+  ) {
     setState(() {
       _hasTriggerFactors = value;
 
       if (!value) {
         _flashingLights = false;
+        _requiresGlassesOutdoors =
+            false;
         _heat = false;
-        _fatigueOrLackOfSleep = false;
+        _fatigueOrLackOfSleep =
+            false;
         _noise = false;
         _crowd = false;
         _confinedSpaces = false;
         _physicalEffort = false;
-        _stressOrStrongEmotions = false;
+        _stressOrStrongEmotions =
+            false;
 
         _waterContact = false;
         _waterVigilance = null;
-        _otherWaterVigilanceController.clear();
+        _otherWaterVigilanceController
+            .clear();
 
         _animals = false;
         _animalVigilance = null;
-        _otherAnimalVigilanceController.clear();
+        _otherAnimalVigilanceController
+            .clear();
 
         _height = false;
         _heightVigilance = null;
-        _otherHeightVigilanceController.clear();
+        _otherHeightVigilanceController
+            .clear();
 
         _otherController.clear();
       }
@@ -169,19 +197,42 @@ class _TriggerFactorsPageState
         .updateHasTriggerFactors(value);
   }
 
-  void _updateFlashingLights(bool? value) {
-    final newValue = value ?? false;
+  void _updateFlashingLights(
+    bool? value,
+  ) {
+    final newValue =
+        value ?? false;
 
     setState(() {
       _flashingLights = newValue;
+
+      if (!newValue) {
+        _requiresGlassesOutdoors =
+            false;
+      }
     });
 
     widget.transmissionController
         .updateFlashingLights(newValue);
   }
 
+  void _updateRequiresGlassesOutdoors(
+    bool value,
+  ) {
+    setState(() {
+      _requiresGlassesOutdoors =
+          value;
+    });
+
+    widget.transmissionController
+        .updateRequiresGlassesOutdoors(
+      value,
+    );
+  }
+
   void _updateHeat(bool? value) {
-    final newValue = value ?? false;
+    final newValue =
+        value ?? false;
 
     setState(() {
       _heat = newValue;
@@ -191,19 +242,26 @@ class _TriggerFactorsPageState
         .updateHeat(newValue);
   }
 
-  void _updateFatigueOrLackOfSleep(bool? value) {
-    final newValue = value ?? false;
+  void _updateFatigueOrLackOfSleep(
+    bool? value,
+  ) {
+    final newValue =
+        value ?? false;
 
     setState(() {
-      _fatigueOrLackOfSleep = newValue;
+      _fatigueOrLackOfSleep =
+          newValue;
     });
 
     widget.transmissionController
-        .updateFatigueOrLackOfSleep(newValue);
+        .updateFatigueOrLackOfSleep(
+      newValue,
+    );
   }
 
   void _updateNoise(bool? value) {
-    final newValue = value ?? false;
+    final newValue =
+        value ?? false;
 
     setState(() {
       _noise = newValue;
@@ -214,7 +272,8 @@ class _TriggerFactorsPageState
   }
 
   void _updateCrowd(bool? value) {
-    final newValue = value ?? false;
+    final newValue =
+        value ?? false;
 
     setState(() {
       _crowd = newValue;
@@ -224,46 +283,63 @@ class _TriggerFactorsPageState
         .updateCrowd(newValue);
   }
 
-  void _updateConfinedSpaces(bool? value) {
-    final newValue = value ?? false;
+  void _updateConfinedSpaces(
+    bool? value,
+  ) {
+    final newValue =
+        value ?? false;
 
     setState(() {
-      _confinedSpaces = newValue;
+      _confinedSpaces =
+          newValue;
     });
 
     widget.transmissionController
         .updateConfinedSpaces(newValue);
   }
 
-  void _updatePhysicalEffort(bool? value) {
-    final newValue = value ?? false;
+  void _updatePhysicalEffort(
+    bool? value,
+  ) {
+    final newValue =
+        value ?? false;
 
     setState(() {
-      _physicalEffort = newValue;
+      _physicalEffort =
+          newValue;
     });
 
     widget.transmissionController
         .updatePhysicalEffort(newValue);
   }
 
-  void _updateStressOrStrongEmotions(bool? value) {
-    final newValue = value ?? false;
+  void _updateStressOrStrongEmotions(
+    bool? value,
+  ) {
+    final newValue =
+        value ?? false;
 
     setState(() {
-      _stressOrStrongEmotions = newValue;
+      _stressOrStrongEmotions =
+          newValue;
     });
 
     widget.transmissionController
-        .updateStressOrStrongEmotions(newValue);
+        .updateStressOrStrongEmotions(
+      newValue,
+    );
   }
 
-  void _updateWaterContact(bool value) {
+  void _updateWaterContact(
+    bool value,
+  ) {
     setState(() {
       _waterContact = value;
 
       if (!value) {
         _waterVigilance = null;
-        _otherWaterVigilanceController.clear();
+        _otherWaterVigilanceController
+            .clear();
       }
     });
 
@@ -277,8 +353,10 @@ class _TriggerFactorsPageState
     setState(() {
       _waterVigilance = value;
 
-      if (value != WaterVigilance.other) {
-        _otherWaterVigilanceController.clear();
+      if (value !=
+          WaterVigilance.other) {
+        _otherWaterVigilanceController
+            .clear();
       }
     });
 
@@ -286,13 +364,16 @@ class _TriggerFactorsPageState
         .updateWaterVigilance(value);
   }
 
-  void _updateAnimals(bool value) {
+  void _updateAnimals(
+    bool value,
+  ) {
     setState(() {
       _animals = value;
 
       if (!value) {
         _animalVigilance = null;
-        _otherAnimalVigilanceController.clear();
+        _otherAnimalVigilanceController
+            .clear();
       }
     });
 
@@ -306,8 +387,10 @@ class _TriggerFactorsPageState
     setState(() {
       _animalVigilance = value;
 
-      if (value != AnimalVigilance.other) {
-        _otherAnimalVigilanceController.clear();
+      if (value !=
+          AnimalVigilance.other) {
+        _otherAnimalVigilanceController
+            .clear();
       }
     });
 
@@ -315,13 +398,16 @@ class _TriggerFactorsPageState
         .updateAnimalVigilance(value);
   }
 
-  void _updateHeight(bool value) {
+  void _updateHeight(
+    bool value,
+  ) {
     setState(() {
       _height = value;
 
       if (!value) {
         _heightVigilance = null;
-        _otherHeightVigilanceController.clear();
+        _otherHeightVigilanceController
+            .clear();
       }
     });
 
@@ -335,8 +421,10 @@ class _TriggerFactorsPageState
     setState(() {
       _heightVigilance = value;
 
-      if (value != HeightVigilance.other) {
-        _otherHeightVigilanceController.clear();
+      if (value !=
+          HeightVigilance.other) {
+        _otherHeightVigilanceController
+            .clear();
       }
     });
 
@@ -348,9 +436,11 @@ class _TriggerFactorsPageState
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TreatmentsPage(
+        builder: (context) =>
+            TreatmentsPage(
           transmissionController:
-              widget.transmissionController,
+              widget
+                  .transmissionController,
         ),
       ),
     );
@@ -359,11 +449,14 @@ class _TriggerFactorsPageState
   Widget _buildCheckbox({
     required String label,
     required bool value,
-    required ValueChanged<bool?> onChanged,
+    required ValueChanged<bool?>
+        onChanged,
   }) {
     return CheckboxListTile(
-      contentPadding: EdgeInsets.zero,
-      controlAffinity: ListTileControlAffinity.leading,
+      contentPadding:
+          EdgeInsets.zero,
+      controlAffinity:
+          ListTileControlAffinity.leading,
       title: Text(
         label,
         style: const TextStyle(
@@ -375,7 +468,9 @@ class _TriggerFactorsPageState
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(
+    String title,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(
         top: 24,
@@ -385,7 +480,8 @@ class _TriggerFactorsPageState
         title,
         style: const TextStyle(
           fontSize: 18,
-          fontWeight: FontWeight.bold,
+          fontWeight:
+              FontWeight.bold,
         ),
       ),
     );
@@ -393,7 +489,8 @@ class _TriggerFactorsPageState
 
   Widget _buildWaterQuestions() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment:
+          CrossAxisAlignment.stretch,
       children: [
         _buildSectionTitle(
           'Contact avec l’eau',
@@ -402,56 +499,75 @@ class _TriggerFactorsPageState
           label:
               'Le contact avec l’eau nécessite-t-il une vigilance particulière pour votre enfant ?',
           value: _waterContact,
-          onChanged: _updateWaterContact,
+          onChanged:
+              _updateWaterContact,
         ),
         if (_waterContact) ...[
-          const SizedBox(height: 12),
+          const SizedBox(
+            height: 12,
+          ),
           const Text(
             'Quelle vigilance est nécessaire ?',
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
           RadioGroup<WaterVigilance>(
-            groupValue: _waterVigilance,
-            onChanged: _updateWaterVigilance,
-            child: Column(
-              children: const [
-                RadioListTile<WaterVigilance>(
-                  contentPadding: EdgeInsets.zero,
+            groupValue:
+                _waterVigilance,
+            onChanged:
+                _updateWaterVigilance,
+            child: const Column(
+              children: [
+                RadioListTile<
+                    WaterVigilance>(
+                  contentPadding:
+                      EdgeInsets.zero,
                   title: Text(
                     'Risque de se jeter dans l’eau',
                   ),
                   value:
-                      WaterVigilance.mayJumpIntoWater,
+                      WaterVigilance
+                          .mayJumpIntoWater,
                 ),
-                RadioListTile<WaterVigilance>(
-                  contentPadding: EdgeInsets.zero,
+                RadioListTile<
+                    WaterVigilance>(
+                  contentPadding:
+                      EdgeInsets.zero,
                   title: Text(
                     'Ne sait pas nager',
                   ),
-                  value: WaterVigilance.cannotSwim,
+                  value:
+                      WaterVigilance
+                          .cannotSwim,
                 ),
-                RadioListTile<WaterVigilance>(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    'Autre',
-                  ),
-                  value: WaterVigilance.other,
+                RadioListTile<
+                    WaterVigilance>(
+                  contentPadding:
+                      EdgeInsets.zero,
+                  title:
+                      Text('Autre'),
+                  value:
+                      WaterVigilance
+                          .other,
                 ),
               ],
             ),
           ),
           if (_waterVigilance ==
               WaterVigilance.other) ...[
-            const SizedBox(height: 8),
+            const SizedBox(
+              height: 8,
+            ),
             SkTextField(
               label:
                   'Précisez la vigilance nécessaire avec l’eau',
               controller:
                   _otherWaterVigilanceController,
-              onChanged: widget.transmissionController
+              onChanged: widget
+                  .transmissionController
                   .updateOtherWaterVigilance,
             ),
           ],
@@ -462,7 +578,8 @@ class _TriggerFactorsPageState
 
   Widget _buildAnimalQuestions() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment:
+          CrossAxisAlignment.stretch,
       children: [
         _buildSectionTitle(
           'Présence d’animaux',
@@ -471,57 +588,76 @@ class _TriggerFactorsPageState
           label:
               'La présence d’animaux nécessite-t-elle une vigilance particulière pour votre enfant ?',
           value: _animals,
-          onChanged: _updateAnimals,
+          onChanged:
+              _updateAnimals,
         ),
         if (_animals) ...[
-          const SizedBox(height: 12),
+          const SizedBox(
+            height: 12,
+          ),
           const Text(
             'Quelle vigilance est nécessaire ?',
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
-          RadioGroup<AnimalVigilance>(
-            groupValue: _animalVigilance,
-            onChanged: _updateAnimalVigilance,
-            child: Column(
-              children: const [
-                RadioListTile<AnimalVigilance>(
-                  contentPadding: EdgeInsets.zero,
+          RadioGroup<
+              AnimalVigilance>(
+            groupValue:
+                _animalVigilance,
+            onChanged:
+                _updateAnimalVigilance,
+            child: const Column(
+              children: [
+                RadioListTile<
+                    AnimalVigilance>(
+                  contentPadding:
+                      EdgeInsets.zero,
                   title: Text(
                     'Peur importante des animaux',
                   ),
                   value:
-                      AnimalVigilance.importantFear,
+                      AnimalVigilance
+                          .importantFear,
                 ),
-                RadioListTile<AnimalVigilance>(
-                  contentPadding: EdgeInsets.zero,
+                RadioListTile<
+                    AnimalVigilance>(
+                  contentPadding:
+                      EdgeInsets.zero,
                   title: Text(
                     'Tendance à s’approcher des animaux sans percevoir le danger',
                   ),
-                  value: AnimalVigilance
-                      .approachesWithoutPerceivingDanger,
+                  value:
+                      AnimalVigilance
+                          .approachesWithoutPerceivingDanger,
                 ),
-                RadioListTile<AnimalVigilance>(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    'Autre',
-                  ),
-                  value: AnimalVigilance.other,
+                RadioListTile<
+                    AnimalVigilance>(
+                  contentPadding:
+                      EdgeInsets.zero,
+                  title:
+                      Text('Autre'),
+                  value:
+                      AnimalVigilance
+                          .other,
                 ),
               ],
             ),
           ),
           if (_animalVigilance ==
               AnimalVigilance.other) ...[
-            const SizedBox(height: 8),
+            const SizedBox(
+              height: 8,
+            ),
             SkTextField(
               label:
                   'Précisez la vigilance nécessaire avec les animaux',
               controller:
                   _otherAnimalVigilanceController,
-              onChanged: widget.transmissionController
+              onChanged: widget
+                  .transmissionController
                   .updateOtherAnimalVigilance,
             ),
           ],
@@ -532,7 +668,8 @@ class _TriggerFactorsPageState
 
   Widget _buildHeightQuestions() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment:
+          CrossAxisAlignment.stretch,
       children: [
         _buildSectionTitle(
           'Hauteur',
@@ -541,57 +678,76 @@ class _TriggerFactorsPageState
           label:
               'La hauteur nécessite-t-elle une vigilance particulière pour votre enfant ?',
           value: _height,
-          onChanged: _updateHeight,
+          onChanged:
+              _updateHeight,
         ),
         if (_height) ...[
-          const SizedBox(height: 12),
+          const SizedBox(
+            height: 12,
+          ),
           const Text(
             'Quelle vigilance est nécessaire ?',
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
-          RadioGroup<HeightVigilance>(
-            groupValue: _heightVigilance,
-            onChanged: _updateHeightVigilance,
-            child: Column(
-              children: const [
-                RadioListTile<HeightVigilance>(
-                  contentPadding: EdgeInsets.zero,
+          RadioGroup<
+              HeightVigilance>(
+            groupValue:
+                _heightVigilance,
+            onChanged:
+                _updateHeightVigilance,
+            child: const Column(
+              children: [
+                RadioListTile<
+                    HeightVigilance>(
+                  contentPadding:
+                      EdgeInsets.zero,
                   title: Text(
                     'Absence de perception du danger',
                   ),
-                  value: HeightVigilance
-                      .doesNotPerceiveDanger,
+                  value:
+                      HeightVigilance
+                          .doesNotPerceiveDanger,
                 ),
-                RadioListTile<HeightVigilance>(
-                  contentPadding: EdgeInsets.zero,
+                RadioListTile<
+                    HeightVigilance>(
+                  contentPadding:
+                      EdgeInsets.zero,
                   title: Text(
                     'Vertige ou peur importante',
                   ),
-                  value: HeightVigilance
-                      .vertigoOrImportantFear,
+                  value:
+                      HeightVigilance
+                          .vertigoOrImportantFear,
                 ),
-                RadioListTile<HeightVigilance>(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    'Autre',
-                  ),
-                  value: HeightVigilance.other,
+                RadioListTile<
+                    HeightVigilance>(
+                  contentPadding:
+                      EdgeInsets.zero,
+                  title:
+                      Text('Autre'),
+                  value:
+                      HeightVigilance
+                          .other,
                 ),
               ],
             ),
           ),
           if (_heightVigilance ==
               HeightVigilance.other) ...[
-            const SizedBox(height: 8),
+            const SizedBox(
+              height: 8,
+            ),
             SkTextField(
               label:
                   'Précisez la vigilance nécessaire concernant la hauteur',
               controller:
                   _otherHeightVigilanceController,
-              onChanged: widget.transmissionController
+              onChanged: widget
+                  .transmissionController
                   .updateOtherHeightVigilance,
             ),
           ],
@@ -601,85 +757,152 @@ class _TriggerFactorsPageState
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return QuestionnairePage(
       title: '',
       subtitle:
           'Votre enfant présente-t-il des facteurs déclencheurs ou des sensibilités nécessitant une vigilance particulière ?',
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment:
+            CrossAxisAlignment.stretch,
         children: [
           SkYesNoField(
             label:
                 'Votre enfant présente-t-il des facteurs déclencheurs ou des sensibilités nécessitant une vigilance particulière ?',
-            value: _hasTriggerFactors,
-            onChanged: _updateHasTriggerFactors,
+            value:
+                _hasTriggerFactors,
+            onChanged:
+                _updateHasTriggerFactors,
           ),
+
           if (_hasTriggerFactors) ...[
-            const SizedBox(height: 24),
+            const SizedBox(
+              height: 24,
+            ),
+
             const Text(
               'Sélectionnez les facteurs déclencheurs qui concernent votre enfant.',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontWeight:
+                    FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 12),
+
+            const SizedBox(
+              height: 12,
+            ),
+
             _buildCheckbox(
               label:
                   'Lumières clignotantes (photosensibilité)',
-              value: _flashingLights,
-              onChanged: _updateFlashingLights,
+              value:
+                  _flashingLights,
+              onChanged:
+                  _updateFlashingLights,
             ),
+
+            if (_flashingLights) ...[
+              const SizedBox(
+                height: 12,
+              ),
+
+              SkYesNoField(
+                label:
+                    'Le port de lunettes est-il nécessaire lors des activités en extérieur ?',
+                value:
+                    _requiresGlassesOutdoors,
+                onChanged:
+                    _updateRequiresGlassesOutdoors,
+              ),
+
+              const SizedBox(
+                height: 12,
+              ),
+            ],
+
             _buildCheckbox(
               label: 'Chaleur',
               value: _heat,
-              onChanged: _updateHeat,
+              onChanged:
+                  _updateHeat,
             ),
+
             _buildCheckbox(
-              label: 'Fatigue ou manque de sommeil',
-              value: _fatigueOrLackOfSleep,
-              onChanged: _updateFatigueOrLackOfSleep,
+              label:
+                  'Fatigue ou manque de sommeil',
+              value:
+                  _fatigueOrLackOfSleep,
+              onChanged:
+                  _updateFatigueOrLackOfSleep,
             ),
+
             _buildCheckbox(
               label: 'Bruit',
               value: _noise,
-              onChanged: _updateNoise,
+              onChanged:
+                  _updateNoise,
             ),
+
             _buildCheckbox(
               label: 'Foule',
               value: _crowd,
-              onChanged: _updateCrowd,
+              onChanged:
+                  _updateCrowd,
             ),
+
             _buildCheckbox(
-              label: 'Espaces confinés',
-              value: _confinedSpaces,
-              onChanged: _updateConfinedSpaces,
+              label:
+                  'Espaces confinés',
+              value:
+                  _confinedSpaces,
+              onChanged:
+                  _updateConfinedSpaces,
             ),
+
             _buildCheckbox(
-              label: 'Effort physique',
-              value: _physicalEffort,
-              onChanged: _updatePhysicalEffort,
+              label:
+                  'Effort physique',
+              value:
+                  _physicalEffort,
+              onChanged:
+                  _updatePhysicalEffort,
             ),
+
             _buildCheckbox(
-              label: 'Stress ou émotions fortes',
-              value: _stressOrStrongEmotions,
+              label:
+                  'Stress ou émotions fortes',
+              value:
+                  _stressOrStrongEmotions,
               onChanged:
                   _updateStressOrStrongEmotions,
             ),
+
             _buildWaterQuestions(),
             _buildAnimalQuestions(),
             _buildHeightQuestions(),
-            const SizedBox(height: 24),
+
+            const SizedBox(
+              height: 24,
+            ),
+
             SkTextField(
               label:
                   'Autre facteur déclencheur ou sensibilité',
-              controller: _otherController,
-              onChanged: widget.transmissionController
+              controller:
+                  _otherController,
+              onChanged: widget
+                  .transmissionController
                   .updateOtherTriggerFactor,
             ),
           ],
-          const SizedBox(height: 30),
+
+          const SizedBox(
+            height: 30,
+          ),
+
           FilledButton(
             onPressed: _continue,
             child: const Text(

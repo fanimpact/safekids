@@ -113,7 +113,7 @@ class _ActivitySafetyPageState
           children: [
             _yesNoQuestion(
               question:
-                  'L’activité se déroule-t-elle en hauteur ou comporte-t-elle un risque de chute ?',
+                  'L’activité se déroule-t-elle en hauteur ?',
               value: _hasFallRisk,
               onChanged: (value) {
                 setState(() {

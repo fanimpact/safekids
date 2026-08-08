@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../controllers/activity_profile_controller.dart';
 import '../widgets/questionnaire_page.dart';
-import '../widgets/sk_text_field.dart';
 import '../widgets/sk_yes_no_field.dart';
 import 'overnight_stay_page.dart';
 
@@ -21,11 +20,8 @@ class WalkingEffortPage extends StatefulWidget {
 
 class _WalkingEffortPageState
     extends State<WalkingEffortPage> {
-  late bool _requiresAdaptations;
-  late bool _requiresActivityAdjustment;
-
-  late final TextEditingController
-      _activityAdjustmentController;
+  late bool _prolongedWalkingRequiresVigilance;
+  late bool _intensePhysicalEffortRequiresVigilance;
 
   @override
   void initState() {
@@ -36,81 +32,39 @@ class _WalkingEffortPageState
         .draft
         .walkingEffort;
 
-    _requiresAdaptations =
-        data.requiresAdaptations;
+    _prolongedWalkingRequiresVigilance =
+        data.prolongedWalkingRequiresVigilance;
 
-    _requiresActivityAdjustment =
-        data.requiresActivityAdjustment;
-
-    _activityAdjustmentController =
-        TextEditingController(
-      text: data.activityAdjustmentDetails ?? '',
-    );
+    _intensePhysicalEffortRequiresVigilance =
+        data.intensePhysicalEffortRequiresVigilance;
   }
 
-  @override
-  void dispose() {
-    _activityAdjustmentController.dispose();
-    super.dispose();
-  }
-
-  void _updateRequiresAdaptations(bool value) {
-    final data = widget
-        .activityProfileController
-        .draft
-        .walkingEffort;
-
-    setState(() {
-      _requiresAdaptations = value;
-
-      if (!value) {
-        _requiresActivityAdjustment = false;
-        _activityAdjustmentController.clear();
-      }
-    });
-
-    data.requiresAdaptations = value;
-
-    if (!value) {
-      data.requiresActivityAdjustment = false;
-      data.activityAdjustmentDetails = null;
-    }
-  }
-
-  void _updateRequiresActivityAdjustment(
+  void _updateProlongedWalkingRequiresVigilance(
     bool value,
   ) {
-    final data = widget
-        .activityProfileController
-        .draft
-        .walkingEffort;
-
     setState(() {
-      _requiresActivityAdjustment = value;
-
-      if (!value) {
-        _activityAdjustmentController.clear();
-      }
+      _prolongedWalkingRequiresVigilance = value;
     });
 
-    data.requiresActivityAdjustment = value;
-
-    if (!value) {
-      data.activityAdjustmentDetails = null;
-    }
+    widget
+        .activityProfileController
+        .draft
+        .walkingEffort
+        .prolongedWalkingRequiresVigilance = value;
   }
 
-  void _updateActivityAdjustmentDetails(
-    String value,
+  void _updateIntensePhysicalEffortRequiresVigilance(
+    bool value,
   ) {
-    final trimmedValue = value.trim();
+    setState(() {
+      _intensePhysicalEffortRequiresVigilance = value;
+    });
 
     widget
-            .activityProfileController
-            .draft
-            .walkingEffort
-            .activityAdjustmentDetails =
-        trimmedValue.isEmpty ? null : trimmedValue;
+        .activityProfileController
+        .draft
+        .walkingEffort
+        .intensePhysicalEffortRequiresVigilance = value;
   }
 
   void _continue() {
@@ -139,46 +93,23 @@ class _WalkingEffortPageState
         children: [
           SkYesNoField(
             label:
-                'Votre enfant nécessite-t-il des adaptations lors des activités comportant une marche prolongée ou un effort physique important, par rapport à un enfant de son âge ?',
-            value: _requiresAdaptations,
+                'La marche prolongée nécessite-t-elle une vigilance particulière pour votre enfant ?',
+            value:
+                _prolongedWalkingRequiresVigilance,
             onChanged:
-                _updateRequiresAdaptations,
+                _updateProlongedWalkingRequiresVigilance,
           ),
 
-          if (_requiresAdaptations) ...[
-            const SizedBox(height: 24),
+          const SizedBox(height: 24),
 
-            SkYesNoField(
-              label:
-                  'Les modalités de l’activité doivent-elles être adaptées ?',
-              value:
-                  _requiresActivityAdjustment,
-              onChanged:
-                  _updateRequiresActivityAdjustment,
-            ),
-
-            if (_requiresActivityAdjustment) ...[
-              const SizedBox(height: 12),
-
-              SkTextField(
-                label:
-                    'Précisez les adaptations nécessaires',
-                controller:
-                    _activityAdjustmentController,
-                onChanged:
-                    _updateActivityAdjustmentDetails,
-              ),
-
-              const SizedBox(height: 8),
-
-              const Text(
-                'Exemples : pauses régulières, distance à limiter, éviter certains efforts…',
-                style: TextStyle(
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ],
+          SkYesNoField(
+            label:
+                'Un effort physique intense nécessite-t-il une vigilance particulière pour votre enfant ?',
+            value:
+                _intensePhysicalEffortRequiresVigilance,
+            onChanged:
+                _updateIntensePhysicalEffortRequiresVigilance,
+          ),
 
           const SizedBox(height: 30),
 

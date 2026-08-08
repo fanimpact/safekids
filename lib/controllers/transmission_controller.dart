@@ -15,7 +15,8 @@ class TransmissionController {
 
   ChildProfileDraft get formData => _draft;
 
-  ChildProfileData? get validatedProfile => _validatedProfile;
+  ChildProfileData? get validatedProfile =>
+      _validatedProfile;
 
   // IDENTITÉ
 
@@ -43,8 +44,11 @@ class TransmissionController {
     );
   }
 
-  void updateHasDiagnosedPathologies(bool value) {
-    _draft.identity.hasDiagnosedPathologies = value;
+  void updateHasDiagnosedPathologies(
+    bool value,
+  ) {
+    _draft.identity.hasDiagnosedPathologies =
+        value;
   }
 
   // PATHOLOGIES
@@ -75,14 +79,16 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.pathologies[index].name = value.trim();
+    _draft.pathologies[index].name =
+        value.trim();
   }
 
   void updatePathologyDiagnosisDate(
     int index,
     String value,
   ) {
-    _draft.pathologies[index].approximateDiagnosisDate =
+    _draft.pathologies[index]
+            .approximateDiagnosisDate =
         value.trim();
   }
 
@@ -90,15 +96,18 @@ class TransmissionController {
     int index,
     bool value,
   ) {
-    final pathology = _draft.pathologies[index];
+    final pathology =
+        _draft.pathologies[index];
 
-    pathology.hasReferringProfessional = value;
+    pathology.hasReferringProfessional =
+        value;
 
     if (value) {
       pathology.referringProfessional ??=
           MedicalProfessionalData();
     } else {
-      pathology.referringProfessional = null;
+      pathology.referringProfessional =
+          null;
     }
   }
 
@@ -106,15 +115,18 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.pathologies[index].referringProfessional?.name =
-        value.trim();
+    _draft
+        .pathologies[index]
+        .referringProfessional
+        ?.name = value.trim();
   }
 
   void updateProfessionalSpecialty(
     int index,
     String value,
   ) {
-    _draft.pathologies[index]
+    _draft
+        .pathologies[index]
         .referringProfessional
         ?.specialty = value.trim();
   }
@@ -123,7 +135,8 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.pathologies[index]
+    _draft
+        .pathologies[index]
         .referringProfessional
         ?.workplace = value.trim();
   }
@@ -132,7 +145,8 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.pathologies[index]
+    _draft
+        .pathologies[index]
         .referringProfessional
         ?.phoneNumber = value.trim();
   }
@@ -173,7 +187,8 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.medicalEvents[index].approximateDate =
+    _draft.medicalEvents[index]
+            .approximateDate =
         value.trim();
   }
 
@@ -181,7 +196,8 @@ class TransmissionController {
     int index,
     bool value,
   ) {
-    _draft.medicalEvents[index].emergencyServicesCalled =
+    _draft.medicalEvents[index]
+            .emergencyServicesCalled =
         value;
   }
 
@@ -189,12 +205,14 @@ class TransmissionController {
     int index,
     bool value,
   ) {
-    final event = _draft.medicalEvents[index];
+    final event =
+        _draft.medicalEvents[index];
 
     event.hospitalized = value;
 
     if (!value) {
-      event.hospitalizationDuration = null;
+      event.hospitalizationDuration =
+          null;
     }
   }
 
@@ -202,7 +220,8 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.medicalEvents[index].hospitalizationDuration =
+    _draft.medicalEvents[index]
+            .hospitalizationDuration =
         value.trim();
   }
 
@@ -210,9 +229,11 @@ class TransmissionController {
     int index,
     bool value,
   ) {
-    final event = _draft.medicalEvents[index];
+    final event =
+        _draft.medicalEvents[index];
 
-    event.importantExaminationsPerformed = value;
+    event.importantExaminationsPerformed =
+        value;
 
     if (!value) {
       event.importantExaminations = null;
@@ -223,7 +244,8 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.medicalEvents[index].importantExaminations =
+    _draft.medicalEvents[index]
+            .importantExaminations =
         value.trim();
   }
 
@@ -231,9 +253,11 @@ class TransmissionController {
     int index,
     bool value,
   ) {
-    final event = _draft.medicalEvents[index];
+    final event =
+        _draft.medicalEvents[index];
 
-    event.hasOngoingConsequences = value;
+    event.hasOngoingConsequences =
+        value;
 
     if (!value) {
       event.ongoingConsequences = null;
@@ -244,53 +268,95 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.medicalEvents[index].ongoingConsequences =
+    _draft.medicalEvents[index]
+            .ongoingConsequences =
         value.trim();
   }
 
   // FACTEURS DÉCLENCHANTS ET SENSIBILITÉS
 
-  void updateHasTriggerFactors(bool value) {
-    final triggerFactors = _draft.triggerFactors;
+  void updateHasTriggerFactors(
+    bool value,
+  ) {
+    final triggerFactors =
+        _draft.triggerFactors;
 
-    triggerFactors.hasTriggerFactors = value;
+    triggerFactors.hasTriggerFactors =
+        value;
 
     if (!value) {
-      triggerFactors.flashingLights = false;
+      triggerFactors.flashingLights =
+          false;
+      triggerFactors.requiresGlassesOutdoors =
+          false;
       triggerFactors.heat = false;
-      triggerFactors.fatigueOrLackOfSleep = false;
+      triggerFactors.fatigueOrLackOfSleep =
+          false;
       triggerFactors.noise = false;
       triggerFactors.crowd = false;
-      triggerFactors.confinedSpaces = false;
-      triggerFactors.physicalEffort = false;
-      triggerFactors.stressOrStrongEmotions = false;
+      triggerFactors.confinedSpaces =
+          false;
+      triggerFactors.physicalEffort =
+          false;
+      triggerFactors
+              .stressOrStrongEmotions =
+          false;
 
       triggerFactors.waterContact = false;
-      triggerFactors.waterVigilance = null;
-      triggerFactors.otherWaterVigilance = null;
+      triggerFactors.waterVigilance =
+          null;
+      triggerFactors.otherWaterVigilance =
+          null;
 
       triggerFactors.animals = false;
-      triggerFactors.animalVigilance = null;
-      triggerFactors.otherAnimalVigilance = null;
+      triggerFactors.animalVigilance =
+          null;
+      triggerFactors
+              .otherAnimalVigilance =
+          null;
 
       triggerFactors.height = false;
-      triggerFactors.heightVigilance = null;
-      triggerFactors.otherHeightVigilance = null;
+      triggerFactors.heightVigilance =
+          null;
+      triggerFactors.otherHeightVigilance =
+          null;
 
       triggerFactors.other = null;
     }
   }
 
   void updateFlashingLights(bool value) {
-    _draft.triggerFactors.flashingLights = value;
+    final triggerFactors =
+        _draft.triggerFactors;
+
+    triggerFactors.flashingLights = value;
+
+    if (!value) {
+      triggerFactors
+              .requiresGlassesOutdoors =
+          false;
+    }
+  }
+
+  void updateRequiresGlassesOutdoors(
+    bool value,
+  ) {
+    _draft
+        .triggerFactors
+        .requiresGlassesOutdoors = value;
   }
 
   void updateHeat(bool value) {
     _draft.triggerFactors.heat = value;
   }
 
-  void updateFatigueOrLackOfSleep(bool value) {
-    _draft.triggerFactors.fatigueOrLackOfSleep = value;
+  void updateFatigueOrLackOfSleep(
+    bool value,
+  ) {
+    _draft
+            .triggerFactors
+            .fatigueOrLackOfSleep =
+        value;
   }
 
   void updateNoise(bool value) {
@@ -302,137 +368,190 @@ class TransmissionController {
   }
 
   void updateConfinedSpaces(bool value) {
-    _draft.triggerFactors.confinedSpaces = value;
+    _draft.triggerFactors.confinedSpaces =
+        value;
   }
 
   void updatePhysicalEffort(bool value) {
-    _draft.triggerFactors.physicalEffort = value;
+    _draft.triggerFactors.physicalEffort =
+        value;
   }
 
-  void updateStressOrStrongEmotions(bool value) {
-    _draft.triggerFactors.stressOrStrongEmotions =
+  void updateStressOrStrongEmotions(
+    bool value,
+  ) {
+    _draft
+            .triggerFactors
+            .stressOrStrongEmotions =
         value;
   }
 
   // EAU
 
   void updateWaterContact(bool value) {
-    final triggerFactors = _draft.triggerFactors;
+    final triggerFactors =
+        _draft.triggerFactors;
 
     triggerFactors.waterContact = value;
 
     if (!value) {
-      triggerFactors.waterVigilance = null;
-      triggerFactors.otherWaterVigilance = null;
+      triggerFactors.waterVigilance =
+          null;
+      triggerFactors.otherWaterVigilance =
+          null;
     }
   }
 
   void updateWaterVigilance(
     WaterVigilance? value,
   ) {
-    final triggerFactors = _draft.triggerFactors;
+    final triggerFactors =
+        _draft.triggerFactors;
 
     triggerFactors.waterVigilance = value;
 
     if (value != WaterVigilance.other) {
-      triggerFactors.otherWaterVigilance = null;
+      triggerFactors.otherWaterVigilance =
+          null;
     }
   }
 
-  void updateOtherWaterVigilance(String value) {
+  void updateOtherWaterVigilance(
+    String value,
+  ) {
     final trimmedValue = value.trim();
 
-    _draft.triggerFactors.otherWaterVigilance =
-        trimmedValue.isEmpty ? null : trimmedValue;
+    _draft
+            .triggerFactors
+            .otherWaterVigilance =
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
   }
 
   // ANIMAUX
 
   void updateAnimals(bool value) {
-    final triggerFactors = _draft.triggerFactors;
+    final triggerFactors =
+        _draft.triggerFactors;
 
     triggerFactors.animals = value;
 
     if (!value) {
-      triggerFactors.animalVigilance = null;
-      triggerFactors.otherAnimalVigilance = null;
+      triggerFactors.animalVigilance =
+          null;
+      triggerFactors
+              .otherAnimalVigilance =
+          null;
     }
   }
 
   void updateAnimalVigilance(
     AnimalVigilance? value,
   ) {
-    final triggerFactors = _draft.triggerFactors;
+    final triggerFactors =
+        _draft.triggerFactors;
 
-    triggerFactors.animalVigilance = value;
+    triggerFactors.animalVigilance =
+        value;
 
     if (value != AnimalVigilance.other) {
-      triggerFactors.otherAnimalVigilance = null;
+      triggerFactors
+              .otherAnimalVigilance =
+          null;
     }
   }
 
-  void updateOtherAnimalVigilance(String value) {
+  void updateOtherAnimalVigilance(
+    String value,
+  ) {
     final trimmedValue = value.trim();
 
-    _draft.triggerFactors.otherAnimalVigilance =
-        trimmedValue.isEmpty ? null : trimmedValue;
+    _draft
+            .triggerFactors
+            .otherAnimalVigilance =
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
   }
 
   // HAUTEUR
 
   void updateHeight(bool value) {
-    final triggerFactors = _draft.triggerFactors;
+    final triggerFactors =
+        _draft.triggerFactors;
 
     triggerFactors.height = value;
 
     if (!value) {
-      triggerFactors.heightVigilance = null;
-      triggerFactors.otherHeightVigilance = null;
+      triggerFactors.heightVigilance =
+          null;
+      triggerFactors.otherHeightVigilance =
+          null;
     }
   }
 
   void updateHeightVigilance(
     HeightVigilance? value,
   ) {
-    final triggerFactors = _draft.triggerFactors;
+    final triggerFactors =
+        _draft.triggerFactors;
 
-    triggerFactors.heightVigilance = value;
+    triggerFactors.heightVigilance =
+        value;
 
     if (value != HeightVigilance.other) {
-      triggerFactors.otherHeightVigilance = null;
+      triggerFactors
+              .otherHeightVigilance =
+          null;
     }
   }
 
-  void updateOtherHeightVigilance(String value) {
+  void updateOtherHeightVigilance(
+    String value,
+  ) {
     final trimmedValue = value.trim();
 
-    _draft.triggerFactors.otherHeightVigilance =
-        trimmedValue.isEmpty ? null : trimmedValue;
+    _draft
+            .triggerFactors
+            .otherHeightVigilance =
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
   }
 
-  void updateOtherTriggerFactor(String value) {
+  void updateOtherTriggerFactor(
+    String value,
+  ) {
     final trimmedValue = value.trim();
 
     _draft.triggerFactors.other =
-        trimmedValue.isEmpty ? null : trimmedValue;
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
   }
 
   // MÉDECIN TRAITANT
 
-  void updatePrimaryCareDoctorName(String value) {
-    _draft.primaryCareDoctor.name = value.trim();
+  void updatePrimaryCareDoctorName(
+    String value,
+  ) {
+    _draft.primaryCareDoctor.name =
+        value.trim();
   }
 
   void updatePrimaryCareDoctorWorkplace(
     String value,
   ) {
-    _draft.primaryCareDoctor.workplace = value.trim();
+    _draft.primaryCareDoctor.workplace =
+        value.trim();
   }
 
   void updatePrimaryCareDoctorPhone(
     String value,
   ) {
-    _draft.primaryCareDoctor.phoneNumber = value.trim();
+    _draft.primaryCareDoctor.phoneNumber =
+        value.trim();
   }
 
   // TRAITEMENTS QUOTIDIENS
@@ -452,10 +571,13 @@ class TransmissionController {
   }
 
   void removeDailyTreatment(int index) {
-    if (_draft.dailyTreatments.length > 1 &&
+    if (_draft.dailyTreatments.length >
+            1 &&
         index >= 0 &&
-        index < _draft.dailyTreatments.length) {
-      _draft.dailyTreatments.removeAt(index);
+        index <
+            _draft.dailyTreatments.length) {
+      _draft.dailyTreatments
+          .removeAt(index);
     }
   }
 
@@ -463,7 +585,8 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.dailyTreatments[index].medicationName =
+    _draft.dailyTreatments[index]
+            .medicationName =
         value.trim();
   }
 
@@ -479,14 +602,16 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.dailyTreatments[index].administrationTimes =
+    _draft.dailyTreatments[index]
+            .administrationTimes =
         value.trim();
   }
 
   // TRAITEMENTS D’URGENCE
 
   void ensureFirstEmergencyTreatment() {
-    if (_draft.emergencyTreatments.isEmpty) {
+    if (_draft.emergencyTreatments
+        .isEmpty) {
       _draft.emergencyTreatments.add(
         EmergencyTreatmentData(),
       );
@@ -499,11 +624,18 @@ class TransmissionController {
     );
   }
 
-  void removeEmergencyTreatment(int index) {
-    if (_draft.emergencyTreatments.length > 1 &&
+  void removeEmergencyTreatment(
+    int index,
+  ) {
+    if (_draft.emergencyTreatments.length >
+            1 &&
         index >= 0 &&
-        index < _draft.emergencyTreatments.length) {
-      _draft.emergencyTreatments.removeAt(index);
+        index <
+            _draft
+                .emergencyTreatments
+                .length) {
+      _draft.emergencyTreatments
+          .removeAt(index);
     }
   }
 
@@ -511,7 +643,8 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.emergencyTreatments[index].medicationName =
+    _draft.emergencyTreatments[index]
+            .medicationName =
         value.trim();
   }
 
@@ -520,14 +653,16 @@ class TransmissionController {
     String value,
   ) {
     _draft.emergencyTreatments[index]
-        .administrationCondition = value.trim();
+            .administrationCondition =
+        value.trim();
   }
 
   void updateEmergencyTreatmentDosage(
     int index,
     String value,
   ) {
-    _draft.emergencyTreatments[index].dosage =
+    _draft.emergencyTreatments[index]
+            .dosage =
         value.trim();
   }
 
@@ -536,7 +671,8 @@ class TransmissionController {
     String value,
   ) {
     _draft.emergencyTreatments[index]
-        .administrationMethod = value.trim();
+            .administrationMethod =
+        value.trim();
   }
 
   // ALLERGIES
@@ -567,14 +703,16 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.allergies[index].allergen = value.trim();
+    _draft.allergies[index].allergen =
+        value.trim();
   }
 
   void updateAllergyObservedReaction(
     int index,
     String value,
   ) {
-    _draft.allergies[index].observedReaction =
+    _draft.allergies[index]
+            .observedReaction =
         value.trim();
   }
 
@@ -582,7 +720,8 @@ class TransmissionController {
     int index,
     bool value,
   ) {
-    final allergy = _draft.allergies[index];
+    final allergy =
+        _draft.allergies[index];
 
     allergy.hasDailyTreatment = value;
 
@@ -596,7 +735,8 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.allergies[index].dailyTreatmentName =
+    _draft.allergies[index]
+            .dailyTreatmentName =
         value.trim();
   }
 
@@ -604,7 +744,8 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.allergies[index].dailyTreatmentDosage =
+    _draft.allergies[index]
+            .dailyTreatmentDosage =
         value.trim();
   }
 
@@ -612,13 +753,17 @@ class TransmissionController {
     int index,
     bool value,
   ) {
-    final allergy = _draft.allergies[index];
+    final allergy =
+        _draft.allergies[index];
 
-    allergy.hasEmergencyTreatment = value;
+    allergy.hasEmergencyTreatment =
+        value;
 
     if (!value) {
-      allergy.emergencyTreatmentName = null;
-      allergy.emergencyTreatmentDosage = null;
+      allergy.emergencyTreatmentName =
+          null;
+      allergy.emergencyTreatmentDosage =
+          null;
     }
   }
 
@@ -626,7 +771,8 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.allergies[index].emergencyTreatmentName =
+    _draft.allergies[index]
+            .emergencyTreatmentName =
         value.trim();
   }
 
@@ -634,7 +780,8 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.allergies[index].emergencyTreatmentDosage =
+    _draft.allergies[index]
+            .emergencyTreatmentDosage =
         value.trim();
   }
 
@@ -655,10 +802,13 @@ class TransmissionController {
   }
 
   void removeMedicalDevice(int index) {
-    if (_draft.medicalDevices.length > 1 &&
+    if (_draft.medicalDevices.length >
+            1 &&
         index >= 0 &&
-        index < _draft.medicalDevices.length) {
-      _draft.medicalDevices.removeAt(index);
+        index <
+            _draft.medicalDevices.length) {
+      _draft.medicalDevices
+          .removeAt(index);
     }
   }
 
@@ -666,7 +816,8 @@ class TransmissionController {
     int index,
     String value,
   ) {
-    _draft.medicalDevices[index].deviceName =
+    _draft.medicalDevices[index]
+            .deviceName =
         value.trim();
   }
 
@@ -681,7 +832,8 @@ class TransmissionController {
   // VALIDATION
 
   ChildProfileData validateAndGetProfile() {
-    final profile = ChildProfileData.fromDraft(
+    final profile =
+        ChildProfileData.fromDraft(
       _draft,
     );
 

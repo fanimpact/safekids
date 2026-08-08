@@ -20,6 +20,8 @@ class TriggerFactorData {
   bool hasTriggerFactors;
 
   bool flashingLights;
+  bool requiresGlassesOutdoors;
+
   bool heat;
   bool fatigueOrLackOfSleep;
   bool noise;
@@ -45,6 +47,7 @@ class TriggerFactorData {
   TriggerFactorData({
     this.hasTriggerFactors = false,
     this.flashingLights = false,
+    this.requiresGlassesOutdoors = false,
     this.heat = false,
     this.fatigueOrLackOfSleep = false,
     this.noise = false,
