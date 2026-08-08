@@ -61,7 +61,7 @@ class ActivitySessionRepository {
           electricityMayBeUnavailable: null,
           phoneNetworkMayBeUnavailable: null,
 
-          hasFallRisk: false,
+          hasHeightActivity: false,
           hasAnimalContact: true,
 
           hasLoudEnvironment: true,

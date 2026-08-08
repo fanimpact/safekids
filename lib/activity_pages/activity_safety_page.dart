@@ -18,22 +18,22 @@ class ActivitySafetyPage extends StatefulWidget {
 
 class _ActivitySafetyPageState
     extends State<ActivitySafetyPage> {
-  bool? _hasFallRisk;
+  bool? _hasHeightActivity;
   bool? _hasAnimalContact;
 
   @override
   void initState() {
     super.initState();
 
-    _hasFallRisk =
-        widget.sessionData.hasFallRisk;
+    _hasHeightActivity =
+        widget.sessionData.hasHeightActivity;
 
     _hasAnimalContact =
         widget.sessionData.hasAnimalContact;
   }
 
   void _continue() {
-    if (_hasFallRisk == null ||
+    if (_hasHeightActivity == null ||
         _hasAnimalContact == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -45,8 +45,8 @@ class _ActivitySafetyPageState
       return;
     }
 
-    widget.sessionData.hasFallRisk =
-        _hasFallRisk;
+    widget.sessionData.hasHeightActivity =
+        _hasHeightActivity;
 
     widget.sessionData.hasAnimalContact =
         _hasAnimalContact;
@@ -114,10 +114,10 @@ class _ActivitySafetyPageState
             _yesNoQuestion(
               question:
                   'L’activité se déroule-t-elle en hauteur ?',
-              value: _hasFallRisk,
+              value: _hasHeightActivity,
               onChanged: (value) {
                 setState(() {
-                  _hasFallRisk = value;
+                  _hasHeightActivity = value;
                 });
               },
             ),

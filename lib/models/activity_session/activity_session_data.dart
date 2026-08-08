@@ -33,7 +33,7 @@ class ActivitySessionData {
   ActivityThreeStateAnswer? electricityMayBeUnavailable;
   ActivityThreeStateAnswer? phoneNetworkMayBeUnavailable;
 
-  bool? hasFallRisk;
+  bool? hasHeightActivity;
   bool? hasAnimalContact;
 
   bool? hasLoudEnvironment;
@@ -58,7 +58,7 @@ class ActivitySessionData {
     this.collectiveAccommodation,
     this.electricityMayBeUnavailable,
     this.phoneNetworkMayBeUnavailable,
-    this.hasFallRisk,
+    this.hasHeightActivity,
     this.hasAnimalContact,
     this.hasLoudEnvironment,
     this.hasLargeCrowd,

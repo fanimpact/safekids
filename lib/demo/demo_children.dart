@@ -4,6 +4,7 @@ import '../models/aquatic_activity_data.dart';
 import '../models/child_profile_data.dart';
 import '../models/clothing_data.dart';
 import '../models/communication_data.dart';
+import '../models/emergency_treatment_data.dart';
 import '../models/identity_data.dart';
 import '../models/other_information_data.dart';
 import '../models/overnight_stay_data.dart';
@@ -65,10 +66,8 @@ class DemoChildren {
       medicalEvents: [],
       triggerFactors: TriggerFactorData(
         hasTriggerFactors: true,
-
         flashingLights: true,
         requiresGlassesOutdoors: true,
-
         heat: true,
         fatigueOrLackOfSleep: true,
         noise: false,
@@ -76,24 +75,27 @@ class DemoChildren {
         confinedSpaces: false,
         physicalEffort: false,
         stressOrStrongEmotions: true,
-
         waterContact: true,
         waterVigilance:
             WaterVigilance.cannotSwim,
         otherWaterVigilance: null,
-
         animals: false,
         animalVigilance: null,
         otherAnimalVigilance: null,
-
         height: false,
         heightVigilance: null,
         otherHeightVigilance: null,
-
         other: null,
       ),
       dailyTreatments: [],
-      emergencyTreatments: [],
+      emergencyTreatments: [
+        EmergencyTreatmentData(
+          medicationName: 'Buccolam',
+          administrationCondition: null,
+          dosage: null,
+          administrationMethod: null,
+        ),
+      ],
       allergies: [],
       medicalDevices: [],
       contacts: [],
@@ -138,8 +140,16 @@ class DemoChildren {
         otherAdaptationDetails: null,
       ),
       transport: TransportData(
-        requiresAdaptations: false,
-        motionSickness: false,
+        requiresAdaptations: true,
+        motionSickness: true,
+        motionSicknessTransports: {
+          TransportMode.car,
+        },
+        takesMotionSicknessMedication: true,
+        motionSicknessMedicationNames: {
+          TransportMode.car:
+              'Médicament test mal des transports',
+        },
         requiresSpecialEquipment: false,
         specialEquipmentDetails: null,
         requiresSpecialAttention: false,
@@ -224,10 +234,8 @@ class DemoChildren {
       medicalEvents: [],
       triggerFactors: TriggerFactorData(
         hasTriggerFactors: true,
-
         flashingLights: false,
         requiresGlassesOutdoors: false,
-
         heat: false,
         fatigueOrLackOfSleep: false,
         noise: false,
@@ -235,24 +243,35 @@ class DemoChildren {
         confinedSpaces: false,
         physicalEffort: false,
         stressOrStrongEmotions: false,
-
         waterContact: true,
         waterVigilance:
             WaterVigilance.cannotSwim,
         otherWaterVigilance: null,
-
         animals: false,
         animalVigilance: null,
         otherAnimalVigilance: null,
-
         height: false,
         heightVigilance: null,
         otherHeightVigilance: null,
-
         other: null,
       ),
       dailyTreatments: [],
-      emergencyTreatments: [],
+      emergencyTreatments: [
+        EmergencyTreatmentData(
+          medicationName: 'Desloratadine',
+          administrationCondition:
+              'En cas de piqûre de guêpe',
+          dosage: null,
+          administrationMethod: null,
+        ),
+        EmergencyTreatmentData(
+          medicationName: 'Solupred',
+          administrationCondition:
+              'En cas de piqûre de guêpe',
+          dosage: null,
+          administrationMethod: null,
+        ),
+      ],
       allergies: [
         AllergyData(
           allergen:
