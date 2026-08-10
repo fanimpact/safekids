@@ -130,8 +130,11 @@ class DemoChildren {
             false,
         requiresDedicatedAdultNearWater:
             true,
-        requiresSpecialEquipment: false,
-        specialEquipmentDetails: null,
+
+        requiresSpecialEquipment: true,
+        specialEquipmentDetails:
+            'Bouchons d’oreilles et bonnet de bain',
+
         requiresAdaptedSupervision: true,
         notifyLifeguard: true,
         requiresDedicatedAdult: true,

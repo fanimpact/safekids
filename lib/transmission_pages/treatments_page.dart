@@ -15,10 +15,12 @@ class TreatmentsPage extends StatefulWidget {
   });
 
   @override
-  State<TreatmentsPage> createState() => _TreatmentsPageState();
+  State<TreatmentsPage> createState() =>
+      _TreatmentsPageState();
 }
 
-class _TreatmentsPageState extends State<TreatmentsPage> {
+class _TreatmentsPageState
+    extends State<TreatmentsPage> {
   bool? _hasDailyTreatments;
   bool? _hasEmergencyTreatments;
   bool? _hasAllergies;
@@ -28,7 +30,8 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
   void initState() {
     super.initState();
 
-    final draft = widget.transmissionController.formData;
+    final draft =
+        widget.transmissionController.formData;
 
     if (draft.dailyTreatments.isNotEmpty) {
       _hasDailyTreatments = true;
@@ -47,87 +50,119 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
     }
   }
 
-  void _updateHasDailyTreatments(bool value) {
+  void _updateHasDailyTreatments(
+    bool value,
+  ) {
     setState(() {
       _hasDailyTreatments = value;
 
       if (value) {
-        widget.transmissionController.ensureFirstDailyTreatment();
+        widget.transmissionController
+            .ensureFirstDailyTreatment();
       } else {
-        widget.transmissionController.formData.dailyTreatments.clear();
+        widget.transmissionController
+            .formData.dailyTreatments
+            .clear();
       }
     });
   }
 
-  void _updateHasEmergencyTreatments(bool value) {
+  void _updateHasEmergencyTreatments(
+    bool value,
+  ) {
     setState(() {
       _hasEmergencyTreatments = value;
 
       if (value) {
-        widget.transmissionController.ensureFirstEmergencyTreatment();
+        widget.transmissionController
+            .ensureFirstEmergencyTreatment();
       } else {
-        widget.transmissionController.formData.emergencyTreatments.clear();
+        widget.transmissionController
+            .formData.emergencyTreatments
+            .clear();
       }
     });
   }
 
-  void _updateHasAllergies(bool value) {
+  void _updateHasAllergies(
+    bool value,
+  ) {
     setState(() {
       _hasAllergies = value;
 
       if (value) {
-        widget.transmissionController.ensureFirstAllergy();
+        widget.transmissionController
+            .ensureFirstAllergy();
       } else {
-        widget.transmissionController.formData.allergies.clear();
+        widget.transmissionController
+            .formData.allergies
+            .clear();
       }
     });
   }
 
-  void _updateHasMedicalDevices(bool value) {
+  void _updateHasMedicalDevices(
+    bool value,
+  ) {
     setState(() {
       _hasMedicalDevices = value;
 
       if (value) {
-        widget.transmissionController.ensureFirstMedicalDevice();
+        widget.transmissionController
+            .ensureFirstMedicalDevice();
       } else {
-        widget.transmissionController.formData.medicalDevices.clear();
+        widget.transmissionController
+            .formData.medicalDevices
+            .clear();
       }
     });
   }
 
   void _addDailyTreatment() {
     setState(() {
-      widget.transmissionController.addDailyTreatment();
+      widget.transmissionController
+          .addDailyTreatment();
     });
   }
 
-  void _removeDailyTreatment(int index) {
+  void _removeDailyTreatment(
+    int index,
+  ) {
     setState(() {
-      widget.transmissionController.removeDailyTreatment(index);
+      widget.transmissionController
+          .removeDailyTreatment(index);
     });
   }
 
   void _addEmergencyTreatment() {
     setState(() {
-      widget.transmissionController.addEmergencyTreatment();
+      widget.transmissionController
+          .addEmergencyTreatment();
     });
   }
 
-  void _removeEmergencyTreatment(int index) {
+  void _removeEmergencyTreatment(
+    int index,
+  ) {
     setState(() {
-      widget.transmissionController.removeEmergencyTreatment(index);
+      widget.transmissionController
+          .removeEmergencyTreatment(index);
     });
   }
 
   void _addAllergy() {
     setState(() {
-      widget.transmissionController.addAllergy();
+      widget.transmissionController
+          .addAllergy();
     });
   }
 
-  void _removeAllergy(int index) {
+  void _removeAllergy(
+    int index,
+  ) {
     setState(() {
-      widget.transmissionController.removeAllergy(index);
+      widget.transmissionController
+          .removeAllergy(index);
     });
   }
 
@@ -137,7 +172,10 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
   ) {
     setState(() {
       widget.transmissionController
-          .updateAllergyHasDailyTreatment(index, value);
+          .updateAllergyHasDailyTreatment(
+        index,
+        value,
+      );
     });
   }
 
@@ -147,19 +185,26 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
   ) {
     setState(() {
       widget.transmissionController
-          .updateAllergyHasEmergencyTreatment(index, value);
+          .updateAllergyHasEmergencyTreatment(
+        index,
+        value,
+      );
     });
   }
 
   void _addMedicalDevice() {
     setState(() {
-      widget.transmissionController.addMedicalDevice();
+      widget.transmissionController
+          .addMedicalDevice();
     });
   }
 
-  void _removeMedicalDevice(int index) {
+  void _removeMedicalDevice(
+    int index,
+  ) {
     setState(() {
-      widget.transmissionController.removeMedicalDevice(index);
+      widget.transmissionController
+          .removeMedicalDevice(index);
     });
   }
 
@@ -167,197 +212,449 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ContactsPage(
-          transmissionController: widget.transmissionController,
+        builder: (context) =>
+            ContactsPage(
+          transmissionController:
+              widget.transmissionController,
         ),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final draft = widget.transmissionController.formData;
+  Widget _buildDailyTreatmentPathologies(
+    int treatmentIndex,
+  ) {
+    final draft =
+        widget.transmissionController.formData;
 
-    final dailyTreatments = draft.dailyTreatments;
-    final emergencyTreatments = draft.emergencyTreatments;
-    final allergies = draft.allergies;
-    final medicalDevices = draft.medicalDevices;
+    final pathologies = draft.pathologies
+        .where(
+          (pathology) =>
+              pathology.name != null &&
+              pathology.name!
+                  .trim()
+                  .isNotEmpty,
+        )
+        .toList();
+
+    if (pathologies.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final treatment =
+        draft.dailyTreatments[
+          treatmentIndex
+        ];
+
+    return Column(
+      crossAxisAlignment:
+          CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 24),
+
+        const Text(
+          'Ce traitement est-il lié à une ou plusieurs pathologies renseignées ?',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        for (final pathology in pathologies)
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            controlAffinity:
+                ListTileControlAffinity.leading,
+            title: Text(
+              pathology.name!.trim(),
+            ),
+            value: treatment
+                .relatedPathologyIds
+                .contains(
+              pathology.pathologyId,
+            ),
+            onChanged: (value) {
+              setState(() {
+                widget
+                    .transmissionController
+                    .updateDailyTreatmentPathology(
+                  treatmentIndex,
+                  pathology.pathologyId,
+                  value ?? false,
+                );
+              });
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildEmergencyTreatmentPathologies(
+    int treatmentIndex,
+  ) {
+    final draft =
+        widget.transmissionController.formData;
+
+    final pathologies = draft.pathologies
+        .where(
+          (pathology) =>
+              pathology.name != null &&
+              pathology.name!
+                  .trim()
+                  .isNotEmpty,
+        )
+        .toList();
+
+    if (pathologies.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final treatment =
+        draft.emergencyTreatments[
+          treatmentIndex
+        ];
+
+    return Column(
+      crossAxisAlignment:
+          CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 24),
+
+        const Text(
+          'Ce traitement est-il lié à une ou plusieurs pathologies renseignées ?',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        for (final pathology in pathologies)
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            controlAffinity:
+                ListTileControlAffinity.leading,
+            title: Text(
+              pathology.name!.trim(),
+            ),
+            value: treatment
+                .relatedPathologyIds
+                .contains(
+              pathology.pathologyId,
+            ),
+            onChanged: (value) {
+              setState(() {
+                widget
+                    .transmissionController
+                    .updateEmergencyTreatmentPathology(
+                  treatmentIndex,
+                  pathology.pathologyId,
+                  value ?? false,
+                );
+              });
+            },
+          ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    final draft =
+        widget.transmissionController.formData;
+
+    final dailyTreatments =
+        draft.dailyTreatments;
+
+    final emergencyTreatments =
+        draft.emergencyTreatments;
+
+    final allergies =
+        draft.allergies;
+
+    final medicalDevices =
+        draft.medicalDevices;
 
     return QuestionnairePage(
       title: "",
       subtitle:
           "Quels sont les traitements actuellement prescrits à votre enfant ?",
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment:
+            CrossAxisAlignment.stretch,
         children: [
           const Text(
             "Traitements réguliers",
             style: TextStyle(
               fontSize: 21,
-              fontWeight: FontWeight.bold,
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(
+            height: 20,
+          ),
 
           SkYesNoField(
             label:
                 "En dehors des traitements ponctuels (antibiotiques, Doliprane...), votre enfant suit-il un ou plusieurs traitements quotidiens prescrits ?",
-            value: _hasDailyTreatments,
-            onChanged: _updateHasDailyTreatments,
+            value:
+                _hasDailyTreatments,
+            onChanged:
+                _updateHasDailyTreatments,
           ),
 
-          if (_hasDailyTreatments == true) ...[
-            const SizedBox(height: 28),
+          if (_hasDailyTreatments ==
+              true) ...[
+            const SizedBox(
+              height: 28,
+            ),
 
             for (
               int index = 0;
-              index < dailyTreatments.length;
+              index <
+                  dailyTreatments.length;
               index++
             ) ...[
               Text(
                 "Traitement quotidien n°${index + 1}",
-                style: const TextStyle(
+                style:
+                    const TextStyle(
                   fontSize: 19,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(
+                height: 16,
+              ),
 
               SkTextField(
-                label: "Nom du traitement",
-                controller: TextEditingController(
+                label:
+                    "Nom du traitement",
+                controller:
+                    TextEditingController(
                   text:
-                      dailyTreatments[index].medicationName ?? '',
+                      dailyTreatments[
+                                  index]
+                              .medicationName ??
+                          '',
                 ),
                 onChanged: (value) {
-                  widget.transmissionController
-                      .updateDailyTreatmentName(index, value);
+                  widget
+                      .transmissionController
+                      .updateDailyTreatmentName(
+                    index,
+                    value,
+                  );
                 },
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
 
               SkTextField(
                 label: "Posologie",
-                controller: TextEditingController(
-                  text: dailyTreatments[index].dosage ?? '',
+                controller:
+                    TextEditingController(
+                  text:
+                      dailyTreatments[
+                                  index]
+                              .dosage ??
+                          '',
                 ),
                 onChanged: (value) {
-                  widget.transmissionController
-                      .updateDailyTreatmentDosage(index, value);
+                  widget
+                      .transmissionController
+                      .updateDailyTreatmentDosage(
+                    index,
+                    value,
+                  );
                 },
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
 
               SkTextField(
                 label:
                     "À quelle(s) heure(s) est-il habituellement administré ?",
-                controller: TextEditingController(
+                controller:
+                    TextEditingController(
                   text:
-                      dailyTreatments[index].administrationTimes ??
+                      dailyTreatments[
+                                  index]
+                              .administrationTimes ??
                           '',
                 ),
                 onChanged: (value) {
-                  widget.transmissionController
-                      .updateDailyTreatmentTimes(index, value);
+                  widget
+                      .transmissionController
+                      .updateDailyTreatmentTimes(
+                    index,
+                    value,
+                  );
                 },
               ),
 
-              if (dailyTreatments.length > 1) ...[
-                const SizedBox(height: 12),
+              _buildDailyTreatmentPathologies(
+                index,
+              ),
+
+              if (dailyTreatments
+                      .length >
+                  1) ...[
+                const SizedBox(
+                  height: 12,
+                ),
 
                 Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
+                  alignment:
+                      Alignment
+                          .centerRight,
+                  child:
+                      TextButton.icon(
                     onPressed: () =>
-                        _removeDailyTreatment(index),
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text("Supprimer"),
+                        _removeDailyTreatment(
+                      index,
+                    ),
+                    icon: const Icon(
+                      Icons
+                          .delete_outline,
+                    ),
+                    label:
+                        const Text(
+                      "Supprimer",
+                    ),
                   ),
                 ),
               ],
 
-              const SizedBox(height: 28),
+              const SizedBox(
+                height: 28,
+              ),
             ],
 
             OutlinedButton.icon(
-              onPressed: _addDailyTreatment,
-              icon: const Icon(Icons.add),
+              onPressed:
+                  _addDailyTreatment,
+              icon:
+                  const Icon(
+                Icons.add,
+              ),
               label: const Text(
                 "Ajouter un traitement quotidien",
               ),
             ),
           ],
 
-          const SizedBox(height: 40),
+          const SizedBox(
+            height: 40,
+          ),
 
           const Divider(),
 
-          const SizedBox(height: 30),
+          const SizedBox(
+            height: 30,
+          ),
 
           const Text(
             "Traitements d’urgence",
             style: TextStyle(
               fontSize: 21,
-              fontWeight: FontWeight.bold,
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(
+            height: 20,
+          ),
 
           SkYesNoField(
             label:
                 "Votre enfant dispose-t-il d’un ou plusieurs traitements d’urgence prescrits ?",
-            value: _hasEmergencyTreatments,
-            onChanged: _updateHasEmergencyTreatments,
+            value:
+                _hasEmergencyTreatments,
+            onChanged:
+                _updateHasEmergencyTreatments,
           ),
 
-          if (_hasEmergencyTreatments == true) ...[
-            const SizedBox(height: 28),
+          if (_hasEmergencyTreatments ==
+              true) ...[
+            const SizedBox(
+              height: 28,
+            ),
 
             for (
               int index = 0;
-              index < emergencyTreatments.length;
+              index <
+                  emergencyTreatments
+                      .length;
               index++
             ) ...[
               Text(
                 "Traitement d’urgence n°${index + 1}",
-                style: const TextStyle(
+                style:
+                    const TextStyle(
                   fontSize: 19,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(
+                height: 16,
+              ),
 
               SkTextField(
-                label: "Nom du traitement",
-                controller: TextEditingController(
-                  text: emergencyTreatments[index]
-                          .medicationName ??
-                      '',
+                label:
+                    "Nom du traitement",
+                controller:
+                    TextEditingController(
+                  text:
+                      emergencyTreatments[
+                                  index]
+                              .medicationName ??
+                          '',
                 ),
                 onChanged: (value) {
-                  widget.transmissionController
-                      .updateEmergencyTreatmentName(index, value);
+                  widget
+                      .transmissionController
+                      .updateEmergencyTreatmentName(
+                    index,
+                    value,
+                  );
                 },
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
 
               SkTextField(
                 label:
                     "Dans quelle situation doit-il être administré ?",
-                controller: TextEditingController(
-                  text: emergencyTreatments[index]
-                          .administrationCondition ??
-                      '',
+                controller:
+                    TextEditingController(
+                  text:
+                      emergencyTreatments[
+                                  index]
+                              .administrationCondition ??
+                          '',
                 ),
                 onChanged: (value) {
-                  widget.transmissionController
+                  widget
+                      .transmissionController
                       .updateEmergencyTreatmentCondition(
                     index,
                     value,
@@ -365,15 +662,23 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
                 },
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
 
               SkTextField(
                 label: "Posologie",
-                controller: TextEditingController(
-                  text: emergencyTreatments[index].dosage ?? '',
+                controller:
+                    TextEditingController(
+                  text:
+                      emergencyTreatments[
+                                  index]
+                              .dosage ??
+                          '',
                 ),
                 onChanged: (value) {
-                  widget.transmissionController
+                  widget
+                      .transmissionController
                       .updateEmergencyTreatmentDosage(
                     index,
                     value,
@@ -381,17 +686,24 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
                 },
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
 
               SkTextField(
-                label: "Mode d’administration",
-                controller: TextEditingController(
-                  text: emergencyTreatments[index]
-                          .administrationMethod ??
-                      '',
+                label:
+                    "Mode d’administration",
+                controller:
+                    TextEditingController(
+                  text:
+                      emergencyTreatments[
+                                  index]
+                              .administrationMethod ??
+                          '',
                 ),
                 onChanged: (value) {
-                  widget.transmissionController
+                  widget
+                      .transmissionController
                       .updateEmergencyTreatmentMethod(
                     index,
                     value,
@@ -399,94 +711,152 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
                 },
               ),
 
-              if (emergencyTreatments.length > 1) ...[
-                const SizedBox(height: 12),
+              _buildEmergencyTreatmentPathologies(
+                index,
+              ),
+
+              if (emergencyTreatments
+                      .length >
+                  1) ...[
+                const SizedBox(
+                  height: 12,
+                ),
 
                 Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
+                  alignment:
+                      Alignment
+                          .centerRight,
+                  child:
+                      TextButton.icon(
                     onPressed: () =>
-                        _removeEmergencyTreatment(index),
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text("Supprimer"),
+                        _removeEmergencyTreatment(
+                      index,
+                    ),
+                    icon: const Icon(
+                      Icons
+                          .delete_outline,
+                    ),
+                    label:
+                        const Text(
+                      "Supprimer",
+                    ),
                   ),
                 ),
               ],
 
-              const SizedBox(height: 28),
+              const SizedBox(
+                height: 28,
+              ),
             ],
 
             OutlinedButton.icon(
-              onPressed: _addEmergencyTreatment,
-              icon: const Icon(Icons.add),
+              onPressed:
+                  _addEmergencyTreatment,
+              icon:
+                  const Icon(
+                Icons.add,
+              ),
               label: const Text(
                 "Ajouter un traitement d’urgence",
               ),
             ),
           ],
-                    const SizedBox(height: 40),
+
+          const SizedBox(
+            height: 40,
+          ),
 
           const Divider(),
 
-          const SizedBox(height: 30),
+          const SizedBox(
+            height: 30,
+          ),
 
           const Text(
             "Allergies",
             style: TextStyle(
               fontSize: 21,
-              fontWeight: FontWeight.bold,
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(
+            height: 20,
+          ),
 
           SkYesNoField(
             label:
                 "Votre enfant présente-t-il une ou plusieurs allergies importantes ?",
-            value: _hasAllergies,
-            onChanged: _updateHasAllergies,
+            value:
+                _hasAllergies,
+            onChanged:
+                _updateHasAllergies,
           ),
 
-          if (_hasAllergies == true) ...[
-            const SizedBox(height: 28),
+          if (_hasAllergies ==
+              true) ...[
+            const SizedBox(
+              height: 28,
+            ),
 
             for (
               int index = 0;
-              index < allergies.length;
+              index <
+                  allergies.length;
               index++
             ) ...[
               Text(
                 "Allergie n°${index + 1}",
-                style: const TextStyle(
+                style:
+                    const TextStyle(
                   fontSize: 19,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(
+                height: 16,
+              ),
 
               SkTextField(
                 label:
                     "À quoi votre enfant est-il allergique ?",
-                controller: TextEditingController(
-                  text: allergies[index].allergen ?? '',
+                controller:
+                    TextEditingController(
+                  text:
+                      allergies[index]
+                              .allergen ??
+                          '',
                 ),
                 onChanged: (value) {
-                  widget.transmissionController
-                      .updateAllergen(index, value);
+                  widget
+                      .transmissionController
+                      .updateAllergen(
+                    index,
+                    value,
+                  );
                 },
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
 
               SkTextField(
-                label: "Réaction déjà observée",
-                controller: TextEditingController(
+                label:
+                    "Réaction déjà observée",
+                controller:
+                    TextEditingController(
                   text:
-                      allergies[index].observedReaction ?? '',
+                      allergies[index]
+                              .observedReaction ??
+                          '',
                 ),
                 onChanged: (value) {
-                  widget.transmissionController
+                  widget
+                      .transmissionController
                       .updateAllergyObservedReaction(
                     index,
                     value,
@@ -494,12 +864,16 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
                 },
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(
+                height: 24,
+              ),
 
               SkYesNoField(
                 label:
                     "Votre enfant suit-il un traitement quotidien pour cette allergie ?",
-                value: allergies[index].hasDailyTreatment,
+                value:
+                    allergies[index]
+                        .hasDailyTreatment,
                 onChanged: (value) {
                   _updateAllergyHasDailyTreatment(
                     index,
@@ -508,18 +882,27 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
                 },
               ),
 
-              if (allergies[index].hasDailyTreatment == true) ...[
-                const SizedBox(height: 20),
+              if (allergies[index]
+                      .hasDailyTreatment ==
+                  true) ...[
+                const SizedBox(
+                  height: 20,
+                ),
 
                 SkTextField(
-                  label: "Nom du traitement quotidien",
-                  controller: TextEditingController(
+                  label:
+                      "Nom du traitement quotidien",
+                  controller:
+                      TextEditingController(
                     text:
-                        allergies[index].dailyTreatmentName ??
+                        allergies[index]
+                                .dailyTreatmentName ??
                             '',
                   ),
-                  onChanged: (value) {
-                    widget.transmissionController
+                  onChanged:
+                      (value) {
+                    widget
+                        .transmissionController
                         .updateAllergyDailyTreatmentName(
                       index,
                       value,
@@ -527,17 +910,24 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
                   },
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(
+                  height: 20,
+                ),
 
                 SkTextField(
-                  label: "Posologie",
-                  controller: TextEditingController(
-                    text: allergies[index]
-                            .dailyTreatmentDosage ??
-                        '',
+                  label:
+                      "Posologie",
+                  controller:
+                      TextEditingController(
+                    text:
+                        allergies[index]
+                                .dailyTreatmentDosage ??
+                            '',
                   ),
-                  onChanged: (value) {
-                    widget.transmissionController
+                  onChanged:
+                      (value) {
+                    widget
+                        .transmissionController
                         .updateAllergyDailyTreatmentDosage(
                       index,
                       value,
@@ -546,13 +936,16 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
                 ),
               ],
 
-              const SizedBox(height: 24),
+              const SizedBox(
+                height: 24,
+              ),
 
               SkYesNoField(
                 label:
                     "Votre enfant dispose-t-il d’un traitement d’urgence pour cette allergie ?",
                 value:
-                    allergies[index].hasEmergencyTreatment,
+                    allergies[index]
+                        .hasEmergencyTreatment,
                 onChanged: (value) {
                   _updateAllergyHasEmergencyTreatment(
                     index,
@@ -561,19 +954,27 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
                 },
               ),
 
-              if (allergies[index].hasEmergencyTreatment ==
+              if (allergies[index]
+                      .hasEmergencyTreatment ==
                   true) ...[
-                const SizedBox(height: 20),
+                const SizedBox(
+                  height: 20,
+                ),
 
                 SkTextField(
-                  label: "Nom du traitement d’urgence",
-                  controller: TextEditingController(
-                    text: allergies[index]
-                            .emergencyTreatmentName ??
-                        '',
+                  label:
+                      "Nom du traitement d’urgence",
+                  controller:
+                      TextEditingController(
+                    text:
+                        allergies[index]
+                                .emergencyTreatmentName ??
+                            '',
                   ),
-                  onChanged: (value) {
-                    widget.transmissionController
+                  onChanged:
+                      (value) {
+                    widget
+                        .transmissionController
                         .updateAllergyEmergencyTreatmentName(
                       index,
                       value,
@@ -581,17 +982,24 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
                   },
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(
+                  height: 20,
+                ),
 
                 SkTextField(
-                  label: "Posologie",
-                  controller: TextEditingController(
-                    text: allergies[index]
-                            .emergencyTreatmentDosage ??
-                        '',
+                  label:
+                      "Posologie",
+                  controller:
+                      TextEditingController(
+                    text:
+                        allergies[index]
+                                .emergencyTreatmentDosage ??
+                            '',
                   ),
-                  onChanged: (value) {
-                    widget.transmissionController
+                  onChanged:
+                      (value) {
+                    widget
+                        .transmissionController
                         .updateAllergyEmergencyTreatmentDosage(
                       index,
                       value,
@@ -600,123 +1008,216 @@ class _TreatmentsPageState extends State<TreatmentsPage> {
                 ),
               ],
 
-              if (allergies.length > 1) ...[
-                const SizedBox(height: 12),
+              if (allergies.length >
+                  1) ...[
+                const SizedBox(
+                  height: 12,
+                ),
 
                 Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () => _removeAllergy(index),
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text("Supprimer"),
+                  alignment:
+                      Alignment
+                          .centerRight,
+                  child:
+                      TextButton.icon(
+                    onPressed: () =>
+                        _removeAllergy(
+                      index,
+                    ),
+                    icon: const Icon(
+                      Icons
+                          .delete_outline,
+                    ),
+                    label:
+                        const Text(
+                      "Supprimer",
+                    ),
                   ),
                 ),
               ],
 
-              const SizedBox(height: 28),
+              const SizedBox(
+                height: 28,
+              ),
             ],
 
             OutlinedButton.icon(
-              onPressed: _addAllergy,
-              icon: const Icon(Icons.add),
-              label: const Text("Ajouter une allergie"),
+              onPressed:
+                  _addAllergy,
+              icon:
+                  const Icon(
+                Icons.add,
+              ),
+              label:
+                  const Text(
+                "Ajouter une allergie",
+              ),
             ),
           ],
 
-          const SizedBox(height: 40),
+          const SizedBox(
+            height: 40,
+          ),
 
           const Divider(),
 
-          const SizedBox(height: 30),
+          const SizedBox(
+            height: 30,
+          ),
 
           const Text(
             "Dispositifs médicaux",
             style: TextStyle(
               fontSize: 21,
-              fontWeight: FontWeight.bold,
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(
+            height: 20,
+          ),
 
           SkYesNoField(
             label:
                 "Votre enfant utilise-t-il un ou plusieurs dispositifs médicaux ?",
-            value: _hasMedicalDevices,
-            onChanged: _updateHasMedicalDevices,
+            value:
+                _hasMedicalDevices,
+            onChanged:
+                _updateHasMedicalDevices,
           ),
 
-          if (_hasMedicalDevices == true) ...[
-            const SizedBox(height: 28),
+          if (_hasMedicalDevices ==
+              true) ...[
+            const SizedBox(
+              height: 28,
+            ),
 
             for (
               int index = 0;
-              index < medicalDevices.length;
+              index <
+                  medicalDevices.length;
               index++
             ) ...[
               Text(
                 "Dispositif n°${index + 1}",
-                style: const TextStyle(
+                style:
+                    const TextStyle(
                   fontSize: 19,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(
+                height: 16,
+              ),
 
               SkTextField(
-                label: "Nom du dispositif",
-                controller: TextEditingController(
-                  text: medicalDevices[index].deviceName ?? '',
+                label:
+                    "Nom du dispositif",
+                controller:
+                    TextEditingController(
+                  text:
+                      medicalDevices[
+                                  index]
+                              .deviceName ??
+                          '',
                 ),
                 onChanged: (value) {
-                  widget.transmissionController
-                      .updateMedicalDeviceName(index, value);
+                  widget
+                      .transmissionController
+                      .updateMedicalDeviceName(
+                    index,
+                    value,
+                  );
                 },
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
 
               SkTextField(
-                label: "À quoi sert-il ?",
-                controller: TextEditingController(
-                  text: medicalDevices[index].mainUse ?? '',
+                label:
+                    "À quoi sert-il ?",
+                controller:
+                    TextEditingController(
+                  text:
+                      medicalDevices[
+                                  index]
+                              .mainUse ??
+                          '',
                 ),
                 onChanged: (value) {
-                  widget.transmissionController
-                      .updateMedicalDeviceUse(index, value);
+                  widget
+                      .transmissionController
+                      .updateMedicalDeviceUse(
+                    index,
+                    value,
+                  );
                 },
               ),
 
-              if (medicalDevices.length > 1) ...[
-                const SizedBox(height: 12),
+              if (medicalDevices
+                      .length >
+                  1) ...[
+                const SizedBox(
+                  height: 12,
+                ),
 
                 Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
+                  alignment:
+                      Alignment
+                          .centerRight,
+                  child:
+                      TextButton.icon(
                     onPressed: () =>
-                        _removeMedicalDevice(index),
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text("Supprimer"),
+                        _removeMedicalDevice(
+                      index,
+                    ),
+                    icon: const Icon(
+                      Icons
+                          .delete_outline,
+                    ),
+                    label:
+                        const Text(
+                      "Supprimer",
+                    ),
                   ),
                 ),
               ],
 
-              const SizedBox(height: 28),
+              const SizedBox(
+                height: 28,
+              ),
             ],
 
             OutlinedButton.icon(
-              onPressed: _addMedicalDevice,
-              icon: const Icon(Icons.add),
-              label: const Text("Ajouter un dispositif"),
+              onPressed:
+                  _addMedicalDevice,
+              icon:
+                  const Icon(
+                Icons.add,
+              ),
+              label:
+                  const Text(
+                "Ajouter un dispositif",
+              ),
             ),
           ],
 
-          const SizedBox(height: 30),
+          const SizedBox(
+            height: 30,
+          ),
 
           FilledButton(
-            onPressed: _continue,
-            child: const Text("Continuer"),
+            onPressed:
+                _continue,
+            child:
+                const Text(
+              "Continuer",
+            ),
           ),
         ],
       ),

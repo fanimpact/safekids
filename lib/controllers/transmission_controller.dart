@@ -71,7 +71,24 @@ class TransmissionController {
     if (_draft.pathologies.length > 1 &&
         index >= 0 &&
         index < _draft.pathologies.length) {
+      final pathologyId =
+          _draft.pathologies[index].pathologyId;
+
       _draft.pathologies.removeAt(index);
+
+      for (final treatment
+          in _draft.dailyTreatments) {
+        treatment.relatedPathologyIds.remove(
+          pathologyId,
+        );
+      }
+
+      for (final treatment
+          in _draft.emergencyTreatments) {
+        treatment.relatedPathologyIds.remove(
+          pathologyId,
+        );
+      }
     }
   }
 
@@ -607,6 +624,29 @@ class TransmissionController {
         value.trim();
   }
 
+  void updateDailyTreatmentPathology(
+    int treatmentIndex,
+    String pathologyId,
+    bool selected,
+  ) {
+    final treatment =
+        _draft.dailyTreatments[treatmentIndex];
+
+    if (selected) {
+      if (!treatment.relatedPathologyIds.contains(
+        pathologyId,
+      )) {
+        treatment.relatedPathologyIds.add(
+          pathologyId,
+        );
+      }
+    } else {
+      treatment.relatedPathologyIds.remove(
+        pathologyId,
+      );
+    }
+  }
+
   // TRAITEMENTS D’URGENCE
 
   void ensureFirstEmergencyTreatment() {
@@ -673,6 +713,31 @@ class TransmissionController {
     _draft.emergencyTreatments[index]
             .administrationMethod =
         value.trim();
+  }
+
+  void updateEmergencyTreatmentPathology(
+    int treatmentIndex,
+    String pathologyId,
+    bool selected,
+  ) {
+    final treatment =
+        _draft.emergencyTreatments[
+          treatmentIndex
+        ];
+
+    if (selected) {
+      if (!treatment.relatedPathologyIds.contains(
+        pathologyId,
+      )) {
+        treatment.relatedPathologyIds.add(
+          pathologyId,
+        );
+      }
+    } else {
+      treatment.relatedPathologyIds.remove(
+        pathologyId,
+      );
+    }
   }
 
   // ALLERGIES

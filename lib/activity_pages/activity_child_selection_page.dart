@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../models/activity_session/activity_session_data.dart';
+import '../recommendation_engine/recommendation_engine.dart';
 import '../repositories/activity_session_repository.dart';
 import '../repositories/child_repository.dart';
-import 'activities_home_page.dart';
+import 'activity_recommendations_page.dart';
 
 class ActivityChildSelectionPage extends StatefulWidget {
   final ActivitySessionData sessionData;
@@ -36,18 +37,28 @@ class _ActivityChildSelectionPageState
   }
 
   void _saveActivity() {
-    ActivitySessionRepository.instance.addActivity(
+    final completeActivity =
+        ActivitySessionRepository.instance.addActivity(
       widget.sessionData,
       childIds: _selectedChildIds.toList(),
     );
 
-    Navigator.pushAndRemoveUntil(
+    final recommendationResult =
+        RecommendationEngine().generateRecommendations(
+      completeActivity,
+    );
+
+    completeActivity.recommendationsGenerated = true;
+
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) =>
-            const ActivitiesHomePage(),
+            ActivityRecommendationsPage(
+          activitySession: completeActivity,
+          recommendationResult: recommendationResult,
+        ),
       ),
-      (route) => route.isFirst,
     );
   }
 
@@ -171,7 +182,7 @@ class _ActivityChildSelectionPageState
                         ? null
                         : _saveActivity,
                 child: const Text(
-                  'Enregistrer l’activité',
+                  'Générer les recommandations',
                 ),
               ),
             ],

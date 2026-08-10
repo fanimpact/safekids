@@ -24,11 +24,13 @@ class OvernightStayRules {
       return recommendations;
     }
 
+    // Appareil utilisé pendant la nuit.
     if (overnightStay.usesNightDevice) {
       final deviceDetails =
           overnightStay.nightDeviceDetails?.trim();
 
-      if (deviceDetails != null && deviceDetails.isNotEmpty) {
+      if (deviceDetails != null &&
+          deviceDetails.isNotEmpty) {
         recommendations.add(
           Recommendation(
             id: 'overnight_night_device',
@@ -40,6 +42,7 @@ class OvernightStayRules {
       }
     }
 
+    // Surveillance nocturne éventuelle.
     if (overnightStay.requiresNightSupervision) {
       final supervisionDetails =
           overnightStay.nightSupervisionDetails?.trim();
@@ -66,7 +69,11 @@ class OvernightStayRules {
             electricityMayBeUnavailable ==
                 ActivityThreeStateAnswer.unknown;
 
+    // Une alimentation de secours n'est recommandée
+    // que si la coupure est indiquée comme critique
+    // pour cet enfant.
     if (overnightStay.requiresElectricity &&
+        overnightStay.powerFailureIsCritical &&
         electricityIsUncertainOrUnavailable) {
       recommendations.add(
         Recommendation(
@@ -78,18 +85,16 @@ class OvernightStayRules {
         ),
       );
 
-      if (overnightStay.powerFailureIsCritical) {
-        recommendations.add(
-          Recommendation(
-            id: 'overnight_power_failure_critical',
-            category:
-                RecommendationCategory.informationVigilance,
-            childId: childId,
-            text:
-                'Une coupure de courant peut avoir des conséquences critiques pour cet enfant.',
-          ),
-        );
-      }
+      recommendations.add(
+        Recommendation(
+          id: 'overnight_power_failure_critical',
+          category:
+              RecommendationCategory.informationVigilance,
+          childId: childId,
+          text:
+              'Une coupure de courant nécessite une vigilance particulière pour cet enfant.',
+        ),
+      );
     }
 
     return recommendations;

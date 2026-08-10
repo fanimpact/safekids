@@ -125,6 +125,10 @@ void main() {
           .map((recommendation) => recommendation.id)
           .toSet();
 
+      final texts = theoResult.recommendations
+          .map((recommendation) => recommendation.text)
+          .toSet();
+
       expect(
         ids,
         contains('water_dedicated_adult'),
@@ -138,6 +142,18 @@ void main() {
       expect(
         ids,
         contains('water_notify_lifeguard'),
+      );
+
+      expect(
+        ids,
+        contains('water_special_swimming_equipment'),
+      );
+
+      expect(
+        texts,
+        contains(
+          'Bouchons d’oreilles et bonnet de bain',
+        ),
       );
     },
   );
@@ -584,8 +600,7 @@ void main() {
     () {
       final activity = CompleteActivitySessionData(
         activity: ActivitySessionData(
-          activityName:
-              'Test électricité Théo',
+          activityName: 'Test électricité Théo',
           hasOvernightStay: true,
           electricityMayBeUnavailable:
               ActivityThreeStateAnswer.yes,
@@ -667,12 +682,11 @@ void main() {
   );
 
   test(
-    'Nuitée - Noé a besoin de sa machine et d’une alimentation de secours sans criticité',
+    'Nuitée - Noé emporte sa machine sans alimentation de secours imposée',
     () {
       final activity = CompleteActivitySessionData(
         activity: ActivitySessionData(
-          activityName:
-              'Test nuitée Noé',
+          activityName: 'Test nuitée Noé',
           hasOvernightStay: true,
           electricityMayBeUnavailable:
               ActivityThreeStateAnswer.yes,
@@ -693,14 +707,27 @@ void main() {
           .map((recommendation) => recommendation.id)
           .toSet();
 
+      final texts = noeResult.recommendations
+          .map((recommendation) => recommendation.text)
+          .toSet();
+
       expect(
         ids,
         contains('overnight_night_device'),
       );
 
       expect(
+        texts,
+        contains(
+          'Machine pour l’apnée du sommeil',
+        ),
+      );
+
+      expect(
         ids,
-        contains('overnight_backup_power'),
+        isNot(
+          contains('overnight_backup_power'),
+        ),
       );
 
       expect(
@@ -719,8 +746,7 @@ void main() {
     () {
       final activity = CompleteActivitySessionData(
         activity: ActivitySessionData(
-          activityName:
-              'Test sans nuitée',
+          activityName: 'Test sans nuitée',
           hasOvernightStay: false,
           electricityMayBeUnavailable:
               ActivityThreeStateAnswer.yes,
