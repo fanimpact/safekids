@@ -24,7 +24,7 @@ class GlobalActivityRules {
           category:
               RecommendationCategory.informationVigilance,
           text:
-              'Le réseau téléphonique peut être indisponible. Prévoir une solution permettant d’alerter les secours.',
+              'Le réseau téléphonique risque d’être indisponible.',
         ),
       );
     }

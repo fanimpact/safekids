@@ -34,6 +34,7 @@ class DemoChildren {
 
   static void _loadTheo() {
     const childId = 'demo-theo';
+    const epilepsyId = 'demo-theo-epilepsy';
 
     final existingChild =
         ChildRepository.instance.findByChildId(
@@ -57,6 +58,7 @@ class DemoChildren {
       ),
       pathologies: [
         PathologyData(
+          pathologyId: epilepsyId,
           name: 'Épilepsie',
           approximateDiagnosisDate: null,
           hasReferringProfessional: false,
@@ -94,6 +96,9 @@ class DemoChildren {
           administrationCondition: null,
           dosage: null,
           administrationMethod: null,
+          relatedPathologyIds: const [
+            epilepsyId,
+          ],
         ),
       ],
       allergies: [],
@@ -148,11 +153,8 @@ class DemoChildren {
         motionSicknessTransports: {
           TransportMode.car,
         },
-        takesMotionSicknessMedication: true,
-        motionSicknessMedicationNames: {
-          TransportMode.car:
-              'Médicament test mal des transports',
-        },
+        takesMotionSicknessMedication: false,
+        motionSicknessMedicationNames: {},
         requiresSpecialEquipment: false,
         specialEquipmentDetails: null,
         requiresSpecialAttention: false,
@@ -213,6 +215,8 @@ class DemoChildren {
 
   static void _loadNoe() {
     const childId = 'demo-noe';
+    const waspAllergyId =
+        'demo-noe-wasp-allergy';
 
     final existingChild =
         ChildRepository.instance.findByChildId(
@@ -267,6 +271,9 @@ class DemoChildren {
               'En cas de piqûre de guêpe',
           dosage: null,
           administrationMethod: null,
+          relatedAllergyIds: const [
+            waspAllergyId,
+          ],
         ),
         EmergencyTreatmentData(
           medicationName: 'Solupred',
@@ -274,10 +281,14 @@ class DemoChildren {
               'En cas de piqûre de guêpe',
           dosage: null,
           administrationMethod: null,
+          relatedAllergyIds: const [
+            waspAllergyId,
+          ],
         ),
       ],
       allergies: [
         AllergyData(
+          allergyId: waspAllergyId,
           allergen:
               'Piqûres de guêpe',
           observedReaction:

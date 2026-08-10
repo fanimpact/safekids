@@ -361,6 +361,146 @@ class _TreatmentsPageState
     );
   }
 
+  Widget _buildDailyTreatmentAllergies(
+    int treatmentIndex,
+  ) {
+    final draft =
+        widget.transmissionController.formData;
+
+    final allergies = draft.allergies
+        .where(
+          (allergy) =>
+              allergy.allergen != null &&
+              allergy.allergen!
+                  .trim()
+                  .isNotEmpty,
+        )
+        .toList();
+
+    if (allergies.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final treatment =
+        draft.dailyTreatments[
+          treatmentIndex
+        ];
+
+    return Column(
+      crossAxisAlignment:
+          CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 24),
+
+        const Text(
+          'Ce traitement est-il lié à une ou plusieurs allergies renseignées ?',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        for (final allergy in allergies)
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            controlAffinity:
+                ListTileControlAffinity.leading,
+            title: Text(
+              allergy.allergen!.trim(),
+            ),
+            value: treatment
+                .relatedAllergyIds
+                .contains(
+              allergy.allergyId,
+            ),
+            onChanged: (value) {
+              setState(() {
+                widget
+                    .transmissionController
+                    .updateDailyTreatmentAllergy(
+                  treatmentIndex,
+                  allergy.allergyId,
+                  value ?? false,
+                );
+              });
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildEmergencyTreatmentAllergies(
+    int treatmentIndex,
+  ) {
+    final draft =
+        widget.transmissionController.formData;
+
+    final allergies = draft.allergies
+        .where(
+          (allergy) =>
+              allergy.allergen != null &&
+              allergy.allergen!
+                  .trim()
+                  .isNotEmpty,
+        )
+        .toList();
+
+    if (allergies.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final treatment =
+        draft.emergencyTreatments[
+          treatmentIndex
+        ];
+
+    return Column(
+      crossAxisAlignment:
+          CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 24),
+
+        const Text(
+          'Ce traitement est-il lié à une ou plusieurs allergies renseignées ?',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        for (final allergy in allergies)
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            controlAffinity:
+                ListTileControlAffinity.leading,
+            title: Text(
+              allergy.allergen!.trim(),
+            ),
+            value: treatment
+                .relatedAllergyIds
+                .contains(
+              allergy.allergyId,
+            ),
+            onChanged: (value) {
+              setState(() {
+                widget
+                    .transmissionController
+                    .updateEmergencyTreatmentAllergy(
+                  treatmentIndex,
+                  allergy.allergyId,
+                  value ?? false,
+                );
+              });
+            },
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(
     BuildContext context,
@@ -507,6 +647,10 @@ class _TreatmentsPageState
               ),
 
               _buildDailyTreatmentPathologies(
+                index,
+              ),
+
+              _buildDailyTreatmentAllergies(
                 index,
               ),
 
@@ -712,6 +856,10 @@ class _TreatmentsPageState
               ),
 
               _buildEmergencyTreatmentPathologies(
+                index,
+              ),
+
+              _buildEmergencyTreatmentAllergies(
                 index,
               ),
 

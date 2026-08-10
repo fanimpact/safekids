@@ -100,7 +100,7 @@ void main() {
   );
 
   test(
-    'Communication - enfant pouvant sembler avoir compris',
+    'Communication - sembler avoir compris génère vérifier sa compréhension',
     () {
       final child = _createTestChild(
         childId: 'test-may-understand',
@@ -109,21 +109,21 @@ void main() {
 
       final recommendations = rules.evaluate(child);
 
-      final ids = recommendations
-          .map((recommendation) => recommendation.id)
-          .toSet();
+      final recommendation = recommendations.firstWhere(
+        (recommendation) =>
+            recommendation.id ==
+            'communication_verify_understanding',
+      );
 
       expect(
-        ids,
-        contains(
-          'communication_may_appear_to_understand',
-        ),
+        recommendation.text,
+        'Vérifier sa compréhension.',
       );
     },
   );
 
   test(
-    'Communication - vérifier individuellement la compréhension',
+    'Communication - vérifier individuellement génère vérifier sa compréhension',
     () {
       final child = _createTestChild(
         childId: 'test-verify-understanding',
@@ -132,15 +132,45 @@ void main() {
 
       final recommendations = rules.evaluate(child);
 
-      final ids = recommendations
-          .map((recommendation) => recommendation.id)
-          .toSet();
+      final recommendation = recommendations.firstWhere(
+        (recommendation) =>
+            recommendation.id ==
+            'communication_verify_understanding',
+      );
 
       expect(
-        ids,
-        contains(
-          'communication_verify_understanding',
-        ),
+        recommendation.text,
+        'Vérifier sa compréhension.',
+      );
+    },
+  );
+
+  test(
+    'Communication - les deux besoins génèrent une seule vérification',
+    () {
+      final child = _createTestChild(
+        childId: 'test-both-understanding',
+        mayAppearToUnderstand: true,
+        verifyUnderstandingIndividually: true,
+      );
+
+      final recommendations = rules.evaluate(child);
+
+      final understandingRecommendations =
+          recommendations.where(
+        (recommendation) =>
+            recommendation.id ==
+            'communication_verify_understanding',
+      );
+
+      expect(
+        understandingRecommendations.length,
+        1,
+      );
+
+      expect(
+        understandingRecommendations.first.text,
+        'Vérifier sa compréhension.',
       );
     },
   );
@@ -159,7 +189,8 @@ void main() {
 
       final support = recommendations.firstWhere(
         (recommendation) =>
-            recommendation.id == 'communication_support',
+            recommendation.id ==
+            'communication_support',
       );
 
       expect(
@@ -183,7 +214,8 @@ void main() {
       final supportRecommendations =
           recommendations.where(
         (recommendation) =>
-            recommendation.id == 'communication_support',
+            recommendation.id ==
+            'communication_support',
       );
 
       expect(

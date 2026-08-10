@@ -13,14 +13,18 @@ class WaterRules {
     final recommendations = <Recommendation>[];
 
     final childId = child.childId;
-    final aquaticActivity = child.activityProfile?.aquaticActivity;
+    final aquaticActivity =
+        child.activityProfile?.aquaticActivity;
 
     if (childId == null || aquaticActivity == null) {
       return recommendations;
     }
 
-    final hasWaterNearby = activity.hasWaterNearby == true;
-    final hasSwimming = activity.childrenWillEnterWater == true;
+    final hasWaterNearby =
+        activity.hasWaterNearby == true;
+
+    final hasSwimming =
+        activity.childrenWillEnterWater == true;
 
     if (!hasWaterNearby && !hasSwimming) {
       return recommendations;
@@ -30,12 +34,15 @@ class WaterRules {
       return recommendations;
     }
 
-    // Informations communes dès qu'il y a un contexte lié à l'eau.
+    // Informations communes dès qu'il y a
+    // un contexte lié à l'eau.
+
     if (!aquaticActivity.canSwim) {
       recommendations.add(
         Recommendation(
           id: 'water_cannot_swim',
-          category: RecommendationCategory.informationVigilance,
+          category:
+              RecommendationCategory.informationVigilance,
           childId: childId,
           text: 'L’enfant ne sait pas nager.',
         ),
@@ -46,7 +53,8 @@ class WaterRules {
       recommendations.add(
         Recommendation(
           id: 'water_may_jump_into_water',
-          category: RecommendationCategory.informationVigilance,
+          category:
+              RecommendationCategory.informationVigilance,
           childId: childId,
           text: 'L’enfant peut se jeter dans l’eau.',
         ),
@@ -54,12 +62,15 @@ class WaterRules {
     }
 
     // À proximité d'un point d'eau.
+
     if (hasWaterNearby &&
-        aquaticActivity.requiresFlotationVestNearWater) {
+        aquaticActivity
+            .requiresFlotationVestNearWater) {
       recommendations.add(
         Recommendation(
           id: 'water_flotation_vest_near_water',
-          category: RecommendationCategory.equipment,
+          category:
+              RecommendationCategory.equipment,
           childId: childId,
           text: 'Gilet de flottaison.',
         ),
@@ -68,15 +79,18 @@ class WaterRules {
 
     final requiresDedicatedAdult =
         (hasWaterNearby &&
-                aquaticActivity.requiresDedicatedAdultNearWater) ||
+                aquaticActivity
+                    .requiresDedicatedAdultNearWater) ||
             (hasSwimming &&
-                aquaticActivity.requiresDedicatedAdult);
+                aquaticActivity
+                    .requiresDedicatedAdult);
 
     if (requiresDedicatedAdult) {
       recommendations.add(
         Recommendation(
           id: 'water_dedicated_adult',
-          category: RecommendationCategory.adaptation,
+          category:
+              RecommendationCategory.adaptation,
           childId: childId,
           text: 'Prévoir un adulte dédié.',
         ),
@@ -84,17 +98,23 @@ class WaterRules {
     }
 
     // Règles spécifiques à une baignade réelle.
+
     if (hasSwimming) {
-      if (aquaticActivity.requiresSpecialEquipment) {
+      if (aquaticActivity
+          .requiresSpecialEquipment) {
         final equipmentDetails =
-            aquaticActivity.specialEquipmentDetails?.trim();
+            aquaticActivity
+                .specialEquipmentDetails
+                ?.trim();
 
         if (equipmentDetails != null &&
             equipmentDetails.isNotEmpty) {
           recommendations.add(
             Recommendation(
-              id: 'water_special_swimming_equipment',
-              category: RecommendationCategory.equipment,
+              id:
+                  'water_special_swimming_equipment',
+              category:
+                  RecommendationCategory.equipment,
               childId: childId,
               text: equipmentDetails,
             ),
@@ -102,25 +122,26 @@ class WaterRules {
         }
       }
 
-      if (aquaticActivity.requiresAdaptedSupervision) {
-        recommendations.add(
-          Recommendation(
-            id: 'water_adapted_supervision',
-            category: RecommendationCategory.adaptation,
-            childId: childId,
-            text: 'Prévoir une surveillance adaptée.',
-          ),
-        );
+      // Une surveillance adaptée ne doit pas
+      // produire une consigne vague.
+      // On affiche uniquement la précision
+      // renseignée par le parent.
 
+      if (aquaticActivity
+          .requiresAdaptedSupervision) {
         final supervisionDetails =
-            aquaticActivity.otherSupervisionDetails?.trim();
+            aquaticActivity
+                .otherSupervisionDetails
+                ?.trim();
 
         if (supervisionDetails != null &&
             supervisionDetails.isNotEmpty) {
           recommendations.add(
             Recommendation(
-              id: 'water_other_supervision_details',
-              category: RecommendationCategory.adaptation,
+              id:
+                  'water_adapted_supervision',
+              category:
+                  RecommendationCategory.adaptation,
               childId: childId,
               text: supervisionDetails,
             ),
@@ -129,27 +150,39 @@ class WaterRules {
       }
 
       if (aquaticActivity.notifyLifeguard &&
-          activity.swimmingSupervisedByLifeguard == true) {
+          activity
+                  .swimmingSupervisedByLifeguard ==
+              true) {
         recommendations.add(
           Recommendation(
             id: 'water_notify_lifeguard',
-            category: RecommendationCategory.adaptation,
+            category:
+                RecommendationCategory.adaptation,
             childId: childId,
-            text: 'Prévenir le maître-nageur.',
+            text:
+                'Prévenir le maître-nageur.',
           ),
         );
       }
 
-      if (aquaticActivity.requiresOtherAdaptation) {
+      // Autre adaptation importante :
+      // reprendre exactement la précision
+      // renseignée dans le profil parent.
+
+      if (aquaticActivity
+          .requiresOtherAdaptation) {
         final adaptationDetails =
-            aquaticActivity.otherAdaptationDetails?.trim();
+            aquaticActivity
+                .otherAdaptationDetails
+                ?.trim();
 
         if (adaptationDetails != null &&
             adaptationDetails.isNotEmpty) {
           recommendations.add(
             Recommendation(
               id: 'water_other_adaptation',
-              category: RecommendationCategory.adaptation,
+              category:
+                  RecommendationCategory.adaptation,
               childId: childId,
               text: adaptationDetails,
             ),

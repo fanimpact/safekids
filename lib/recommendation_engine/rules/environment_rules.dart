@@ -94,7 +94,8 @@ class EnvironmentRules {
         case AnimalVigilance.approachesWithoutPerceivingDanger:
           recommendations.add(
             Recommendation(
-              id: 'animals_approaches_without_perceiving_danger',
+              id:
+                  'animals_approaches_without_perceiving_danger',
               category:
                   RecommendationCategory.informationVigilance,
               childId: childId,
@@ -135,8 +136,7 @@ class EnvironmentRules {
           category:
               RecommendationCategory.informationVigilance,
           childId: childId,
-          text:
-              'Le bruit nécessite une vigilance particulière.',
+          text: 'Bruit : vigilance particulière.',
         ),
       );
     }
@@ -150,8 +150,7 @@ class EnvironmentRules {
           category:
               RecommendationCategory.informationVigilance,
           childId: childId,
-          text:
-              'La foule nécessite une vigilance particulière.',
+          text: 'Foule : vigilance particulière.',
         ),
       );
     }
@@ -166,7 +165,7 @@ class EnvironmentRules {
               RecommendationCategory.informationVigilance,
           childId: childId,
           text:
-              'Les espaces confinés nécessitent une vigilance particulière.',
+              'Espaces confinés : vigilance particulière.',
         ),
       );
     }

@@ -16,55 +16,139 @@ class EmergencyMedicationRules {
       return recommendations;
     }
 
-    final essentialInformation = child.essentialInformation;
+    final essentialInformation =
+        child.essentialInformation;
 
     for (var index = 0;
-        index < essentialInformation.emergencyTreatments.length;
+        index <
+            essentialInformation
+                .emergencyTreatments
+                .length;
         index++) {
       final treatment =
-          essentialInformation.emergencyTreatments[index];
+          essentialInformation
+              .emergencyTreatments[index];
 
-      final medicationName = treatment.medicationName?.trim();
+      final medicationName =
+          treatment.medicationName?.trim();
 
-      if (medicationName == null || medicationName.isEmpty) {
+      if (medicationName == null ||
+          medicationName.isEmpty) {
         continue;
+      }
+
+      final relatedLabels = <String>[];
+
+      for (final pathologyId
+          in treatment.relatedPathologyIds) {
+        final matchingPathologies =
+            essentialInformation.pathologies.where(
+          (pathology) =>
+              pathology.pathologyId ==
+              pathologyId,
+        );
+
+        if (matchingPathologies.isEmpty) {
+          continue;
+        }
+
+        final pathologyName =
+            matchingPathologies
+                .first
+                .name
+                ?.trim();
+
+        if (pathologyName != null &&
+            pathologyName.isNotEmpty) {
+          relatedLabels.add(
+            pathologyName,
+          );
+        }
+      }
+
+      for (final allergyId
+          in treatment.relatedAllergyIds) {
+        final matchingAllergies =
+            essentialInformation.allergies.where(
+          (allergy) =>
+              allergy.allergyId ==
+              allergyId,
+        );
+
+        if (matchingAllergies.isEmpty) {
+          continue;
+        }
+
+        final allergen =
+            matchingAllergies
+                .first
+                .allergen
+                ?.trim();
+
+        if (allergen != null &&
+            allergen.isNotEmpty) {
+          relatedLabels.add(
+            allergen,
+          );
+        }
       }
 
       final details = <String>[];
 
-      final dosage = treatment.dosage?.trim();
-      final administrationCondition =
-          treatment.administrationCondition?.trim();
-      final administrationMethod =
-          treatment.administrationMethod?.trim();
+      final dosage =
+          treatment.dosage?.trim();
 
-      if (dosage != null && dosage.isNotEmpty) {
-        details.add('Dosage : $dosage');
+      final administrationCondition =
+          treatment
+              .administrationCondition
+              ?.trim();
+
+      final administrationMethod =
+          treatment
+              .administrationMethod
+              ?.trim();
+
+      if (dosage != null &&
+          dosage.isNotEmpty) {
+        details.add(
+          'Dosage : $dosage',
+        );
       }
 
       if (administrationCondition != null &&
           administrationCondition.isNotEmpty) {
         details.add(
-          'Condition d’administration : $administrationCondition',
+          'Condition d’administration : '
+          '$administrationCondition',
         );
       }
 
       if (administrationMethod != null &&
           administrationMethod.isNotEmpty) {
         details.add(
-          'Mode d’administration : $administrationMethod',
+          'Mode d’administration : '
+          '$administrationMethod',
         );
       }
 
-      final text = details.isEmpty
-          ? medicationName
-          : '$medicationName — ${details.join(' — ')}';
+      final prefix =
+          relatedLabels.isEmpty
+              ? medicationName
+              : '${relatedLabels.join(' / ')} — '
+                  '$medicationName';
+
+      final text =
+          details.isEmpty
+              ? prefix
+              : '$prefix — ${details.join(' — ')}';
 
       recommendations.add(
         Recommendation(
-          id: 'emergency_treatment_$index',
+          id:
+              'emergency_treatment_$index',
           category:
-              RecommendationCategory.emergencyMedication,
+              RecommendationCategory
+                  .emergencyMedication,
           childId: childId,
           text: text,
         ),
@@ -72,44 +156,65 @@ class EmergencyMedicationRules {
     }
 
     for (var index = 0;
-        index < essentialInformation.allergies.length;
+        index <
+            essentialInformation
+                .allergies
+                .length;
         index++) {
-      final allergy = essentialInformation.allergies[index];
+      final allergy =
+          essentialInformation
+              .allergies[index];
 
-      if (allergy.hasEmergencyTreatment != true) {
+      if (allergy.hasEmergencyTreatment !=
+          true) {
         continue;
       }
 
       final medicationName =
-          allergy.emergencyTreatmentName?.trim();
+          allergy
+              .emergencyTreatmentName
+              ?.trim();
 
-      if (medicationName == null || medicationName.isEmpty) {
+      if (medicationName == null ||
+          medicationName.isEmpty) {
         continue;
       }
 
       final details = <String>[];
 
       final dosage =
-          allergy.emergencyTreatmentDosage?.trim();
-      final allergen = allergy.allergen?.trim();
+          allergy
+              .emergencyTreatmentDosage
+              ?.trim();
 
-      if (dosage != null && dosage.isNotEmpty) {
-        details.add('Dosage : $dosage');
+      final allergen =
+          allergy.allergen?.trim();
+
+      if (dosage != null &&
+          dosage.isNotEmpty) {
+        details.add(
+          'Dosage : $dosage',
+        );
       }
 
-      if (allergen != null && allergen.isNotEmpty) {
-        details.add('Allergie : $allergen');
-      }
+      final prefix =
+          allergen != null &&
+                  allergen.isNotEmpty
+              ? '$allergen — $medicationName'
+              : medicationName;
 
-      final text = details.isEmpty
-          ? medicationName
-          : '$medicationName — ${details.join(' — ')}';
+      final text =
+          details.isEmpty
+              ? prefix
+              : '$prefix — ${details.join(' — ')}';
 
       recommendations.add(
         Recommendation(
-          id: 'allergy_emergency_treatment_$index',
+          id:
+              'allergy_emergency_treatment_$index',
           category:
-              RecommendationCategory.emergencyMedication,
+              RecommendationCategory
+                  .emergencyMedication,
           childId: childId,
           text: text,
         ),

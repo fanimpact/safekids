@@ -4,6 +4,7 @@ import 'package:safekids/models/child_profile_data.dart';
 import 'package:safekids/models/complete_child_profile_data.dart';
 import 'package:safekids/models/emergency_treatment_data.dart';
 import 'package:safekids/models/identity_data.dart';
+import 'package:safekids/models/pathology_data.dart';
 import 'package:safekids/models/primary_care_doctor_data.dart';
 import 'package:safekids/models/trigger_factor_data.dart';
 import 'package:safekids/recommendation_engine/models/recommendation_category.dart';
@@ -11,6 +12,7 @@ import 'package:safekids/recommendation_engine/rules/emergency_medication_rules.
 
 CompleteChildProfileData _createTestChild({
   required String childId,
+  List<PathologyData> pathologies = const [],
   List<EmergencyTreatmentData> emergencyTreatments = const [],
   List<AllergyData> allergies = const [],
 }) {
@@ -24,9 +26,9 @@ CompleteChildProfileData _createTestChild({
         dateOfBirth: null,
         heightCm: null,
         weightKg: null,
-        hasDiagnosedPathologies: false,
+        hasDiagnosedPathologies: pathologies.isNotEmpty,
       ),
-      pathologies: [],
+      pathologies: pathologies,
       medicalEvents: [],
       triggerFactors: TriggerFactorData(),
       dailyTreatments: [],
@@ -147,11 +149,15 @@ void main() {
       final recommendations = rules.evaluate(child);
 
       final ids = recommendations
-          .map((recommendation) => recommendation.id)
+          .map(
+            (recommendation) => recommendation.id,
+          )
           .toSet();
 
       final texts = recommendations
-          .map((recommendation) => recommendation.text)
+          .map(
+            (recommendation) => recommendation.text,
+          )
           .toSet();
 
       expect(
@@ -183,6 +189,7 @@ void main() {
         childId: 'test-allergy-emergency',
         allergies: [
           AllergyData(
+            allergyId: 'allergy-arachide',
             allergen: 'Arachide',
             hasEmergencyTreatment: true,
             emergencyTreatmentName:
@@ -212,17 +219,17 @@ void main() {
 
       expect(
         recommendations.first.text,
+        contains('Arachide'),
+      );
+
+      expect(
+        recommendations.first.text,
         contains('Auto-injecteur test'),
       );
 
       expect(
         recommendations.first.text,
         contains('Dosage : 0,3 mg'),
-      );
-
-      expect(
-        recommendations.first.text,
-        contains('Allergie : Arachide'),
       );
     },
   );
@@ -297,7 +304,9 @@ void main() {
       final recommendations = rules.evaluate(child);
 
       final ids = recommendations
-          .map((recommendation) => recommendation.id)
+          .map(
+            (recommendation) => recommendation.id,
+          )
           .toSet();
 
       expect(
@@ -313,6 +322,163 @@ void main() {
       expect(
         recommendations.length,
         2,
+      );
+    },
+  );
+
+  test(
+    'Traitement urgence général peut être relié à une pathologie',
+    () {
+      const pathologyId =
+          'test-pathology-epilepsy';
+
+      final child = _createTestChild(
+        childId: 'test-pathology-link',
+        pathologies: [
+          PathologyData(
+            pathologyId: pathologyId,
+            name: 'Épilepsie',
+          ),
+        ],
+        emergencyTreatments: [
+          EmergencyTreatmentData(
+            medicationName: 'Buccolam',
+            relatedPathologyIds: const [
+              pathologyId,
+            ],
+          ),
+        ],
+      );
+
+      final recommendations = rules.evaluate(child);
+
+      expect(
+        recommendations.length,
+        1,
+      );
+
+      expect(
+        recommendations.first.text,
+        contains('Épilepsie'),
+      );
+
+      expect(
+        recommendations.first.text,
+        contains('Buccolam'),
+      );
+    },
+  );
+
+  test(
+    'Traitement urgence général peut être relié à une allergie',
+    () {
+      const allergyId =
+          'test-allergy-wasp';
+
+      final child = _createTestChild(
+        childId: 'test-allergy-link',
+        allergies: [
+          AllergyData(
+            allergyId: allergyId,
+            allergen: 'Piqûres de guêpe',
+          ),
+        ],
+        emergencyTreatments: [
+          EmergencyTreatmentData(
+            medicationName: 'Desloratadine',
+            relatedAllergyIds: const [
+              allergyId,
+            ],
+          ),
+        ],
+      );
+
+      final recommendations = rules.evaluate(child);
+
+      expect(
+        recommendations.length,
+        1,
+      );
+
+      expect(
+        recommendations.first.text,
+        contains('Piqûres de guêpe'),
+      );
+
+      expect(
+        recommendations.first.text,
+        contains('Desloratadine'),
+      );
+    },
+  );
+
+  test(
+    'Plusieurs médicaments peuvent être reliés à la même allergie',
+    () {
+      const allergyId =
+          'test-allergy-wasp-multiple';
+
+      final child = _createTestChild(
+        childId: 'test-allergy-multiple-medications',
+        allergies: [
+          AllergyData(
+            allergyId: allergyId,
+            allergen: 'Piqûres de guêpe',
+          ),
+        ],
+        emergencyTreatments: [
+          EmergencyTreatmentData(
+            medicationName: 'Desloratadine',
+            relatedAllergyIds: const [
+              allergyId,
+            ],
+          ),
+          EmergencyTreatmentData(
+            medicationName: 'Solupred',
+            relatedAllergyIds: const [
+              allergyId,
+            ],
+          ),
+        ],
+      );
+
+      final recommendations = rules.evaluate(child);
+
+      expect(
+        recommendations.length,
+        2,
+      );
+
+      final texts = recommendations
+          .map(
+            (recommendation) => recommendation.text,
+          )
+          .toList();
+
+      expect(
+        texts.any(
+          (text) =>
+              text.contains(
+                'Piqûres de guêpe',
+              ) &&
+              text.contains(
+                'Desloratadine',
+              ),
+        ),
+        isTrue,
+      );
+
+      expect(
+        texts.any(
+          (text) =>
+              text.contains(
+                'Piqûres de guêpe',
+              ) &&
+              text.contains(
+                'Solupred',
+              ),
+        ),
+        isTrue,
       );
     },
   );

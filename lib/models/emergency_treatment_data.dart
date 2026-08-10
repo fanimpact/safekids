@@ -5,6 +5,7 @@ class EmergencyTreatmentData {
   String? administrationMethod;
 
   final List<String> relatedPathologyIds;
+  final List<String> relatedAllergyIds;
 
   EmergencyTreatmentData({
     this.medicationName,
@@ -12,6 +13,9 @@ class EmergencyTreatmentData {
     this.dosage,
     this.administrationMethod,
     List<String>? relatedPathologyIds,
-  }) : relatedPathologyIds =
-            relatedPathologyIds ?? [];
+    List<String>? relatedAllergyIds,
+  })  : relatedPathologyIds =
+            relatedPathologyIds ?? [],
+        relatedAllergyIds =
+            relatedAllergyIds ?? [];
 }

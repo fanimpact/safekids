@@ -647,6 +647,29 @@ class TransmissionController {
     }
   }
 
+  void updateDailyTreatmentAllergy(
+    int treatmentIndex,
+    String allergyId,
+    bool selected,
+  ) {
+    final treatment =
+        _draft.dailyTreatments[treatmentIndex];
+
+    if (selected) {
+      if (!treatment.relatedAllergyIds.contains(
+        allergyId,
+      )) {
+        treatment.relatedAllergyIds.add(
+          allergyId,
+        );
+      }
+    } else {
+      treatment.relatedAllergyIds.remove(
+        allergyId,
+      );
+    }
+  }
+
   // TRAITEMENTS D’URGENCE
 
   void ensureFirstEmergencyTreatment() {
@@ -740,6 +763,31 @@ class TransmissionController {
     }
   }
 
+  void updateEmergencyTreatmentAllergy(
+    int treatmentIndex,
+    String allergyId,
+    bool selected,
+  ) {
+    final treatment =
+        _draft.emergencyTreatments[
+          treatmentIndex
+        ];
+
+    if (selected) {
+      if (!treatment.relatedAllergyIds.contains(
+        allergyId,
+      )) {
+        treatment.relatedAllergyIds.add(
+          allergyId,
+        );
+      }
+    } else {
+      treatment.relatedAllergyIds.remove(
+        allergyId,
+      );
+    }
+  }
+
   // ALLERGIES
 
   void ensureFirstAllergy() {
@@ -760,7 +808,24 @@ class TransmissionController {
     if (_draft.allergies.length > 1 &&
         index >= 0 &&
         index < _draft.allergies.length) {
+      final allergyId =
+          _draft.allergies[index].allergyId;
+
       _draft.allergies.removeAt(index);
+
+      for (final treatment
+          in _draft.dailyTreatments) {
+        treatment.relatedAllergyIds.remove(
+          allergyId,
+        );
+      }
+
+      for (final treatment
+          in _draft.emergencyTreatments) {
+        treatment.relatedAllergyIds.remove(
+          allergyId,
+        );
+      }
     }
   }
 

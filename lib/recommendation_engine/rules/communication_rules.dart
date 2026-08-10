@@ -11,7 +11,8 @@ class CommunicationRules {
     final recommendations = <Recommendation>[];
 
     final childId = child.childId;
-    final communication = child.activityProfile?.communication;
+    final communication =
+        child.activityProfile?.communication;
 
     if (childId == null || communication == null) {
       return recommendations;
@@ -21,45 +22,43 @@ class CommunicationRules {
       recommendations.add(
         Recommendation(
           id: 'communication_simple_instructions',
-          category: RecommendationCategory.adaptation,
+          category:
+              RecommendationCategory.adaptation,
           childId: childId,
           text: 'Utiliser des consignes simples.',
         ),
       );
     }
 
-    if (communication.mayAppearToUnderstand) {
-      recommendations.add(
-        Recommendation(
-          id: 'communication_may_appear_to_understand',
-          category: RecommendationCategory.informationVigilance,
-          childId: childId,
-          text:
-              'L’enfant peut sembler avoir compris alors que ce n’est pas nécessairement le cas.',
-        ),
-      );
-    }
-
-    if (communication.verifyUnderstandingIndividually) {
+    // Si l'une des deux situations est présente,
+    // ou si les deux le sont, une seule recommandation
+    // est générée.
+    if (communication.mayAppearToUnderstand ||
+        communication.verifyUnderstandingIndividually) {
       recommendations.add(
         Recommendation(
           id: 'communication_verify_understanding',
-          category: RecommendationCategory.adaptation,
+          category:
+              RecommendationCategory.adaptation,
           childId: childId,
-          text: 'Vérifier individuellement sa compréhension.',
+          text: 'Vérifier sa compréhension.',
         ),
       );
     }
 
     if (communication.usesCommunicationSupport) {
       final supportDetails =
-          communication.communicationSupportDetails?.trim();
+          communication
+              .communicationSupportDetails
+              ?.trim();
 
-      if (supportDetails != null && supportDetails.isNotEmpty) {
+      if (supportDetails != null &&
+          supportDetails.isNotEmpty) {
         recommendations.add(
           Recommendation(
             id: 'communication_support',
-            category: RecommendationCategory.equipment,
+            category:
+                RecommendationCategory.equipment,
             childId: childId,
             text: supportDetails,
           ),

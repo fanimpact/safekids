@@ -118,7 +118,9 @@ void main() {
 
       expect(
         theoIds,
-        contains('water_adapted_supervision'),
+        isNot(
+          contains('water_adapted_supervision'),
+        ),
       );
 
       expect(
@@ -142,8 +144,10 @@ void main() {
 
       expect(
         theoIds,
-        contains(
-          'transport_motion_sickness_medication_car',
+        isNot(
+          contains(
+            'transport_motion_sickness_medication_car',
+          ),
         ),
       );
 
@@ -180,7 +184,9 @@ void main() {
 
       expect(
         noeIds,
-        contains('overnight_backup_power'),
+        isNot(
+          contains('overnight_backup_power'),
+        ),
       );
 
       expect(

@@ -71,8 +71,10 @@ void main() {
 
       expect(
         theoTexts,
-        contains(
-          'Médicament test mal des transports',
+        isNot(
+          contains(
+            'Médicament test mal des transports',
+          ),
         ),
       );
 
@@ -136,7 +138,9 @@ void main() {
 
       expect(
         ids,
-        contains('water_adapted_supervision'),
+        isNot(
+          contains('water_adapted_supervision'),
+        ),
       );
 
       expect(
@@ -191,7 +195,9 @@ void main() {
 
       expect(
         ids,
-        contains('water_adapted_supervision'),
+        isNot(
+          contains('water_adapted_supervision'),
+        ),
       );
 
       expect(
@@ -372,7 +378,7 @@ void main() {
   );
 
   test(
-    'Transport - voiture déclenche le mal des transports de Théo',
+    'Transport - voiture déclenche le mal des transports de Théo sans médicament renseigné',
     () {
       final activity = CompleteActivitySessionData(
         activity: ActivitySessionData(
@@ -407,8 +413,10 @@ void main() {
 
       expect(
         ids,
-        contains(
-          'transport_motion_sickness_medication_car',
+        isNot(
+          contains(
+            'transport_motion_sickness_medication_car',
+          ),
         ),
       );
     },

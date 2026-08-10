@@ -13,34 +13,43 @@ class WalkingEffortRules {
     final recommendations = <Recommendation>[];
 
     final childId = child.childId;
-    final walkingEffort = child.activityProfile?.walkingEffort;
+    final walkingEffort =
+        child.activityProfile?.walkingEffort;
 
     if (childId == null || walkingEffort == null) {
       return recommendations;
     }
 
     if (activity.hasProlongedWalking == true &&
-        walkingEffort.prolongedWalkingRequiresVigilance) {
+        walkingEffort
+            .prolongedWalkingRequiresVigilance) {
       recommendations.add(
         Recommendation(
           id: 'prolonged_walking_vigilance',
-          category: RecommendationCategory.informationVigilance,
+          category:
+              RecommendationCategory
+                  .informationVigilance,
           childId: childId,
           text:
-              'La marche prolongée nécessite une vigilance particulière.',
+              'Marche prolongée : vigilance particulière.',
         ),
       );
     }
 
-    if (activity.hasSignificantPhysicalEffort == true &&
-        walkingEffort.intensePhysicalEffortRequiresVigilance) {
+    if (activity.hasSignificantPhysicalEffort ==
+            true &&
+        walkingEffort
+            .intensePhysicalEffortRequiresVigilance) {
       recommendations.add(
         Recommendation(
-          id: 'intense_physical_effort_vigilance',
-          category: RecommendationCategory.informationVigilance,
+          id:
+              'intense_physical_effort_vigilance',
+          category:
+              RecommendationCategory
+                  .informationVigilance,
           childId: childId,
           text:
-              'L’effort physique intense nécessite une vigilance particulière.',
+              'Effort physique intense : vigilance particulière.',
         ),
       );
     }

@@ -49,7 +49,7 @@ class UniversalTriggerRules {
           category:
               RecommendationCategory.informationVigilance,
           childId: childId,
-          text: 'La chaleur nécessite une vigilance particulière.',
+          text: 'Chaleur : vigilance particulière.',
         ),
       );
     }
@@ -62,7 +62,7 @@ class UniversalTriggerRules {
               RecommendationCategory.informationVigilance,
           childId: childId,
           text:
-              'Le stress ou les émotions fortes nécessitent une vigilance particulière.',
+              'Stress ou émotions fortes : vigilance particulière.',
         ),
       );
     }

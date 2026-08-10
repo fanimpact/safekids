@@ -14,7 +14,8 @@ class OvernightStayRules {
     final recommendations = <Recommendation>[];
 
     final childId = child.childId;
-    final overnightStay = child.activityProfile?.overnightStay;
+    final overnightStay =
+        child.activityProfile?.overnightStay;
 
     if (childId == null || overnightStay == null) {
       return recommendations;
@@ -34,7 +35,8 @@ class OvernightStayRules {
         recommendations.add(
           Recommendation(
             id: 'overnight_night_device',
-            category: RecommendationCategory.equipment,
+            category:
+                RecommendationCategory.equipment,
             childId: childId,
             text: deviceDetails,
           ),
@@ -42,22 +44,27 @@ class OvernightStayRules {
       }
     }
 
-    // Surveillance nocturne éventuelle.
+    // Surveillance nocturne :
+    // on reprend uniquement la précision
+    // réellement renseignée par le parent.
     if (overnightStay.requiresNightSupervision) {
       final supervisionDetails =
-          overnightStay.nightSupervisionDetails?.trim();
+          overnightStay
+              .nightSupervisionDetails
+              ?.trim();
 
-      recommendations.add(
-        Recommendation(
-          id: 'overnight_night_supervision',
-          category: RecommendationCategory.adaptation,
-          childId: childId,
-          text: supervisionDetails != null &&
-                  supervisionDetails.isNotEmpty
-              ? supervisionDetails
-              : 'Prévoir une surveillance nocturne.',
-        ),
-      );
+      if (supervisionDetails != null &&
+          supervisionDetails.isNotEmpty) {
+        recommendations.add(
+          Recommendation(
+            id: 'overnight_night_supervision',
+            category:
+                RecommendationCategory.adaptation,
+            childId: childId,
+            text: supervisionDetails,
+          ),
+        );
+      }
     }
 
     final electricityMayBeUnavailable =
@@ -78,7 +85,8 @@ class OvernightStayRules {
       recommendations.add(
         Recommendation(
           id: 'overnight_backup_power',
-          category: RecommendationCategory.adaptation,
+          category:
+              RecommendationCategory.adaptation,
           childId: childId,
           text:
               'Prévoir une solution d’alimentation électrique de secours.',
@@ -89,10 +97,11 @@ class OvernightStayRules {
         Recommendation(
           id: 'overnight_power_failure_critical',
           category:
-              RecommendationCategory.informationVigilance,
+              RecommendationCategory
+                  .informationVigilance,
           childId: childId,
           text:
-              'Une coupure de courant nécessite une vigilance particulière pour cet enfant.',
+              'L’appareil utilisé la nuit nécessite une alimentation électrique.',
         ),
       );
     }
