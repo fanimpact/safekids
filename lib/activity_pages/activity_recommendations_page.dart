@@ -51,6 +51,28 @@ class ActivityRecommendationsPage extends StatelessWidget {
         : displayName;
   }
 
+  String _formatDate(
+    DateTime date,
+  ) {
+    final day =
+        date.day.toString().padLeft(2, '0');
+    final month =
+        date.month.toString().padLeft(2, '0');
+
+    return '$day/$month/${date.year}';
+  }
+
+  String _formatTime(
+    DateTime date,
+  ) {
+    final hour =
+        date.hour.toString().padLeft(2, '0');
+    final minute =
+        date.minute.toString().padLeft(2, '0');
+
+    return '$hour:$minute';
+  }
+
   List<Recommendation> _recommendationsForChild(
     String childId,
   ) {
@@ -231,7 +253,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
   }) {
     return Padding(
       padding: const EdgeInsets.only(
-        bottom: 12,
+        bottom: 16,
       ),
       child: Row(
         children: [
@@ -258,12 +280,29 @@ class ActivityRecommendationsPage extends StatelessWidget {
     );
   }
 
+  Widget _buildChildTitle(
+    String childId,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        bottom: 8,
+      ),
+      child: Text(
+        _childDisplayName(childId),
+        style: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
   Widget _buildBullet(
     String text,
   ) {
     return Padding(
       padding: const EdgeInsets.only(
-        bottom: 7,
+        bottom: 8,
       ),
       child: Row(
         crossAxisAlignment:
@@ -284,7 +323,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
               text,
               style: const TextStyle(
                 fontSize: 15,
-                height: 1.35,
+                height: 1.4,
               ),
             ),
           ),
@@ -323,21 +362,13 @@ class ActivityRecommendationsPage extends StatelessWidget {
       childrenWidgets.add(
         Padding(
           padding: const EdgeInsets.only(
-            bottom: 18,
+            bottom: 20,
           ),
           child: Column(
             crossAxisAlignment:
                 CrossAxisAlignment.start,
             children: [
-              Text(
-                _childDisplayName(childId),
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 8),
+              _buildChildTitle(childId),
 
               for (final text in allergyTexts)
                 _buildBullet(text),
@@ -359,19 +390,6 @@ class ActivityRecommendationsPage extends StatelessWidget {
       );
     }
 
-    if (childrenWidgets.isEmpty &&
-        recommendationResult
-            .globalRecommendations
-            .where(
-              (recommendation) =>
-                  recommendation.category ==
-                  RecommendationCategory
-                      .informationVigilance,
-            )
-            .isEmpty) {
-      return const SizedBox.shrink();
-    }
-
     final globalVigilances =
         recommendationResult
             .globalRecommendations
@@ -382,6 +400,11 @@ class ActivityRecommendationsPage extends StatelessWidget {
                       .informationVigilance,
             )
             .toList();
+
+    if (childrenWidgets.isEmpty &&
+        globalVigilances.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Card(
       margin: const EdgeInsets.only(
@@ -404,7 +427,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
                 'Pour l’activité',
                 style: TextStyle(
                   fontSize: 17,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
 
@@ -416,7 +439,9 @@ class ActivityRecommendationsPage extends StatelessWidget {
                   recommendation.text,
                 ),
 
-              const SizedBox(height: 10),
+              const Divider(
+                height: 28,
+              ),
             ],
 
             ...childrenWidgets,
@@ -478,15 +503,15 @@ class ActivityRecommendationsPage extends StatelessWidget {
                 in orderedSituations) ...[
               Padding(
                 padding: const EdgeInsets.only(
-                  top: 8,
-                  bottom: 10,
+                  top: 6,
+                  bottom: 12,
                 ),
                 child: Text(
                   situation,
                   style: const TextStyle(
-                    fontSize: 17,
+                    fontSize: 18,
                     fontWeight:
-                        FontWeight.bold,
+                        FontWeight.w700,
                   ),
                 ),
               ),
@@ -495,18 +520,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
                   in activitySession.childIds)
                 if (groups[situation]!
                     .containsKey(childId)) ...[
-                  Text(
-                    _childDisplayName(
-                      childId,
-                    ),
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight:
-                          FontWeight.w600,
-                    ),
-                  ),
-
-                  const SizedBox(height: 6),
+                  _buildChildTitle(childId),
 
                   for (final recommendation
                       in groups[situation]![
@@ -521,7 +535,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
               if (situation !=
                   orderedSituations.last)
                 const Divider(
-                  height: 24,
+                  height: 28,
                 ),
             ],
           ],
@@ -548,21 +562,13 @@ class ActivityRecommendationsPage extends StatelessWidget {
       childWidgets.add(
         Padding(
           padding: const EdgeInsets.only(
-            bottom: 16,
+            bottom: 18,
           ),
           child: Column(
             crossAxisAlignment:
                 CrossAxisAlignment.start,
             children: [
-              Text(
-                _childDisplayName(childId),
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 8),
+              _buildChildTitle(childId),
 
               for (final medication
                   in medications)
@@ -639,27 +645,19 @@ class ActivityRecommendationsPage extends StatelessWidget {
       childWidgets.add(
         Padding(
           padding: const EdgeInsets.only(
-            bottom: 16,
+            bottom: 18,
           ),
           child: Column(
             crossAxisAlignment:
                 CrossAxisAlignment.start,
             children: [
-              Text(
-                _childDisplayName(childId),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 8),
+              _buildChildTitle(childId),
 
               for (final item in allItems)
                 Padding(
                   padding:
                       const EdgeInsets.only(
-                    bottom: 7,
+                    bottom: 8,
                   ),
                   child: Row(
                     crossAxisAlignment:
@@ -679,7 +677,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
                           style:
                               const TextStyle(
                             fontSize: 15,
-                            height: 1.3,
+                            height: 1.4,
                           ),
                         ),
                       ),
@@ -737,6 +735,10 @@ class ActivityRecommendationsPage extends StatelessWidget {
   ) {
     final activityName =
         activitySession.activityName;
+    final activityDate =
+        activitySession.date;
+    final activityLocation =
+        activitySession.location?.trim();
 
     return Scaffold(
       appBar: AppBar(
@@ -775,7 +777,82 @@ class ActivityRecommendationsPage extends StatelessWidget {
                       style:
                           const TextStyle(
                         fontSize: 18,
+                        fontWeight:
+                            FontWeight.w600,
                       ),
+                    ),
+                  ],
+
+                  if (activityDate != null) ...[
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_today_outlined,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _formatDate(
+                            activityDate,
+                          ),
+                          style:
+                              const TextStyle(
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 7,
+                    ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.access_time,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _formatTime(
+                            activityDate,
+                          ),
+                          style:
+                              const TextStyle(
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  if (activityLocation != null &&
+                      activityLocation
+                          .isNotEmpty) ...[
+                    const SizedBox(
+                      height: 7,
+                    ),
+                    Row(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            activityLocation,
+                            style:
+                                const TextStyle(
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
 

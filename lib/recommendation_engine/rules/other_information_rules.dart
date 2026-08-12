@@ -11,9 +11,11 @@ class OtherInformationRules {
     final recommendations = <Recommendation>[];
 
     final childId = child.childId;
-    final otherInformation = child.activityProfile?.otherInformation;
+    final otherInformation =
+        child.activityProfile?.otherInformation;
 
-    if (childId == null || otherInformation == null) {
+    if (childId == null ||
+        otherInformation == null) {
       return recommendations;
     }
 
@@ -21,20 +23,37 @@ class OtherInformationRules {
       return recommendations;
     }
 
-    final details = otherInformation.details?.trim();
+    final details =
+        otherInformation.details?.trim();
 
-    if (details == null || details.isEmpty) {
-      return recommendations;
+    if (details != null &&
+        details.isNotEmpty) {
+      recommendations.add(
+        Recommendation(
+          id: 'other_information_1',
+          category:
+              RecommendationCategory.additionalInformation,
+          childId: childId,
+          text: details,
+        ),
+      );
     }
 
-    recommendations.add(
-      Recommendation(
-        id: 'other_information',
-        category: RecommendationCategory.additionalInformation,
-        childId: childId,
-        text: details,
-      ),
-    );
+    final secondDetails =
+        otherInformation.secondDetails?.trim();
+
+    if (secondDetails != null &&
+        secondDetails.isNotEmpty) {
+      recommendations.add(
+        Recommendation(
+          id: 'other_information_2',
+          category:
+              RecommendationCategory.additionalInformation,
+          childId: childId,
+          text: secondDetails,
+        ),
+      );
+    }
 
     return recommendations;
   }

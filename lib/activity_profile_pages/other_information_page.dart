@@ -23,9 +23,13 @@ class OtherInformationPage extends StatefulWidget {
 class _OtherInformationPageState
     extends State<OtherInformationPage> {
   late bool _hasOtherInformation;
+  late bool _showSecondInformation;
 
   late final TextEditingController
       _otherInformationController;
+
+  late final TextEditingController
+      _secondInformationController;
 
   @override
   void initState() {
@@ -43,11 +47,21 @@ class _OtherInformationPageState
         TextEditingController(
       text: data.details ?? '',
     );
+
+    _secondInformationController =
+        TextEditingController(
+      text: data.secondDetails ?? '',
+    );
+
+    _showSecondInformation =
+        data.secondDetails != null &&
+        data.secondDetails!.trim().isNotEmpty;
   }
 
   @override
   void dispose() {
     _otherInformationController.dispose();
+    _secondInformationController.dispose();
     super.dispose();
   }
 
@@ -63,7 +77,9 @@ class _OtherInformationPageState
       _hasOtherInformation = value;
 
       if (!value) {
+        _showSecondInformation = false;
         _otherInformationController.clear();
+        _secondInformationController.clear();
       }
     });
 
@@ -71,6 +87,7 @@ class _OtherInformationPageState
 
     if (!value) {
       data.details = null;
+      data.secondDetails = null;
     }
   }
 
@@ -87,6 +104,40 @@ class _OtherInformationPageState
         trimmedValue.isEmpty
             ? null
             : trimmedValue;
+  }
+
+  void _updateSecondInformation(
+    String value,
+  ) {
+    final trimmedValue = value.trim();
+
+    widget
+            .activityProfileController
+            .draft
+            .otherInformation
+            .secondDetails =
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
+  }
+
+  void _addSecondInformation() {
+    setState(() {
+      _showSecondInformation = true;
+    });
+  }
+
+  void _removeSecondInformation() {
+    setState(() {
+      _showSecondInformation = false;
+      _secondInformationController.clear();
+    });
+
+    widget
+        .activityProfileController
+        .draft
+        .otherInformation
+        .secondDetails = null;
   }
 
   void _finish() {
@@ -161,12 +212,61 @@ class _OtherInformationPageState
                   _otherInformationController,
               onChanged:
                   _updateOtherInformation,
+              maxLength: 100,
+              helperText:
+                  'Réponse courte recommandée (quelques mots ou une phrase courte).',
             ),
+
+            if (!_showSecondInformation) ...[
+              const SizedBox(height: 12),
+
+              TextButton.icon(
+                onPressed:
+                    _addSecondInformation,
+                icon: const Icon(
+                  Icons.add,
+                ),
+                label: const Text(
+                  'Ajouter une autre information',
+                ),
+              ),
+            ],
+
+            if (_showSecondInformation) ...[
+              const SizedBox(height: 20),
+
+              SkTextField(
+                label:
+                    'Deuxième information',
+                controller:
+                    _secondInformationController,
+                onChanged:
+                    _updateSecondInformation,
+                maxLength: 100,
+                helperText:
+                    'Réponse courte recommandée (quelques mots ou une phrase courte).',
+              ),
+
+              Align(
+                alignment:
+                    Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed:
+                      _removeSecondInformation,
+                  icon: const Icon(
+                    Icons.delete_outline,
+                  ),
+                  label: const Text(
+                    'Supprimer cette information',
+                  ),
+                ),
+              ),
+            ],
 
             const SizedBox(height: 12),
 
             const Text(
-              'Cette information sera ajoutée au profil de votre enfant et pourra être transmise aux personnes que vous autoriserez.',
+              'Ces informations seront ajoutées au profil de votre enfant et pourront être transmises aux personnes que vous autoriserez.',
               style: TextStyle(
                 fontSize: 14,
               ),

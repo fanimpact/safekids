@@ -25,7 +25,8 @@ class UniversalTriggerRules {
           category:
               RecommendationCategory.informationVigilance,
           childId: childId,
-          text: 'Photosensibilité.',
+          text:
+              'Photosensibilité : vigilance avec les lumières, reflets et alternances ombre/lumière.',
         ),
       );
     }
@@ -37,7 +38,8 @@ class UniversalTriggerRules {
           id: 'photosensitivity_glasses',
           category: RecommendationCategory.equipment,
           childId: childId,
-          text: 'Lunettes.',
+          text:
+              'Lunettes adaptées à la photosensibilité.',
         ),
       );
     }
@@ -49,7 +51,8 @@ class UniversalTriggerRules {
           category:
               RecommendationCategory.informationVigilance,
           childId: childId,
-          text: 'Chaleur : vigilance particulière.',
+          text:
+              'Chaleur : vigilance particulière.',
         ),
       );
     }

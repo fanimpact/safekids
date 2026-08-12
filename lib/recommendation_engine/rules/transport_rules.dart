@@ -33,13 +33,16 @@ class TransportRules {
     );
 
     for (final mode in matchingMotionSicknessModes) {
+      final transportLabel = _transportLabel(mode);
+
       recommendations.add(
         Recommendation(
           id: 'transport_motion_sickness_${mode.name}',
-          category: RecommendationCategory.informationVigilance,
+          category:
+              RecommendationCategory.informationVigilance,
           childId: childId,
           text:
-              'L’enfant a le mal des transports en ${_transportLabel(mode)}.',
+              'L’enfant a le mal des transports en $transportLabel.',
         ),
       );
 
@@ -47,13 +50,17 @@ class TransportRules {
         final medicationName =
             transport.motionSicknessMedicationNames[mode]?.trim();
 
-        if (medicationName != null && medicationName.isNotEmpty) {
+        if (medicationName != null &&
+            medicationName.isNotEmpty) {
           recommendations.add(
             Recommendation(
-              id: 'transport_motion_sickness_medication_${mode.name}',
-              category: RecommendationCategory.rememberToTake,
+              id:
+                  'transport_motion_sickness_medication_${mode.name}',
+              category:
+                  RecommendationCategory.rememberToTake,
               childId: childId,
-              text: medicationName,
+              text:
+                  'Mal des transports en $transportLabel — $medicationName',
             ),
           );
         }
@@ -64,11 +71,13 @@ class TransportRules {
       final equipmentDetails =
           transport.specialEquipmentDetails?.trim();
 
-      if (equipmentDetails != null && equipmentDetails.isNotEmpty) {
+      if (equipmentDetails != null &&
+          equipmentDetails.isNotEmpty) {
         recommendations.add(
           Recommendation(
             id: 'transport_special_equipment',
-            category: RecommendationCategory.equipment,
+            category:
+                RecommendationCategory.equipment,
             childId: childId,
             text: equipmentDetails,
           ),
@@ -80,11 +89,13 @@ class TransportRules {
       final attentionDetails =
           transport.specialAttentionDetails?.trim();
 
-      if (attentionDetails != null && attentionDetails.isNotEmpty) {
+      if (attentionDetails != null &&
+          attentionDetails.isNotEmpty) {
         recommendations.add(
           Recommendation(
             id: 'transport_special_attention',
-            category: RecommendationCategory.adaptation,
+            category:
+                RecommendationCategory.adaptation,
             childId: childId,
             text: attentionDetails,
           ),

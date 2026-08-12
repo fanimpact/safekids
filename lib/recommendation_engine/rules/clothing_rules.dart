@@ -26,8 +26,7 @@ class ClothingRules {
           id: 'clothing_change_assistance',
           category: RecommendationCategory.adaptation,
           childId: childId,
-          text:
-              'Prévoir une assistance pour l’habillage ou le déshabillage.',
+          text: 'Assistance pour changement de tenue.',
         ),
       );
     }

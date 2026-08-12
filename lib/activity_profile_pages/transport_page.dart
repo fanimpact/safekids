@@ -577,6 +577,9 @@ class _TransportPageState extends State<TransportPage> {
                     _specialEquipmentController,
                 onChanged:
                     _updateSpecialEquipmentDetails,
+                maxLength: 100,
+                helperText:
+                    'Réponse courte recommandée (quelques mots ou une phrase courte).',
               ),
 
               const SizedBox(height: 8),
@@ -610,6 +613,9 @@ class _TransportPageState extends State<TransportPage> {
                     _specialAttentionController,
                 onChanged:
                     _updateSpecialAttentionDetails,
+                maxLength: 100,
+                helperText:
+                    'Réponse courte recommandée (quelques mots ou une phrase courte).',
               ),
 
               const SizedBox(height: 8),

@@ -5,11 +5,16 @@ class SkTextField extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String>? onChanged;
 
+  final int? maxLength;
+  final String? helperText;
+
   const SkTextField({
     super.key,
     required this.label,
     required this.controller,
     this.onChanged,
+    this.maxLength,
+    this.helperText,
   });
 
   @override
@@ -17,8 +22,10 @@ class SkTextField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       onChanged: onChanged,
+      maxLength: maxLength,
       decoration: InputDecoration(
         labelText: label,
+        helperText: helperText,
         border: const OutlineInputBorder(),
       ),
     );

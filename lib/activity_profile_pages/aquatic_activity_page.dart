@@ -487,6 +487,9 @@ class _AquaticActivityPageState
                   _specialEquipmentController,
               onChanged:
                   _updateSpecialEquipmentDetails,
+              maxLength: 100,
+              helperText:
+                  'Réponse courte recommandée (quelques mots ou une phrase courte).',
             ),
 
             const SizedBox(height: 8),
@@ -540,6 +543,9 @@ class _AquaticActivityPageState
                   _otherSupervisionController,
               onChanged:
                   _updateOtherSupervisionDetails,
+              maxLength: 100,
+              helperText:
+                  'Réponse courte recommandée (quelques mots ou une phrase courte).',
             ),
           ],
 
@@ -564,6 +570,9 @@ class _AquaticActivityPageState
                   _otherAdaptationController,
               onChanged:
                   _updateOtherAdaptationDetails,
+              maxLength: 100,
+              helperText:
+                  'Réponse courte recommandée (quelques mots ou une phrase courte).',
             ),
           ],
 

@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 
 import 'demo/demo_children.dart';
+import 'demo/demo_test_children.dart';
+import 'demo/demo_test_children_emma.dart';
+import 'demo/demo_test_children_final.dart';
+import 'demo/demo_test_children_lucas.dart';
 import 'welcome_page.dart';
 
 void main() {
   DemoChildren.load();
+  DemoTestChildren.load();
+  DemoTestChildrenLucas.load();
+  DemoTestChildrenEmma.load();
+  DemoTestChildrenFinal.load();
 
   runApp(
     const SafeKidsApp(),

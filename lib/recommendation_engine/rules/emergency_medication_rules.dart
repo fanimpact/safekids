@@ -98,11 +98,6 @@ class EmergencyMedicationRules {
       final dosage =
           treatment.dosage?.trim();
 
-      final administrationCondition =
-          treatment
-              .administrationCondition
-              ?.trim();
-
       final administrationMethod =
           treatment
               .administrationMethod
@@ -112,14 +107,6 @@ class EmergencyMedicationRules {
           dosage.isNotEmpty) {
         details.add(
           'Dosage : $dosage',
-        );
-      }
-
-      if (administrationCondition != null &&
-          administrationCondition.isNotEmpty) {
-        details.add(
-          'Condition d’administration : '
-          '$administrationCondition',
         );
       }
 

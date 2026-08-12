@@ -85,7 +85,7 @@ void main() {
   );
 
   test(
-    'Médicament urgence général - dosage condition et mode sont conservés',
+    'Médicament urgence général - dosage et mode sont affichés mais pas la condition',
     () {
       final child = _createTestChild(
         childId: 'test-emergency-details',
@@ -117,8 +117,10 @@ void main() {
 
       expect(
         text,
-        contains(
-          'Condition d’administration : En cas de crise',
+        isNot(
+          contains(
+            'Condition d’administration : En cas de crise',
+          ),
         ),
       );
 

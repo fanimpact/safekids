@@ -10,6 +10,7 @@ import 'rules/environment_rules.dart';
 import 'rules/global_activity_rules.dart';
 import 'rules/other_information_rules.dart';
 import 'rules/overnight_stay_rules.dart';
+import 'rules/safety_rules.dart';
 import 'rules/toilets_rules.dart';
 import 'rules/transitions_rules.dart';
 import 'rules/transport_rules.dart';
@@ -52,6 +53,9 @@ class RecommendationEngine {
 
   final ClothingRules _clothingRules =
       const ClothingRules();
+
+  final SafetyRules _safetyRules =
+      const SafetyRules();
 
   final EmergencyMedicationRules _emergencyMedicationRules =
       const EmergencyMedicationRules();
@@ -138,6 +142,10 @@ class RecommendationEngine {
           child,
           activitySession.activity,
         ),
+      );
+
+      recommendations.addAll(
+        _safetyRules.evaluate(child),
       );
 
       recommendations.addAll(

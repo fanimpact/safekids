@@ -22,6 +22,7 @@ CompleteChildProfileData _createTestChild({
   required String childId,
   bool hasOtherInformation = false,
   String? details,
+  String? secondDetails,
 }) {
   return CompleteChildProfileData(
     essentialInformation: ChildProfileData(
@@ -62,6 +63,7 @@ CompleteChildProfileData _createTestChild({
       otherInformation: OtherInformationData(
         hasOtherInformation: hasOtherInformation,
         details: details,
+        secondDetails: secondDetails,
       ),
     ),
   );
@@ -71,7 +73,7 @@ void main() {
   const rules = OtherInformationRules();
 
   test(
-    'Informations complémentaires - texte renseigné génère une recommandation',
+    'Informations complémentaires - premier texte renseigné génère une recommandation',
     () {
       final child = _createTestChild(
         childId: 'test-other-information',
@@ -88,7 +90,7 @@ void main() {
 
       expect(
         recommendations.first.id,
-        'other_information',
+        'other_information_1',
       );
 
       expect(
@@ -104,19 +106,93 @@ void main() {
   );
 
   test(
-    'Informations complémentaires - espaces autour du texte sont supprimés',
+    'Informations complémentaires - deux textes génèrent deux recommandations séparées',
     () {
       final child = _createTestChild(
-        childId: 'test-other-information-trim',
+        childId: 'test-two-other-information',
         hasOtherInformation: true,
-        details: '   Détail utile   ',
+        details: 'Première information.',
+        secondDetails: 'Deuxième information.',
       );
 
       final recommendations = rules.evaluate(child);
 
       expect(
+        recommendations.length,
+        2,
+      );
+
+      expect(
+        recommendations[0].id,
+        'other_information_1',
+      );
+
+      expect(
+        recommendations[0].text,
+        'Première information.',
+      );
+
+      expect(
+        recommendations[1].id,
+        'other_information_2',
+      );
+
+      expect(
+        recommendations[1].text,
+        'Deuxième information.',
+      );
+    },
+  );
+
+  test(
+    'Informations complémentaires - deuxième texte seul génère une recommandation',
+    () {
+      final child = _createTestChild(
+        childId: 'test-second-other-information',
+        hasOtherInformation: true,
+        details: null,
+        secondDetails: 'Deuxième information uniquement.',
+      );
+
+      final recommendations = rules.evaluate(child);
+
+      expect(
+        recommendations.length,
+        1,
+      );
+
+      expect(
+        recommendations.first.id,
+        'other_information_2',
+      );
+
+      expect(
         recommendations.first.text,
+        'Deuxième information uniquement.',
+      );
+    },
+  );
+
+  test(
+    'Informations complémentaires - espaces autour des textes sont supprimés',
+    () {
+      final child = _createTestChild(
+        childId: 'test-other-information-trim',
+        hasOtherInformation: true,
+        details: '   Détail utile   ',
+        secondDetails: '   Deuxième détail   ',
+      );
+
+      final recommendations = rules.evaluate(child);
+
+      expect(
+        recommendations[0].text,
         'Détail utile',
+      );
+
+      expect(
+        recommendations[1].text,
+        'Deuxième détail',
       );
     },
   );
@@ -128,6 +204,8 @@ void main() {
         childId: 'test-other-information-false',
         hasOtherInformation: false,
         details: 'Ce texte ne doit pas sortir.',
+        secondDetails:
+            'Ce deuxième texte ne doit pas sortir non plus.',
       );
 
       final recommendations = rules.evaluate(child);
@@ -140,12 +218,13 @@ void main() {
   );
 
   test(
-    'Informations complémentaires - texte vide ne génère rien',
+    'Informations complémentaires - textes vides ne génèrent rien',
     () {
       final child = _createTestChild(
         childId: 'test-other-information-empty',
         hasOtherInformation: true,
         details: '   ',
+        secondDetails: '   ',
       );
 
       final recommendations = rules.evaluate(child);

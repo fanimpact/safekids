@@ -39,9 +39,12 @@ class _CommunicationPageState
         .draft
         .communication;
 
-    _requiresAdaptations = data.requiresAdaptations;
-    _useSimpleInstructions = data.useSimpleInstructions;
-    _mayAppearToUnderstand = data.mayAppearToUnderstand;
+    _requiresAdaptations =
+        data.requiresAdaptations;
+    _useSimpleInstructions =
+        data.useSimpleInstructions;
+    _mayAppearToUnderstand =
+        data.mayAppearToUnderstand;
     _verifyUnderstandingIndividually =
         data.verifyUnderstandingIndividually;
     _usesCommunicationSupport =
@@ -49,7 +52,9 @@ class _CommunicationPageState
 
     _communicationSupportController =
         TextEditingController(
-      text: data.communicationSupportDetails ?? '',
+      text:
+          data.communicationSupportDetails ??
+              '',
     );
   }
 
@@ -59,7 +64,9 @@ class _CommunicationPageState
     super.dispose();
   }
 
-  void _updateRequiresAdaptations(bool value) {
+  void _updateRequiresAdaptations(
+    bool value,
+  ) {
     final data = widget
         .activityProfileController
         .draft
@@ -71,9 +78,11 @@ class _CommunicationPageState
       if (!value) {
         _useSimpleInstructions = false;
         _mayAppearToUnderstand = false;
-        _verifyUnderstandingIndividually = false;
+        _verifyUnderstandingIndividually =
+            false;
         _usesCommunicationSupport = false;
-        _communicationSupportController.clear();
+        _communicationSupportController
+            .clear();
       }
     });
 
@@ -82,13 +91,16 @@ class _CommunicationPageState
     if (!value) {
       data.useSimpleInstructions = false;
       data.mayAppearToUnderstand = false;
-      data.verifyUnderstandingIndividually = false;
+      data.verifyUnderstandingIndividually =
+          false;
       data.usesCommunicationSupport = false;
-      data.communicationSupportDetails = null;
+      data.communicationSupportDetails =
+          null;
     }
   }
 
-  void _updateUseSimpleInstructions(bool? value) {
+  void _updateUseSimpleInstructions(
+      bool? value) {
     final newValue = value ?? false;
 
     setState(() {
@@ -102,7 +114,8 @@ class _CommunicationPageState
         .useSimpleInstructions = newValue;
   }
 
-  void _updateMayAppearToUnderstand(bool? value) {
+  void _updateMayAppearToUnderstand(
+      bool? value) {
     final newValue = value ?? false;
 
     setState(() {
@@ -116,13 +129,15 @@ class _CommunicationPageState
         .mayAppearToUnderstand = newValue;
   }
 
-  void _updateVerifyUnderstandingIndividually(
+  void
+      _updateVerifyUnderstandingIndividually(
     bool? value,
   ) {
     final newValue = value ?? false;
 
     setState(() {
-      _verifyUnderstandingIndividually = newValue;
+      _verifyUnderstandingIndividually =
+          newValue;
     });
 
     widget
@@ -133,7 +148,9 @@ class _CommunicationPageState
         newValue;
   }
 
-  void _updateUsesCommunicationSupport(bool value) {
+  void _updateUsesCommunicationSupport(
+    bool value,
+  ) {
     final data = widget
         .activityProfileController
         .draft
@@ -143,14 +160,16 @@ class _CommunicationPageState
       _usesCommunicationSupport = value;
 
       if (!value) {
-        _communicationSupportController.clear();
+        _communicationSupportController
+            .clear();
       }
     });
 
     data.usesCommunicationSupport = value;
 
     if (!value) {
-      data.communicationSupportDetails = null;
+      data.communicationSupportDetails =
+          null;
     }
   }
 
@@ -164,18 +183,23 @@ class _CommunicationPageState
             .draft
             .communication
             .communicationSupportDetails =
-        trimmedValue.isEmpty ? null : trimmedValue;
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
   }
 
   void _continue() {
-    widget.activityProfileController.validateDraft();
+    widget.activityProfileController
+        .validateDraft();
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TransitionsPage(
+        builder: (context) =>
+            TransitionsPage(
           activityProfileController:
-              widget.activityProfileController,
+              widget
+                  .activityProfileController,
         ),
       ),
     );
@@ -215,47 +239,46 @@ class _CommunicationPageState
             label:
                 'Votre enfant nécessite-t-il des adaptations particulières concernant la communication, par rapport à un enfant de son âge ?',
             value: _requiresAdaptations,
-            onChanged: _updateRequiresAdaptations,
+            onChanged:
+                _updateRequiresAdaptations,
           ),
-
           if (_requiresAdaptations) ...[
             const SizedBox(height: 24),
-
             _buildCheckbox(
               label:
                   'Les consignes doivent être formulées avec des mots simples.',
-              value: _useSimpleInstructions,
-              onChanged: _updateUseSimpleInstructions,
+              value:
+                  _useSimpleInstructions,
+              onChanged:
+                  _updateUseSimpleInstructions,
             ),
-
             _buildCheckbox(
               label:
                   'Votre enfant peut donner l’impression d’avoir compris une consigne alors que ce n’est pas le cas.',
-              value: _mayAppearToUnderstand,
-              onChanged: _updateMayAppearToUnderstand,
+              value:
+                  _mayAppearToUnderstand,
+              onChanged:
+                  _updateMayAppearToUnderstand,
             ),
-
             _buildCheckbox(
               label:
                   'Il est préférable de vérifier individuellement que les consignes ont été comprises.',
-              value: _verifyUnderstandingIndividually,
+              value:
+                  _verifyUnderstandingIndividually,
               onChanged:
                   _updateVerifyUnderstandingIndividually,
             ),
-
             const SizedBox(height: 24),
-
             SkYesNoField(
               label:
                   'Votre enfant utilise-t-il un support de communication particulier ?',
-              value: _usesCommunicationSupport,
+              value:
+                  _usesCommunicationSupport,
               onChanged:
                   _updateUsesCommunicationSupport,
             ),
-
             if (_usesCommunicationSupport) ...[
               const SizedBox(height: 12),
-
               SkTextField(
                 label:
                     'Précisez le support de communication utilisé',
@@ -263,10 +286,11 @@ class _CommunicationPageState
                     _communicationSupportController,
                 onChanged:
                     _updateCommunicationSupportDetails,
+                maxLength: 100,
+                helperText:
+                    'Réponse courte recommandée (quelques mots ou une phrase courte).',
               ),
-
               const SizedBox(height: 8),
-
               const Text(
                 'Exemples : pictogrammes, tablette de communication, classeur de communication…',
                 style: TextStyle(
@@ -275,9 +299,7 @@ class _CommunicationPageState
               ),
             ],
           ],
-
           const SizedBox(height: 30),
-
           FilledButton(
             onPressed: _continue,
             child: const Text(

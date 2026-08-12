@@ -227,6 +227,9 @@ class _SafetyPageState extends State<SafetyPage> {
                     _safetyEquipmentController,
                 onChanged:
                     _updateSafetyEquipmentDetails,
+                maxLength: 100,
+                helperText:
+                    'Réponse courte recommandée (quelques mots ou une phrase courte).',
               ),
 
               const SizedBox(height: 8),
