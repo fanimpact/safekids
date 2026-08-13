@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../children/child_profile_page.dart';
 import '../controllers/transmission_controller.dart';
 import '../models/contact_data.dart';
+import '../repositories/child_repository.dart';
+import '../utils/text_controller_cache.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_text_field.dart';
 import 'transition_to_activities_page.dart';
@@ -19,6 +22,8 @@ class ContactsPage extends StatefulWidget {
 }
 
 class _ContactsPageState extends State<ContactsPage> {
+  final _controllers = TextControllerCache();
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +34,12 @@ class _ContactsPageState extends State<ContactsPage> {
     while (contacts.length < 2) {
       contacts.add(ContactData());
     }
+  }
+
+  @override
+  void dispose() {
+    _controllers.disposeAll();
+    super.dispose();
   }
 
   void _addContact() {
@@ -91,6 +102,30 @@ class _ContactsPageState extends State<ContactsPage> {
   }
 
   void _validateInformation() {
+    if (widget.transmissionController.isEditing) {
+      final profile = widget.transmissionController
+          .validateAndGetProfile();
+
+      ChildRepository.instance.replaceChild(profile);
+
+      final updatedChild =
+          ChildRepository.instance.findByChildId(
+        profile.childId ?? '',
+      )!;
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChildProfilePage(
+            child: updatedChild,
+          ),
+        ),
+        (route) => false,
+      );
+
+      return;
+    }
+
     widget.transmissionController.validateDraft();
 
     Navigator.push(
@@ -133,8 +168,9 @@ class _ContactsPageState extends State<ContactsPage> {
 
             SkTextField(
               label: "Nom et prénom",
-              controller: TextEditingController(
-                text: contacts[index].fullName ?? '',
+              controller: _controllers.of(
+                'contact_${index}_fullName',
+                contacts[index].fullName ?? '',
               ),
               onChanged: (value) {
                 _updateContactName(index, value);
@@ -145,8 +181,9 @@ class _ContactsPageState extends State<ContactsPage> {
 
             SkTextField(
               label: "Lien avec l’enfant",
-              controller: TextEditingController(
-                text: contacts[index].relationship ?? '',
+              controller: _controllers.of(
+                'contact_${index}_relationship',
+                contacts[index].relationship ?? '',
               ),
               onChanged: (value) {
                 _updateContactRelationship(index, value);
@@ -157,8 +194,9 @@ class _ContactsPageState extends State<ContactsPage> {
 
             SkTextField(
               label: "Numéro de téléphone",
-              controller: TextEditingController(
-                text: contacts[index].phoneNumber ?? '',
+              controller: _controllers.of(
+                'contact_${index}_phoneNumber',
+                contacts[index].phoneNumber ?? '',
               ),
               onChanged: (value) {
                 _updateContactPhone(index, value);

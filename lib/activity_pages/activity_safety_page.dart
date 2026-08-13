@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/activity_session/activity_answer.dart';
 import '../models/activity_session/activity_session_data.dart';
 import 'activity_trigger_factors_page.dart';
 
@@ -20,6 +21,7 @@ class _ActivitySafetyPageState
     extends State<ActivitySafetyPage> {
   bool? _hasHeightActivity;
   bool? _hasAnimalContact;
+  ActivityThreeStateAnswer? _phoneNetworkMayBeUnavailable;
 
   @override
   void initState() {
@@ -30,11 +32,15 @@ class _ActivitySafetyPageState
 
     _hasAnimalContact =
         widget.sessionData.hasAnimalContact;
+
+    _phoneNetworkMayBeUnavailable =
+        widget.sessionData.phoneNetworkMayBeUnavailable;
   }
 
   void _continue() {
     if (_hasHeightActivity == null ||
-        _hasAnimalContact == null) {
+        _hasAnimalContact == null ||
+        _phoneNetworkMayBeUnavailable == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -50,6 +56,9 @@ class _ActivitySafetyPageState
 
     widget.sessionData.hasAnimalContact =
         _hasAnimalContact;
+
+    widget.sessionData.phoneNetworkMayBeUnavailable =
+        _phoneNetworkMayBeUnavailable;
 
     Navigator.push(
       context,
@@ -99,6 +108,47 @@ class _ActivitySafetyPageState
     );
   }
 
+  Widget _threeStateQuestion({
+    required String question,
+    required ActivityThreeStateAnswer? value,
+    required ValueChanged<ActivityThreeStateAnswer?> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment:
+          CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          question,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        RadioGroup<ActivityThreeStateAnswer>(
+          groupValue: value,
+          onChanged: onChanged,
+          child: const Column(
+            children: [
+              RadioListTile<ActivityThreeStateAnswer>(
+                title: Text('Oui'),
+                value: ActivityThreeStateAnswer.yes,
+              ),
+              RadioListTile<ActivityThreeStateAnswer>(
+                title: Text('Non'),
+                value: ActivityThreeStateAnswer.no,
+              ),
+              RadioListTile<ActivityThreeStateAnswer>(
+                title: Text('Je ne sais pas'),
+                value: ActivityThreeStateAnswer.unknown,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,6 +181,20 @@ class _ActivitySafetyPageState
               onChanged: (value) {
                 setState(() {
                   _hasAnimalContact = value;
+                });
+              },
+            ),
+
+            const SizedBox(height: 24),
+
+            _threeStateQuestion(
+              question:
+                  'Le réseau téléphonique risque-t-il d’être indisponible pendant tout ou partie de l’activité ?',
+              value: _phoneNetworkMayBeUnavailable,
+              onChanged: (value) {
+                setState(() {
+                  _phoneNetworkMayBeUnavailable =
+                      value;
                 });
               },
             ),

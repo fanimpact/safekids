@@ -256,4 +256,62 @@ void main() {
       );
     },
   );
+
+  test(
+    'Les liens pathologie-traitement survivent à la conversion finale (fromDraft)',
+    () {
+      final controller = TransmissionController();
+
+      controller.ensureFirstPathology();
+      controller.updatePathologyName(
+        0,
+        'Épilepsie',
+      );
+
+      controller.ensureFirstDailyTreatment();
+      controller.updateDailyTreatmentName(
+        0,
+        'Dépakine',
+      );
+
+      controller.ensureFirstEmergencyTreatment();
+      controller.updateEmergencyTreatmentName(
+        0,
+        'Buccolam',
+      );
+
+      final epilepsyId =
+          controller
+              .formData
+              .pathologies[0]
+              .pathologyId;
+
+      controller.updateDailyTreatmentPathology(
+        0,
+        epilepsyId,
+        true,
+      );
+
+      controller.updateEmergencyTreatmentPathology(
+        0,
+        epilepsyId,
+        true,
+      );
+
+      final profile =
+          controller.validateAndGetProfile();
+
+      expect(
+        profile.dailyTreatments[0].relatedPathologyIds,
+        contains(epilepsyId),
+      );
+
+      expect(
+        profile
+            .emergencyTreatments[0]
+            .relatedPathologyIds,
+        contains(epilepsyId),
+      );
+    },
+  );
 }

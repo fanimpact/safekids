@@ -54,6 +54,7 @@ class DemoTestChildrenFinal {
       ),
       pathologies: [],
       medicalEvents: [],
+      medicalObservations: [],
       triggerFactors: TriggerFactorData(
         hasTriggerFactors: true,
 
@@ -92,6 +93,7 @@ class DemoTestChildrenFinal {
             'Les changements brusques de température',
       ),
       dailyTreatments: [],
+      discontinuedTreatments: [],
       emergencyTreatments: [],
       allergies: [],
       medicalDevices: [],
@@ -140,6 +142,7 @@ class DemoTestChildrenFinal {
       ),
       pathologies: [],
       medicalEvents: [],
+      medicalObservations: [],
       triggerFactors: TriggerFactorData(
         hasTriggerFactors: true,
 
@@ -176,6 +179,7 @@ class DemoTestChildrenFinal {
         other: null,
       ),
       dailyTreatments: [],
+      discontinuedTreatments: [],
       emergencyTreatments: [],
       allergies: [],
       medicalDevices: [],

@@ -2,16 +2,24 @@ import '../models/allergy_data.dart';
 import '../models/child_profile_data.dart';
 import '../models/child_profile_draft.dart';
 import '../models/daily_treatment_data.dart';
+import '../models/discontinued_treatment_data.dart';
 import '../models/emergency_treatment_data.dart';
 import '../models/medical_device_data.dart';
 import '../models/medical_event_data.dart';
+import '../models/medical_observation_data.dart';
 import '../models/medical_professional_data.dart';
 import '../models/pathology_data.dart';
 import '../models/trigger_factor_data.dart';
 
 class TransmissionController {
-  ChildProfileDraft _draft = ChildProfileDraft();
+  ChildProfileDraft _draft;
   ChildProfileData? _validatedProfile;
+  final bool isEditing;
+
+  TransmissionController({
+    ChildProfileDraft? initialDraft,
+    this.isEditing = false,
+  }) : _draft = initialDraft ?? ChildProfileDraft();
 
   ChildProfileDraft get formData => _draft;
 
@@ -92,6 +100,22 @@ class TransmissionController {
     }
   }
 
+  void clearPathologies() {
+    for (final pathology in _draft.pathologies) {
+      final pathologyId = pathology.pathologyId;
+
+      for (final treatment in _draft.dailyTreatments) {
+        treatment.relatedPathologyIds.remove(pathologyId);
+      }
+
+      for (final treatment in _draft.emergencyTreatments) {
+        treatment.relatedPathologyIds.remove(pathologyId);
+      }
+    }
+
+    _draft.pathologies.clear();
+  }
+
   void updatePathologyName(
     int index,
     String value,
@@ -166,6 +190,39 @@ class TransmissionController {
         .pathologies[index]
         .referringProfessional
         ?.phoneNumber = value.trim();
+  }
+
+  void addPathologyEmergencyStep(
+    int pathologyIndex,
+  ) {
+    _draft
+        .pathologies[pathologyIndex]
+        .emergencyInstructionSteps
+        .add('');
+  }
+
+  void removePathologyEmergencyStep(
+    int pathologyIndex,
+    int stepIndex,
+  ) {
+    final steps = _draft
+        .pathologies[pathologyIndex]
+        .emergencyInstructionSteps;
+
+    if (stepIndex >= 0 && stepIndex < steps.length) {
+      steps.removeAt(stepIndex);
+    }
+  }
+
+  void updatePathologyEmergencyStep(
+    int pathologyIndex,
+    int stepIndex,
+    String value,
+  ) {
+    _draft
+        .pathologies[pathologyIndex]
+        .emergencyInstructionSteps[stepIndex] =
+        value.trim();
   }
 
   // ÉVÉNEMENTS MÉDICAUX
@@ -290,6 +347,58 @@ class TransmissionController {
         value.trim();
   }
 
+  // OBSERVATIONS MÉDICALES
+
+  void ensureFirstMedicalObservation() {
+    if (_draft.medicalObservations.isEmpty) {
+      _draft.medicalObservations.add(
+        MedicalObservationData(),
+      );
+    }
+  }
+
+  void addMedicalObservation() {
+    _draft.medicalObservations.add(
+      MedicalObservationData(),
+    );
+  }
+
+  void removeMedicalObservation(int index) {
+    if (_draft.medicalObservations.length > 1 &&
+        index >= 0 &&
+        index <
+            _draft.medicalObservations.length) {
+      _draft.medicalObservations.removeAt(index);
+    }
+  }
+
+  void updateMedicalObservationDescription(
+    int index,
+    String value,
+  ) {
+    _draft.medicalObservations[index]
+            .description =
+        value.trim();
+  }
+
+  void updateMedicalObservationDate(
+    int index,
+    String value,
+  ) {
+    _draft.medicalObservations[index]
+            .approximateDate =
+        value.trim();
+  }
+
+  void updateMedicalObservationConclusion(
+    int index,
+    String value,
+  ) {
+    _draft.medicalObservations[index]
+            .conclusion =
+        value.trim();
+  }
+
   // FACTEURS DÉCLENCHANTS ET SENSIBILITÉS
 
   void updateHasTriggerFactors(
@@ -303,21 +412,21 @@ class TransmissionController {
 
     if (!value) {
       triggerFactors.flashingLights =
-          false;
+          null;
       triggerFactors.requiresGlassesOutdoors =
           false;
-      triggerFactors.heat = false;
+      triggerFactors.heat = null;
       triggerFactors.fatigueOrLackOfSleep =
-          false;
-      triggerFactors.noise = false;
-      triggerFactors.crowd = false;
+          null;
+      triggerFactors.noise = null;
+      triggerFactors.crowd = null;
       triggerFactors.confinedSpaces =
-          false;
+          null;
       triggerFactors.physicalEffort =
-          false;
+          null;
       triggerFactors
               .stressOrStrongEmotions =
-          false;
+          null;
 
       triggerFactors.waterContact = false;
       triggerFactors.waterVigilance =
@@ -670,6 +779,49 @@ class TransmissionController {
     }
   }
 
+  // TRAITEMENTS ARRÊTÉS
+
+  void ensureFirstDiscontinuedTreatment() {
+    if (_draft.discontinuedTreatments.isEmpty) {
+      _draft.discontinuedTreatments.add(
+        DiscontinuedTreatmentData(),
+      );
+    }
+  }
+
+  void addDiscontinuedTreatment() {
+    _draft.discontinuedTreatments.add(
+      DiscontinuedTreatmentData(),
+    );
+  }
+
+  void removeDiscontinuedTreatment(int index) {
+    if (_draft.discontinuedTreatments.length > 1 &&
+        index >= 0 &&
+        index <
+            _draft.discontinuedTreatments.length) {
+      _draft.discontinuedTreatments.removeAt(index);
+    }
+  }
+
+  void updateDiscontinuedTreatmentName(
+    int index,
+    String value,
+  ) {
+    _draft.discontinuedTreatments[index]
+            .medicationName =
+        value.trim();
+  }
+
+  void updateDiscontinuedTreatmentStopDate(
+    int index,
+    String value,
+  ) {
+    _draft.discontinuedTreatments[index]
+            .approximateStopDate =
+        value.trim();
+  }
+
   // TRAITEMENTS D’URGENCE
 
   void ensureFirstEmergencyTreatment() {
@@ -829,6 +981,22 @@ class TransmissionController {
     }
   }
 
+  void clearAllergies() {
+    for (final allergy in _draft.allergies) {
+      final allergyId = allergy.allergyId;
+
+      for (final treatment in _draft.dailyTreatments) {
+        treatment.relatedAllergyIds.remove(allergyId);
+      }
+
+      for (final treatment in _draft.emergencyTreatments) {
+        treatment.relatedAllergyIds.remove(allergyId);
+      }
+    }
+
+    _draft.allergies.clear();
+  }
+
   void updateAllergen(
     int index,
     String value,
@@ -843,6 +1011,39 @@ class TransmissionController {
   ) {
     _draft.allergies[index]
             .observedReaction =
+        value.trim();
+  }
+
+  void addAllergyEmergencyStep(
+    int allergyIndex,
+  ) {
+    _draft
+        .allergies[allergyIndex]
+        .emergencyInstructionSteps
+        .add('');
+  }
+
+  void removeAllergyEmergencyStep(
+    int allergyIndex,
+    int stepIndex,
+  ) {
+    final steps = _draft
+        .allergies[allergyIndex]
+        .emergencyInstructionSteps;
+
+    if (stepIndex >= 0 && stepIndex < steps.length) {
+      steps.removeAt(stepIndex);
+    }
+  }
+
+  void updateAllergyEmergencyStep(
+    int allergyIndex,
+    int stepIndex,
+    String value,
+  ) {
+    _draft
+        .allergies[allergyIndex]
+        .emergencyInstructionSteps[stepIndex] =
         value.trim();
   }
 

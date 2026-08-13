@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../controllers/transmission_controller.dart';
+import '../utils/text_controller_cache.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_text_field.dart';
 import '../widgets/sk_yes_no_field.dart';
@@ -22,9 +23,11 @@ class TreatmentsPage extends StatefulWidget {
 class _TreatmentsPageState
     extends State<TreatmentsPage> {
   bool? _hasDailyTreatments;
+  bool? _hasDiscontinuedTreatments;
   bool? _hasEmergencyTreatments;
-  bool? _hasAllergies;
   bool? _hasMedicalDevices;
+
+  final _controllers = TextControllerCache();
 
   @override
   void initState() {
@@ -37,17 +40,23 @@ class _TreatmentsPageState
       _hasDailyTreatments = true;
     }
 
-    if (draft.emergencyTreatments.isNotEmpty) {
-      _hasEmergencyTreatments = true;
+    if (draft.discontinuedTreatments.isNotEmpty) {
+      _hasDiscontinuedTreatments = true;
     }
 
-    if (draft.allergies.isNotEmpty) {
-      _hasAllergies = true;
+    if (draft.emergencyTreatments.isNotEmpty) {
+      _hasEmergencyTreatments = true;
     }
 
     if (draft.medicalDevices.isNotEmpty) {
       _hasMedicalDevices = true;
     }
+  }
+
+  @override
+  void dispose() {
+    _controllers.disposeAll();
+    super.dispose();
   }
 
   void _updateHasDailyTreatments(
@@ -67,6 +76,23 @@ class _TreatmentsPageState
     });
   }
 
+  void _updateHasDiscontinuedTreatments(
+    bool value,
+  ) {
+    setState(() {
+      _hasDiscontinuedTreatments = value;
+
+      if (value) {
+        widget.transmissionController
+            .ensureFirstDiscontinuedTreatment();
+      } else {
+        widget.transmissionController
+            .formData.discontinuedTreatments
+            .clear();
+      }
+    });
+  }
+
   void _updateHasEmergencyTreatments(
     bool value,
   ) {
@@ -79,23 +105,6 @@ class _TreatmentsPageState
       } else {
         widget.transmissionController
             .formData.emergencyTreatments
-            .clear();
-      }
-    });
-  }
-
-  void _updateHasAllergies(
-    bool value,
-  ) {
-    setState(() {
-      _hasAllergies = value;
-
-      if (value) {
-        widget.transmissionController
-            .ensureFirstAllergy();
-      } else {
-        widget.transmissionController
-            .formData.allergies
             .clear();
       }
     });
@@ -134,6 +143,22 @@ class _TreatmentsPageState
     });
   }
 
+  void _addDiscontinuedTreatment() {
+    setState(() {
+      widget.transmissionController
+          .addDiscontinuedTreatment();
+    });
+  }
+
+  void _removeDiscontinuedTreatment(
+    int index,
+  ) {
+    setState(() {
+      widget.transmissionController
+          .removeDiscontinuedTreatment(index);
+    });
+  }
+
   void _addEmergencyTreatment() {
     setState(() {
       widget.transmissionController
@@ -147,22 +172,6 @@ class _TreatmentsPageState
     setState(() {
       widget.transmissionController
           .removeEmergencyTreatment(index);
-    });
-  }
-
-  void _addAllergy() {
-    setState(() {
-      widget.transmissionController
-          .addAllergy();
-    });
-  }
-
-  void _removeAllergy(
-    int index,
-  ) {
-    setState(() {
-      widget.transmissionController
-          .removeAllergy(index);
     });
   }
 
@@ -511,6 +520,9 @@ class _TreatmentsPageState
     final dailyTreatments =
         draft.dailyTreatments;
 
+    final discontinuedTreatments =
+        draft.discontinuedTreatments;
+
     final emergencyTreatments =
         draft.emergencyTreatments;
 
@@ -580,9 +592,9 @@ class _TreatmentsPageState
                 label:
                     "Nom du traitement",
                 controller:
-                    TextEditingController(
-                  text:
-                      dailyTreatments[
+                    _controllers.of(
+                  'dailyTreatment_${index}_name',
+                  dailyTreatments[
                                   index]
                               .medicationName ??
                           '',
@@ -604,9 +616,9 @@ class _TreatmentsPageState
               SkTextField(
                 label: "Posologie",
                 controller:
-                    TextEditingController(
-                  text:
-                      dailyTreatments[
+                    _controllers.of(
+                  'dailyTreatment_${index}_dosage',
+                  dailyTreatments[
                                   index]
                               .dosage ??
                           '',
@@ -629,9 +641,9 @@ class _TreatmentsPageState
                 label:
                     "À quelle(s) heure(s) est-il habituellement administré ?",
                 controller:
-                    TextEditingController(
-                  text:
-                      dailyTreatments[
+                    _controllers.of(
+                  'dailyTreatment_${index}_times',
+                  dailyTreatments[
                                   index]
                               .administrationTimes ??
                           '',
@@ -712,6 +724,158 @@ class _TreatmentsPageState
           ),
 
           const Text(
+            "Traitements arrêtés",
+            style: TextStyle(
+              fontSize: 21,
+              fontWeight:
+                  FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(
+            height: 20,
+          ),
+
+          SkYesNoField(
+            label:
+                "Votre enfant a-t-il arrêté un traitement récemment ?",
+            value:
+                _hasDiscontinuedTreatments,
+            onChanged:
+                _updateHasDiscontinuedTreatments,
+          ),
+
+          if (_hasDiscontinuedTreatments ==
+              true) ...[
+            const SizedBox(
+              height: 28,
+            ),
+
+            for (
+              int index = 0;
+              index <
+                  discontinuedTreatments
+                      .length;
+              index++
+            ) ...[
+              Text(
+                "Traitement arrêté n°${index + 1}",
+                style:
+                    const TextStyle(
+                  fontSize: 19,
+                  fontWeight:
+                      FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(
+                height: 16,
+              ),
+
+              SkTextField(
+                label:
+                    "Nom du traitement",
+                controller:
+                    _controllers.of(
+                  'discontinuedTreatment_${index}_name',
+                  discontinuedTreatments[
+                                  index]
+                              .medicationName ??
+                          '',
+                ),
+                onChanged: (value) {
+                  widget
+                      .transmissionController
+                      .updateDiscontinuedTreatmentName(
+                    index,
+                    value,
+                  );
+                },
+              ),
+
+              const SizedBox(
+                height: 20,
+              ),
+
+              SkTextField(
+                label:
+                    "Date d’arrêt approximative (mois/année suffit)",
+                controller:
+                    _controllers.of(
+                  'discontinuedTreatment_${index}_stopDate',
+                  discontinuedTreatments[
+                                  index]
+                              .approximateStopDate ??
+                          '',
+                ),
+                onChanged: (value) {
+                  widget
+                      .transmissionController
+                      .updateDiscontinuedTreatmentStopDate(
+                    index,
+                    value,
+                  );
+                },
+              ),
+
+              if (discontinuedTreatments
+                      .length >
+                  1) ...[
+                const SizedBox(
+                  height: 12,
+                ),
+
+                Align(
+                  alignment:
+                      Alignment
+                          .centerRight,
+                  child:
+                      TextButton.icon(
+                    onPressed: () =>
+                        _removeDiscontinuedTreatment(
+                      index,
+                    ),
+                    icon: const Icon(
+                      Icons
+                          .delete_outline,
+                    ),
+                    label:
+                        const Text(
+                      "Supprimer",
+                    ),
+                  ),
+                ),
+              ],
+
+              const SizedBox(
+                height: 28,
+              ),
+            ],
+
+            OutlinedButton.icon(
+              onPressed:
+                  _addDiscontinuedTreatment,
+              icon:
+                  const Icon(
+                Icons.add,
+              ),
+              label: const Text(
+                "Ajouter un traitement arrêté",
+              ),
+            ),
+          ],
+
+          const SizedBox(
+            height: 40,
+          ),
+
+          const Divider(),
+
+          const SizedBox(
+            height: 30,
+          ),
+
+          const Text(
             "Traitements d’urgence",
             style: TextStyle(
               fontSize: 21,
@@ -764,9 +928,9 @@ class _TreatmentsPageState
                 label:
                     "Nom du traitement",
                 controller:
-                    TextEditingController(
-                  text:
-                      emergencyTreatments[
+                    _controllers.of(
+                  'emergencyTreatment_${index}_name',
+                  emergencyTreatments[
                                   index]
                               .medicationName ??
                           '',
@@ -789,9 +953,9 @@ class _TreatmentsPageState
                 label:
                     "Dans quelle situation doit-il être administré ?",
                 controller:
-                    TextEditingController(
-                  text:
-                      emergencyTreatments[
+                    _controllers.of(
+                  'emergencyTreatment_${index}_condition',
+                  emergencyTreatments[
                                   index]
                               .administrationCondition ??
                           '',
@@ -813,9 +977,9 @@ class _TreatmentsPageState
               SkTextField(
                 label: "Posologie",
                 controller:
-                    TextEditingController(
-                  text:
-                      emergencyTreatments[
+                    _controllers.of(
+                  'emergencyTreatment_${index}_dosage',
+                  emergencyTreatments[
                                   index]
                               .dosage ??
                           '',
@@ -838,9 +1002,9 @@ class _TreatmentsPageState
                 label:
                     "Mode d’administration",
                 controller:
-                    TextEditingController(
-                  text:
-                      emergencyTreatments[
+                    _controllers.of(
+                  'emergencyTreatment_${index}_method',
+                  emergencyTreatments[
                                   index]
                               .administrationMethod ??
                           '',
@@ -930,20 +1094,25 @@ class _TreatmentsPageState
           ),
 
           const SizedBox(
-            height: 20,
+            height: 8,
           ),
 
-          SkYesNoField(
-            label:
-                "Votre enfant présente-t-il une ou plusieurs allergies importantes ?",
-            value:
-                _hasAllergies,
-            onChanged:
-                _updateHasAllergies,
+          const Text(
+            "Renseignez ici le traitement associé à chaque allergie déjà déclarée. "
+            "Pour ajouter ou modifier une allergie, revenez à l’étape « Santé de votre enfant ».",
           ),
 
-          if (_hasAllergies ==
-              true) ...[
+          if (allergies.isEmpty) ...[
+            const SizedBox(
+              height: 12,
+            ),
+
+            const Text(
+              "Aucune allergie déclarée pour le moment.",
+            ),
+          ],
+
+          if (allergies.isNotEmpty) ...[
             const SizedBox(
               height: 28,
             ),
@@ -955,7 +1124,17 @@ class _TreatmentsPageState
               index++
             ) ...[
               Text(
-                "Allergie n°${index + 1}",
+                allergies[index]
+                            .allergen !=
+                        null &&
+                        allergies[index]
+                            .allergen!
+                            .trim()
+                            .isNotEmpty
+                    ? allergies[index]
+                        .allergen!
+                        .trim()
+                    : "Allergie n°${index + 1}",
                 style:
                     const TextStyle(
                   fontSize: 19,
@@ -966,54 +1145,6 @@ class _TreatmentsPageState
 
               const SizedBox(
                 height: 16,
-              ),
-
-              SkTextField(
-                label:
-                    "À quoi votre enfant est-il allergique ?",
-                controller:
-                    TextEditingController(
-                  text:
-                      allergies[index]
-                              .allergen ??
-                          '',
-                ),
-                onChanged: (value) {
-                  widget
-                      .transmissionController
-                      .updateAllergen(
-                    index,
-                    value,
-                  );
-                },
-              ),
-
-              const SizedBox(
-                height: 20,
-              ),
-
-              SkTextField(
-                label:
-                    "Réaction déjà observée",
-                controller:
-                    TextEditingController(
-                  text:
-                      allergies[index]
-                              .observedReaction ??
-                          '',
-                ),
-                onChanged: (value) {
-                  widget
-                      .transmissionController
-                      .updateAllergyObservedReaction(
-                    index,
-                    value,
-                  );
-                },
-              ),
-
-              const SizedBox(
-                height: 24,
               ),
 
               SkYesNoField(
@@ -1041,9 +1172,9 @@ class _TreatmentsPageState
                   label:
                       "Nom du traitement quotidien",
                   controller:
-                      TextEditingController(
-                    text:
-                        allergies[index]
+                      _controllers.of(
+                    '${allergies[index].allergyId}_dailyTreatmentName',
+                    allergies[index]
                                 .dailyTreatmentName ??
                             '',
                   ),
@@ -1066,9 +1197,9 @@ class _TreatmentsPageState
                   label:
                       "Posologie",
                   controller:
-                      TextEditingController(
-                    text:
-                        allergies[index]
+                      _controllers.of(
+                    '${allergies[index].allergyId}_dailyTreatmentDosage',
+                    allergies[index]
                                 .dailyTreatmentDosage ??
                             '',
                   ),
@@ -1113,9 +1244,9 @@ class _TreatmentsPageState
                   label:
                       "Nom du traitement d’urgence",
                   controller:
-                      TextEditingController(
-                    text:
-                        allergies[index]
+                      _controllers.of(
+                    '${allergies[index].allergyId}_emergencyTreatmentName',
+                    allergies[index]
                                 .emergencyTreatmentName ??
                             '',
                   ),
@@ -1138,9 +1269,9 @@ class _TreatmentsPageState
                   label:
                       "Posologie",
                   controller:
-                      TextEditingController(
-                    text:
-                        allergies[index]
+                      _controllers.of(
+                    '${allergies[index].allergyId}_emergencyTreatmentDosage',
+                    allergies[index]
                                 .emergencyTreatmentDosage ??
                             '',
                   ),
@@ -1156,51 +1287,10 @@ class _TreatmentsPageState
                 ),
               ],
 
-              if (allergies.length >
-                  1) ...[
-                const SizedBox(
-                  height: 12,
-                ),
-
-                Align(
-                  alignment:
-                      Alignment
-                          .centerRight,
-                  child:
-                      TextButton.icon(
-                    onPressed: () =>
-                        _removeAllergy(
-                      index,
-                    ),
-                    icon: const Icon(
-                      Icons
-                          .delete_outline,
-                    ),
-                    label:
-                        const Text(
-                      "Supprimer",
-                    ),
-                  ),
-                ),
-              ],
-
               const SizedBox(
                 height: 28,
               ),
             ],
-
-            OutlinedButton.icon(
-              onPressed:
-                  _addAllergy,
-              icon:
-                  const Icon(
-                Icons.add,
-              ),
-              label:
-                  const Text(
-                "Ajouter une allergie",
-              ),
-            ),
           ],
 
           const SizedBox(
@@ -1265,9 +1355,9 @@ class _TreatmentsPageState
                 label:
                     "Nom du dispositif",
                 controller:
-                    TextEditingController(
-                  text:
-                      medicalDevices[
+                    _controllers.of(
+                  'medicalDevice_${index}_name',
+                  medicalDevices[
                                   index]
                               .deviceName ??
                           '',
@@ -1290,9 +1380,9 @@ class _TreatmentsPageState
                 label:
                     "À quoi sert-il ?",
                 controller:
-                    TextEditingController(
-                  text:
-                      medicalDevices[
+                    _controllers.of(
+                  'medicalDevice_${index}_use',
+                  medicalDevices[
                                   index]
                               .mainUse ??
                           '',

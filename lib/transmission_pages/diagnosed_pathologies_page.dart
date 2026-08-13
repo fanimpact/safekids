@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../controllers/transmission_controller.dart';
+import '../utils/text_controller_cache.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_text_field.dart';
 import '../widgets/sk_yes_no_field.dart';
@@ -24,6 +25,8 @@ class _DiagnosedPathologiesPageState
   bool? _hasPathologies;
   bool? _hasAllergies;
 
+  final _controllers = TextControllerCache();
+
   @override
   void initState() {
     super.initState();
@@ -39,6 +42,12 @@ class _DiagnosedPathologiesPageState
     }
   }
 
+  @override
+  void dispose() {
+    _controllers.disposeAll();
+    super.dispose();
+  }
+
   void _updateHasPathologies(bool value) {
     setState(() {
       _hasPathologies = value;
@@ -46,7 +55,7 @@ class _DiagnosedPathologiesPageState
       if (value) {
         widget.transmissionController.ensureFirstPathology();
       } else {
-        widget.transmissionController.formData.pathologies.clear();
+        widget.transmissionController.clearPathologies();
       }
     });
   }
@@ -58,7 +67,7 @@ class _DiagnosedPathologiesPageState
       if (value) {
         widget.transmissionController.ensureFirstAllergy();
       } else {
-        widget.transmissionController.formData.allergies.clear();
+        widget.transmissionController.clearAllergies();
       }
     });
   }
@@ -95,6 +104,146 @@ class _DiagnosedPathologiesPageState
     setState(() {
       widget.transmissionController.removeAllergy(index);
     });
+  }
+
+  void _addPathologyEmergencyStep(int pathologyIndex) {
+    setState(() {
+      widget.transmissionController
+          .addPathologyEmergencyStep(pathologyIndex);
+    });
+  }
+
+  void _removePathologyEmergencyStep(
+    int pathologyIndex,
+    int stepIndex,
+  ) {
+    setState(() {
+      widget.transmissionController
+          .removePathologyEmergencyStep(
+        pathologyIndex,
+        stepIndex,
+      );
+    });
+  }
+
+  void _addAllergyEmergencyStep(int allergyIndex) {
+    setState(() {
+      widget.transmissionController
+          .addAllergyEmergencyStep(allergyIndex);
+    });
+  }
+
+  void _removeAllergyEmergencyStep(
+    int allergyIndex,
+    int stepIndex,
+  ) {
+    setState(() {
+      widget.transmissionController
+          .removeAllergyEmergencyStep(
+        allergyIndex,
+        stepIndex,
+      );
+    });
+  }
+
+  Widget _buildEmergencyStepsSection({
+    required String label,
+    required String controllerKeyPrefix,
+    required List<String> steps,
+    required VoidCallback onAddStep,
+    required void Function(int stepIndex) onRemoveStep,
+    required void Function(
+      int stepIndex,
+      String value,
+    ) onUpdateStep,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 24),
+
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Exemple (à titre indicatif, à ne pas recopier)",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 6),
+              Text(
+                "1. Mettre en position latérale de sécurité\n"
+                "2. Déclencher un chronomètre\n"
+                "3. Donner le traitement d'urgence après le délai indiqué",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        for (
+          int stepIndex = 0;
+          stepIndex < steps.length;
+          stepIndex++
+        ) ...[
+          const SizedBox(height: 16),
+
+          SkTextField(
+            label: "Étape ${stepIndex + 1}",
+            controller: _controllers.of(
+              '${controllerKeyPrefix}_emergencyStep_$stepIndex',
+              steps[stepIndex],
+            ),
+            onChanged: (value) =>
+                onUpdateStep(stepIndex, value),
+          ),
+
+          const SizedBox(height: 8),
+
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () =>
+                  onRemoveStep(stepIndex),
+              icon: const Icon(
+                  Icons.delete_outline),
+              label: const Text(
+                  "Supprimer cette étape"),
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 12),
+
+        OutlinedButton.icon(
+          onPressed: onAddStep,
+          icon: const Icon(Icons.add),
+          label: const Text("Ajouter une étape"),
+        ),
+      ],
+    );
   }
 
   void _continue() {
@@ -169,8 +318,9 @@ class _DiagnosedPathologiesPageState
 
               SkTextField(
                 label: "Nom de la pathologie",
-                controller: TextEditingController(
-                  text: pathologies[index].name ?? '',
+                controller: _controllers.of(
+                  '${pathologies[index].pathologyId}_name',
+                  pathologies[index].name ?? '',
                 ),
                 onChanged: (value) {
                   widget.transmissionController
@@ -183,8 +333,9 @@ class _DiagnosedPathologiesPageState
               SkTextField(
                 label:
                     "Date ou année approximative du diagnostic",
-                controller: TextEditingController(
-                  text: pathologies[index]
+                controller: _controllers.of(
+                  '${pathologies[index].pathologyId}_diagnosisDate',
+                  pathologies[index]
                           .approximateDiagnosisDate ??
                       '',
                 ),
@@ -217,8 +368,9 @@ class _DiagnosedPathologiesPageState
 
                 SkTextField(
                   label: "Nom du professionnel référent",
-                  controller: TextEditingController(
-                    text: pathologies[index]
+                  controller: _controllers.of(
+                    '${pathologies[index].pathologyId}_professionalName',
+                    pathologies[index]
                             .referringProfessional
                             ?.name ??
                         '',
@@ -234,8 +386,9 @@ class _DiagnosedPathologiesPageState
 
                 SkTextField(
                   label: "Spécialité",
-                  controller: TextEditingController(
-                    text: pathologies[index]
+                  controller: _controllers.of(
+                    '${pathologies[index].pathologyId}_professionalSpecialty',
+                    pathologies[index]
                             .referringProfessional
                             ?.specialty ??
                         '',
@@ -251,8 +404,9 @@ class _DiagnosedPathologiesPageState
 
                 SkTextField(
                   label: "Lieu d'exercice",
-                  controller: TextEditingController(
-                    text: pathologies[index]
+                  controller: _controllers.of(
+                    '${pathologies[index].pathologyId}_professionalWorkplace',
+                    pathologies[index]
                             .referringProfessional
                             ?.workplace ??
                         '',
@@ -269,8 +423,9 @@ class _DiagnosedPathologiesPageState
                 SkTextField(
                   label:
                       "Téléphone (facultatif)",
-                  controller: TextEditingController(
-                    text: pathologies[index]
+                  controller: _controllers.of(
+                    '${pathologies[index].pathologyId}_professionalPhone',
+                    pathologies[index]
                             .referringProfessional
                             ?.phoneNumber ??
                         '',
@@ -282,6 +437,30 @@ class _DiagnosedPathologiesPageState
                   },
                 ),
               ],
+
+              _buildEmergencyStepsSection(
+                label:
+                    "Que faire en cas d'urgence liée à cette pathologie ? (facultatif)",
+                controllerKeyPrefix:
+                    pathologies[index].pathologyId,
+                steps: pathologies[index]
+                    .emergencyInstructionSteps,
+                onAddStep: () =>
+                    _addPathologyEmergencyStep(index),
+                onRemoveStep: (stepIndex) =>
+                    _removePathologyEmergencyStep(
+                  index,
+                  stepIndex,
+                ),
+                onUpdateStep: (stepIndex, value) {
+                  widget.transmissionController
+                      .updatePathologyEmergencyStep(
+                    index,
+                    stepIndex,
+                    value,
+                  );
+                },
+              ),
 
               if (pathologies.length > 1) ...[
                 const SizedBox(height: 12),
@@ -354,8 +533,9 @@ class _DiagnosedPathologiesPageState
               SkTextField(
                 label:
                     "À quoi votre enfant est-il allergique ?",
-                controller: TextEditingController(
-                  text: allergies[index]
+                controller: _controllers.of(
+                  '${allergies[index].allergyId}_allergen',
+                  allergies[index]
                           .allergen ??
                       '',
                 ),
@@ -371,8 +551,9 @@ class _DiagnosedPathologiesPageState
               SkTextField(
                 label:
                     "Réaction déjà observée",
-                controller: TextEditingController(
-                  text: allergies[index]
+                controller: _controllers.of(
+                  '${allergies[index].allergyId}_observedReaction',
+                  allergies[index]
                           .observedReaction ??
                       '',
                 ),
@@ -380,6 +561,30 @@ class _DiagnosedPathologiesPageState
                   widget.transmissionController
                       .updateAllergyObservedReaction(
                           index, value);
+                },
+              ),
+
+              _buildEmergencyStepsSection(
+                label:
+                    "Que faire en cas d'urgence liée à cette allergie ? (facultatif)",
+                controllerKeyPrefix:
+                    allergies[index].allergyId,
+                steps: allergies[index]
+                    .emergencyInstructionSteps,
+                onAddStep: () =>
+                    _addAllergyEmergencyStep(index),
+                onRemoveStep: (stepIndex) =>
+                    _removeAllergyEmergencyStep(
+                  index,
+                  stepIndex,
+                ),
+                onUpdateStep: (stepIndex, value) {
+                  widget.transmissionController
+                      .updateAllergyEmergencyStep(
+                    index,
+                    stepIndex,
+                    value,
+                  );
                 },
               ),
 

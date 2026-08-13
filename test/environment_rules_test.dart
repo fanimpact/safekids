@@ -33,6 +33,7 @@ CompleteChildProfileData _createTestChild({
       ),
       pathologies: [],
       medicalEvents: [],
+      medicalObservations: [],
       triggerFactors: TriggerFactorData(
         hasTriggerFactors: true,
         height: height,
@@ -46,6 +47,7 @@ CompleteChildProfileData _createTestChild({
         confinedSpaces: confinedSpaces,
       ),
       dailyTreatments: [],
+      discontinuedTreatments: [],
       emergencyTreatments: [],
       allergies: [],
       medicalDevices: [],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../controllers/transmission_controller.dart';
+import '../utils/text_controller_cache.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_text_field.dart';
 import '../widgets/sk_yes_no_field.dart';
@@ -20,10 +21,20 @@ class MedicalEventsPage extends StatefulWidget {
 }
 
 class _MedicalEventsPageState extends State<MedicalEventsPage> {
+  final _controllers = TextControllerCache();
+
   @override
   void initState() {
     super.initState();
     widget.transmissionController.ensureFirstMedicalEvent();
+    widget.transmissionController
+        .ensureFirstMedicalObservation();
+  }
+
+  @override
+  void dispose() {
+    _controllers.disposeAll();
+    super.dispose();
   }
 
   void _addMedicalEvent() {
@@ -78,6 +89,20 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
     });
   }
 
+  void _addMedicalObservation() {
+    setState(() {
+      widget.transmissionController
+          .addMedicalObservation();
+    });
+  }
+
+  void _removeMedicalObservation(int index) {
+    setState(() {
+      widget.transmissionController
+          .removeMedicalObservation(index);
+    });
+  }
+
   void _continue() {
     Navigator.push(
       context,
@@ -94,6 +119,11 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
   Widget build(BuildContext context) {
     final medicalEvents =
         widget.transmissionController.formData.medicalEvents;
+
+    final medicalObservations = widget
+        .transmissionController
+        .formData
+        .medicalObservations;
 
     final primaryCareDoctor =
         widget.transmissionController.formData.primaryCareDoctor;
@@ -135,8 +165,9 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
             SkTextField(
               label:
                   "Quel événement médical important s’est produit ?",
-              controller: TextEditingController(
-                text: medicalEvents[index].description ?? '',
+              controller: _controllers.of(
+                'medicalEvent_${index}_description',
+                medicalEvents[index].description ?? '',
               ),
               onChanged: (value) {
                 widget.transmissionController
@@ -151,9 +182,9 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
 
             SkTextField(
               label: "Date ou année approximative",
-              controller: TextEditingController(
-                text:
-                    medicalEvents[index].approximateDate ?? '',
+              controller: _controllers.of(
+                'medicalEvent_${index}_date',
+                medicalEvents[index].approximateDate ?? '',
               ),
               onChanged: (value) {
                 widget.transmissionController
@@ -197,8 +228,9 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
               SkTextField(
                 label:
                     "Durée de l’hospitalisation (facultatif)",
-                controller: TextEditingController(
-                  text: medicalEvents[index]
+                controller: _controllers.of(
+                  'medicalEvent_${index}_hospitalizationDuration',
+                  medicalEvents[index]
                           .hospitalizationDuration ??
                       '',
                 ),
@@ -234,8 +266,9 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
 
               SkTextField(
                 label: "Lesquels ?",
-                controller: TextEditingController(
-                  text: medicalEvents[index]
+                controller: _controllers.of(
+                  'medicalEvent_${index}_importantExaminations',
+                  medicalEvents[index]
                           .importantExaminations ??
                       '',
                 ),
@@ -280,8 +313,9 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
 
               SkTextField(
                 label: "Lesquelles ?",
-                controller: TextEditingController(
-                  text: medicalEvents[index]
+                controller: _controllers.of(
+                  'medicalEvent_${index}_ongoingConsequences',
+                  medicalEvents[index]
                           .ongoingConsequences ??
                       '',
                 ),
@@ -326,6 +360,127 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
           const SizedBox(height: 30),
 
           const Text(
+            "Observations médicales",
+            style: TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          const Text(
+            "Un fait médical ponctuel, déjà examiné, mais qui ne "
+            "nécessite pas de suivi actif (par exemple un souffle "
+            "au cœur détecté sans conséquence identifiée).",
+            style: TextStyle(
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          for (
+            int index = 0;
+            index < medicalObservations.length;
+            index++
+          ) ...[
+            Text(
+              "Observation n°${index + 1}",
+              style: const TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            SkTextField(
+              label: "Quel fait médical a été observé ?",
+              controller: _controllers.of(
+                'medicalObservation_${index}_description',
+                medicalObservations[index].description ??
+                    '',
+              ),
+              onChanged: (value) {
+                widget.transmissionController
+                    .updateMedicalObservationDescription(
+                  index,
+                  value,
+                );
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            SkTextField(
+              label: "Date ou période approximative",
+              controller: _controllers.of(
+                'medicalObservation_${index}_date',
+                medicalObservations[index]
+                        .approximateDate ??
+                    '',
+              ),
+              onChanged: (value) {
+                widget.transmissionController
+                    .updateMedicalObservationDate(
+                  index,
+                  value,
+                );
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            SkTextField(
+              label:
+                  "Conclusion (ex. « Sans conséquence identifiée »)",
+              controller: _controllers.of(
+                'medicalObservation_${index}_conclusion',
+                medicalObservations[index].conclusion ??
+                    '',
+              ),
+              onChanged: (value) {
+                widget.transmissionController
+                    .updateMedicalObservationConclusion(
+                  index,
+                  value,
+                );
+              },
+            ),
+
+            if (medicalObservations.length > 1) ...[
+              const SizedBox(height: 12),
+
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () =>
+                      _removeMedicalObservation(index),
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text("Supprimer"),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 30),
+          ],
+
+          OutlinedButton.icon(
+            onPressed: _addMedicalObservation,
+            icon: const Icon(Icons.add),
+            label:
+                const Text("Ajouter une observation"),
+          ),
+
+          const SizedBox(height: 40),
+
+          const Divider(),
+
+          const SizedBox(height: 30),
+
+          const Text(
             "Médecin traitant",
             style: TextStyle(
               fontSize: 22,
@@ -337,8 +492,9 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
 
           SkTextField(
             label: "Nom du médecin traitant",
-            controller: TextEditingController(
-              text: primaryCareDoctor.name ?? '',
+            controller: _controllers.of(
+              'primaryCareDoctor_name',
+              primaryCareDoctor.name ?? '',
             ),
             onChanged: widget
                 .transmissionController
@@ -349,8 +505,9 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
 
           SkTextField(
             label: "Lieu d'exercice",
-            controller: TextEditingController(
-              text: primaryCareDoctor.workplace ?? '',
+            controller: _controllers.of(
+              'primaryCareDoctor_workplace',
+              primaryCareDoctor.workplace ?? '',
             ),
             onChanged: widget
                 .transmissionController
@@ -361,8 +518,9 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
 
           SkTextField(
             label: "Téléphone (facultatif)",
-            controller: TextEditingController(
-              text: primaryCareDoctor.phoneNumber ?? '',
+            controller: _controllers.of(
+              'primaryCareDoctor_phone',
+              primaryCareDoctor.phoneNumber ?? '',
             ),
             onChanged: widget
                 .transmissionController

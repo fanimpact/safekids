@@ -27,6 +27,7 @@ CompleteChildProfileData _createTestChild({
       ),
       pathologies: [],
       medicalEvents: [],
+      medicalObservations: [],
       triggerFactors: TriggerFactorData(
         hasTriggerFactors: true,
         flashingLights: flashingLights,
@@ -37,6 +38,7 @@ CompleteChildProfileData _createTestChild({
             stressOrStrongEmotions,
       ),
       dailyTreatments: [],
+      discontinuedTreatments: [],
       emergencyTreatments: [],
       allergies: [],
       medicalDevices: [],

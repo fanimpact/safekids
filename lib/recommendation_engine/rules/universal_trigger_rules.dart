@@ -18,7 +18,7 @@ class UniversalTriggerRules {
       return recommendations;
     }
 
-    if (triggerFactors.flashingLights) {
+    if (triggerFactors.flashingLights == true) {
       recommendations.add(
         Recommendation(
           id: 'photosensitivity',
@@ -31,7 +31,7 @@ class UniversalTriggerRules {
       );
     }
 
-    if (triggerFactors.flashingLights &&
+    if (triggerFactors.flashingLights == true &&
         triggerFactors.requiresGlassesOutdoors) {
       recommendations.add(
         Recommendation(
@@ -44,7 +44,7 @@ class UniversalTriggerRules {
       );
     }
 
-    if (triggerFactors.heat) {
+    if (triggerFactors.heat == true) {
       recommendations.add(
         Recommendation(
           id: 'heat_vigilance',
@@ -57,7 +57,7 @@ class UniversalTriggerRules {
       );
     }
 
-    if (triggerFactors.stressOrStrongEmotions) {
+    if (triggerFactors.stressOrStrongEmotions == true) {
       recommendations.add(
         Recommendation(
           id: 'stress_strong_emotions_vigilance',
@@ -66,6 +66,35 @@ class UniversalTriggerRules {
           childId: childId,
           text:
               'Stress ou émotions fortes : vigilance particulière.',
+        ),
+      );
+    }
+
+    if (triggerFactors.fatigueOrLackOfSleep == true) {
+      recommendations.add(
+        Recommendation(
+          id: 'fatigue_vigilance',
+          category:
+              RecommendationCategory.informationVigilance,
+          childId: childId,
+          text:
+              'Fatigue ou manque de sommeil : vigilance particulière.',
+        ),
+      );
+    }
+
+    final otherTriggerFactor =
+        triggerFactors.other?.trim();
+
+    if (otherTriggerFactor != null &&
+        otherTriggerFactor.isNotEmpty) {
+      recommendations.add(
+        Recommendation(
+          id: 'other_trigger_factor',
+          category:
+              RecommendationCategory.informationVigilance,
+          childId: childId,
+          text: otherTriggerFactor,
         ),
       );
     }

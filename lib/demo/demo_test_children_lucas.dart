@@ -53,6 +53,7 @@ class DemoTestChildrenLucas {
       ),
       pathologies: [],
       medicalEvents: [],
+      medicalObservations: [],
       triggerFactors: TriggerFactorData(
         hasTriggerFactors: false,
         flashingLights: false,
@@ -76,6 +77,7 @@ class DemoTestChildrenLucas {
         other: null,
       ),
       dailyTreatments: [],
+      discontinuedTreatments: [],
       emergencyTreatments: [],
       allergies: [],
       medicalDevices: [],

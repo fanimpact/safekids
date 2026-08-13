@@ -24,12 +24,20 @@ class _OtherInformationPageState
     extends State<OtherInformationPage> {
   late bool _hasOtherInformation;
   late bool _showSecondInformation;
+  late bool _showThirdInformation;
+  late bool _showFourthInformation;
 
   late final TextEditingController
       _otherInformationController;
 
   late final TextEditingController
       _secondInformationController;
+
+  late final TextEditingController
+      _thirdInformationController;
+
+  late final TextEditingController
+      _fourthInformationController;
 
   @override
   void initState() {
@@ -53,15 +61,35 @@ class _OtherInformationPageState
       text: data.secondDetails ?? '',
     );
 
+    _thirdInformationController =
+        TextEditingController(
+      text: data.thirdDetails ?? '',
+    );
+
+    _fourthInformationController =
+        TextEditingController(
+      text: data.fourthDetails ?? '',
+    );
+
     _showSecondInformation =
         data.secondDetails != null &&
         data.secondDetails!.trim().isNotEmpty;
+
+    _showThirdInformation =
+        data.thirdDetails != null &&
+        data.thirdDetails!.trim().isNotEmpty;
+
+    _showFourthInformation =
+        data.fourthDetails != null &&
+        data.fourthDetails!.trim().isNotEmpty;
   }
 
   @override
   void dispose() {
     _otherInformationController.dispose();
     _secondInformationController.dispose();
+    _thirdInformationController.dispose();
+    _fourthInformationController.dispose();
     super.dispose();
   }
 
@@ -78,8 +106,12 @@ class _OtherInformationPageState
 
       if (!value) {
         _showSecondInformation = false;
+        _showThirdInformation = false;
+        _showFourthInformation = false;
         _otherInformationController.clear();
         _secondInformationController.clear();
+        _thirdInformationController.clear();
+        _fourthInformationController.clear();
       }
     });
 
@@ -88,6 +120,8 @@ class _OtherInformationPageState
     if (!value) {
       data.details = null;
       data.secondDetails = null;
+      data.thirdDetails = null;
+      data.fourthDetails = null;
     }
   }
 
@@ -130,14 +164,93 @@ class _OtherInformationPageState
   void _removeSecondInformation() {
     setState(() {
       _showSecondInformation = false;
+      _showThirdInformation = false;
+      _showFourthInformation = false;
       _secondInformationController.clear();
+      _thirdInformationController.clear();
+      _fourthInformationController.clear();
+    });
+
+    final data = widget
+        .activityProfileController
+        .draft
+        .otherInformation;
+
+    data.secondDetails = null;
+    data.thirdDetails = null;
+    data.fourthDetails = null;
+  }
+
+  void _updateThirdInformation(
+    String value,
+  ) {
+    final trimmedValue = value.trim();
+
+    widget
+            .activityProfileController
+            .draft
+            .otherInformation
+            .thirdDetails =
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
+  }
+
+  void _addThirdInformation() {
+    setState(() {
+      _showThirdInformation = true;
+    });
+  }
+
+  void _removeThirdInformation() {
+    setState(() {
+      _showThirdInformation = false;
+      _showFourthInformation = false;
+      _thirdInformationController.clear();
+      _fourthInformationController.clear();
+    });
+
+    final data = widget
+        .activityProfileController
+        .draft
+        .otherInformation;
+
+    data.thirdDetails = null;
+    data.fourthDetails = null;
+  }
+
+  void _updateFourthInformation(
+    String value,
+  ) {
+    final trimmedValue = value.trim();
+
+    widget
+            .activityProfileController
+            .draft
+            .otherInformation
+            .fourthDetails =
+        trimmedValue.isEmpty
+            ? null
+            : trimmedValue;
+  }
+
+  void _addFourthInformation() {
+    setState(() {
+      _showFourthInformation = true;
+    });
+  }
+
+  void _removeFourthInformation() {
+    setState(() {
+      _showFourthInformation = false;
+      _fourthInformationController.clear();
     });
 
     widget
         .activityProfileController
         .draft
         .otherInformation
-        .secondDetails = null;
+        .fourthDetails = null;
   }
 
   void _finish() {
@@ -253,6 +366,98 @@ class _OtherInformationPageState
                 child: TextButton.icon(
                   onPressed:
                       _removeSecondInformation,
+                  icon: const Icon(
+                    Icons.delete_outline,
+                  ),
+                  label: const Text(
+                    'Supprimer cette information',
+                  ),
+                ),
+              ),
+
+              if (!_showThirdInformation) ...[
+                const SizedBox(height: 4),
+
+                TextButton.icon(
+                  onPressed:
+                      _addThirdInformation,
+                  icon: const Icon(
+                    Icons.add,
+                  ),
+                  label: const Text(
+                    'Ajouter une autre information',
+                  ),
+                ),
+              ],
+            ],
+
+            if (_showThirdInformation) ...[
+              const SizedBox(height: 20),
+
+              SkTextField(
+                label:
+                    'Troisième information',
+                controller:
+                    _thirdInformationController,
+                onChanged:
+                    _updateThirdInformation,
+                maxLength: 100,
+                helperText:
+                    'Réponse courte recommandée (quelques mots ou une phrase courte).',
+              ),
+
+              Align(
+                alignment:
+                    Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed:
+                      _removeThirdInformation,
+                  icon: const Icon(
+                    Icons.delete_outline,
+                  ),
+                  label: const Text(
+                    'Supprimer cette information',
+                  ),
+                ),
+              ),
+
+              if (!_showFourthInformation) ...[
+                const SizedBox(height: 4),
+
+                TextButton.icon(
+                  onPressed:
+                      _addFourthInformation,
+                  icon: const Icon(
+                    Icons.add,
+                  ),
+                  label: const Text(
+                    'Ajouter une autre information',
+                  ),
+                ),
+              ],
+            ],
+
+            if (_showFourthInformation) ...[
+              const SizedBox(height: 20),
+
+              SkTextField(
+                label:
+                    'Quatrième information',
+                controller:
+                    _fourthInformationController,
+                onChanged:
+                    _updateFourthInformation,
+                maxLength: 100,
+                helperText:
+                    'Réponse courte recommandée (quelques mots ou une phrase courte).',
+              ),
+
+              Align(
+                alignment:
+                    Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed:
+                      _removeFourthInformation,
                   icon: const Icon(
                     Icons.delete_outline,
                   ),

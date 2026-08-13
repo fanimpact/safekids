@@ -4,8 +4,14 @@ import '../models/aquatic_activity_data.dart';
 import '../models/child_profile_data.dart';
 import '../models/clothing_data.dart';
 import '../models/communication_data.dart';
+import '../models/contact_data.dart';
+import '../models/daily_treatment_data.dart';
+import '../models/discontinued_treatment_data.dart';
 import '../models/emergency_treatment_data.dart';
 import '../models/identity_data.dart';
+import '../models/medical_device_data.dart';
+import '../models/medical_event_data.dart';
+import '../models/medical_observation_data.dart';
 import '../models/other_information_data.dart';
 import '../models/overnight_stay_data.dart';
 import '../models/pathology_data.dart';
@@ -51,7 +57,7 @@ class DemoChildren {
       identity: IdentityData(
         lastName: 'Di Caro',
         firstName: 'Théo',
-        dateOfBirth: null,
+        dateOfBirth: DateTime(2016, 10, 20),
         heightCm: 148,
         weightKg: 44,
         hasDiagnosedPathologies: true,
@@ -63,9 +69,46 @@ class DemoChildren {
           approximateDiagnosisDate: null,
           hasReferringProfessional: false,
           referringProfessional: null,
+          emergencyInstructionSteps: [
+            'Mettre en position latérale de sécurité',
+            'Déclencher un chronomètre',
+            'Si la crise dure plus de 5 minutes, donner le Buccolam',
+          ],
         ),
       ],
-      medicalEvents: [],
+      medicalEvents: [
+        MedicalEventData(
+          description:
+              'Trois crises sur trois jours consécutifs : les deux premières généralisées, la troisième focale avec paralysie de Todd',
+          approximateDate: '24-26 décembre',
+          emergencyServicesCalled: true,
+          hospitalized: true,
+          hospitalizationDuration: 'Une nuit',
+          importantExaminationsPerformed: true,
+          importantExaminations: 'EEG et IRM',
+          hasOngoingConsequences: false,
+          ongoingConsequences: null,
+        ),
+        MedicalEventData(
+          description: 'Une crise généralisée',
+          approximateDate: '7 juillet 2026',
+          emergencyServicesCalled: true,
+          hospitalized: true,
+          hospitalizationDuration: 'Trois jours',
+          importantExaminationsPerformed: true,
+          importantExaminations: 'EEG et IRM',
+          hasOngoingConsequences: false,
+          ongoingConsequences: null,
+        ),
+      ],
+      medicalObservations: [
+        MedicalObservationData(
+          description: 'Souffle au cœur détecté',
+          approximateDate: 'Petite enfance',
+          conclusion:
+              'Bilan cardiologique réalisé, sans conséquence identifiée',
+        ),
+      ],
       triggerFactors: TriggerFactorData(
         hasTriggerFactors: true,
         flashingLights: true,
@@ -89,7 +132,19 @@ class DemoChildren {
         otherHeightVigilance: null,
         other: null,
       ),
-      dailyTreatments: [],
+      dailyTreatments: [
+        DailyTreatmentData(
+          medicationName: 'Dépakine',
+          dosage: '500 mg',
+          administrationTimes: '8h30',
+        ),
+        DailyTreatmentData(
+          medicationName: 'Dépakine',
+          dosage: '750 mg',
+          administrationTimes: '20h30',
+        ),
+      ],
+      discontinuedTreatments: [],
       emergencyTreatments: [
         EmergencyTreatmentData(
           medicationName: 'Buccolam',
@@ -102,11 +157,28 @@ class DemoChildren {
         ),
       ],
       allergies: [],
-      medicalDevices: [],
-      contacts: [],
+      medicalDevices: [
+        MedicalDeviceData(
+          deviceName: 'Diabolos',
+          mainUse: null,
+        ),
+        MedicalDeviceData(
+          deviceName:
+              'Machine pour l’apnée du sommeil',
+          mainUse: null,
+        ),
+      ],
+      contacts: [
+        ContactData(
+          fullName: 'Fanny',
+          relationship: 'Parent',
+          phoneNumber: null,
+          isPrimaryContact: true,
+        ),
+      ],
       primaryCareDoctor:
           PrimaryCareDoctorData(
-        name: null,
+        name: 'Julien',
         workplace: null,
         phoneNumber: null,
       ),
@@ -217,6 +289,8 @@ class DemoChildren {
     const childId = 'demo-noe';
     const waspAllergyId =
         'demo-noe-wasp-allergy';
+    const sleepEpilepsyId =
+        'demo-noe-sleep-epilepsy';
 
     final existingChild =
         ChildRepository.instance.findByChildId(
@@ -233,13 +307,31 @@ class DemoChildren {
       identity: IdentityData(
         lastName: 'Di Caro',
         firstName: 'Noé',
-        dateOfBirth: null,
-        heightCm: null,
+        dateOfBirth: DateTime(2018, 11, 16),
+        heightCm: 130,
         weightKg: 26,
-        hasDiagnosedPathologies: false,
+        hasDiagnosedPathologies: true,
       ),
-      pathologies: [],
-      medicalEvents: [],
+      pathologies: [
+        PathologyData(
+          pathologyId: sleepEpilepsyId,
+          name: 'Épilepsie du sommeil',
+          approximateDiagnosisDate: '2022',
+          hasReferringProfessional: false,
+          referringProfessional: null,
+        ),
+      ],
+      medicalEvents: [
+        MedicalEventData(
+          description:
+              'Deux crises pendant l’année 2022',
+          approximateDate: '2022',
+          emergencyServicesCalled: true,
+          hospitalized: true,
+          hospitalizationDuration: 'Une nuit',
+        ),
+      ],
+      medicalObservations: [],
       triggerFactors: TriggerFactorData(
         hasTriggerFactors: true,
         flashingLights: false,
@@ -264,6 +356,12 @@ class DemoChildren {
         other: null,
       ),
       dailyTreatments: [],
+      discontinuedTreatments: [
+        DiscontinuedTreatmentData(
+          medicationName: 'Urbanyl',
+          approximateStopDate: 'Février 2026',
+        ),
+      ],
       emergencyTreatments: [
         EmergencyTreatmentData(
           medicationName: 'Desloratadine',
@@ -301,11 +399,24 @@ class DemoChildren {
           emergencyTreatmentDosage: null,
         ),
       ],
-      medicalDevices: [],
-      contacts: [],
+      medicalDevices: [
+        MedicalDeviceData(
+          deviceName:
+              'Machine pour l’apnée du sommeil',
+          mainUse: null,
+        ),
+      ],
+      contacts: [
+        ContactData(
+          fullName: 'Fanny',
+          relationship: 'Parent',
+          phoneNumber: null,
+          isPrimaryContact: true,
+        ),
+      ],
       primaryCareDoctor:
           PrimaryCareDoctorData(
-        name: null,
+        name: 'Julien',
         workplace: null,
         phoneNumber: null,
       ),

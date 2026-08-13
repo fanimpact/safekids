@@ -127,9 +127,81 @@ class EnvironmentRules {
       }
     }
 
+    // Vigilance eau (facteur déclenchant, distinct des
+    // réponses du profil activité aquatique).
+    final hasWaterContext =
+        activity.hasWaterNearby == true ||
+            activity.childrenWillEnterWater == true;
+
+    if (hasWaterContext && triggerFactors.waterContact) {
+      switch (triggerFactors.waterVigilance) {
+        case WaterVigilance.mayJumpIntoWater:
+          recommendations.add(
+            Recommendation(
+              id: 'trigger_water_may_jump_into_water',
+              category:
+                  RecommendationCategory.informationVigilance,
+              childId: childId,
+              text:
+                  'Facteur déclenchant signalé par la famille : risque de se jeter dans l’eau.',
+            ),
+          );
+          break;
+
+        case WaterVigilance.cannotSwim:
+          recommendations.add(
+            Recommendation(
+              id: 'trigger_water_cannot_swim',
+              category:
+                  RecommendationCategory.informationVigilance,
+              childId: childId,
+              text:
+                  'Facteur déclenchant signalé par la famille : l’enfant ne sait pas nager.',
+            ),
+          );
+          break;
+
+        case WaterVigilance.other:
+          final details =
+              triggerFactors.otherWaterVigilance?.trim();
+
+          if (details != null && details.isNotEmpty) {
+            recommendations.add(
+              Recommendation(
+                id: 'trigger_water_other_vigilance',
+                category:
+                    RecommendationCategory.informationVigilance,
+                childId: childId,
+                text: details,
+              ),
+            );
+          }
+          break;
+
+        case null:
+          break;
+      }
+    }
+
+    // Effort physique (facteur déclenchant, distinct de la
+    // vigilance "effort physique intense" du profil marche).
+    if (activity.hasSignificantPhysicalEffort == true &&
+        triggerFactors.physicalEffort == true) {
+      recommendations.add(
+        Recommendation(
+          id: 'trigger_physical_effort_vigilance',
+          category:
+              RecommendationCategory.informationVigilance,
+          childId: childId,
+          text:
+              'Effort physique signalé comme facteur déclenchant : vigilance particulière.',
+        ),
+      );
+    }
+
     // Bruit
     if (activity.hasLoudEnvironment == true &&
-        triggerFactors.noise) {
+        triggerFactors.noise == true) {
       recommendations.add(
         Recommendation(
           id: 'noise_vigilance',
@@ -143,7 +215,7 @@ class EnvironmentRules {
 
     // Foule
     if (activity.hasLargeCrowd == true &&
-        triggerFactors.crowd) {
+        triggerFactors.crowd == true) {
       recommendations.add(
         Recommendation(
           id: 'crowd_vigilance',
@@ -157,7 +229,7 @@ class EnvironmentRules {
 
     // Espaces confinés
     if (activity.hasConfinedSpace == true &&
-        triggerFactors.confinedSpaces) {
+        triggerFactors.confinedSpaces == true) {
       recommendations.add(
         Recommendation(
           id: 'confined_space_vigilance',

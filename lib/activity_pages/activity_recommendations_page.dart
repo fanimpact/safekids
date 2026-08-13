@@ -1,10 +1,16 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 import '../models/activity_session/complete_activity_session_data.dart';
 import '../recommendation_engine/models/activity_recommendation_result.dart';
 import '../recommendation_engine/models/recommendation.dart';
 import '../recommendation_engine/models/recommendation_category.dart';
 import '../repositories/child_repository.dart';
+import '../utils/pdf_text.dart';
 import 'activities_home_page.dart';
 
 class ActivityRecommendationsPage extends StatelessWidget {
@@ -716,6 +722,297 @@ class ActivityRecommendationsPage extends StatelessWidget {
     );
   }
 
+  pw.Widget _pdfChildTitle(
+    String childId,
+  ) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(
+        top: 6,
+        bottom: 4,
+      ),
+      child: pw.Text(
+        pdfSafeText(_childDisplayName(childId)),
+        style: pw.TextStyle(
+          fontSize: 12,
+          fontWeight: pw.FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  List<pw.Widget> _pdfImportantPointsSection() {
+    final widgets = <pw.Widget>[];
+
+    final globalVigilances =
+        recommendationResult
+            .globalRecommendations
+            .where(
+              (recommendation) =>
+                  recommendation.category ==
+                  RecommendationCategory
+                      .informationVigilance,
+            )
+            .toList();
+
+    final childBlocks = <pw.Widget>[];
+
+    for (final childId in activitySession.childIds) {
+      final vigilanceRecommendations =
+          _recommendationsForChildAndCategory(
+        childId,
+        RecommendationCategory.informationVigilance,
+      );
+
+      final allergyTexts = _allergyTexts(childId);
+
+      final additionalInformation =
+          _recommendationsForChildAndCategory(
+        childId,
+        RecommendationCategory.additionalInformation,
+      );
+
+      if (vigilanceRecommendations.isEmpty &&
+          allergyTexts.isEmpty &&
+          additionalInformation.isEmpty) {
+        continue;
+      }
+
+      childBlocks.add(_pdfChildTitle(childId));
+
+      for (final text in allergyTexts) {
+        childBlocks.add(pdfBullet(text));
+      }
+
+      for (final recommendation in vigilanceRecommendations) {
+        childBlocks.add(pdfBullet(recommendation.text));
+      }
+
+      for (final recommendation in additionalInformation) {
+        childBlocks.add(pdfBullet(recommendation.text));
+      }
+    }
+
+    if (globalVigilances.isEmpty && childBlocks.isEmpty) {
+      return widgets;
+    }
+
+    widgets.add(pdfSectionTitle('Points importants'));
+
+    for (final recommendation in globalVigilances) {
+      widgets.add(pdfBullet(recommendation.text));
+    }
+
+    widgets.addAll(childBlocks);
+
+    return widgets;
+  }
+
+  List<pw.Widget> _pdfSituationsSection() {
+    final groups = _buildSituationGroups();
+
+    if (groups.isEmpty) {
+      return [];
+    }
+
+    const preferredOrder = [
+      'Baignade / Eau',
+      'Nuit',
+      'Transport',
+      'Marche / Effort',
+      'Extérieur',
+      'Environnement',
+      'Habillage',
+      'Toilettes',
+      'Communication',
+      'Transitions',
+      'Autres',
+    ];
+
+    final orderedSituations = <String>[
+      ...preferredOrder.where(groups.containsKey),
+      ...groups.keys.where(
+        (key) => !preferredOrder.contains(key),
+      ),
+    ];
+
+    final widgets = <pw.Widget>[
+      pdfSectionTitle('À prévoir par situation'),
+    ];
+
+    for (final situation in orderedSituations) {
+      widgets.add(
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(
+            top: 6,
+            bottom: 2,
+          ),
+          child: pw.Text(
+            situation,
+            style: pw.TextStyle(
+              fontSize: 12,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+        ),
+      );
+
+      for (final childId in activitySession.childIds) {
+        if (!groups[situation]!.containsKey(childId)) {
+          continue;
+        }
+
+        widgets.add(_pdfChildTitle(childId));
+
+        for (final recommendation
+            in groups[situation]![childId]!) {
+          widgets.add(pdfBullet(recommendation.text));
+        }
+      }
+    }
+
+    return widgets;
+  }
+
+  List<pw.Widget> _pdfEmergencyMedicationsSection() {
+    final childBlocks = <pw.Widget>[];
+
+    for (final childId in activitySession.childIds) {
+      final medications = _recommendationsForChildAndCategory(
+        childId,
+        RecommendationCategory.emergencyMedication,
+      );
+
+      if (medications.isEmpty) {
+        continue;
+      }
+
+      childBlocks.add(_pdfChildTitle(childId));
+
+      for (final medication in medications) {
+        childBlocks.add(pdfBullet(medication.text));
+      }
+    }
+
+    if (childBlocks.isEmpty) {
+      return [];
+    }
+
+    return [
+      pdfSectionTitle('Médicaments d’urgence'),
+      ...childBlocks,
+    ];
+  }
+
+  List<pw.Widget> _pdfEquipmentSummarySection() {
+    final childBlocks = <pw.Widget>[];
+
+    for (final childId in activitySession.childIds) {
+      final equipment = _recommendationsForChildAndCategory(
+        childId,
+        RecommendationCategory.equipment,
+      );
+
+      final rememberToTake = _recommendationsForChildAndCategory(
+        childId,
+        RecommendationCategory.rememberToTake,
+      );
+
+      final allItems = <Recommendation>[
+        ...equipment,
+        ...rememberToTake,
+      ];
+
+      if (allItems.isEmpty) {
+        continue;
+      }
+
+      childBlocks.add(_pdfChildTitle(childId));
+
+      for (final item in allItems) {
+        childBlocks.add(pdfBullet(item.text));
+      }
+    }
+
+    if (childBlocks.isEmpty) {
+      return [];
+    }
+
+    return [
+      pdfSectionTitle('Matériel à prévoir — récapitulatif'),
+      ...childBlocks,
+    ];
+  }
+
+  Future<Uint8List> _buildPdfBytes() async {
+    final document = pw.Document();
+
+    final activityName = activitySession.activityName;
+    final activityDate = activitySession.date;
+    final activityLocation = activitySession.location?.trim();
+
+    document.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) => [
+          pw.Text(
+            'Fiche de recommandations',
+            style: pw.TextStyle(
+              fontSize: 20,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+
+          if (activityName != null &&
+              activityName.trim().isNotEmpty)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 4),
+              child: pw.Text(
+                pdfSafeText(activityName.trim()),
+                style: pw.TextStyle(
+                  fontSize: 14,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+
+          if (activityDate != null)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 6),
+              child: pw.Text(
+                '${_formatDate(activityDate)} à '
+                '${_formatTime(activityDate)}',
+                style: const pw.TextStyle(fontSize: 11),
+              ),
+            ),
+
+          if (activityLocation != null &&
+              activityLocation.isNotEmpty)
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 2),
+              child: pw.Text(
+                pdfSafeText(activityLocation),
+                style: const pw.TextStyle(fontSize: 11),
+              ),
+            ),
+
+          ..._pdfImportantPointsSection(),
+          ..._pdfSituationsSection(),
+          ..._pdfEmergencyMedicationsSection(),
+          ..._pdfEquipmentSummarySection(),
+        ],
+      ),
+    );
+
+    return document.save();
+  }
+
+  Future<void> _printRecommendations() async {
+    await Printing.layoutPdf(
+      onLayout: (_) => _buildPdfBytes(),
+      name: 'Fiche de recommandations',
+    );
+  }
+
   void _finish(
     BuildContext context,
   ) {
@@ -745,6 +1042,13 @@ class ActivityRecommendationsPage extends StatelessWidget {
         title: const Text(
           'Recommandations',
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.print_outlined),
+            tooltip: 'Imprimer / exporter en PDF',
+            onPressed: _printRecommendations,
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(

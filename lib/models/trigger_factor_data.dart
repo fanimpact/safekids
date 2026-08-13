@@ -19,16 +19,16 @@ enum HeightVigilance {
 class TriggerFactorData {
   bool hasTriggerFactors;
 
-  bool flashingLights;
+  bool? flashingLights;
   bool requiresGlassesOutdoors;
 
-  bool heat;
-  bool fatigueOrLackOfSleep;
-  bool noise;
-  bool crowd;
-  bool confinedSpaces;
-  bool physicalEffort;
-  bool stressOrStrongEmotions;
+  bool? heat;
+  bool? fatigueOrLackOfSleep;
+  bool? noise;
+  bool? crowd;
+  bool? confinedSpaces;
+  bool? physicalEffort;
+  bool? stressOrStrongEmotions;
 
   bool waterContact;
   WaterVigilance? waterVigilance;
@@ -46,15 +46,15 @@ class TriggerFactorData {
 
   TriggerFactorData({
     this.hasTriggerFactors = false,
-    this.flashingLights = false,
+    this.flashingLights,
     this.requiresGlassesOutdoors = false,
-    this.heat = false,
-    this.fatigueOrLackOfSleep = false,
-    this.noise = false,
-    this.crowd = false,
-    this.confinedSpaces = false,
-    this.physicalEffort = false,
-    this.stressOrStrongEmotions = false,
+    this.heat,
+    this.fatigueOrLackOfSleep,
+    this.noise,
+    this.crowd,
+    this.confinedSpaces,
+    this.physicalEffort,
+    this.stressOrStrongEmotions,
     this.waterContact = false,
     this.waterVigilance,
     this.otherWaterVigilance,

@@ -55,6 +55,38 @@ class OtherInformationRules {
       );
     }
 
+    final thirdDetails =
+        otherInformation.thirdDetails?.trim();
+
+    if (thirdDetails != null &&
+        thirdDetails.isNotEmpty) {
+      recommendations.add(
+        Recommendation(
+          id: 'other_information_3',
+          category:
+              RecommendationCategory.additionalInformation,
+          childId: childId,
+          text: thirdDetails,
+        ),
+      );
+    }
+
+    final fourthDetails =
+        otherInformation.fourthDetails?.trim();
+
+    if (fourthDetails != null &&
+        fourthDetails.isNotEmpty) {
+      recommendations.add(
+        Recommendation(
+          id: 'other_information_4',
+          category:
+              RecommendationCategory.additionalInformation,
+          childId: childId,
+          text: fourthDetails,
+        ),
+      );
+    }
+
     return recommendations;
   }
 }

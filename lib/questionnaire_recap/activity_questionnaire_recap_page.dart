@@ -1,0 +1,795 @@
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+
+import '../models/activity_profile_data.dart';
+import '../models/complete_child_profile_data.dart';
+import '../models/transport_data.dart';
+import '../utils/pdf_text.dart';
+
+/// Récapitulatif intégral du questionnaire "Profil Activités" pour un
+/// enfant : chaque question posée dans les 10 sections, avec la réponse
+/// déjà donnée. Lecture seule — rien n'est modifiable ici.
+class ActivityQuestionnaireRecapPage extends StatelessWidget {
+  final CompleteChildProfileData child;
+
+  const ActivityQuestionnaireRecapPage({
+    super.key,
+    required this.child,
+  });
+
+  String get _displayName {
+    final identity =
+        child.essentialInformation.identity;
+
+    final parts = [
+      identity.firstName,
+      identity.lastName,
+    ].where(
+      (value) =>
+          value != null && value.trim().isNotEmpty,
+    ).map(
+      (value) => value!.trim(),
+    );
+
+    final name = parts.join(' ');
+
+    return name.isEmpty ? 'Enfant' : name;
+  }
+
+  String _yesNo(bool? value) {
+    if (value == null) {
+      return 'Non renseigné';
+    }
+
+    return value ? 'Oui' : 'Non';
+  }
+
+  String _textOr(String? value) {
+    final trimmed = value?.trim();
+
+    return trimmed == null || trimmed.isEmpty
+        ? 'Non renseigné'
+        : trimmed;
+  }
+
+  String _qa(String question, String answer) {
+    return '$question — $answer';
+  }
+
+  String _qaBool(String question, bool value) {
+    return _qa(question, _yesNo(value));
+  }
+
+  String _qaText(String question, String? value) {
+    return _qa(question, _textOr(value));
+  }
+
+  String _transportModeLabel(TransportMode mode) {
+    return switch (mode) {
+      TransportMode.car => 'Voiture',
+      TransportMode.bus => 'Bus',
+      TransportMode.train => 'Train',
+      TransportMode.tram => 'Tramway',
+      TransportMode.metro => 'Métro',
+      TransportMode.plane => 'Avion',
+      TransportMode.boatOrFerry => 'Bateau / Ferry',
+      TransportMode.other => 'Autre',
+    };
+  }
+
+  List<String> _aquaticActivityLines(
+    ActivityProfileData profile,
+  ) {
+    final data = profile.aquaticActivity;
+
+    final lines = <String>[
+      _qaBool(
+        'Votre enfant nécessite-t-il des adaptations particulières en présence d’un point d’eau (baignade ou hors baignade) ?',
+        data.requiresAdaptations,
+      ),
+    ];
+
+    if (!data.requiresAdaptations) {
+      return lines;
+    }
+
+    lines.add('À proximité d’un point d’eau');
+    lines.add(
+      _qaBool(
+        'Votre enfant risque-t-il de se jeter dans l’eau ?',
+        data.mayJumpIntoWater,
+      ),
+    );
+    lines.add(
+      _qaBool('Votre enfant sait-il nager ?', data.canSwim),
+    );
+
+    if (!data.canSwim) {
+      lines.add(
+        _qaBool(
+          'Votre enfant doit-il disposer d’un gilet de flottaison lorsqu’il se trouve à proximité d’un point d’eau ?',
+          data.requiresFlotationVestNearWater,
+        ),
+      );
+    }
+
+    lines.add(
+      _qaBool(
+        'Votre enfant a-t-il besoin d’un adulte dédié à proximité d’un point d’eau pour assurer sa sécurité ?',
+        data.requiresDedicatedAdultNearWater,
+      ),
+    );
+
+    lines.add('Baignade');
+    lines.add(
+      _qaBool(
+        'Votre enfant nécessite-t-il un équipement particulier ?',
+        data.requiresSpecialEquipment,
+      ),
+    );
+
+    if (data.requiresSpecialEquipment) {
+      lines.add(
+        _qaText(
+          'Équipement nécessaire',
+          data.specialEquipmentDetails,
+        ),
+      );
+    }
+
+    lines.add(
+      _qaBool(
+        'Une adaptation particulière de la surveillance est-elle nécessaire ?',
+        data.requiresAdaptedSupervision,
+      ),
+    );
+
+    if (data.requiresAdaptedSupervision) {
+      lines.add(
+        _qaBool('Prévenir le maître-nageur', data.notifyLifeguard),
+      );
+      lines.add(
+        _qaBool(
+          'Prévoir un adulte dédié',
+          data.requiresDedicatedAdult,
+        ),
+      );
+      lines.add(
+        _qaText(
+          'Autre adaptation de la surveillance',
+          data.otherSupervisionDetails,
+        ),
+      );
+    }
+
+    lines.add(
+      _qaBool(
+        'Une autre adaptation importante est-elle nécessaire ?',
+        data.requiresOtherAdaptation,
+      ),
+    );
+
+    if (data.requiresOtherAdaptation) {
+      lines.add(
+        _qaText(
+          'Précisez cette adaptation',
+          data.otherAdaptationDetails,
+        ),
+      );
+    }
+
+    return lines;
+  }
+
+  List<String> _transportLines(
+    ActivityProfileData profile,
+  ) {
+    final data = profile.transport;
+
+    final lines = <String>[
+      _qaBool(
+        'Votre enfant nécessite-t-il des adaptations particulières lors des transports ?',
+        data.requiresAdaptations,
+      ),
+    ];
+
+    if (!data.requiresAdaptations) {
+      return lines;
+    }
+
+    lines.add(
+      _qaBool(
+        'Votre enfant a-t-il le mal des transports ?',
+        data.motionSickness,
+      ),
+    );
+
+    if (data.motionSickness) {
+      lines.add(
+        _qa(
+          'Moyen(s) de transport concerné(s)',
+          data.motionSicknessTransports.isEmpty
+              ? 'Non renseigné'
+              : data.motionSicknessTransports
+                  .map(_transportModeLabel)
+                  .join(', '),
+        ),
+      );
+      lines.add(
+        _qaBool(
+          'Votre enfant prend-il habituellement un médicament avant ce(s) transport(s) ?',
+          data.takesMotionSicknessMedication,
+        ),
+      );
+
+      if (data.takesMotionSicknessMedication) {
+        if (data.motionSicknessMedicationNames.isEmpty) {
+          lines.add(_qaText('Nom du médicament', null));
+        } else {
+          for (final entry
+              in data.motionSicknessMedicationNames.entries) {
+            lines.add(
+              _qaText(
+                'Nom du médicament – ${_transportModeLabel(entry.key)}',
+                entry.value,
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    lines.add(
+      _qaBool(
+        'Votre enfant a-t-il besoin d’un équipement particulier pendant le transport ?',
+        data.requiresSpecialEquipment,
+      ),
+    );
+
+    if (data.requiresSpecialEquipment) {
+      lines.add(
+        _qaText(
+          'Équipement nécessaire',
+          data.specialEquipmentDetails,
+        ),
+      );
+    }
+
+    lines.add(
+      _qaBool(
+        'Votre enfant nécessite-t-il une attention particulière pendant le transport ?',
+        data.requiresSpecialAttention,
+      ),
+    );
+
+    if (data.requiresSpecialAttention) {
+      lines.add(
+        _qaText(
+          'Précisez l’attention nécessaire',
+          data.specialAttentionDetails,
+        ),
+      );
+    }
+
+    return lines;
+  }
+
+  List<String> _walkingEffortLines(
+    ActivityProfileData profile,
+  ) {
+    final data = profile.walkingEffort;
+
+    return [
+      _qaBool(
+        'La marche prolongée nécessite-t-elle une vigilance particulière pour votre enfant ?',
+        data.prolongedWalkingRequiresVigilance,
+      ),
+      _qaBool(
+        'Un effort physique intense nécessite-t-il une vigilance particulière pour votre enfant ?',
+        data.intensePhysicalEffortRequiresVigilance,
+      ),
+    ];
+  }
+
+  List<String> _overnightStayLines(
+    ActivityProfileData profile,
+  ) {
+    final data = profile.overnightStay;
+
+    final lines = <String>[
+      _qaBool(
+        'Votre enfant nécessite-t-il des adaptations particulières lors d’un séjour avec nuitée, par rapport à un enfant de son âge ?',
+        data.requiresAdaptations,
+      ),
+    ];
+
+    if (!data.requiresAdaptations) {
+      return lines;
+    }
+
+    lines.add(
+      _qaBool(
+        'Votre enfant utilise-t-il un appareillage pendant la nuit ?',
+        data.usesNightDevice,
+      ),
+    );
+
+    if (data.usesNightDevice) {
+      lines.add(
+        _qaText(
+          'Précisez l’appareillage utilisé',
+          data.nightDeviceDetails,
+        ),
+      );
+      lines.add(
+        _qaBool(
+          'Cet appareillage nécessite-t-il une alimentation électrique ?',
+          data.requiresElectricity,
+        ),
+      );
+
+      if (data.requiresElectricity) {
+        lines.add(
+          _qaBool(
+            'Une panne d’électricité peut-elle compromettre la sécurité ou la santé de votre enfant ?',
+            data.powerFailureIsCritical,
+          ),
+        );
+      }
+    }
+
+    lines.add(
+      _qaBool(
+        'Une adaptation particulière de la surveillance est-elle nécessaire pendant la nuit ?',
+        data.requiresNightSupervision,
+      ),
+    );
+
+    if (data.requiresNightSupervision) {
+      lines.add(
+        _qaText(
+          'Précisez la surveillance nécessaire',
+          data.nightSupervisionDetails,
+        ),
+      );
+    }
+
+    return lines;
+  }
+
+  List<String> _clothingLines(
+    ActivityProfileData profile,
+  ) {
+    return [
+      _qaBool(
+        'Votre enfant nécessite-t-il qu’un adulte dédié l’aide lors d’un changement de tenue, par rapport à un enfant de son âge ?',
+        profile.clothing.requiresAssistance,
+      ),
+    ];
+  }
+
+  List<String> _toiletsLines(
+    ActivityProfileData profile,
+  ) {
+    return [
+      _qaBool(
+        'Votre enfant nécessite-t-il qu’un adulte dédié l’accompagne aux toilettes, par rapport à un enfant de son âge ?',
+        profile.toilets.requiresAssistance,
+      ),
+    ];
+  }
+
+  List<String> _communicationLines(
+    ActivityProfileData profile,
+  ) {
+    final data = profile.communication;
+
+    final lines = <String>[
+      _qaBool(
+        'Votre enfant nécessite-t-il des adaptations particulières concernant la communication, par rapport à un enfant de son âge ?',
+        data.requiresAdaptations,
+      ),
+    ];
+
+    if (!data.requiresAdaptations) {
+      return lines;
+    }
+
+    lines.add(
+      _qaBool(
+        'Les consignes doivent être formulées avec des mots simples.',
+        data.useSimpleInstructions,
+      ),
+    );
+    lines.add(
+      _qaBool(
+        'Votre enfant peut donner l’impression d’avoir compris une consigne alors que ce n’est pas le cas.',
+        data.mayAppearToUnderstand,
+      ),
+    );
+    lines.add(
+      _qaBool(
+        'Il est préférable de vérifier individuellement que les consignes ont été comprises.',
+        data.verifyUnderstandingIndividually,
+      ),
+    );
+    lines.add(
+      _qaBool(
+        'Votre enfant utilise-t-il un support de communication particulier ?',
+        data.usesCommunicationSupport,
+      ),
+    );
+
+    if (data.usesCommunicationSupport) {
+      lines.add(
+        _qaText(
+          'Précisez le support de communication utilisé',
+          data.communicationSupportDetails,
+        ),
+      );
+    }
+
+    return lines;
+  }
+
+  List<String> _transitionsLines(
+    ActivityProfileData profile,
+  ) {
+    final data = profile.transitions;
+
+    final lines = <String>[
+      _qaBool(
+        'Votre enfant nécessite-t-il des adaptations particulières lors des transitions ou des changements d’activité, par rapport à un enfant de son âge ?',
+        data.requiresAdaptations,
+      ),
+    ];
+
+    if (!data.requiresAdaptations) {
+      return lines;
+    }
+
+    lines.add(
+      _qaBool(
+        'Les changements d’activité peuvent provoquer un stress important.',
+        data.transitionsMayCauseStress,
+      ),
+    );
+    lines.add(
+      _qaBool(
+        'Les changements de programme doivent être annoncés à l’avance.',
+        data.changesMustBeAnnounced,
+      ),
+    );
+
+    return lines;
+  }
+
+  List<String> _safetyLines(
+    ActivityProfileData profile,
+  ) {
+    final data = profile.safety;
+
+    final lines = <String>[
+      _qaBool(
+        'Votre enfant nécessite-t-il des adaptations particulières concernant sa sécurité, par rapport à un enfant de son âge ?',
+        data.requiresAdaptations,
+      ),
+    ];
+
+    if (!data.requiresAdaptations) {
+      return lines;
+    }
+
+    lines.add(
+      _qaBool(
+        'Votre enfant a déjà quitté brusquement un groupe.',
+        data.mayLeaveGroupSuddenly,
+      ),
+    );
+    lines.add(
+      _qaBool(
+        'Votre enfant nécessite-t-il un équipement de sécurité particulier ?',
+        data.requiresSafetyEquipment,
+      ),
+    );
+
+    if (data.requiresSafetyEquipment) {
+      lines.add(
+        _qaText(
+          'Précisez l’équipement de sécurité nécessaire',
+          data.safetyEquipmentDetails,
+        ),
+      );
+    }
+
+    return lines;
+  }
+
+  List<String> _otherInformationLines(
+    ActivityProfileData profile,
+  ) {
+    final data = profile.otherInformation;
+
+    final lines = <String>[
+      _qaBool(
+        'Y a-t-il une autre information importante concernant l’accompagnement de votre enfant que nous n’avons pas abordée ?',
+        data.hasOtherInformation,
+      ),
+    ];
+
+    if (!data.hasOtherInformation) {
+      return lines;
+    }
+
+    for (final details in [
+      data.details,
+      data.secondDetails,
+      data.thirdDetails,
+      data.fourthDetails,
+    ]) {
+      final trimmed = details?.trim();
+
+      if (trimmed != null && trimmed.isNotEmpty) {
+        lines.add(_qa('Information complémentaire', trimmed));
+      }
+    }
+
+    return lines;
+  }
+
+  List<_RecapSection> _sections(
+    ActivityProfileData profile,
+  ) {
+    return [
+      _RecapSection(
+        title: 'Activité aquatique',
+        icon: Icons.pool,
+        lines: _aquaticActivityLines(profile),
+      ),
+      _RecapSection(
+        title: 'Transport',
+        icon: Icons.directions_bus,
+        lines: _transportLines(profile),
+      ),
+      _RecapSection(
+        title: 'Marche prolongée / effort physique',
+        icon: Icons.directions_walk,
+        lines: _walkingEffortLines(profile),
+      ),
+      _RecapSection(
+        title: 'Séjour avec nuitée',
+        icon: Icons.bed,
+        lines: _overnightStayLines(profile),
+      ),
+      _RecapSection(
+        title: 'Changement de tenue',
+        icon: Icons.checkroom,
+        lines: _clothingLines(profile),
+      ),
+      _RecapSection(
+        title: 'Toilettes',
+        icon: Icons.wc,
+        lines: _toiletsLines(profile),
+      ),
+      _RecapSection(
+        title: 'Communication',
+        icon: Icons.chat_bubble_outline,
+        lines: _communicationLines(profile),
+      ),
+      _RecapSection(
+        title: 'Transitions / changements d’activité',
+        icon: Icons.sync_alt,
+        lines: _transitionsLines(profile),
+      ),
+      _RecapSection(
+        title: 'Sécurité',
+        icon: Icons.health_and_safety,
+        lines: _safetyLines(profile),
+      ),
+      _RecapSection(
+        title: 'Autres informations',
+        icon: Icons.info_outline,
+        lines: _otherInformationLines(profile),
+      ),
+    ];
+  }
+
+  Future<void> _print(
+    ActivityProfileData profile,
+  ) async {
+    await Printing.layoutPdf(
+      onLayout: (_) => _buildPdfBytes(profile),
+      name: 'Profil activites - $_displayName',
+    );
+  }
+
+  Future<void> _share(
+    ActivityProfileData profile,
+  ) async {
+    await Printing.sharePdf(
+      bytes: await _buildPdfBytes(profile),
+      filename: 'profil_activites_$_displayName.pdf',
+    );
+  }
+
+  Future<Uint8List> _buildPdfBytes(
+    ActivityProfileData profile,
+  ) async {
+    final document = pw.Document();
+
+    document.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) => [
+          pw.Text(
+            pdfSafeText(
+              'Profil Activités — $_displayName',
+            ),
+            style: pw.TextStyle(
+              fontSize: 20,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+          for (final section in _sections(profile)) ...[
+            pdfSectionTitle(section.title),
+            ...section.lines.map(pdfBullet),
+          ],
+        ],
+      ),
+    );
+
+    return document.save();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profile = child.activityProfile;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profil Activités'),
+        actions: profile == null
+            ? null
+            : [
+                IconButton(
+                  icon: const Icon(
+                    Icons.print_outlined,
+                  ),
+                  tooltip: 'Imprimer / exporter en PDF',
+                  onPressed: () => _print(profile),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.share_outlined),
+                  tooltip: 'Partager',
+                  onPressed: () => _share(profile),
+                ),
+              ],
+      ),
+      body: SafeArea(
+        child: profile == null
+            ? Padding(
+                padding: const EdgeInsets.all(24),
+                child: Center(
+                  child: Text(
+                    'Le profil Activités n’a pas encore été rempli pour $_displayName.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 17),
+                  ),
+                ),
+              )
+            : ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  Text(
+                    _displayName,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  for (final section in _sections(profile))
+                    Card(
+                      margin: const EdgeInsets.only(
+                        bottom: 16,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(
+                          18,
+                        ),
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  section.icon,
+                                  size: 22,
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    section.title,
+                                    style:
+                                        const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight:
+                                          FontWeight
+                                              .bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            for (final line
+                                in section.lines)
+                              Padding(
+                                padding:
+                                    const EdgeInsets
+                                        .only(
+                                  bottom: 8,
+                                ),
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment
+                                          .start,
+                                  children: [
+                                    const Padding(
+                                      padding:
+                                          EdgeInsets
+                                              .only(
+                                        top: 7,
+                                      ),
+                                      child: Icon(
+                                        Icons.circle,
+                                        size: 6,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      width: 9,
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        line,
+                                        style:
+                                            const TextStyle(
+                                          fontSize: 15,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _RecapSection {
+  final String title;
+  final IconData icon;
+  final List<String> lines;
+
+  _RecapSection({
+    required this.title,
+    required this.icon,
+    required this.lines,
+  });
+}

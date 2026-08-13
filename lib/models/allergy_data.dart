@@ -15,6 +15,11 @@ class AllergyData {
   String? emergencyTreatmentName;
   String? emergencyTreatmentDosage;
 
+  /// Étapes à suivre en cas d'urgence liée à cette allergie,
+  /// dans l'ordre, saisies par le parent. Affichées numérotées
+  /// automatiquement dans le Mode Urgence.
+  final List<String> emergencyInstructionSteps;
+
   AllergyData({
     String? allergyId,
     this.allergen,
@@ -25,8 +30,11 @@ class AllergyData {
     this.hasEmergencyTreatment,
     this.emergencyTreatmentName,
     this.emergencyTreatmentDosage,
-  }) : allergyId =
-            allergyId ?? _createAllergyId();
+    List<String>? emergencyInstructionSteps,
+  })  : allergyId =
+            allergyId ?? _createAllergyId(),
+        emergencyInstructionSteps =
+            emergencyInstructionSteps ?? [];
 
   static String _createAllergyId() {
     _nextId++;

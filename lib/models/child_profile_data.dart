@@ -2,10 +2,12 @@ import 'allergy_data.dart';
 import 'child_profile_draft.dart';
 import 'contact_data.dart';
 import 'daily_treatment_data.dart';
+import 'discontinued_treatment_data.dart';
 import 'emergency_treatment_data.dart';
 import 'identity_data.dart';
 import 'medical_device_data.dart';
 import 'medical_event_data.dart';
+import 'medical_observation_data.dart';
 import 'medical_professional_data.dart';
 import 'pathology_data.dart';
 import 'primary_care_doctor_data.dart';
@@ -19,11 +21,14 @@ class ChildProfileData {
 
   final List<PathologyData> pathologies;
   final List<MedicalEventData> medicalEvents;
+  final List<MedicalObservationData> medicalObservations;
 
   final TriggerFactorData triggerFactors;
 
   final List<DailyTreatmentData>
       dailyTreatments;
+  final List<DiscontinuedTreatmentData>
+      discontinuedTreatments;
   final List<EmergencyTreatmentData>
       emergencyTreatments;
 
@@ -41,8 +46,10 @@ class ChildProfileData {
     required this.identity,
     required this.pathologies,
     required this.medicalEvents,
+    required this.medicalObservations,
     required this.triggerFactors,
     required this.dailyTreatments,
+    required this.discontinuedTreatments,
     required this.emergencyTreatments,
     required this.allergies,
     required this.medicalDevices,
@@ -82,6 +89,7 @@ class ChildProfileData {
                   .referringProfessional;
 
           return PathologyData(
+            pathologyId: pathology.pathologyId,
             name: pathology.name,
             approximateDiagnosisDate:
                 pathology
@@ -106,6 +114,11 @@ class ChildProfileData {
                             professional
                                 .phoneNumber,
                       ),
+            emergencyInstructionSteps:
+                List<String>.from(
+              pathology
+                  .emergencyInstructionSteps,
+            ),
           );
         },
       ).toList(),
@@ -138,6 +151,20 @@ class ChildProfileData {
             ongoingConsequences:
                 event
                     .ongoingConsequences,
+          );
+        },
+      ).toList(),
+
+      medicalObservations:
+          draft.medicalObservations.map(
+        (observation) {
+          return MedicalObservationData(
+            description:
+                observation.description,
+            approximateDate:
+                observation.approximateDate,
+            conclusion:
+                observation.conclusion,
           );
         },
       ).toList(),
@@ -249,6 +276,27 @@ class ChildProfileData {
             administrationTimes:
                 treatment
                     .administrationTimes,
+            relatedPathologyIds:
+                List<String>.from(
+              treatment
+                  .relatedPathologyIds,
+            ),
+            relatedAllergyIds:
+                List<String>.from(
+              treatment.relatedAllergyIds,
+            ),
+          );
+        },
+      ).toList(),
+
+      discontinuedTreatments:
+          draft.discontinuedTreatments.map(
+        (treatment) {
+          return DiscontinuedTreatmentData(
+            medicationName:
+                treatment.medicationName,
+            approximateStopDate:
+                treatment.approximateStopDate,
           );
         },
       ).toList(),
@@ -268,6 +316,15 @@ class ChildProfileData {
             administrationMethod:
                 treatment
                     .administrationMethod,
+            relatedPathologyIds:
+                List<String>.from(
+              treatment
+                  .relatedPathologyIds,
+            ),
+            relatedAllergyIds:
+                List<String>.from(
+              treatment.relatedAllergyIds,
+            ),
           );
         },
       ).toList(),
@@ -276,6 +333,7 @@ class ChildProfileData {
           draft.allergies.map(
         (allergy) {
           return AllergyData(
+            allergyId: allergy.allergyId,
             allergen:
                 allergy.allergen,
             observedReaction:
@@ -299,6 +357,11 @@ class ChildProfileData {
             emergencyTreatmentDosage:
                 allergy
                     .emergencyTreatmentDosage,
+            emergencyInstructionSteps:
+                List<String>.from(
+              allergy
+                  .emergencyInstructionSteps,
+            ),
           );
         },
       ).toList(),

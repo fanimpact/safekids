@@ -110,15 +110,46 @@ class _AquaticActivityPageState
   void _updateRequiresAdaptations(
     bool value,
   ) {
-    setState(() {
-      _requiresAdaptations = value;
-    });
-
-    widget
+    final data = widget
         .activityProfileController
         .draft
-        .aquaticActivity
-        .requiresAdaptations = value;
+        .aquaticActivity;
+
+    setState(() {
+      _requiresAdaptations = value;
+
+      if (!value) {
+        _mayJumpIntoWater = false;
+        _canSwim = false;
+        _requiresFlotationVestNearWater = false;
+        _requiresDedicatedAdultNearWater = false;
+        _requiresSpecialEquipment = false;
+        _specialEquipmentController.clear();
+        _requiresAdaptedSupervision = false;
+        _notifyLifeguard = false;
+        _requiresDedicatedAdult = false;
+        _otherSupervisionController.clear();
+        _requiresOtherAdaptation = false;
+        _otherAdaptationController.clear();
+      }
+    });
+
+    data.requiresAdaptations = value;
+
+    if (!value) {
+      data.mayJumpIntoWater = false;
+      data.canSwim = false;
+      data.requiresFlotationVestNearWater = false;
+      data.requiresDedicatedAdultNearWater = false;
+      data.requiresSpecialEquipment = false;
+      data.specialEquipmentDetails = null;
+      data.requiresAdaptedSupervision = false;
+      data.notifyLifeguard = false;
+      data.requiresDedicatedAdult = false;
+      data.otherSupervisionDetails = null;
+      data.requiresOtherAdaptation = false;
+      data.otherAdaptationDetails = null;
+    }
   }
 
   void _updateMayJumpIntoWater(
@@ -410,6 +441,7 @@ class _AquaticActivityPageState
                 _updateRequiresAdaptations,
           ),
 
+          if (_requiresAdaptations) ...[
           const SizedBox(height: 32),
 
           _buildSectionTitle(
@@ -574,6 +606,7 @@ class _AquaticActivityPageState
               helperText:
                   'Réponse courte recommandée (quelques mots ou une phrase courte).',
             ),
+          ],
           ],
 
           const SizedBox(height: 30),

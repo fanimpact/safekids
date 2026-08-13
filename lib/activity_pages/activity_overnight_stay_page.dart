@@ -23,7 +23,6 @@ class _ActivityOvernightStayPageState
   bool? _collectiveAccommodation;
 
   ActivityThreeStateAnswer? _electricityMayBeUnavailable;
-  ActivityThreeStateAnswer? _phoneNetworkMayBeUnavailable;
 
   @override
   void initState() {
@@ -37,9 +36,6 @@ class _ActivityOvernightStayPageState
 
     _electricityMayBeUnavailable =
         widget.sessionData.electricityMayBeUnavailable;
-
-    _phoneNetworkMayBeUnavailable =
-        widget.sessionData.phoneNetworkMayBeUnavailable;
   }
 
   void _continue() {
@@ -50,8 +46,7 @@ class _ActivityOvernightStayPageState
 
     if (_hasOvernightStay == true &&
         (_collectiveAccommodation == null ||
-            _electricityMayBeUnavailable == null ||
-            _phoneNetworkMayBeUnavailable == null)) {
+            _electricityMayBeUnavailable == null)) {
       _showMissingAnswer();
       return;
     }
@@ -65,17 +60,11 @@ class _ActivityOvernightStayPageState
 
       widget.sessionData.electricityMayBeUnavailable =
           _electricityMayBeUnavailable;
-
-      widget.sessionData.phoneNetworkMayBeUnavailable =
-          _phoneNetworkMayBeUnavailable;
     } else {
       widget.sessionData.collectiveAccommodation =
           false;
 
       widget.sessionData.electricityMayBeUnavailable =
-          null;
-
-      widget.sessionData.phoneNetworkMayBeUnavailable =
           null;
     }
 
@@ -202,8 +191,6 @@ class _ActivityOvernightStayPageState
                     _collectiveAccommodation = null;
                     _electricityMayBeUnavailable =
                         null;
-                    _phoneNetworkMayBeUnavailable =
-                        null;
                   }
                 });
               },
@@ -234,21 +221,6 @@ class _ActivityOvernightStayPageState
                 onChanged: (value) {
                   setState(() {
                     _electricityMayBeUnavailable =
-                        value;
-                  });
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              _threeStateQuestion(
-                question:
-                    'Le réseau téléphonique risque-t-il d’être indisponible pendant tout ou partie de l’activité ?',
-                value:
-                    _phoneNetworkMayBeUnavailable,
-                onChanged: (value) {
-                  setState(() {
-                    _phoneNetworkMayBeUnavailable =
                         value;
                   });
                 },

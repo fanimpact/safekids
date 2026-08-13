@@ -53,6 +53,7 @@ class DemoTestChildren {
       ),
       pathologies: [],
       medicalEvents: [],
+      medicalObservations: [],
       triggerFactors: TriggerFactorData(
         hasTriggerFactors: true,
 
@@ -88,6 +89,7 @@ class DemoTestChildren {
         other: null,
       ),
       dailyTreatments: [],
+      discontinuedTreatments: [],
       emergencyTreatments: [],
       allergies: [],
       medicalDevices: [],

@@ -25,16 +25,16 @@ class _TriggerFactorsPageState
     extends State<TriggerFactorsPage> {
   late bool _hasTriggerFactors;
 
-  late bool _flashingLights;
+  bool? _flashingLights;
   late bool _requiresGlassesOutdoors;
 
-  late bool _heat;
-  late bool _fatigueOrLackOfSleep;
-  late bool _noise;
-  late bool _crowd;
-  late bool _confinedSpaces;
-  late bool _physicalEffort;
-  late bool _stressOrStrongEmotions;
+  bool? _heat;
+  bool? _fatigueOrLackOfSleep;
+  bool? _noise;
+  bool? _crowd;
+  bool? _confinedSpaces;
+  bool? _physicalEffort;
+  bool? _stressOrStrongEmotions;
 
   late bool _waterContact;
   WaterVigilance? _waterVigilance;
@@ -161,18 +161,18 @@ class _TriggerFactorsPageState
       _hasTriggerFactors = value;
 
       if (!value) {
-        _flashingLights = false;
+        _flashingLights = null;
         _requiresGlassesOutdoors =
             false;
-        _heat = false;
+        _heat = null;
         _fatigueOrLackOfSleep =
-            false;
-        _noise = false;
-        _crowd = false;
-        _confinedSpaces = false;
-        _physicalEffort = false;
+            null;
+        _noise = null;
+        _crowd = null;
+        _confinedSpaces = null;
+        _physicalEffort = null;
         _stressOrStrongEmotions =
-            false;
+            null;
 
         _waterContact = false;
         _waterVigilance = null;
@@ -198,22 +198,19 @@ class _TriggerFactorsPageState
   }
 
   void _updateFlashingLights(
-    bool? value,
+    bool value,
   ) {
-    final newValue =
-        value ?? false;
-
     setState(() {
-      _flashingLights = newValue;
+      _flashingLights = value;
 
-      if (!newValue) {
+      if (!value) {
         _requiresGlassesOutdoors =
             false;
       }
     });
 
     widget.transmissionController
-        .updateFlashingLights(newValue);
+        .updateFlashingLights(value);
   }
 
   void _updateRequiresGlassesOutdoors(
@@ -230,103 +227,78 @@ class _TriggerFactorsPageState
     );
   }
 
-  void _updateHeat(bool? value) {
-    final newValue =
-        value ?? false;
-
+  void _updateHeat(bool value) {
     setState(() {
-      _heat = newValue;
+      _heat = value;
     });
 
     widget.transmissionController
-        .updateHeat(newValue);
+        .updateHeat(value);
   }
 
   void _updateFatigueOrLackOfSleep(
-    bool? value,
+    bool value,
   ) {
-    final newValue =
-        value ?? false;
-
     setState(() {
-      _fatigueOrLackOfSleep =
-          newValue;
+      _fatigueOrLackOfSleep = value;
     });
 
     widget.transmissionController
         .updateFatigueOrLackOfSleep(
-      newValue,
+      value,
     );
   }
 
-  void _updateNoise(bool? value) {
-    final newValue =
-        value ?? false;
-
+  void _updateNoise(bool value) {
     setState(() {
-      _noise = newValue;
+      _noise = value;
     });
 
     widget.transmissionController
-        .updateNoise(newValue);
+        .updateNoise(value);
   }
 
-  void _updateCrowd(bool? value) {
-    final newValue =
-        value ?? false;
-
+  void _updateCrowd(bool value) {
     setState(() {
-      _crowd = newValue;
+      _crowd = value;
     });
 
     widget.transmissionController
-        .updateCrowd(newValue);
+        .updateCrowd(value);
   }
 
   void _updateConfinedSpaces(
-    bool? value,
+    bool value,
   ) {
-    final newValue =
-        value ?? false;
-
     setState(() {
-      _confinedSpaces =
-          newValue;
+      _confinedSpaces = value;
     });
 
     widget.transmissionController
-        .updateConfinedSpaces(newValue);
+        .updateConfinedSpaces(value);
   }
 
   void _updatePhysicalEffort(
-    bool? value,
+    bool value,
   ) {
-    final newValue =
-        value ?? false;
-
     setState(() {
-      _physicalEffort =
-          newValue;
+      _physicalEffort = value;
     });
 
     widget.transmissionController
-        .updatePhysicalEffort(newValue);
+        .updatePhysicalEffort(value);
   }
 
   void _updateStressOrStrongEmotions(
-    bool? value,
+    bool value,
   ) {
-    final newValue =
-        value ?? false;
-
     setState(() {
-      _stressOrStrongEmotions =
-          newValue;
+      _stressOrStrongEmotions = value;
     });
 
     widget.transmissionController
         .updateStressOrStrongEmotions(
-      newValue,
+      value,
     );
   }
 
@@ -433,6 +405,31 @@ class _TriggerFactorsPageState
   }
 
   void _continue() {
+    if (_hasTriggerFactors) {
+      final hasUnansweredFactor =
+          _flashingLights == null ||
+              _heat == null ||
+              _fatigueOrLackOfSleep == null ||
+              _noise == null ||
+              _crowd == null ||
+              _confinedSpaces == null ||
+              _physicalEffort == null ||
+              _stressOrStrongEmotions == null;
+
+      if (hasUnansweredFactor) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Répondez par oui ou par non à chaque facteur déclencheur avant de continuer.",
+            ),
+          ),
+        );
+
+        return;
+      }
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -443,28 +440,6 @@ class _TriggerFactorsPageState
                   .transmissionController,
         ),
       ),
-    );
-  }
-
-  Widget _buildCheckbox({
-    required String label,
-    required bool value,
-    required ValueChanged<bool?>
-        onChanged,
-  }) {
-    return CheckboxListTile(
-      contentPadding:
-          EdgeInsets.zero,
-      controlAffinity:
-          ListTileControlAffinity.leading,
-      title: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 16,
-        ),
-      ),
-      value: value,
-      onChanged: onChanged,
     );
   }
 
@@ -783,7 +758,7 @@ class _TriggerFactorsPageState
             ),
 
             const Text(
-              'Sélectionnez les facteurs déclencheurs qui concernent votre enfant.',
+              'Répondez à chaque question ci-dessous.',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight:
@@ -795,16 +770,16 @@ class _TriggerFactorsPageState
               height: 12,
             ),
 
-            _buildCheckbox(
+            SkYesNoField(
               label:
-                  'Lumières clignotantes (photosensibilité)',
+                  'Les lumières clignotantes (photosensibilité) nécessitent-elles une vigilance particulière pour votre enfant ?',
               value:
                   _flashingLights,
               onChanged:
                   _updateFlashingLights,
             ),
 
-            if (_flashingLights) ...[
+            if (_flashingLights == true) ...[
               const SizedBox(
                 height: 12,
               ),
@@ -817,67 +792,98 @@ class _TriggerFactorsPageState
                 onChanged:
                     _updateRequiresGlassesOutdoors,
               ),
-
-              const SizedBox(
-                height: 12,
-              ),
             ],
 
-            _buildCheckbox(
-              label: 'Chaleur',
+            const SizedBox(
+              height: 24,
+            ),
+
+            SkYesNoField(
+              label:
+                  'La chaleur nécessite-t-elle une vigilance particulière pour votre enfant ?',
               value: _heat,
               onChanged:
                   _updateHeat,
             ),
 
-            _buildCheckbox(
+            const SizedBox(
+              height: 24,
+            ),
+
+            SkYesNoField(
               label:
-                  'Fatigue ou manque de sommeil',
+                  'La fatigue ou le manque de sommeil nécessitent-ils une vigilance particulière pour votre enfant ?',
               value:
                   _fatigueOrLackOfSleep,
               onChanged:
                   _updateFatigueOrLackOfSleep,
             ),
 
-            _buildCheckbox(
-              label: 'Bruit',
+            const SizedBox(
+              height: 24,
+            ),
+
+            SkYesNoField(
+              label:
+                  'Le bruit nécessite-t-il une vigilance particulière pour votre enfant ?',
               value: _noise,
               onChanged:
                   _updateNoise,
             ),
 
-            _buildCheckbox(
-              label: 'Foule',
+            const SizedBox(
+              height: 24,
+            ),
+
+            SkYesNoField(
+              label:
+                  'La foule nécessite-t-elle une vigilance particulière pour votre enfant ?',
               value: _crowd,
               onChanged:
                   _updateCrowd,
             ),
 
-            _buildCheckbox(
+            const SizedBox(
+              height: 24,
+            ),
+
+            SkYesNoField(
               label:
-                  'Espaces confinés',
+                  'Les espaces confinés nécessitent-ils une vigilance particulière pour votre enfant ?',
               value:
                   _confinedSpaces,
               onChanged:
                   _updateConfinedSpaces,
             ),
 
-            _buildCheckbox(
+            const SizedBox(
+              height: 24,
+            ),
+
+            SkYesNoField(
               label:
-                  'Effort physique',
+                  'L’effort physique nécessite-t-il une vigilance particulière pour votre enfant ?',
               value:
                   _physicalEffort,
               onChanged:
                   _updatePhysicalEffort,
             ),
 
-            _buildCheckbox(
+            const SizedBox(
+              height: 24,
+            ),
+
+            SkYesNoField(
               label:
-                  'Stress ou émotions fortes',
+                  'Le stress ou les émotions fortes nécessitent-ils une vigilance particulière pour votre enfant ?',
               value:
                   _stressOrStrongEmotions,
               onChanged:
                   _updateStressOrStrongEmotions,
+            ),
+
+            const SizedBox(
+              height: 12,
             ),
 
             _buildWaterQuestions(),

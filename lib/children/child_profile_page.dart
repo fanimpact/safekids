@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../activity_pages/activities_home_page.dart';
+import '../care_info/care_info_sheet_page.dart';
+import '../controllers/transmission_controller.dart';
+import '../emergency_info/emergency_info_sheet_page.dart';
+import '../emergency_mode/emergency_mode_button_list_page.dart';
+import '../models/child_profile_draft.dart';
 import '../models/complete_child_profile_data.dart';
+import '../questionnaire_recap/activity_questionnaire_recap_page.dart';
+import '../questionnaire_recap/medical_questionnaire_recap_page.dart';
+import '../transmission_pages/identity_page.dart';
+import '../utils/age_utils.dart';
 
 class ChildProfilePage extends StatelessWidget {
   final CompleteChildProfileData child;
@@ -25,7 +34,13 @@ class ChildProfilePage extends StatelessWidget {
   }
 
   String get _age {
-    return '';
+    return formatAge(
+          child
+              .essentialInformation
+              .identity
+              .dateOfBirth,
+        ) ??
+        '';
   }
 
   List<String> get _pathologies {
@@ -288,10 +303,14 @@ class ChildProfilePage extends StatelessWidget {
               subtitle:
                   'Accéder immédiatement au protocole d’urgence.',
               onPressed: () {
-                _showTemporaryMessage(
-                  context: context,
-                  message:
-                      'Le Mode Urgence sera relié ici.',
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        EmergencyModeButtonListPage(
+                      child: child,
+                    ),
+                  ),
                 );
               },
             ),
@@ -304,10 +323,73 @@ class ChildProfilePage extends StatelessWidget {
               subtitle:
                   'Afficher la fiche destinée aux services de secours.',
               onPressed: () {
-                _showTemporaryMessage(
-                  context: context,
-                  message:
-                      'La fiche destinée aux secours sera reliée ici.',
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        EmergencyInfoSheetPage(
+                      child: child,
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            _actionButton(
+              icon: Icons.fact_check_outlined,
+              color: Colors.teal,
+              title:
+                  'Questionnaire santé (récapitulatif)',
+              subtitle:
+                  'Voir et imprimer toutes les questions et réponses du questionnaire santé.',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        MedicalQuestionnaireRecapPage(
+                      child: child,
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            _actionButton(
+              icon: Icons.checklist_rtl,
+              color: Colors.indigo,
+              title:
+                  'Questionnaire activité (récapitulatif)',
+              subtitle:
+                  'Voir et imprimer toutes les questions et réponses du profil Activités.',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ActivityQuestionnaireRecapPage(
+                      child: child,
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            _actionButton(
+              icon: Icons.family_restroom,
+              color: Colors.brown,
+              title: "Ce qu'il faut savoir sur $_firstName",
+              subtitle:
+                  'Informations à connaître pour un accompagnement de plusieurs jours (ex. grands-parents).',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        CareInfoSheetPage(
+                      child: child,
+                    ),
+                  ),
                 );
               },
             ),
@@ -387,10 +469,23 @@ class ChildProfilePage extends StatelessWidget {
               subtitle:
                   'Modifier les informations destinées aux secours.',
               onPressed: () {
-                _showTemporaryMessage(
-                  context: context,
-                  message:
-                      'La modification des informations essentielles sera reliée ici.',
+                final transmissionController =
+                    TransmissionController(
+                  initialDraft:
+                      ChildProfileDraft.fromChildProfileData(
+                    child.essentialInformation,
+                  ),
+                  isEditing: true,
+                );
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => IdentityPage(
+                      transmissionController:
+                          transmissionController,
+                    ),
+                  ),
                 );
               },
             ),

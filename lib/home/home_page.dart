@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../activity_pages/activity_session_start_page.dart';
 import '../children/children_page.dart';
+import '../emergency_info/emergency_info_child_picker_page.dart';
+import '../emergency_info/emergency_info_sheet_page.dart';
+import '../emergency_mode/emergency_mode_button_list_page.dart';
+import '../emergency_mode/emergency_mode_child_picker_page.dart';
+import '../repositories/child_repository.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -27,6 +32,84 @@ class HomePage extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) =>
             const ActivitySessionStartPage(),
+      ),
+    );
+  }
+
+  void _openEmergencyInfo(BuildContext context) {
+    final children =
+        ChildRepository.instance.children;
+
+    if (children.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Aucun enfant enregistré. Créez d’abord le profil d’un enfant depuis « Mes enfants ».',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    if (children.length == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              EmergencyInfoSheetPage(
+            child: children.first,
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            const EmergencyInfoChildPickerPage(),
+      ),
+    );
+  }
+
+  void _openEmergencyMode(BuildContext context) {
+    final children =
+        ChildRepository.instance.children;
+
+    if (children.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Aucun enfant enregistré. Créez d’abord le profil d’un enfant depuis « Mes enfants ».',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    if (children.length == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              EmergencyModeButtonListPage(
+            child: children.first,
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            const EmergencyModeChildPickerPage(),
       ),
     );
   }
@@ -215,10 +298,7 @@ class HomePage extends StatelessWidget {
                 label: 'Mode Urgence',
                 icon: Icons.emergency_outlined,
                 onPressed: () {
-                  _showComingSoon(
-                    context,
-                    'Le mode Urgence',
-                  );
+                  _openEmergencyMode(context);
                 },
               ),
 
@@ -230,10 +310,7 @@ class HomePage extends StatelessWidget {
                 icon:
                     Icons.medical_information_outlined,
                 onPressed: () {
-                  _showComingSoon(
-                    context,
-                    'Les informations pour les secours',
-                  );
+                  _openEmergencyInfo(context);
                 },
               ),
 
