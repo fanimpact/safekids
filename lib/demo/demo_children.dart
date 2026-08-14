@@ -202,7 +202,6 @@ class DemoChildren {
           AquaticActivityData(
         requiresAdaptations: true,
         mayJumpIntoWater: false,
-        canSwim: true,
         requiresFlotationVestNearWater:
             false,
         requiresDedicatedAdultNearWater:
@@ -440,7 +439,6 @@ class DemoChildren {
           AquaticActivityData(
         requiresAdaptations: false,
         mayJumpIntoWater: false,
-        canSwim: true,
         requiresFlotationVestNearWater:
             false,
         requiresDedicatedAdultNearWater:

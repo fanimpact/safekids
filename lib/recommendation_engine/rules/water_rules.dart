@@ -1,5 +1,6 @@
 import '../../models/activity_session/activity_session_data.dart';
 import '../../models/complete_child_profile_data.dart';
+import '../../models/trigger_factor_data.dart';
 import '../models/recommendation.dart';
 import '../models/recommendation_category.dart';
 
@@ -37,7 +38,10 @@ class WaterRules {
     // Informations communes dès qu'il y a
     // un contexte lié à l'eau.
 
-    if (!aquaticActivity.canSwim) {
+    final waterVigilance =
+        child.essentialInformation.triggerFactors.waterVigilance;
+
+    if (waterVigilance == WaterVigilance.cannotSwim) {
       recommendations.add(
         Recommendation(
           id: 'water_cannot_swim',

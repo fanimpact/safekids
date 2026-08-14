@@ -55,7 +55,7 @@ class DemoTestChildrenEmma {
       medicalEvents: [],
       medicalObservations: [],
       triggerFactors: TriggerFactorData(
-        hasTriggerFactors: false,
+        hasTriggerFactors: true,
         flashingLights: false,
         requiresGlassesOutdoors: false,
         heat: false,
@@ -65,8 +65,8 @@ class DemoTestChildrenEmma {
         confinedSpaces: false,
         physicalEffort: false,
         stressOrStrongEmotions: false,
-        waterContact: false,
-        waterVigilance: null,
+        waterContact: true,
+        waterVigilance: WaterVigilance.cannotSwim,
         otherWaterVigilance: null,
         animals: false,
         animalVigilance: null,
@@ -110,7 +110,6 @@ class DemoTestChildrenEmma {
 
         // Proximité d'un point d'eau.
         mayJumpIntoWater: true,
-        canSwim: false,
         requiresFlotationVestNearWater:
             true,
         requiresDedicatedAdultNearWater:

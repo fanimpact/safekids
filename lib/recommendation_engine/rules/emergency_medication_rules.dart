@@ -118,16 +118,19 @@ class EmergencyMedicationRules {
         );
       }
 
-      final prefix =
+      final context =
           relatedLabels.isEmpty
-              ? medicationName
-              : '${relatedLabels.join(' / ')} — '
-                  '$medicationName';
+              ? null
+              : ' (${relatedLabels.join(' / ')})';
+
+      final base =
+          'Pensez à emporter le traitement d’urgence : '
+          '$medicationName${context ?? ''}';
 
       final text =
           details.isEmpty
-              ? prefix
-              : '$prefix — ${details.join(' — ')}';
+              ? base
+              : '$base — ${details.join(' — ')}';
 
       recommendations.add(
         Recommendation(
@@ -184,16 +187,19 @@ class EmergencyMedicationRules {
         );
       }
 
-      final prefix =
-          allergen != null &&
-                  allergen.isNotEmpty
-              ? '$allergen — $medicationName'
-              : medicationName;
+      final context =
+          allergen != null && allergen.isNotEmpty
+              ? ' ($allergen)'
+              : '';
+
+      final base =
+          'Pensez à emporter le traitement d’urgence : '
+          '$medicationName$context';
 
       final text =
           details.isEmpty
-              ? prefix
-              : '$prefix — ${details.join(' — ')}';
+              ? base
+              : '$base — ${details.join(' — ')}';
 
       recommendations.add(
         Recommendation(

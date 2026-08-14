@@ -8,6 +8,7 @@ import 'package:printing/printing.dart';
 import '../models/activity_profile_data.dart';
 import '../models/complete_child_profile_data.dart';
 import '../models/transport_data.dart';
+import '../models/trigger_factor_data.dart';
 import '../utils/pdf_text.dart';
 
 /// Récapitulatif intégral du questionnaire "Profil Activités" pour un
@@ -104,11 +105,18 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
         data.mayJumpIntoWater,
       ),
     );
-    lines.add(
-      _qaBool('Votre enfant sait-il nager ?', data.canSwim),
-    );
+    final cannotSwim =
+        child
+            .essentialInformation
+            .triggerFactors
+            .waterVigilance ==
+        WaterVigilance.cannotSwim;
 
-    if (!data.canSwim) {
+    if (cannotSwim) {
+      lines.add(
+        'D’après le profil santé, l’enfant ne sait pas nager.',
+      );
+
       lines.add(
         _qaBool(
           'Votre enfant doit-il disposer d’un gilet de flottaison lorsqu’il se trouve à proximité d’un point d’eau ?',

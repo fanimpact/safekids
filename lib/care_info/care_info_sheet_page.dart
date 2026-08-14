@@ -6,17 +6,26 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../models/complete_child_profile_data.dart';
+import '../models/transport_data.dart';
 import '../models/trigger_factor_data.dart';
 import '../utils/age_utils.dart';
 import '../utils/pdf_text.dart';
+
+/// Un groupe de lignes avec son propre sous-titre, affiché à l'intérieur
+/// d'une même section (ex. "Traitements d'urgence" / "Traitements
+/// réguliers" dans la section "Médicaments").
+typedef _LineGroup = ({String heading, List<String> lines});
 
 /// Fiche de lecture seule, générée uniquement à partir du profil déjà
 /// rempli de l'enfant, pensée pour un accompagnant qui garde l'enfant
 /// plusieurs jours (ex. grands-parents). Contrairement à la fiche de
 /// recommandations d'activité, elle affiche tout ce qui est renseigné
-/// dans le profil, sans lien à une activité précise. Elle ne contient
-/// aucune consigne "que faire en cas d'urgence" (réservée au Mode
-/// Urgence). Ce qui est affiché à l'écran et ce qui est exporté
+/// dans le profil (santé ET activités), sans lien à une activité
+/// précise. Elle ne contient aucune consigne "que faire en cas
+/// d'urgence" (réservée au Mode Urgence). Trois sections, sur le
+/// modèle de la fiche de recommandations d'activité : les points de
+/// vigilance et de sécurité, les médicaments, puis le matériel à
+/// prévoir. Ce qui est affiché à l'écran et ce qui est exporté
 /// (PDF / partage) sont strictement identiques : rien n'est
 /// modifiable ici, cette page n'a pas d'état.
 class CareInfoSheetPage extends StatelessWidget {
@@ -32,14 +41,14 @@ class CareInfoSheetPage extends StatelessWidget {
         child.essentialInformation.identity.firstName;
 
     if (value == null || value.trim().isEmpty) {
-      return 'Enfant';
+      return 'l’enfant';
     }
 
     return value.trim();
   }
 
   String get _pageTitle {
-    return "Ce qu'il faut savoir sur $_firstName";
+    return "Ce qu'il faut savoir sur $_displayName";
   }
 
   String get _displayName {
@@ -110,6 +119,11 @@ class CareInfoSheetPage extends StatelessWidget {
 
     return details;
   }
+
+  // ---------------------------------------------------------------------
+  // Contenu brut par catégorie, réutilisé pour composer les 3 sections
+  // ci-dessous ainsi que les Contacts.
+  // ---------------------------------------------------------------------
 
   List<String> get _pathologyLines {
     final lines = <String>[];
@@ -218,6 +232,42 @@ class CareInfoSheetPage extends StatelessWidget {
     return lines;
   }
 
+  List<String> get _allergyEmergencyTreatmentLines {
+    final lines = <String>[];
+
+    for (final allergy
+        in child.essentialInformation.allergies) {
+      if (allergy.hasEmergencyTreatment != true) {
+        continue;
+      }
+
+      final name =
+          allergy.emergencyTreatmentName?.trim();
+
+      if (name == null || name.isEmpty) {
+        continue;
+      }
+
+      final dosage =
+          allergy.emergencyTreatmentDosage?.trim();
+
+      final allergen = allergy.allergen?.trim();
+
+      final prefix =
+          allergen != null && allergen.isNotEmpty
+              ? '$allergen — $name'
+              : name;
+
+      lines.add(
+        dosage != null && dosage.isNotEmpty
+            ? '$prefix — $dosage'
+            : prefix,
+      );
+    }
+
+    return lines;
+  }
+
   List<String> get _medicalDeviceLines {
     final lines = <String>[];
 
@@ -241,130 +291,365 @@ class CareInfoSheetPage extends StatelessWidget {
     return lines;
   }
 
-  List<String> get _triggerFactorLines {
-    final triggerFactors =
-        child.essentialInformation.triggerFactors;
+  /// Noms (sans le détail de dosage) de tous les traitements d'urgence
+  /// de l'enfant, toutes sources confondues — utilisé pour la consigne
+  /// "à garder à portée de main en permanence".
+  List<String> get _emergencyMedicationNames {
+    final names = <String>[];
 
-    if (!triggerFactors.hasTriggerFactors) {
+    for (final treatment
+        in child.essentialInformation.emergencyTreatments) {
+      final name = treatment.medicationName?.trim();
+
+      if (name != null && name.isNotEmpty) {
+        names.add(name);
+      }
+    }
+
+    for (final allergy
+        in child.essentialInformation.allergies) {
+      if (allergy.hasEmergencyTreatment != true) {
+        continue;
+      }
+
+      final name =
+          allergy.emergencyTreatmentName?.trim();
+
+      if (name != null && name.isNotEmpty) {
+        names.add(name);
+      }
+    }
+
+    return names;
+  }
+
+  String? _waterLine(TriggerFactorData triggerFactors) {
+    if (!triggerFactors.waterContact) {
+      return null;
+    }
+
+    return switch (triggerFactors.waterVigilance) {
+      WaterVigilance.mayJumpIntoWater =>
+        'Eau : l’enfant risque de se jeter dans l’eau',
+      WaterVigilance.cannotSwim =>
+        'Eau : l’enfant ne sait pas nager',
+      WaterVigilance.other =>
+        'Eau : ${_detailOrFallback(
+          triggerFactors.otherWaterVigilance,
+        )}',
+      null => 'Eau : vigilance particulière',
+    };
+  }
+
+  String? _heightLine(TriggerFactorData triggerFactors) {
+    if (!triggerFactors.height) {
+      return null;
+    }
+
+    return switch (triggerFactors.heightVigilance) {
+      HeightVigilance.doesNotPerceiveDanger =>
+        'Hauteur : l’enfant ne perçoit pas le danger lié à la hauteur',
+      HeightVigilance.vertigoOrImportantFear =>
+        'Hauteur : l’enfant a des vertiges ou une peur importante de la hauteur',
+      HeightVigilance.other =>
+        'Hauteur : ${_detailOrFallback(
+          triggerFactors.otherHeightVigilance,
+        )}',
+      null => 'Hauteur : vigilance particulière',
+    };
+  }
+
+  String _detailOrFallback(String? value) {
+    final trimmed = value?.trim();
+
+    return trimmed != null && trimmed.isNotEmpty
+        ? trimmed
+        : 'vigilance particulière';
+  }
+
+  List<String> _walkingEffortVigilanceLines() {
+    final walkingEffort =
+        child.activityProfile?.walkingEffort;
+
+    if (walkingEffort == null) {
       return [];
     }
 
     final lines = <String>[];
 
-    if (triggerFactors.flashingLights == true) {
+    if (walkingEffort
+        .prolongedWalkingRequiresVigilance) {
       lines.add(
-        triggerFactors.requiresGlassesOutdoors
-            ? 'Photosensibilité (lumières clignotantes) — port de lunettes nécessaire en extérieur'
-            : 'Photosensibilité (lumières clignotantes)',
+        'Marche prolongée : vigilance particulière',
       );
     }
 
-    if (triggerFactors.heat == true) {
-      lines.add('Chaleur');
-    }
-
-    if (triggerFactors.fatigueOrLackOfSleep == true) {
-      lines.add('Fatigue / manque de sommeil');
-    }
-
-    if (triggerFactors.noise == true) {
-      lines.add('Bruit');
-    }
-
-    if (triggerFactors.crowd == true) {
-      lines.add('Foule');
-    }
-
-    if (triggerFactors.confinedSpaces == true) {
-      lines.add('Espaces confinés');
-    }
-
-    if (triggerFactors.physicalEffort == true) {
-      lines.add('Effort physique');
-    }
-
-    if (triggerFactors.stressOrStrongEmotions ==
-        true) {
-      lines.add('Stress / émotions fortes');
-    }
-
-    if (triggerFactors.waterContact) {
-      final vigilance = switch (
-          triggerFactors.waterVigilance) {
-        WaterVigilance.mayJumpIntoWater =>
-          'risque de se jeter dans l’eau',
-        WaterVigilance.cannotSwim => 'ne sait pas nager',
-        WaterVigilance.other =>
-          _nonEmptyOrNull(
-            triggerFactors.otherWaterVigilance,
-          ),
-        null => null,
-      };
-
+    if (walkingEffort
+        .intensePhysicalEffortRequiresVigilance) {
       lines.add(
-        vigilance != null ? 'Eau — $vigilance' : 'Eau',
+        'Effort physique intense : vigilance particulière',
       );
-    }
-
-    if (triggerFactors.animals) {
-      final vigilance = switch (
-          triggerFactors.animalVigilance) {
-        AnimalVigilance.importantFear =>
-          'peur importante des animaux',
-        AnimalVigilance
-            .approachesWithoutPerceivingDanger =>
-          'tendance à s’approcher des animaux sans percevoir le danger',
-        AnimalVigilance.other =>
-          _nonEmptyOrNull(
-            triggerFactors.otherAnimalVigilance,
-          ),
-        null => null,
-      };
-
-      lines.add(
-        vigilance != null
-            ? 'Animaux — $vigilance'
-            : 'Animaux',
-      );
-    }
-
-    if (triggerFactors.height) {
-      final vigilance = switch (
-          triggerFactors.heightVigilance) {
-        HeightVigilance.doesNotPerceiveDanger =>
-          'absence de perception du danger',
-        HeightVigilance.vertigoOrImportantFear =>
-          'vertige ou peur importante',
-        HeightVigilance.other =>
-          _nonEmptyOrNull(
-            triggerFactors.otherHeightVigilance,
-          ),
-        null => null,
-      };
-
-      lines.add(
-        vigilance != null
-            ? 'Hauteur — $vigilance'
-            : 'Hauteur',
-      );
-    }
-
-    final other = triggerFactors.other?.trim();
-
-    if (other != null && other.isNotEmpty) {
-      lines.add('Autre : $other');
     }
 
     return lines;
   }
 
-  String? _nonEmptyOrNull(String? value) {
-    final trimmed = value?.trim();
+  List<String> get _dailyLifeLines {
+    final activityProfile = child.activityProfile;
 
-    return trimmed != null && trimmed.isNotEmpty
-        ? trimmed
-        : null;
+    if (activityProfile == null) {
+      return [];
+    }
+
+    final lines = <String>[];
+
+    if (activityProfile.clothing.requiresAssistance) {
+      lines.add(
+        'Habillage : besoin d’aide pour changer de tenue',
+      );
+    }
+
+    if (activityProfile.toilets.requiresAssistance) {
+      lines.add(
+        'Toilettes : besoin d’accompagnement',
+      );
+    }
+
+    final communication = activityProfile.communication;
+
+    if (communication.useSimpleInstructions) {
+      lines.add(
+        'Communication : utiliser des consignes simples',
+      );
+    }
+
+    if (communication.mayAppearToUnderstand ||
+        communication.verifyUnderstandingIndividually) {
+      lines.add(
+        'Communication : vérifier sa compréhension individuellement',
+      );
+    }
+
+    if (communication.usesCommunicationSupport) {
+      final details = communication
+          .communicationSupportDetails
+          ?.trim();
+
+      if (details != null && details.isNotEmpty) {
+        lines.add('Communication : $details');
+      }
+    }
+
+    final transport = activityProfile.transport;
+
+    if (transport.motionSickness &&
+        transport.motionSicknessTransports.isNotEmpty) {
+      final modes = transport.motionSicknessTransports
+          .map(_transportModeLabel)
+          .toList();
+
+      lines.add(
+        'Transport : mal des transports en ${_joinWithAnd(modes)}',
+      );
+    }
+
+    return lines;
   }
+
+  String _transportModeLabel(TransportMode mode) {
+    return switch (mode) {
+      TransportMode.car => 'voiture',
+      TransportMode.bus => 'bus',
+      TransportMode.train => 'train',
+      TransportMode.tram => 'tramway',
+      TransportMode.metro => 'métro',
+      TransportMode.plane => 'avion',
+      TransportMode.boatOrFerry => 'bateau / ferry',
+      TransportMode.other => 'autre moyen de transport',
+    };
+  }
+
+  String _joinWithAnd(List<String> values) {
+    if (values.length <= 1) {
+      return values.join();
+    }
+
+    return '${values.sublist(0, values.length - 1).join(', ')} et ${values.last}';
+  }
+
+  // ---------------------------------------------------------------------
+  // Section 1 — "S'occuper de [prénom]".
+  // Tous les points de vigilance et de sécurité, du plus important au
+  // moins important : la ou les pathologies en tête, puis les risques
+  // vitaux (eau, hauteur), les allergies, puis le reste des facteurs de
+  // vigilance (santé et profil Activités), et enfin les informations
+  // pratiques du quotidien (habillage, toilettes, communication,
+  // transport). Ne contient ni médicaments ni matériel : ils ont leurs
+  // propres sections ci-dessous, pour éviter toute redondance.
+  // ---------------------------------------------------------------------
+
+  List<String> get _careVigilanceLines {
+    final lines = <String>[
+      ..._pathologyLines.map(
+        (line) => 'Pathologie : $line',
+      ),
+    ];
+
+    final triggerFactors =
+        child.essentialInformation.triggerFactors;
+
+    if (triggerFactors.hasTriggerFactors) {
+      final waterLine = _waterLine(triggerFactors);
+
+      if (waterLine != null) {
+        lines.add(waterLine);
+      }
+
+      final heightLine = _heightLine(triggerFactors);
+
+      if (heightLine != null) {
+        lines.add(heightLine);
+      }
+    }
+
+    lines.addAll(
+      _allergyLines.map(
+        (line) => 'Allergie : $line',
+      ),
+    );
+
+    if (triggerFactors.hasTriggerFactors) {
+      if (triggerFactors.noise == true) {
+        lines.add('Bruit : vigilance particulière');
+      }
+
+      if (triggerFactors.crowd == true) {
+        lines.add('Foule : vigilance particulière');
+      }
+
+      if (triggerFactors.confinedSpaces == true) {
+        lines.add(
+          'Espaces confinés : vigilance particulière',
+        );
+      }
+
+      if (triggerFactors.physicalEffort == true) {
+        lines.add(
+          'Effort physique : vigilance particulière',
+        );
+      }
+
+      if (triggerFactors.animals) {
+        lines.add(
+          switch (triggerFactors.animalVigilance) {
+            AnimalVigilance.importantFear =>
+              'Animaux : l’enfant a une peur importante des animaux',
+            AnimalVigilance
+                .approachesWithoutPerceivingDanger =>
+              'Animaux : l’enfant peut s’approcher des animaux sans percevoir le danger',
+            AnimalVigilance.other =>
+              'Animaux : ${_detailOrFallback(
+                triggerFactors.otherAnimalVigilance,
+              )}',
+            null => 'Animaux : vigilance particulière',
+          },
+        );
+      }
+
+      if (triggerFactors.heat == true) {
+        lines.add('Chaleur : vigilance particulière');
+      }
+
+      if (triggerFactors.fatigueOrLackOfSleep ==
+          true) {
+        lines.add(
+          'Fatigue ou manque de sommeil : vigilance particulière',
+        );
+      }
+
+      if (triggerFactors.stressOrStrongEmotions ==
+          true) {
+        lines.add(
+          'Stress ou émotions fortes : vigilance particulière',
+        );
+      }
+
+      if (triggerFactors.flashingLights == true) {
+        lines.add(
+          triggerFactors.requiresGlassesOutdoors
+              ? 'Photosensibilité (lumières clignotantes) : vigilance particulière, port de lunettes nécessaire en extérieur'
+              : 'Photosensibilité (lumières clignotantes) : vigilance particulière',
+        );
+      }
+    }
+
+    lines.addAll(_walkingEffortVigilanceLines());
+
+    final safety = child.activityProfile?.safety;
+
+    if (safety != null) {
+      if (safety.mayLeaveGroupSuddenly) {
+        lines.add(
+          'Sécurité : l’enfant peut quitter le groupe soudainement',
+        );
+      }
+
+      if (safety.requiresSafetyEquipment) {
+        final details =
+            safety.safetyEquipmentDetails?.trim();
+
+        if (details != null && details.isNotEmpty) {
+          lines.add('Équipement de sécurité : $details');
+        }
+      }
+    }
+
+    if (triggerFactors.hasTriggerFactors) {
+      final other = triggerFactors.other?.trim();
+
+      if (other != null && other.isNotEmpty) {
+        lines.add('Autre : $other');
+      }
+    }
+
+    lines.addAll(_dailyLifeLines);
+
+    return lines;
+  }
+
+  // ---------------------------------------------------------------------
+  // Section 2 — "Médicaments".
+  // Deux sous-parties bien séparées : traitements d'urgence, puis
+  // traitements réguliers. Rien d'autre n'y figure.
+  // ---------------------------------------------------------------------
+
+  List<_LineGroup> get _medicationGroups {
+    final emergencyLines = <String>[
+      if (_emergencyMedicationNames.isNotEmpty)
+        'Traitement d’urgence à garder à portée de main en permanence : ${_joinWithAnd(_emergencyMedicationNames)}',
+      ..._emergencyTreatmentLines,
+      ..._allergyEmergencyTreatmentLines,
+    ];
+
+    return [
+      (
+        heading: 'Traitements d’urgence',
+        lines: emergencyLines,
+      ),
+      (
+        heading: 'Traitements réguliers',
+        lines: _dailyTreatmentLines,
+      ),
+    ];
+  }
+
+  // ---------------------------------------------------------------------
+  // Section 3 — "Matériel à prévoir".
+  // Récapitulatif des dispositifs médicaux, une seule fois (ils
+  // n'apparaissent plus dans la section vigilance/sécurité).
+  // ---------------------------------------------------------------------
+
+  List<String> get _equipmentLines => _medicalDeviceLines;
 
   List<String> get _contactLines {
     final contacts = [
@@ -426,6 +711,10 @@ class CareInfoSheetPage extends StatelessWidget {
   Future<Uint8List> _buildPdfBytes() async {
     final document = pw.Document();
 
+    final medicationGroups = _medicationGroups
+        .where((group) => group.lines.isNotEmpty)
+        .toList();
+
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -449,41 +738,34 @@ class CareInfoSheetPage extends StatelessWidget {
               ),
             ),
 
-          pdfSectionTitle('Pathologies'),
-          ..._pdfLines(
-            _pathologyLines,
-            'Aucune pathologie connue.',
-          ),
+          if (_careVigilanceLines.isNotEmpty) ...[
+            pdfSectionTitle("S'occuper de $_firstName"),
+            ..._careVigilanceLines.map(pdfBullet),
+          ],
 
-          pdfSectionTitle('Allergies'),
-          ..._pdfLines(
-            _allergyLines,
-            'Aucune allergie connue.',
-          ),
+          if (medicationGroups.isNotEmpty) ...[
+            pdfSectionTitle('Médicaments'),
+            for (final group in medicationGroups) ...[
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(
+                  top: 4,
+                  bottom: 2,
+                ),
+                child: pw.Text(
+                  pdfSafeText(group.heading),
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+              ...group.lines.map(pdfBullet),
+            ],
+          ],
 
-          pdfSectionTitle('Traitements réguliers'),
-          ..._pdfLines(
-            _dailyTreatmentLines,
-            'Aucun traitement régulier en cours.',
-          ),
-
-          pdfSectionTitle('Traitements d’urgence'),
-          ..._pdfLines(
-            _emergencyTreatmentLines,
-            'Aucun traitement d’urgence prescrit.',
-          ),
-
-          pdfSectionTitle('Dispositifs médicaux'),
-          ..._pdfLines(
-            _medicalDeviceLines,
-            'Aucun dispositif médical.',
-          ),
-
-          if (_triggerFactorLines.isNotEmpty) ...[
-            pdfSectionTitle(
-              'Facteurs déclenchants et sensibilités',
-            ),
-            ..._triggerFactorLines.map(pdfBullet),
+          if (_equipmentLines.isNotEmpty) ...[
+            pdfSectionTitle('Matériel à prévoir'),
+            ..._equipmentLines.map(pdfBullet),
           ],
 
           pdfSectionTitle('Contacts à prévenir'),
@@ -509,6 +791,55 @@ class CareInfoSheetPage extends StatelessWidget {
     return lines.map(pdfBullet).toList();
   }
 
+  Widget _sectionHeader({
+    required String title,
+    required IconData icon,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 22),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _bulletLine(String line) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 7),
+            child: Icon(
+              Icons.circle,
+              size: 6,
+            ),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              line,
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _sectionCard({
     required String title,
     required IconData icon,
@@ -523,21 +854,7 @@ class CareInfoSheetPage extends StatelessWidget {
           crossAxisAlignment:
               CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(icon, size: 22),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            _sectionHeader(title: title, icon: icon),
             const SizedBox(height: 12),
             if (lines.isEmpty)
               Text(
@@ -548,38 +865,54 @@ class CareInfoSheetPage extends StatelessWidget {
                 ),
               )
             else
-              ...lines.map(
-                (line) => Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: 8,
-                  ),
-                  child: Row(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(
-                          top: 7,
-                        ),
-                        child: Icon(
-                          Icons.circle,
-                          size: 6,
-                        ),
-                      ),
-                      const SizedBox(width: 9),
-                      Expanded(
-                        child: Text(
-                          line,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+              ...lines.map(_bulletLine),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _groupedSectionCard({
+    required String title,
+    required IconData icon,
+    required List<_LineGroup> groups,
+  }) {
+    final nonEmptyGroups = groups
+        .where((group) => group.lines.isNotEmpty)
+        .toList();
+
+    if (nonEmptyGroups.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            _sectionHeader(title: title, icon: icon),
+            const SizedBox(height: 12),
+            for (final group in nonEmptyGroups) ...[
+              Text(
+                group.heading,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
+              const SizedBox(height: 8),
+              ...group.lines.map(_bulletLine),
+              if (group != nonEmptyGroups.last)
+                const Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: 4,
+                  ),
+                  child: Divider(height: 20),
+                ),
+            ],
           ],
         ),
       ),
@@ -628,49 +961,25 @@ class CareInfoSheetPage extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            _sectionCard(
-              title: 'Pathologies',
-              icon: Icons.medical_information_outlined,
-              lines: _pathologyLines,
-              emptyMessage: 'Aucune pathologie connue.',
-            ),
-
-            _sectionCard(
-              title: 'Allergies',
-              icon: Icons.warning_amber_rounded,
-              lines: _allergyLines,
-              emptyMessage: 'Aucune allergie connue.',
-            ),
-
-            _sectionCard(
-              title: 'Traitements réguliers',
-              icon: Icons.medication_outlined,
-              lines: _dailyTreatmentLines,
-              emptyMessage:
-                  'Aucun traitement régulier en cours.',
-            ),
-
-            _sectionCard(
-              title: 'Traitements d’urgence',
-              icon: Icons.medical_services_outlined,
-              lines: _emergencyTreatmentLines,
-              emptyMessage:
-                  'Aucun traitement d’urgence prescrit.',
-            ),
-
-            _sectionCard(
-              title: 'Dispositifs médicaux',
-              icon: Icons.settings_accessibility,
-              lines: _medicalDeviceLines,
-              emptyMessage: 'Aucun dispositif médical.',
-            ),
-
-            if (_triggerFactorLines.isNotEmpty)
+            if (_careVigilanceLines.isNotEmpty)
               _sectionCard(
-                title:
-                    'Facteurs déclenchants et sensibilités',
-                icon: Icons.visibility_outlined,
-                lines: _triggerFactorLines,
+                title: "S'occuper de $_firstName",
+                icon: Icons.health_and_safety_outlined,
+                lines: _careVigilanceLines,
+                emptyMessage: '',
+              ),
+
+            _groupedSectionCard(
+              title: 'Médicaments',
+              icon: Icons.medication_outlined,
+              groups: _medicationGroups,
+            ),
+
+            if (_equipmentLines.isNotEmpty)
+              _sectionCard(
+                title: 'Matériel à prévoir',
+                icon: Icons.backpack_outlined,
+                lines: _equipmentLines,
                 emptyMessage: '',
               ),
 

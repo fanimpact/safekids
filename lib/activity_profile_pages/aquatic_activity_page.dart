@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../controllers/activity_profile_controller.dart';
+import '../models/trigger_factor_data.dart';
+import '../repositories/child_repository.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_text_field.dart';
 import '../widgets/sk_yes_no_field.dart';
@@ -24,7 +26,6 @@ class _AquaticActivityPageState
   late bool _requiresAdaptations;
 
   late bool _mayJumpIntoWater;
-  late bool _canSwim;
   late bool _requiresFlotationVestNearWater;
   late bool _requiresDedicatedAdultNearWater;
 
@@ -57,9 +58,6 @@ class _AquaticActivityPageState
 
     _mayJumpIntoWater =
         data.mayJumpIntoWater;
-
-    _canSwim =
-        data.canSwim;
 
     _requiresFlotationVestNearWater =
         data.requiresFlotationVestNearWater;
@@ -120,7 +118,6 @@ class _AquaticActivityPageState
 
       if (!value) {
         _mayJumpIntoWater = false;
-        _canSwim = false;
         _requiresFlotationVestNearWater = false;
         _requiresDedicatedAdultNearWater = false;
         _requiresSpecialEquipment = false;
@@ -138,7 +135,6 @@ class _AquaticActivityPageState
 
     if (!value) {
       data.mayJumpIntoWater = false;
-      data.canSwim = false;
       data.requiresFlotationVestNearWater = false;
       data.requiresDedicatedAdultNearWater = false;
       data.requiresSpecialEquipment = false;
@@ -166,29 +162,22 @@ class _AquaticActivityPageState
         .mayJumpIntoWater = value;
   }
 
-  void _updateCanSwim(
-    bool value,
-  ) {
-    final data = widget
-        .activityProfileController
-        .draft
-        .aquaticActivity;
+  bool get _cannotSwimPerHealthProfile {
+    final childId =
+        widget.activityProfileController.draft.childId;
 
-    setState(() {
-      _canSwim = value;
-
-      if (value) {
-        _requiresFlotationVestNearWater =
-            false;
-      }
-    });
-
-    data.canSwim = value;
-
-    if (value) {
-      data.requiresFlotationVestNearWater =
-          false;
+    if (childId == null) {
+      return false;
     }
+
+    final child =
+        ChildRepository.instance.findByChildId(childId);
+
+    return child
+            ?.essentialInformation
+            .triggerFactors
+            .waterVigilance ==
+        WaterVigilance.cannotSwim;
   }
 
   void _updateRequiresFlotationVestNearWater(
@@ -460,15 +449,17 @@ class _AquaticActivityPageState
 
           const SizedBox(height: 24),
 
-          SkYesNoField(
-            label:
-                'Votre enfant sait-il nager ?',
-            value: _canSwim,
-            onChanged:
-                _updateCanSwim,
-          ),
+          if (_cannotSwimPerHealthProfile) ...[
+            const SizedBox(height: 12),
 
-          if (!_canSwim) ...[
+            const Text(
+              'D’après le profil santé de l’enfant, il ne sait pas nager.',
+              style: TextStyle(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+
             const SizedBox(height: 24),
 
             SkYesNoField(

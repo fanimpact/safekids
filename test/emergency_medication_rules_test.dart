@@ -81,7 +81,7 @@ void main() {
 
       expect(
         recommendations.first.text,
-        'Buccolam',
+        'Pensez à emporter le traitement d’urgence : Buccolam',
       );
     },
   );
@@ -176,12 +176,16 @@ void main() {
 
       expect(
         texts,
-        contains('Médicament A'),
+        contains(
+          'Pensez à emporter le traitement d’urgence : Médicament A',
+        ),
       );
 
       expect(
         texts,
-        contains('Médicament B'),
+        contains(
+          'Pensez à emporter le traitement d’urgence : Médicament B',
+        ),
       );
     },
   );

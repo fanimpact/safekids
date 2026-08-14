@@ -55,7 +55,7 @@ class DemoTestChildrenLucas {
       medicalEvents: [],
       medicalObservations: [],
       triggerFactors: TriggerFactorData(
-        hasTriggerFactors: false,
+        hasTriggerFactors: true,
         flashingLights: false,
         requiresGlassesOutdoors: false,
         heat: false,
@@ -71,8 +71,9 @@ class DemoTestChildrenLucas {
         animals: false,
         animalVigilance: null,
         otherAnimalVigilance: null,
-        height: false,
-        heightVigilance: null,
+        height: true,
+        heightVigilance:
+            HeightVigilance.doesNotPerceiveDanger,
         otherHeightVigilance: null,
         other: null,
       ),
@@ -108,7 +109,13 @@ class DemoTestChildrenLucas {
           AquaticActivityData(),
 
       transport:
-          TransportData(),
+          TransportData(
+        requiresAdaptations: true,
+        motionSickness: true,
+        motionSicknessTransports: {
+          TransportMode.car,
+        },
+      ),
 
       walkingEffort:
           WalkingEffortData(
@@ -128,18 +135,19 @@ class DemoTestChildrenLucas {
 
       toilets:
           ToiletsData(
-        requiresAssistance: false,
+        requiresAssistance: true,
       ),
 
       communication:
           CommunicationData(
-        requiresAdaptations: false,
+        requiresAdaptations: true,
         useSimpleInstructions: false,
         mayAppearToUnderstand: false,
         verifyUnderstandingIndividually:
             false,
-        usesCommunicationSupport: false,
-        communicationSupportDetails: null,
+        usesCommunicationSupport: true,
+        communicationSupportDetails:
+            'utilise des pictogrammes pour communiquer',
       ),
 
       transitions:
