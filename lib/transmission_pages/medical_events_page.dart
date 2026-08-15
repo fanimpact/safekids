@@ -59,6 +59,16 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
     });
   }
 
+  void _updateEmergencyTreatmentGiven(
+    int index,
+    bool value,
+  ) {
+    setState(() {
+      widget.transmissionController
+          .updateEmergencyTreatmentGiven(index, value);
+    });
+  }
+
   void _updateHospitalized(
     int index,
     bool value,
@@ -76,16 +86,6 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
     setState(() {
       widget.transmissionController
           .updateImportantExaminationsPerformed(index, value);
-    });
-  }
-
-  void _updateHasOngoingConsequences(
-    int index,
-    bool value,
-  ) {
-    setState(() {
-      widget.transmissionController
-          .updateHasOngoingConsequences(index, value);
     });
   }
 
@@ -212,6 +212,21 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
             const SizedBox(height: 24),
 
             SkYesNoField(
+              label:
+                  "Le traitement d'urgence a-t-il été donné lors de cet événement ?",
+              value: medicalEvents[index]
+                  .emergencyTreatmentGiven,
+              onChanged: (value) {
+                _updateEmergencyTreatmentGiven(
+                  index,
+                  value,
+                );
+              },
+            ),
+
+            const SizedBox(height: 24),
+
+            SkYesNoField(
               label: "L’enfant a-t-il été hospitalisé ?",
               value: medicalEvents[index].hospitalized,
               onChanged: (value) {
@@ -223,6 +238,35 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
             ),
 
             if (medicalEvents[index].hospitalized == true) ...[
+              const SizedBox(height: 20),
+
+              const Text(
+                "Utile pour les secours : ils emmènent souvent "
+                "l'enfant à l'hôpital où il a déjà été suivi.",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              SkTextField(
+                label: "Dans quel hôpital ?",
+                controller: _controllers.of(
+                  'medicalEvent_${index}_hospitalName',
+                  medicalEvents[index].hospitalName ??
+                      '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateHospitalName(
+                    index,
+                    value,
+                  );
+                },
+              ),
+
               const SizedBox(height: 20),
 
               SkTextField(
@@ -275,53 +319,6 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
                 onChanged: (value) {
                   widget.transmissionController
                       .updateImportantExaminations(
-                    index,
-                    value,
-                  );
-                },
-              ),
-            ],
-                        const SizedBox(height: 24),
-
-            SkYesNoField(
-              label:
-                  "Cet événement a-t-il laissé des conséquences médicales ?",
-              value: medicalEvents[index]
-                  .hasOngoingConsequences,
-              onChanged: (value) {
-                _updateHasOngoingConsequences(
-                  index,
-                  value,
-                );
-              },
-            ),
-
-            if (medicalEvents[index]
-                    .hasOngoingConsequences ==
-                true) ...[
-              const SizedBox(height: 20),
-
-              const Text(
-                "Résumez uniquement les conséquences encore présentes aujourd'hui.",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              SkTextField(
-                label: "Lesquelles ?",
-                controller: _controllers.of(
-                  'medicalEvent_${index}_ongoingConsequences',
-                  medicalEvents[index]
-                          .ongoingConsequences ??
-                      '',
-                ),
-                onChanged: (value) {
-                  widget.transmissionController
-                      .updateOngoingConsequences(
                     index,
                     value,
                   );

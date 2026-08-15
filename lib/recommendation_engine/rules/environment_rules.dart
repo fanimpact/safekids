@@ -111,7 +111,7 @@ class EnvironmentRules {
     String? childId,
     TriggerFactorData triggerFactors,
   ) {
-    if (!triggerFactors.height) {
+    if (triggerFactors.height != true) {
       return [];
     }
 
@@ -167,7 +167,7 @@ class EnvironmentRules {
     String? childId,
     TriggerFactorData triggerFactors,
   ) {
-    if (!triggerFactors.animals) {
+    if (triggerFactors.animals != true) {
       return [];
     }
 
@@ -224,7 +224,7 @@ class EnvironmentRules {
     String? childId,
     TriggerFactorData triggerFactors,
   ) {
-    if (!triggerFactors.waterContact) {
+    if (triggerFactors.waterContact != true) {
       return [];
     }
 

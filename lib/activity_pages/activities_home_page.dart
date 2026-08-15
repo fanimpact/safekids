@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/complete_child_profile_data.dart';
+import '../utils/child_name_utils.dart';
 import 'activity_session_start_page.dart';
 import 'saved_activities_info_page.dart';
 
@@ -12,18 +13,16 @@ class ActivitiesHomePage extends StatelessWidget {
     this.selectedChild,
   });
 
-  String? get _childFirstName {
-    final firstName = selectedChild
-        ?.essentialInformation
-        .identity
-        .firstName
-        ?.trim();
+  String? get _childDisplayName {
+    final child = selectedChild;
 
-    if (firstName == null || firstName.isEmpty) {
+    if (child == null) {
       return null;
     }
 
-    return firstName;
+    return childFullName(
+      child.essentialInformation.identity,
+    );
   }
 
   void _openNewActivity(
@@ -52,7 +51,7 @@ class ActivitiesHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final childFirstName = _childFirstName;
+    final childDisplayName = _childDisplayName;
 
     return Scaffold(
       appBar: AppBar(
@@ -78,11 +77,11 @@ class ActivitiesHomePage extends StatelessWidget {
                 ),
               ),
 
-              if (childFirstName != null) ...[
+              if (childDisplayName != null) ...[
                 const SizedBox(height: 12),
 
                 Text(
-                  'Pour $childFirstName',
+                  'Pour $childDisplayName',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 18,

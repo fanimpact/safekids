@@ -253,7 +253,7 @@ class _OtherInformationPageState
         .fourthDetails = null;
   }
 
-  void _finish() {
+  Future<void> _finish() async {
     final activityProfileController =
         widget.activityProfileController;
 
@@ -280,11 +280,29 @@ class _OtherInformationPageState
       return;
     }
 
-    ChildRepository.instance
-        .saveActivityProfile(
-      childId: childId,
-      activityProfile: activityProfile,
-    );
+    try {
+      await ChildRepository.instance
+          .saveActivityProfile(
+        childId: childId,
+        activityProfile: activityProfile,
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Impossible d'enregistrer le profil pour le "
+              'moment. Vérifiez la connexion. ($error)',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
 
     Navigator.pushAndRemoveUntil(
       context,

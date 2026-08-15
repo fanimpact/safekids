@@ -33,13 +33,15 @@ class _DiagnosedPathologiesPageState
 
     final draft = widget.transmissionController.formData;
 
-    if (draft.pathologies.isNotEmpty) {
-      _hasPathologies = true;
-    }
+    // La réponse explicite (Oui/Non) est prioritaire : elle seule
+    // permet de distinguer "Non" de "jamais répondu". Les profils
+    // enregistrés avant l'ajout de ce champ n'ont que la liste : on
+    // déduit alors "Oui" si elle contient déjà des éléments.
+    _hasPathologies = draft.hasPathologies ??
+        (draft.pathologies.isNotEmpty ? true : null);
 
-    if (draft.allergies.isNotEmpty) {
-      _hasAllergies = true;
-    }
+    _hasAllergies = draft.hasAllergies ??
+        (draft.allergies.isNotEmpty ? true : null);
   }
 
   @override
@@ -52,6 +54,8 @@ class _DiagnosedPathologiesPageState
     setState(() {
       _hasPathologies = value;
 
+      widget.transmissionController.updateHasPathologies(value);
+
       if (value) {
         widget.transmissionController.ensureFirstPathology();
       } else {
@@ -63,6 +67,8 @@ class _DiagnosedPathologiesPageState
   void _updateHasAllergies(bool value) {
     setState(() {
       _hasAllergies = value;
+
+      widget.transmissionController.updateHasAllergies(value);
 
       if (value) {
         widget.transmissionController.ensureFirstAllergy();
@@ -218,6 +224,9 @@ class _DiagnosedPathologiesPageState
             ),
             onChanged: (value) =>
                 onUpdateStep(stepIndex, value),
+            // La touche Entrée ne doit rien déclencher d'autre
+            // (notamment pas ajouter une nouvelle étape).
+            onFieldSubmitted: (_) {},
           ),
 
           const SizedBox(height: 8),

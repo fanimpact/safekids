@@ -16,4 +16,33 @@ class DailyTreatmentData {
             relatedPathologyIds ?? [],
         relatedAllergyIds =
             relatedAllergyIds ?? [];
+
+  Map<String, dynamic> toJson() => {
+        'medicationName': medicationName,
+        'dosage': dosage,
+        'administrationTimes': administrationTimes,
+        'relatedPathologyIds': relatedPathologyIds,
+        'relatedAllergyIds': relatedAllergyIds,
+      };
+
+  factory DailyTreatmentData.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return DailyTreatmentData(
+      medicationName: json['medicationName'] as String?,
+      dosage: json['dosage'] as String?,
+      administrationTimes:
+          json['administrationTimes'] as String?,
+      relatedPathologyIds:
+          (json['relatedPathologyIds']
+                  as List<dynamic>?)
+              ?.map((id) => id as String)
+              .toList(),
+      relatedAllergyIds:
+          (json['relatedAllergyIds']
+                  as List<dynamic>?)
+              ?.map((id) => id as String)
+              .toList(),
+    );
+  }
 }

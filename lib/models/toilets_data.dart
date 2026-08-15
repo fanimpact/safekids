@@ -4,4 +4,17 @@ class ToiletsData {
   ToiletsData({
     this.requiresAssistance = false,
   });
+
+  Map<String, dynamic> toJson() => {
+        'requiresAssistance': requiresAssistance,
+      };
+
+  factory ToiletsData.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return ToiletsData(
+      requiresAssistance:
+          json['requiresAssistance'] as bool? ?? false,
+    );
+  }
 }

@@ -2,9 +2,13 @@ import '../models/activity_profile_data.dart';
 import '../models/activity_profile_draft.dart';
 
 class ActivityProfileController {
-  ActivityProfileDraft _draft = ActivityProfileDraft();
+  ActivityProfileDraft _draft;
 
   ActivityProfileData? _validatedProfile;
+
+  ActivityProfileController({
+    ActivityProfileDraft? initialDraft,
+  }) : _draft = initialDraft ?? ActivityProfileDraft();
 
   ActivityProfileDraft get draft => _draft;
 

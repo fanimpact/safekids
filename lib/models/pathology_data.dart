@@ -35,4 +35,49 @@ class PathologyData {
     _nextId++;
     return 'pathology_$_nextId';
   }
+
+  Map<String, dynamic> toJson() => {
+        'pathologyId': pathologyId,
+        'name': name,
+        'approximateDiagnosisDate':
+            approximateDiagnosisDate,
+        'hasReferringProfessional':
+            hasReferringProfessional,
+        'referringProfessional':
+            referringProfessional?.toJson(),
+        'emergencyInstructionSteps':
+            emergencyInstructionSteps,
+      };
+
+  factory PathologyData.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final referringProfessional =
+        json['referringProfessional'];
+
+    return PathologyData(
+      pathologyId: json['pathologyId'] as String?,
+      name: json['name'] as String?,
+      approximateDiagnosisDate:
+          json['approximateDiagnosisDate']
+              as String?,
+      hasReferringProfessional:
+          json['hasReferringProfessional']
+              as bool? ??
+              false,
+      referringProfessional:
+          referringProfessional == null
+              ? null
+              : MedicalProfessionalData.fromJson(
+                  Map<String, dynamic>.from(
+                    referringProfessional as Map,
+                  ),
+                ),
+      emergencyInstructionSteps:
+          (json['emergencyInstructionSteps']
+                  as List<dynamic>?)
+              ?.map((step) => step as String)
+              .toList(),
+    );
+  }
 }

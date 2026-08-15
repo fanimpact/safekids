@@ -14,35 +14,90 @@ class ActivityProfileDraft {
   String? userId;
   String? childId;
 
-  final AquaticActivityData aquaticActivity =
-      AquaticActivityData();
+  AquaticActivityData aquaticActivity;
+  TransportData transport;
+  WalkingEffortData walkingEffort;
+  OvernightStayData overnightStay;
+  ClothingData clothing;
+  ToiletsData toilets;
+  CommunicationData communication;
+  TransitionsData transitions;
+  SafetyData safety;
+  OtherInformationData otherInformation;
 
-  final TransportData transport =
-      TransportData();
+  ActivityProfileDraft({
+    this.userId,
+    this.childId,
+    AquaticActivityData? aquaticActivity,
+    TransportData? transport,
+    WalkingEffortData? walkingEffort,
+    OvernightStayData? overnightStay,
+    ClothingData? clothing,
+    ToiletsData? toilets,
+    CommunicationData? communication,
+    TransitionsData? transitions,
+    SafetyData? safety,
+    OtherInformationData? otherInformation,
+  })  : aquaticActivity =
+            aquaticActivity ?? AquaticActivityData(),
+        transport = transport ?? TransportData(),
+        walkingEffort =
+            walkingEffort ?? WalkingEffortData(),
+        overnightStay =
+            overnightStay ?? OvernightStayData(),
+        clothing = clothing ?? ClothingData(),
+        toilets = toilets ?? ToiletsData(),
+        communication =
+            communication ?? CommunicationData(),
+        transitions = transitions ?? TransitionsData(),
+        safety = safety ?? SafetyData(),
+        otherInformation =
+            otherInformation ?? OtherInformationData();
 
-  final WalkingEffortData walkingEffort =
-      WalkingEffortData();
-
-  final OvernightStayData overnightStay =
-      OvernightStayData();
-
-  final ClothingData clothing =
-      ClothingData();
-
-  final ToiletsData toilets =
-      ToiletsData();
-
-  final CommunicationData communication =
-      CommunicationData();
-
-  final TransitionsData transitions =
-      TransitionsData();
-
-  final SafetyData safety =
-      SafetyData();
-
-  final OtherInformationData otherInformation =
-      OtherInformationData();
+  /// Pré-remplit un brouillon à partir d'un profil Activités déjà
+  /// enregistré (modification), avec des copies indépendantes de
+  /// chaque section — pour ne pas modifier le profil déjà enregistré
+  /// tant que l'utilisateur n'a pas terminé et validé.
+  factory ActivityProfileDraft.fromActivityProfileData(
+    ActivityProfileData data, {
+    String? userId,
+    String? childId,
+  }) {
+    return ActivityProfileDraft(
+      userId: userId,
+      childId: childId,
+      aquaticActivity: AquaticActivityData.fromJson(
+        data.aquaticActivity.toJson(),
+      ),
+      transport: TransportData.fromJson(
+        data.transport.toJson(),
+      ),
+      walkingEffort: WalkingEffortData.fromJson(
+        data.walkingEffort.toJson(),
+      ),
+      overnightStay: OvernightStayData.fromJson(
+        data.overnightStay.toJson(),
+      ),
+      clothing: ClothingData.fromJson(
+        data.clothing.toJson(),
+      ),
+      toilets: ToiletsData.fromJson(
+        data.toilets.toJson(),
+      ),
+      communication: CommunicationData.fromJson(
+        data.communication.toJson(),
+      ),
+      transitions: TransitionsData.fromJson(
+        data.transitions.toJson(),
+      ),
+      safety: SafetyData.fromJson(
+        data.safety.toJson(),
+      ),
+      otherInformation: OtherInformationData.fromJson(
+        data.otherInformation.toJson(),
+      ),
+    );
+  }
 
   ActivityProfileData toProfile() {
     return ActivityProfileData(

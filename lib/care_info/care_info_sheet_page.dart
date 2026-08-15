@@ -374,7 +374,7 @@ class CareInfoSheetPage extends StatelessWidget {
   }
 
   String? _waterLine(TriggerFactorData triggerFactors) {
-    if (!triggerFactors.waterContact) {
+    if (triggerFactors.waterContact != true) {
       return null;
     }
 
@@ -392,7 +392,7 @@ class CareInfoSheetPage extends StatelessWidget {
   }
 
   String? _heightLine(TriggerFactorData triggerFactors) {
-    if (!triggerFactors.height) {
+    if (triggerFactors.height != true) {
       return null;
     }
 
@@ -651,7 +651,7 @@ class CareInfoSheetPage extends StatelessWidget {
         );
       }
 
-      if (triggerFactors.animals) {
+      if (triggerFactors.animals == true) {
         lines.add(
           switch (triggerFactors.animalVigilance) {
             AnimalVigilance.importantFear =>

@@ -7,7 +7,6 @@ import '../widgets/sk_number_field.dart';
 import '../widgets/sk_text_field.dart';
 import '../widgets/sk_yes_no_field.dart';
 import 'diagnosed_pathologies_page.dart';
-import 'medical_events_page.dart';
 
 class IdentityPage extends StatefulWidget {
   final TransmissionController transmissionController;
@@ -143,24 +142,11 @@ class _IdentityPageState extends State<IdentityPage> {
       return;
     }
 
-    if (_hasDiagnosedPathologies == true) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              DiagnosedPathologiesPage(
-            transmissionController:
-                widget.transmissionController,
-          ),
-        ),
-      );
-      return;
-    }
-
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => MedicalEventsPage(
+        builder: (context) =>
+            DiagnosedPathologiesPage(
           transmissionController:
               widget.transmissionController,
         ),

@@ -151,15 +151,35 @@ class EmergencyInfoSheetPage extends StatelessWidget {
         details.add('secours intervenus');
       }
 
+      if (event.emergencyTreatmentGiven == true) {
+        details.add('traitement d’urgence donné');
+      } else if (event.emergencyTreatmentGiven == false) {
+        details.add('traitement d’urgence non donné');
+      }
+
       if (event.hospitalized == true) {
+        final hospitalName =
+            event.hospitalName?.trim();
         final duration =
             event.hospitalizationDuration?.trim();
 
-        details.add(
-          duration != null && duration.isNotEmpty
-              ? 'hospitalisation : $duration'
-              : 'hospitalisation',
-        );
+        final hasHospitalName =
+            hospitalName != null &&
+                hospitalName.isNotEmpty;
+        final hasDuration =
+            duration != null && duration.isNotEmpty;
+
+        if (hasHospitalName && hasDuration) {
+          details.add(
+            'hospitalisation à $hospitalName : $duration',
+          );
+        } else if (hasHospitalName) {
+          details.add('hospitalisation à $hospitalName');
+        } else if (hasDuration) {
+          details.add('hospitalisation : $duration');
+        } else {
+          details.add('hospitalisation');
+        }
       }
 
       if (event.importantExaminationsPerformed ==
@@ -177,18 +197,6 @@ class EmergencyInfoSheetPage extends StatelessWidget {
             ? description
             : '$description — ${details.join(' — ')}',
       );
-
-      if (event.hasOngoingConsequences == true) {
-        final consequences =
-            event.ongoingConsequences?.trim();
-
-        if (consequences != null &&
-            consequences.isNotEmpty) {
-          lines.add(
-            'Conséquences toujours présentes : $consequences',
-          );
-        }
-      }
     }
 
     return lines;
@@ -328,7 +336,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
 
     final lines = <String>[];
 
-    if (triggerFactors.waterContact) {
+    if (triggerFactors.waterContact == true) {
       lines.add(
         switch (triggerFactors.waterVigilance) {
           WaterVigilance.mayJumpIntoWater =>
@@ -345,7 +353,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
       );
     }
 
-    if (triggerFactors.height) {
+    if (triggerFactors.height == true) {
       lines.add(
         switch (triggerFactors.heightVigilance) {
           HeightVigilance.doesNotPerceiveDanger =>
@@ -370,7 +378,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
       );
     }
 
-    if (triggerFactors.animals) {
+    if (triggerFactors.animals == true) {
       lines.add(
         switch (triggerFactors.animalVigilance) {
           AnimalVigilance.importantFear =>

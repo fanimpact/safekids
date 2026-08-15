@@ -12,4 +12,21 @@ class MedicalObservationData {
     this.approximateDate,
     this.conclusion,
   });
+
+  Map<String, dynamic> toJson() => {
+        'description': description,
+        'approximateDate': approximateDate,
+        'conclusion': conclusion,
+      };
+
+  factory MedicalObservationData.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return MedicalObservationData(
+      description: json['description'] as String?,
+      approximateDate:
+          json['approximateDate'] as String?,
+      conclusion: json['conclusion'] as String?,
+    );
+  }
 }

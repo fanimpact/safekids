@@ -18,8 +18,17 @@ class EmergencyModeInstructionsPage extends StatelessWidget {
     required this.emptyMessage,
   });
 
+  List<String> get _nonEmptySteps {
+    return steps
+        .map((step) => step.trim())
+        .where((step) => step.isNotEmpty)
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final steps = _nonEmptySteps;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mode Urgence'),

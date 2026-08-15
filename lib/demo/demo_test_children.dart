@@ -102,11 +102,11 @@ class DemoTestChildren {
       ),
     );
 
-    ChildRepository.instance.addChild(
+    ChildRepository.instance.seedForTesting(
       essentialInformation,
     );
 
-    ChildRepository.instance.saveActivityProfile(
+    ChildRepository.instance.seedActivityProfileForTesting(
       childId: childId,
       activityProfile:
           _createLinaActivityProfile(),

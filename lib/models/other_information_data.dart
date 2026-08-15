@@ -13,4 +13,26 @@ class OtherInformationData {
     this.thirdDetails,
     this.fourthDetails,
   });
+
+  Map<String, dynamic> toJson() => {
+        'hasOtherInformation': hasOtherInformation,
+        'details': details,
+        'secondDetails': secondDetails,
+        'thirdDetails': thirdDetails,
+        'fourthDetails': fourthDetails,
+      };
+
+  factory OtherInformationData.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return OtherInformationData(
+      hasOtherInformation:
+          json['hasOtherInformation'] as bool? ??
+              false,
+      details: json['details'] as String?,
+      secondDetails: json['secondDetails'] as String?,
+      thirdDetails: json['thirdDetails'] as String?,
+      fourthDetails: json['fourthDetails'] as String?,
+    );
+  }
 }

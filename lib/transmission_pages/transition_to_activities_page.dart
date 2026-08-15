@@ -15,17 +15,44 @@ class TransitionToActivitiesPage extends StatelessWidget {
     required this.transmissionController,
   });
 
-  ChildProfileData _saveChild() {
+  Future<ChildProfileData> _saveChild() async {
     final profile =
         transmissionController.validateAndGetProfile();
 
-    ChildRepository.instance.addChild(profile);
+    await ChildRepository.instance.addChild(profile);
 
     return profile;
   }
 
-  void _finishForNow(BuildContext context) {
-    _saveChild();
+  void _showSaveError(
+    BuildContext context,
+    Object error,
+  ) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "Impossible d'enregistrer le profil pour le "
+          'moment. Vérifiez la connexion. ($error)',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _finishForNow(
+    BuildContext context,
+  ) async {
+    try {
+      await _saveChild();
+    } catch (error) {
+      if (context.mounted) {
+        _showSaveError(context, error);
+      }
+      return;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
 
     Navigator.pushAndRemoveUntil(
       context,
@@ -36,8 +63,23 @@ class TransitionToActivitiesPage extends StatelessWidget {
     );
   }
 
-  void _continueToActivities(BuildContext context) {
-    final childProfile = _saveChild();
+  Future<void> _continueToActivities(
+    BuildContext context,
+  ) async {
+    final ChildProfileData childProfile;
+
+    try {
+      childProfile = await _saveChild();
+    } catch (error) {
+      if (context.mounted) {
+        _showSaveError(context, error);
+      }
+      return;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
 
     final activityProfileController =
         ActivityProfileController();

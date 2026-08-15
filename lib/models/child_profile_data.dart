@@ -19,6 +19,13 @@ class ChildProfileData {
 
   final IdentityData identity;
 
+  final bool? hasPathologies;
+  final bool? hasAllergies;
+  final bool? hasDailyTreatments;
+  final bool? hasDiscontinuedTreatments;
+  final bool? hasEmergencyTreatments;
+  final bool? hasMedicalDevices;
+
   final List<PathologyData> pathologies;
   final List<MedicalEventData> medicalEvents;
   final List<MedicalObservationData> medicalObservations;
@@ -44,6 +51,12 @@ class ChildProfileData {
     this.userId,
     this.childId,
     required this.identity,
+    this.hasPathologies,
+    this.hasAllergies,
+    this.hasDailyTreatments,
+    this.hasDiscontinuedTreatments,
+    this.hasEmergencyTreatments,
+    this.hasMedicalDevices,
     required this.pathologies,
     required this.medicalEvents,
     required this.medicalObservations,
@@ -63,6 +76,13 @@ class ChildProfileData {
     return ChildProfileData(
       userId: draft.userId,
       childId: draft.childId,
+      hasPathologies: draft.hasPathologies,
+      hasAllergies: draft.hasAllergies,
+      hasDailyTreatments: draft.hasDailyTreatments,
+      hasDiscontinuedTreatments:
+          draft.hasDiscontinuedTreatments,
+      hasEmergencyTreatments: draft.hasEmergencyTreatments,
+      hasMedicalDevices: draft.hasMedicalDevices,
 
       identity: IdentityData(
         lastName:
@@ -136,8 +156,13 @@ class ChildProfileData {
             emergencyServicesCalled:
                 event
                     .emergencyServicesCalled,
+            emergencyTreatmentGiven:
+                event
+                    .emergencyTreatmentGiven,
             hospitalized:
                 event.hospitalized,
+            hospitalName:
+                event.hospitalName,
             hospitalizationDuration:
                 event
                     .hospitalizationDuration,
@@ -147,12 +172,6 @@ class ChildProfileData {
             importantExaminations:
                 event
                     .importantExaminations,
-            hasOngoingConsequences:
-                event
-                    .hasOngoingConsequences,
-            ongoingConsequences:
-                event
-                    .ongoingConsequences,
           );
         },
       ).toList(),

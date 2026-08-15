@@ -22,4 +22,25 @@ class MedicalDeviceData {
     _nextId++;
     return 'device_$_nextId';
   }
+
+  Map<String, dynamic> toJson() => {
+        'deviceId': deviceId,
+        'deviceName': deviceName,
+        'mainUse': mainUse,
+        'isWornOrImplantedPermanently':
+            isWornOrImplantedPermanently,
+      };
+
+  factory MedicalDeviceData.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return MedicalDeviceData(
+      deviceId: json['deviceId'] as String?,
+      deviceName: json['deviceName'] as String?,
+      mainUse: json['mainUse'] as String?,
+      isWornOrImplantedPermanently:
+          json['isWornOrImplantedPermanently']
+              as bool?,
+    );
+  }
 }

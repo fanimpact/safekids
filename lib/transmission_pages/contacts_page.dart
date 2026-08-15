@@ -101,12 +101,33 @@ class _ContactsPageState extends State<ContactsPage> {
     return "Autre contact n°${index - 1}";
   }
 
-  void _validateInformation() {
+  Future<void> _validateInformation() async {
     if (widget.transmissionController.isEditing) {
       final profile = widget.transmissionController
           .validateAndGetProfile();
 
-      ChildRepository.instance.replaceChild(profile);
+      try {
+        await ChildRepository.instance.replaceChild(
+          profile,
+        );
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "Impossible d'enregistrer le profil pour "
+                'le moment. Vérifiez la connexion. '
+                '($error)',
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
+      if (!mounted) {
+        return;
+      }
 
       final updatedChild =
           ChildRepository.instance.findByChildId(

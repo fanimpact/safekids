@@ -5,6 +5,7 @@ import '../controllers/transmission_controller.dart';
 import '../models/complete_child_profile_data.dart';
 import '../repositories/child_repository.dart';
 import '../transmission_pages/identity_page.dart';
+import '../utils/child_name_utils.dart';
 import 'child_profile_page.dart';
 
 class ChildrenPage extends StatelessWidget {
@@ -55,21 +56,14 @@ class ChildrenPage extends StatelessWidget {
     );
   }
 
-  String _childFirstName(
+  String _childDisplayName(
     CompleteChildProfileData child,
     int index,
   ) {
-    final firstName = child
-        .essentialInformation
-        .identity
-        .firstName
-        ?.trim();
-
-    if (firstName != null && firstName.isNotEmpty) {
-      return firstName;
-    }
-
-    return 'Enfant ${index + 1}';
+    return childFullName(
+      child.essentialInformation.identity,
+      fallback: 'Enfant ${index + 1}',
+    );
   }
 
   String _childHealthSummary(
@@ -167,7 +161,7 @@ class ChildrenPage extends StatelessWidget {
             ),
           ),
           title: Text(
-            _childFirstName(
+            _childDisplayName(
               child,
               index,
             ),

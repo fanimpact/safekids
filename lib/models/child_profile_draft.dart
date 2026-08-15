@@ -1,3 +1,5 @@
+import 'package:uuid/uuid.dart';
+
 import 'allergy_data.dart';
 import 'child_profile_data.dart';
 import 'contact_data.dart';
@@ -18,6 +20,20 @@ class ChildProfileDraft {
   String childId;
 
   final IdentityData identity;
+
+  /// Réponse explicite à "Votre enfant présente-t-il une ou plusieurs
+  /// pathologies diagnostiquées par un professionnel de santé ?" /
+  /// "...une ou plusieurs allergies... ?" — stockée séparément de la
+  /// liste (plutôt que déduite de `pathologies.isNotEmpty`), pour que
+  /// "Non" reste affiché en revenant modifier le profil, exactement
+  /// comme "Oui" (une liste vide ne permet pas de distinguer "Non" de
+  /// "jamais répondu").
+  bool? hasPathologies;
+  bool? hasAllergies;
+  bool? hasDailyTreatments;
+  bool? hasDiscontinuedTreatments;
+  bool? hasEmergencyTreatments;
+  bool? hasMedicalDevices;
 
   final List<PathologyData> pathologies;
   final List<MedicalEventData> medicalEvents;
@@ -40,6 +56,12 @@ class ChildProfileDraft {
     this.userId,
     String? childId,
     IdentityData? identity,
+    this.hasPathologies,
+    this.hasAllergies,
+    this.hasDailyTreatments,
+    this.hasDiscontinuedTreatments,
+    this.hasEmergencyTreatments,
+    this.hasMedicalDevices,
     List<PathologyData>? pathologies,
     List<MedicalEventData>? medicalEvents,
     List<MedicalObservationData>? medicalObservations,
@@ -73,7 +95,7 @@ class ChildProfileDraft {
                 PrimaryCareDoctorData();
 
   static String _createChildId() {
-    return 'child_${DateTime.now().microsecondsSinceEpoch}';
+    return const Uuid().v4();
   }
 
   factory ChildProfileDraft.fromChildProfileData(
@@ -82,6 +104,13 @@ class ChildProfileDraft {
     return ChildProfileDraft(
       userId: data.userId,
       childId: data.childId,
+      hasPathologies: data.hasPathologies,
+      hasAllergies: data.hasAllergies,
+      hasDailyTreatments: data.hasDailyTreatments,
+      hasDiscontinuedTreatments:
+          data.hasDiscontinuedTreatments,
+      hasEmergencyTreatments: data.hasEmergencyTreatments,
+      hasMedicalDevices: data.hasMedicalDevices,
 
       identity: IdentityData(
         lastName: data.identity.lastName,
@@ -134,17 +163,16 @@ class ChildProfileDraft {
             approximateDate: event.approximateDate,
             emergencyServicesCalled:
                 event.emergencyServicesCalled,
+            emergencyTreatmentGiven:
+                event.emergencyTreatmentGiven,
             hospitalized: event.hospitalized,
+            hospitalName: event.hospitalName,
             hospitalizationDuration:
                 event.hospitalizationDuration,
             importantExaminationsPerformed:
                 event.importantExaminationsPerformed,
             importantExaminations:
                 event.importantExaminations,
-            hasOngoingConsequences:
-                event.hasOngoingConsequences,
-            ongoingConsequences:
-                event.ongoingConsequences,
           );
         },
       ).toList(),

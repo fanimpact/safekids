@@ -60,7 +60,7 @@ void main() {
         ),
       );
 
-      ChildRepository.instance.addChild(child);
+      ChildRepository.instance.seedForTesting(child);
 
       final activitySession = CompleteActivitySessionData(
         activity: ActivitySessionData(

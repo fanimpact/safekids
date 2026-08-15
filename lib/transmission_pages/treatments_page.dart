@@ -36,21 +36,27 @@ class _TreatmentsPageState
     final draft =
         widget.transmissionController.formData;
 
-    if (draft.dailyTreatments.isNotEmpty) {
-      _hasDailyTreatments = true;
-    }
+    // La réponse explicite est prioritaire (voir DiagnosedPathologiesPage
+    // pour la même correction) : elle seule permet de distinguer "Non"
+    // de "jamais répondu". Les profils enregistrés avant l'ajout de ces
+    // champs n'ont que la liste : on déduit alors "Oui" si elle contient
+    // déjà des éléments.
+    _hasDailyTreatments = draft.hasDailyTreatments ??
+        (draft.dailyTreatments.isNotEmpty ? true : null);
 
-    if (draft.discontinuedTreatments.isNotEmpty) {
-      _hasDiscontinuedTreatments = true;
-    }
+    _hasDiscontinuedTreatments =
+        draft.hasDiscontinuedTreatments ??
+            (draft.discontinuedTreatments.isNotEmpty
+                ? true
+                : null);
 
-    if (draft.emergencyTreatments.isNotEmpty) {
-      _hasEmergencyTreatments = true;
-    }
+    _hasEmergencyTreatments = draft.hasEmergencyTreatments ??
+        (draft.emergencyTreatments.isNotEmpty
+            ? true
+            : null);
 
-    if (draft.medicalDevices.isNotEmpty) {
-      _hasMedicalDevices = true;
-    }
+    _hasMedicalDevices = draft.hasMedicalDevices ??
+        (draft.medicalDevices.isNotEmpty ? true : null);
   }
 
   @override
@@ -64,6 +70,9 @@ class _TreatmentsPageState
   ) {
     setState(() {
       _hasDailyTreatments = value;
+
+      widget.transmissionController
+          .updateHasDailyTreatments(value);
 
       if (value) {
         widget.transmissionController
@@ -82,6 +91,9 @@ class _TreatmentsPageState
     setState(() {
       _hasDiscontinuedTreatments = value;
 
+      widget.transmissionController
+          .updateHasDiscontinuedTreatments(value);
+
       if (value) {
         widget.transmissionController
             .ensureFirstDiscontinuedTreatment();
@@ -99,6 +111,9 @@ class _TreatmentsPageState
     setState(() {
       _hasEmergencyTreatments = value;
 
+      widget.transmissionController
+          .updateHasEmergencyTreatments(value);
+
       if (value) {
         widget.transmissionController
             .ensureFirstEmergencyTreatment();
@@ -115,6 +130,9 @@ class _TreatmentsPageState
   ) {
     setState(() {
       _hasMedicalDevices = value;
+
+      widget.transmissionController
+          .updateHasMedicalDevices(value);
 
       if (value) {
         widget.transmissionController

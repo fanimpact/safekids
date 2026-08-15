@@ -36,13 +36,13 @@ class _TriggerFactorsPageState
   bool? _physicalEffort;
   bool? _stressOrStrongEmotions;
 
-  late bool _waterContact;
+  bool? _waterContact;
   WaterVigilance? _waterVigilance;
 
-  late bool _animals;
+  bool? _animals;
   AnimalVigilance? _animalVigilance;
 
-  late bool _height;
+  bool? _height;
   HeightVigilance? _heightVigilance;
 
   late final TextEditingController
@@ -477,7 +477,7 @@ class _TriggerFactorsPageState
           onChanged:
               _updateWaterContact,
         ),
-        if (_waterContact) ...[
+        if (_waterContact == true) ...[
           const SizedBox(
             height: 12,
           ),
@@ -566,7 +566,7 @@ class _TriggerFactorsPageState
           onChanged:
               _updateAnimals,
         ),
-        if (_animals) ...[
+        if (_animals == true) ...[
           const SizedBox(
             height: 12,
           ),
@@ -656,7 +656,7 @@ class _TriggerFactorsPageState
           onChanged:
               _updateHeight,
         ),
-        if (_height) ...[
+        if (_height == true) ...[
           const SizedBox(
             height: 12,
           ),

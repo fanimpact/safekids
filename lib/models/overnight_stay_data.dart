@@ -24,4 +24,44 @@ class OvernightStayData {
     this.requiresNightSupervision = false,
     this.nightSupervisionDetails,
   }) : nightDeviceIds = nightDeviceIds ?? <String>{};
+
+  Map<String, dynamic> toJson() => {
+        'requiresAdaptations': requiresAdaptations,
+        'usesNightDevice': usesNightDevice,
+        'nightDeviceIds': nightDeviceIds.toList(),
+        'requiresElectricity': requiresElectricity,
+        'powerFailureIsCritical': powerFailureIsCritical,
+        'requiresNightSupervision':
+            requiresNightSupervision,
+        'nightSupervisionDetails':
+            nightSupervisionDetails,
+      };
+
+  factory OvernightStayData.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    return OvernightStayData(
+      requiresAdaptations:
+          json['requiresAdaptations'] as bool? ??
+              false,
+      usesNightDevice:
+          json['usesNightDevice'] as bool? ?? false,
+      nightDeviceIds: (json['nightDeviceIds']
+                  as List<dynamic>?)
+              ?.map((id) => id as String)
+              .toSet() ??
+          {},
+      requiresElectricity:
+          json['requiresElectricity'] as bool? ??
+              false,
+      powerFailureIsCritical:
+          json['powerFailureIsCritical'] as bool? ??
+              false,
+      requiresNightSupervision:
+          json['requiresNightSupervision'] as bool? ??
+              false,
+      nightSupervisionDetails:
+          json['nightSupervisionDetails'] as String?,
+    );
+  }
 }

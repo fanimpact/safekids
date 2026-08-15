@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../activity_pages/activities_home_page.dart';
+import '../activity_profile_pages/activity_profile_entry_page.dart';
 import '../care_info/care_info_sheet_page.dart';
+import '../controllers/activity_profile_controller.dart';
 import '../controllers/transmission_controller.dart';
 import '../emergency_info/emergency_info_sheet_page.dart';
 import '../emergency_mode/emergency_mode_button_list_page.dart';
+import '../models/activity_profile_draft.dart';
 import '../models/child_profile_draft.dart';
 import '../models/complete_child_profile_data.dart';
 import '../questionnaire_recap/activity_questionnaire_recap_page.dart';
 import '../questionnaire_recap/medical_questionnaire_recap_page.dart';
 import '../transmission_pages/identity_page.dart';
 import '../utils/age_utils.dart';
+import '../utils/child_name_utils.dart';
 
 class ChildProfilePage extends StatelessWidget {
   final CompleteChildProfileData child;
@@ -20,17 +24,10 @@ class ChildProfilePage extends StatelessWidget {
     required this.child,
   });
 
-  String get _firstName {
-    final value = child
-        .essentialInformation
-        .identity
-        .firstName;
-
-    if (value == null || value.trim().isEmpty) {
-      return 'Enfant';
-    }
-
-    return value;
+  String get _displayName {
+    return childFullName(
+      child.essentialInformation.identity,
+    );
   }
 
   String get _age {
@@ -204,6 +201,32 @@ class ChildProfilePage extends StatelessWidget {
     );
   }
 
+  void _openActivityProfile(BuildContext context) {
+    final existingProfile = child.activityProfile;
+
+    final activityProfileController = ActivityProfileController(
+      initialDraft: existingProfile == null
+          ? ActivityProfileDraft(
+              userId: child.userId,
+              childId: child.childId,
+            )
+          : ActivityProfileDraft.fromActivityProfileData(
+              existingProfile,
+              userId: child.userId,
+              childId: child.childId,
+            ),
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ActivityProfileEntryPage(
+          activityProfileController: activityProfileController,
+        ),
+      ),
+    );
+  }
+
   void _showTemporaryMessage({
     required BuildContext context,
     required String message,
@@ -224,7 +247,7 @@ class ChildProfilePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _firstName,
+          _displayName,
         ),
       ),
       body: SafeArea(
@@ -240,7 +263,7 @@ class ChildProfilePage extends StatelessWidget {
 
             Center(
               child: Text(
-                _firstName,
+                _displayName,
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -378,7 +401,7 @@ class ChildProfilePage extends StatelessWidget {
             _actionButton(
               icon: Icons.family_restroom,
               color: Colors.brown,
-              title: "Ce qu'il faut savoir sur $_firstName",
+              title: "Ce qu'il faut savoir sur $_displayName",
               subtitle:
                   'Informations à connaître pour un accompagnement de plusieurs jours (ex. grands-parents).',
               onPressed: () {
@@ -496,13 +519,7 @@ class ChildProfilePage extends StatelessWidget {
               title: 'Profil Activités',
               subtitle:
                   'Modifier les informations utilisées pour préparer les activités.',
-              onPressed: () {
-                _showTemporaryMessage(
-                  context: context,
-                  message:
-                      'La modification du profil Activités sera reliée ici.',
-                );
-              },
+              onPressed: () => _openActivityProfile(context),
             ),
 
             const SizedBox(height: 36),

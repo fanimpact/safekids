@@ -274,12 +274,24 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
       );
       lines.add(
         _qaBool(
+          "Le traitement d'urgence a-t-il été donné lors de cet événement ?",
+          event.emergencyTreatmentGiven,
+        ),
+      );
+      lines.add(
+        _qaBool(
           'L’enfant a-t-il été hospitalisé ?',
           event.hospitalized,
         ),
       );
 
       if (event.hospitalized == true) {
+        lines.add(
+          _qaText(
+            'Dans quel hôpital ?',
+            event.hospitalName,
+          ),
+        );
         lines.add(
           _qaText(
             'Durée de l’hospitalisation (facultatif)',
@@ -298,22 +310,6 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
       if (event.importantExaminationsPerformed == true) {
         lines.add(
           _qaText('Lesquels ?', event.importantExaminations),
-        );
-      }
-
-      lines.add(
-        _qaBool(
-          'Cet événement a-t-il laissé des conséquences médicales ?',
-          event.hasOngoingConsequences,
-        ),
-      );
-
-      if (event.hasOngoingConsequences == true) {
-        lines.add(
-          _qaText(
-            'Lesquelles ?',
-            event.ongoingConsequences,
-          ),
         );
       }
     }
@@ -456,7 +452,7 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
       ),
     );
 
-    if (triggerFactors.waterContact) {
+    if (triggerFactors.waterContact == true) {
       lines.add(
         _qa(
           'Quelle vigilance est nécessaire ?',
@@ -480,7 +476,7 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
       ),
     );
 
-    if (triggerFactors.animals) {
+    if (triggerFactors.animals == true) {
       lines.add(
         _qa(
           'Quelle vigilance est nécessaire ?',
@@ -505,7 +501,7 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
       ),
     );
 
-    if (triggerFactors.height) {
+    if (triggerFactors.height == true) {
       lines.add(
         _qa(
           'Quelle vigilance est nécessaire ?',

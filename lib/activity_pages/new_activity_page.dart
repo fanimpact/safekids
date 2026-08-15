@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/complete_child_profile_data.dart';
+import '../utils/child_name_utils.dart';
 import 'activity_characteristics_page.dart';
 
 class NewActivityPage extends StatefulWidget {
@@ -99,11 +100,13 @@ class _NewActivityPageState
 
   @override
   Widget build(BuildContext context) {
-    final childName = widget
-        .selectedChild
-        ?.essentialInformation
-        .identity
-        .firstName;
+    final selectedChild = widget.selectedChild;
+
+    final childName = selectedChild == null
+        ? null
+        : childFullName(
+            selectedChild.essentialInformation.identity,
+          );
 
     return Scaffold(
       appBar: AppBar(

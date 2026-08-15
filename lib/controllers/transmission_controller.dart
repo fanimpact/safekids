@@ -65,6 +65,10 @@ class TransmissionController {
 
   // PATHOLOGIES
 
+  void updateHasPathologies(bool value) {
+    _draft.hasPathologies = value;
+  }
+
   void ensureFirstPathology() {
     if (_draft.pathologies.isEmpty) {
       _draft.pathologies.add(
@@ -155,6 +159,7 @@ class TransmissionController {
           null;
     }
   }
+
 
   void updateProfessionalName(
     int index,
@@ -279,6 +284,15 @@ class TransmissionController {
         value;
   }
 
+  void updateEmergencyTreatmentGiven(
+    int index,
+    bool value,
+  ) {
+    _draft.medicalEvents[index]
+            .emergencyTreatmentGiven =
+        value;
+  }
+
   void updateHospitalized(
     int index,
     bool value,
@@ -289,9 +303,18 @@ class TransmissionController {
     event.hospitalized = value;
 
     if (!value) {
+      event.hospitalName = null;
       event.hospitalizationDuration =
           null;
     }
+  }
+
+  void updateHospitalName(
+    int index,
+    String value,
+  ) {
+    _draft.medicalEvents[index].hospitalName =
+        value.trim();
   }
 
   void updateHospitalizationDuration(
@@ -324,30 +347,6 @@ class TransmissionController {
   ) {
     _draft.medicalEvents[index]
             .importantExaminations =
-        value.trim();
-  }
-
-  void updateHasOngoingConsequences(
-    int index,
-    bool value,
-  ) {
-    final event =
-        _draft.medicalEvents[index];
-
-    event.hasOngoingConsequences =
-        value;
-
-    if (!value) {
-      event.ongoingConsequences = null;
-    }
-  }
-
-  void updateOngoingConsequences(
-    int index,
-    String value,
-  ) {
-    _draft.medicalEvents[index]
-            .ongoingConsequences =
         value.trim();
   }
 
@@ -432,20 +431,20 @@ class TransmissionController {
               .stressOrStrongEmotions =
           null;
 
-      triggerFactors.waterContact = false;
+      triggerFactors.waterContact = null;
       triggerFactors.waterVigilance =
           null;
       triggerFactors.otherWaterVigilance =
           null;
 
-      triggerFactors.animals = false;
+      triggerFactors.animals = null;
       triggerFactors.animalVigilance =
           null;
       triggerFactors
               .otherAnimalVigilance =
           null;
 
-      triggerFactors.height = false;
+      triggerFactors.height = null;
       triggerFactors.heightVigilance =
           null;
       triggerFactors.otherHeightVigilance =
@@ -686,6 +685,10 @@ class TransmissionController {
 
   // TRAITEMENTS QUOTIDIENS
 
+  void updateHasDailyTreatments(bool value) {
+    _draft.hasDailyTreatments = value;
+  }
+
   void ensureFirstDailyTreatment() {
     if (_draft.dailyTreatments.isEmpty) {
       _draft.dailyTreatments.add(
@@ -785,6 +788,10 @@ class TransmissionController {
 
   // TRAITEMENTS ARRÊTÉS
 
+  void updateHasDiscontinuedTreatments(bool value) {
+    _draft.hasDiscontinuedTreatments = value;
+  }
+
   void ensureFirstDiscontinuedTreatment() {
     if (_draft.discontinuedTreatments.isEmpty) {
       _draft.discontinuedTreatments.add(
@@ -827,6 +834,10 @@ class TransmissionController {
   }
 
   // TRAITEMENTS D’URGENCE
+
+  void updateHasEmergencyTreatments(bool value) {
+    _draft.hasEmergencyTreatments = value;
+  }
 
   void ensureFirstEmergencyTreatment() {
     if (_draft.emergencyTreatments
@@ -894,6 +905,7 @@ class TransmissionController {
         value.trim();
   }
 
+
   void updateEmergencyTreatmentPathology(
     int treatmentIndex,
     String pathologyId,
@@ -945,6 +957,10 @@ class TransmissionController {
   }
 
   // ALLERGIES
+
+  void updateHasAllergies(bool value) {
+    _draft.hasAllergies = value;
+  }
 
   void ensureFirstAllergy() {
     if (_draft.allergies.isEmpty) {
@@ -1121,6 +1137,10 @@ class TransmissionController {
   }
 
   // DISPOSITIFS MÉDICAUX
+
+  void updateHasMedicalDevices(bool value) {
+    _draft.hasMedicalDevices = value;
+  }
 
   void ensureFirstMedicalDevice() {
     if (_draft.medicalDevices.isEmpty) {

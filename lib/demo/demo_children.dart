@@ -89,8 +89,6 @@ class DemoChildren {
           hospitalizationDuration: 'Une nuit',
           importantExaminationsPerformed: true,
           importantExaminations: 'EEG et IRM',
-          hasOngoingConsequences: false,
-          ongoingConsequences: null,
         ),
         MedicalEventData(
           description: 'Une crise généralisée',
@@ -100,8 +98,6 @@ class DemoChildren {
           hospitalizationDuration: 'Trois jours',
           importantExaminationsPerformed: true,
           importantExaminations: 'EEG et IRM',
-          hasOngoingConsequences: false,
-          ongoingConsequences: null,
         ),
       ],
       medicalObservations: [
@@ -190,11 +186,11 @@ class DemoChildren {
       ),
     );
 
-    ChildRepository.instance.addChild(
+    ChildRepository.instance.seedForTesting(
       essentialInformation,
     );
 
-    ChildRepository.instance.saveActivityProfile(
+    ChildRepository.instance.seedActivityProfileForTesting(
       childId: childId,
       activityProfile:
           _createTheoActivityProfile(apneaMachineId),
@@ -431,11 +427,11 @@ class DemoChildren {
       ),
     );
 
-    ChildRepository.instance.addChild(
+    ChildRepository.instance.seedForTesting(
       essentialInformation,
     );
 
-    ChildRepository.instance.saveActivityProfile(
+    ChildRepository.instance.seedActivityProfileForTesting(
       childId: childId,
       activityProfile:
           _createNoeActivityProfile(apneaMachineId),
