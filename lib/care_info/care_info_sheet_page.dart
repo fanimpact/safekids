@@ -10,6 +10,7 @@ import '../models/medical_device_data.dart';
 import '../models/transport_data.dart';
 import '../models/trigger_factor_data.dart';
 import '../utils/age_utils.dart';
+import '../utils/date_format_utils.dart';
 import '../utils/pdf_text.dart';
 
 /// Un groupe de lignes avec son propre sous-titre, affiché à l'intérieur
@@ -115,6 +116,17 @@ class CareInfoSheetPage extends StatelessWidget {
           identity.heightCm!,
           'cm',
         ),
+      );
+    }
+
+    if (identity.weightKg != null ||
+        identity.heightCm != null) {
+      details.add(
+        identity.measurementsUpdatedAt == null
+            ? 'date de mesure non renseignée'
+            : 'mesurés le ${formatShortDate(
+                identity.measurementsUpdatedAt!,
+              )}',
       );
     }
 

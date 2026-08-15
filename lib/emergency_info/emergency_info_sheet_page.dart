@@ -8,6 +8,7 @@ import 'package:printing/printing.dart';
 import '../models/complete_child_profile_data.dart';
 import '../models/trigger_factor_data.dart';
 import '../utils/age_utils.dart';
+import '../utils/date_format_utils.dart';
 import '../utils/pdf_text.dart';
 
 /// Fiche de lecture seule, générée uniquement à partir du profil déjà
@@ -85,6 +86,17 @@ class EmergencyInfoSheetPage extends StatelessWidget {
           identity.heightCm!,
           'cm',
         ),
+      );
+    }
+
+    if (identity.weightKg != null ||
+        identity.heightCm != null) {
+      details.add(
+        identity.measurementsUpdatedAt == null
+            ? 'date de mesure non renseignée'
+            : 'mesurés le ${formatShortDate(
+                identity.measurementsUpdatedAt!,
+              )}',
       );
     }
 

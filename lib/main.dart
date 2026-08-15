@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'config/supabase_config.dart';
 import 'demo/demo_children.dart';
 import 'demo/demo_test_children.dart';
 import 'demo/demo_test_children_emma.dart';
@@ -7,7 +9,14 @@ import 'demo/demo_test_children_final.dart';
 import 'demo/demo_test_children_lucas.dart';
 import 'welcome_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: SupabaseConfig.url,
+    publishableKey: SupabaseConfig.publishableKey,
+  );
+
   DemoChildren.load();
   DemoTestChildren.load();
   DemoTestChildrenLucas.load();

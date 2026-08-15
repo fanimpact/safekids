@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../controllers/transmission_controller.dart';
+import '../utils/date_format_utils.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_number_field.dart';
 import '../widgets/sk_text_field.dart';
@@ -27,6 +28,7 @@ class _IdentityPageState extends State<IdentityPage> {
   late final TextEditingController _weightController;
 
   DateTime? _dateOfBirth;
+  DateTime? _measurementsUpdatedAt;
   bool? _hasDiagnosedPathologies;
 
   @override
@@ -53,6 +55,8 @@ class _IdentityPageState extends State<IdentityPage> {
     );
 
     _dateOfBirth = identity.dateOfBirth;
+    _measurementsUpdatedAt =
+        identity.measurementsUpdatedAt;
     _hasDiagnosedPathologies =
         identity.hasDiagnosedPathologies;
   }
@@ -92,11 +96,30 @@ class _IdentityPageState extends State<IdentityPage> {
         .updateDateOfBirth(selectedDate);
   }
 
-  String _formatDate(DateTime date) {
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
+  Future<void> _selectMeasurementsUpdatedAt() async {
+    final now = DateTime.now();
 
-    return '$day/$month/${date.year}';
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: _measurementsUpdatedAt ?? now,
+      firstDate: DateTime(1990),
+      lastDate: now,
+      helpText:
+          'Sélectionner la date de mesure',
+      cancelText: 'Annuler',
+      confirmText: 'Valider',
+    );
+
+    if (selectedDate == null) {
+      return;
+    }
+
+    setState(() {
+      _measurementsUpdatedAt = selectedDate;
+    });
+
+    widget.transmissionController
+        .updateMeasurementsUpdatedAt(selectedDate);
   }
 
   void _updateDiagnosedPathologies(bool value) {
@@ -186,7 +209,7 @@ class _IdentityPageState extends State<IdentityPage> {
                 child: Text(
                   _dateOfBirth == null
                       ? "Sélectionner une date"
-                      : _formatDate(_dateOfBirth!),
+                      : formatShortDate(_dateOfBirth!),
                 ),
               ),
             ),
@@ -196,9 +219,12 @@ class _IdentityPageState extends State<IdentityPage> {
             SkNumberField(
               label: "Taille de l’enfant en cm",
               controller: _heightController,
-              onChanged: widget
-                  .transmissionController
-                  .updateHeightCm,
+              onChanged: (value) {
+                widget.transmissionController
+                    .updateHeightCm(value);
+
+                setState(() {});
+              },
             ),
 
             const SizedBox(height: 20),
@@ -206,10 +232,38 @@ class _IdentityPageState extends State<IdentityPage> {
             SkNumberField(
               label: "Poids de l’enfant en kg",
               controller: _weightController,
-              onChanged: widget
-                  .transmissionController
-                  .updateWeightKg,
+              onChanged: (value) {
+                widget.transmissionController
+                    .updateWeightKg(value);
+
+                setState(() {});
+              },
             ),
+
+            if (_heightController.text.trim().isNotEmpty ||
+                _weightController.text.trim().isNotEmpty) ...[
+              const SizedBox(height: 20),
+
+              InkWell(
+                onTap: _selectMeasurementsUpdatedAt,
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText:
+                        "À quelle date ces valeurs ont-elles été mesurées ? (facultatif)",
+                    border: OutlineInputBorder(),
+                    suffixIcon:
+                        Icon(Icons.calendar_month),
+                  ),
+                  child: Text(
+                    _measurementsUpdatedAt == null
+                        ? "Sélectionner une date"
+                        : formatShortDate(
+                            _measurementsUpdatedAt!,
+                          ),
+                  ),
+                ),
+              ),
+            ],
 
             const SizedBox(height: 30),
 

@@ -21,6 +21,9 @@ migrate_working_dir/
 # Claude Code local settings
 .claude/
 
+# Supabase CLI local cache (metadata only, regenerated automatically)
+supabase/.temp/
+
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.

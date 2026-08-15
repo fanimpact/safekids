@@ -10,6 +10,8 @@ import '../recommendation_engine/models/activity_recommendation_result.dart';
 import '../recommendation_engine/models/recommendation.dart';
 import '../recommendation_engine/models/recommendation_category.dart';
 import '../repositories/child_repository.dart';
+import '../utils/age_utils.dart';
+import '../utils/date_format_utils.dart';
 import '../utils/pdf_text.dart';
 import 'activities_home_page.dart';
 
@@ -55,6 +57,148 @@ class ActivityRecommendationsPage extends StatelessWidget {
     return displayName.isEmpty
         ? 'Enfant'
         : displayName;
+  }
+
+  String _formatMeasurement(
+    double value,
+    String unit,
+  ) {
+    final formatted = value % 1 == 0
+        ? value.toStringAsFixed(0)
+        : value.toString();
+
+    return '$formatted $unit';
+  }
+
+  /// Âge, poids, taille et date de mesure de l'enfant, dans le même
+  /// format que sur la fiche secours et la fiche "Ce qu'il faut savoir
+  /// sur...". Retourne null si rien n'est renseigné.
+  String? _childMeasurementDetails(
+    String childId,
+  ) {
+    final child =
+        ChildRepository.instance.findByChildId(
+      childId,
+    );
+
+    if (child == null) {
+      return null;
+    }
+
+    final identity =
+        child.essentialInformation.identity;
+
+    final parts = <String>[];
+
+    final age = formatAge(identity.dateOfBirth);
+
+    if (age != null) {
+      parts.add(age);
+    }
+
+    if (identity.weightKg != null) {
+      parts.add(
+        _formatMeasurement(
+          identity.weightKg!,
+          'kg',
+        ),
+      );
+    }
+
+    if (identity.heightCm != null) {
+      parts.add(
+        _formatMeasurement(
+          identity.heightCm!,
+          'cm',
+        ),
+      );
+    }
+
+    if (identity.weightKg != null ||
+        identity.heightCm != null) {
+      parts.add(
+        identity.measurementsUpdatedAt == null
+            ? 'date de mesure non renseignée'
+            : 'mesurés le ${formatShortDate(
+                identity.measurementsUpdatedAt!,
+              )}',
+      );
+    }
+
+    if (parts.isEmpty) {
+      return null;
+    }
+
+    return parts.join(' · ');
+  }
+
+  Widget _buildChildrenIdentitySummary() {
+    final lines = <Widget>[];
+
+    for (final childId in activitySession.childIds) {
+      final details = _childMeasurementDetails(childId);
+
+      lines.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 15,
+                color: Colors.black,
+              ),
+              children: [
+                TextSpan(
+                  text: _childDisplayName(childId),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (details != null)
+                  TextSpan(text: ' — $details'),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (lines.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: lines,
+      ),
+    );
+  }
+
+  List<pw.Widget> _pdfChildrenIdentitySummary() {
+    final widgets = <pw.Widget>[];
+
+    for (final childId in activitySession.childIds) {
+      final details = _childMeasurementDetails(childId);
+      final name = _childDisplayName(childId);
+
+      widgets.add(
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(top: 2),
+          child: pw.Text(
+            pdfSafeText(
+              details == null
+                  ? name
+                  : '$name — $details',
+            ),
+            style: const pw.TextStyle(fontSize: 11),
+          ),
+        ),
+      );
+    }
+
+    return widgets;
   }
 
   String _formatDate(
@@ -995,6 +1139,8 @@ class ActivityRecommendationsPage extends StatelessWidget {
               ),
             ),
 
+          ..._pdfChildrenIdentitySummary(),
+
           ..._pdfImportantPointsSection(),
           ..._pdfSituationsSection(),
           ..._pdfEmergencyMedicationsSection(),
@@ -1159,6 +1305,8 @@ class ActivityRecommendationsPage extends StatelessWidget {
                       ],
                     ),
                   ],
+
+                  _buildChildrenIdentitySummary(),
 
                   const SizedBox(
                     height: 24,

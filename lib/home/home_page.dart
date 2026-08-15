@@ -7,6 +7,7 @@ import '../emergency_info/emergency_info_sheet_page.dart';
 import '../emergency_mode/emergency_mode_button_list_page.dart';
 import '../emergency_mode/emergency_mode_child_picker_page.dart';
 import '../repositories/child_repository.dart';
+import '../sharing/create_share_link_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -166,14 +167,17 @@ class HomePage extends StatelessWidget {
                     Icons.share_outlined,
                   ),
                   title: const Text(
-                    'Partages actifs',
+                    'Créer un lien de partage',
                   ),
                   onTap: () {
                     Navigator.pop(context);
 
-                    _showComingSoon(
+                    Navigator.push(
                       context,
-                      'Les partages actifs',
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const CreateShareLinkPage(),
+                      ),
                     );
                   },
                 ),
@@ -198,6 +202,44 @@ class HomePage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildEmergencyButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.red.shade700,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 28,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 32),
+            const SizedBox(width: 14),
+            Flexible(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -283,22 +325,22 @@ class HomePage extends StatelessWidget {
 
               const SizedBox(height: 36),
 
+              _buildEmergencyButton(
+                label: 'Mode Urgence',
+                icon: Icons.emergency,
+                onPressed: () {
+                  _openEmergencyMode(context);
+                },
+              ),
+
+              const SizedBox(height: 32),
+
               _buildMainButton(
                 label: 'Préparer une activité',
                 icon:
                     Icons.event_available_outlined,
                 onPressed: () {
                   _openActivityCreation(context);
-                },
-              ),
-
-              const SizedBox(height: 18),
-
-              _buildMainButton(
-                label: 'Mode Urgence',
-                icon: Icons.emergency_outlined,
-                onPressed: () {
-                  _openEmergencyMode(context);
                 },
               ),
 

@@ -61,6 +61,8 @@ class DemoChildren {
         dateOfBirth: DateTime(2016, 10, 20),
         heightCm: 148,
         weightKg: 44,
+        measurementsUpdatedAt:
+            DateTime(2026, 3, 12),
         hasDiagnosedPathologies: true,
       ),
       pathologies: [

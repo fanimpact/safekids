@@ -7,6 +7,7 @@ import 'package:printing/printing.dart';
 
 import '../models/complete_child_profile_data.dart';
 import '../models/trigger_factor_data.dart';
+import '../utils/date_format_utils.dart';
 import '../utils/pdf_text.dart';
 
 /// Récapitulatif intégral du questionnaire santé pour un enfant : chaque
@@ -118,6 +119,16 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
                 'kg',
               ),
       ),
+      if (identity.weightKg != null ||
+          identity.heightCm != null)
+        _qa(
+          'À quelle date ces valeurs ont-elles été mesurées ?',
+          identity.measurementsUpdatedAt == null
+              ? 'Non renseigné'
+              : formatShortDate(
+                  identity.measurementsUpdatedAt!,
+                ),
+        ),
       _qaBool(
         'Votre enfant présente-t-il une ou plusieurs pathologies diagnostiquées ou allergies importantes nécessitant une vigilance particulière ?',
         identity.hasDiagnosedPathologies,

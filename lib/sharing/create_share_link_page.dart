@@ -1,0 +1,405 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../config/supabase_config.dart';
+import '../models/complete_child_profile_data.dart';
+import '../repositories/child_repository.dart';
+
+/// Les 3 valeurs autorisées par la contrainte SQL sur
+/// `partages.type_fiche`. "recommandations_activite" existe côté base
+/// de données pour plus tard, mais n'est volontairement pas proposé
+/// ici : aucune session d'activité n'est sauvegardée nulle part
+/// aujourd'hui, il n'y aurait rien à partager.
+enum _ShareFicheType {
+  secours('secours', 'Informations pour les secours'),
+  ceQuIlFautSavoir(
+    'ce_qu_il_faut_savoir',
+    'Ce qu’il faut savoir sur l’enfant',
+  );
+
+  const _ShareFicheType(this.value, this.label);
+
+  final String value;
+  final String label;
+}
+
+enum _ShareDuration {
+  jour1('24 heures', Duration(hours: 24)),
+  jours3('3 jours', Duration(days: 3)),
+  jours7('7 jours', Duration(days: 7));
+
+  const _ShareDuration(this.label, this.duration);
+
+  final String label;
+  final Duration duration;
+}
+
+class CreateShareLinkPage extends StatefulWidget {
+  const CreateShareLinkPage({super.key});
+
+  @override
+  State<CreateShareLinkPage> createState() =>
+      _CreateShareLinkPageState();
+}
+
+class _CreateShareLinkPageState
+    extends State<CreateShareLinkPage> {
+  CompleteChildProfileData? _selectedChild;
+  _ShareFicheType _selectedFicheType =
+      _ShareFicheType.secours;
+  _ShareDuration _selectedDuration = _ShareDuration.jour1;
+
+  bool _isGenerating = false;
+  String? _generatedLink;
+
+  List<CompleteChildProfileData> get _children =>
+      ChildRepository.instance.children;
+
+  String _childDisplayName(
+    CompleteChildProfileData child,
+  ) {
+    final identity =
+        child.essentialInformation.identity;
+
+    final parts = [
+      identity.firstName,
+      identity.lastName,
+    ].where(
+      (value) =>
+          value != null && value.trim().isNotEmpty,
+    ).map(
+      (value) => value!.trim(),
+    );
+
+    final name = parts.join(' ');
+
+    return name.isEmpty ? 'Enfant' : name;
+  }
+
+  Future<void> _generateLink() async {
+    final child = _selectedChild;
+
+    if (child == null || child.childId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Sélectionnez un enfant avant de générer le lien.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    setState(() {
+      _isGenerating = true;
+      _generatedLink = null;
+    });
+
+    final dateExpiration = DateTime.now().toUtc().add(
+      _selectedDuration.duration,
+    );
+
+    try {
+      final response = await Supabase.instance.client
+          .from('partages')
+          .insert({
+            'enfant_id': child.childId,
+            'type_fiche': _selectedFicheType.value,
+            'date_expiration':
+                dateExpiration.toIso8601String(),
+          })
+          .select('token')
+          .single();
+
+      final token = response['token'] as String;
+
+      final link =
+          '${SupabaseConfig.url}/functions/v1/voir-partage?token=$token';
+
+      setState(() {
+        _generatedLink = link;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Impossible de générer le lien pour le moment. '
+            'Vérifiez la connexion Supabase. ($error)',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGenerating = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _copyLink() async {
+    final link = _generatedLink;
+
+    if (link == null) {
+      return;
+    }
+
+    await Clipboard.setData(ClipboardData(text: link));
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Lien copié.'),
+      ),
+    );
+  }
+
+  Future<void> _sendBySms() async {
+    final link = _generatedLink;
+
+    if (link == null) {
+      return;
+    }
+
+    final uri = Uri(
+      scheme: 'sms',
+      queryParameters: {
+        'body':
+            'Voici le lien pour accéder aux informations de l’enfant : $link',
+      },
+    );
+
+    await launchUrl(uri);
+  }
+
+  Future<void> _sendByEmail() async {
+    final link = _generatedLink;
+
+    if (link == null) {
+      return;
+    }
+
+    final uri = Uri(
+      scheme: 'mailto',
+      queryParameters: {
+        'subject': 'Informations pour l’accompagnement',
+        'body':
+            'Bonjour,\n\nVoici le lien pour accéder aux informations de l’enfant : $link\n\nCe lien expire automatiquement.',
+      },
+    );
+
+    await launchUrl(uri);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_children.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Créer un lien de partage'),
+        ),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Aucun enfant enregistré. Créez d’abord le profil d’un enfant depuis « Mes enfants ».',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
+    _selectedChild ??= _children.first;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Créer un lien de partage'),
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            const Text(
+              'Enfant concerné',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            DropdownButtonFormField<
+                CompleteChildProfileData>(
+              initialValue: _selectedChild,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+              ),
+              items: _children
+                  .map(
+                    (child) => DropdownMenuItem(
+                      value: child,
+                      child: Text(
+                        _childDisplayName(child),
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (child) {
+                setState(() {
+                  _selectedChild = child;
+                  _generatedLink = null;
+                });
+              },
+            ),
+
+            const SizedBox(height: 28),
+
+            const Text(
+              'Fiche à partager',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            RadioGroup<_ShareFicheType>(
+              groupValue: _selectedFicheType,
+              onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+
+                setState(() {
+                  _selectedFicheType = value;
+                  _generatedLink = null;
+                });
+              },
+              child: Column(
+                children: [
+                  for (final type in _ShareFicheType.values)
+                    RadioListTile<_ShareFicheType>(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(type.label),
+                      value: type,
+                    ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'Durée de validité du lien',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            RadioGroup<_ShareDuration>(
+              groupValue: _selectedDuration,
+              onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+
+                setState(() {
+                  _selectedDuration = value;
+                  _generatedLink = null;
+                });
+              },
+              child: Column(
+                children: [
+                  for (final duration
+                      in _ShareDuration.values)
+                    RadioListTile<_ShareDuration>(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(duration.label),
+                      value: duration,
+                    ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed:
+                    _isGenerating ? null : _generateLink,
+                child: Text(
+                  _isGenerating
+                      ? 'Génération en cours...'
+                      : 'Générer le lien',
+                ),
+              ),
+            ),
+
+            if (_generatedLink != null) ...[
+              const SizedBox(height: 28),
+
+              const Text(
+                'Lien généré',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              SelectableText(_generatedLink!),
+
+              const SizedBox(height: 16),
+
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _copyLink,
+                    icon: const Icon(
+                      Icons.copy_outlined,
+                    ),
+                    label: const Text('Copier le lien'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _sendBySms,
+                    icon: const Icon(
+                      Icons.sms_outlined,
+                    ),
+                    label: const Text('Envoyer par SMS'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _sendByEmail,
+                    icon: const Icon(
+                      Icons.email_outlined,
+                    ),
+                    label: const Text('Envoyer par e-mail'),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}

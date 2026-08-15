@@ -75,6 +75,8 @@ class ChildProfileData {
             draft.identity.heightCm,
         weightKg:
             draft.identity.weightKg,
+        measurementsUpdatedAt:
+            draft.identity.measurementsUpdatedAt,
         hasDiagnosedPathologies:
             draft
                 .identity

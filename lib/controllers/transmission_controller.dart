@@ -40,6 +40,10 @@ class TransmissionController {
     _draft.identity.dateOfBirth = value;
   }
 
+  void updateMeasurementsUpdatedAt(DateTime value) {
+    _draft.identity.measurementsUpdatedAt = value;
+  }
+
   void updateHeightCm(String value) {
     _draft.identity.heightCm = double.tryParse(
       value.replaceAll(',', '.'),

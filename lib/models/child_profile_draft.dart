@@ -89,6 +89,8 @@ class ChildProfileDraft {
         dateOfBirth: data.identity.dateOfBirth,
         heightCm: data.identity.heightCm,
         weightKg: data.identity.weightKg,
+        measurementsUpdatedAt:
+            data.identity.measurementsUpdatedAt,
         hasDiagnosedPathologies:
             data.identity.hasDiagnosedPathologies,
       ),
