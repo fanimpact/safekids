@@ -1160,6 +1160,14 @@ class TransmissionController {
         value.trim();
   }
 
+  void updateMedicalDeviceWornPermanently(
+    int index,
+    bool value,
+  ) {
+    _draft.medicalDevices[index]
+        .isWornOrImplantedPermanently = value;
+  }
+
   // VALIDATION
 
   ChildProfileData validateAndGetProfile() {

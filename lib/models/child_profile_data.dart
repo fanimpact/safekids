@@ -370,10 +370,14 @@ class ChildProfileData {
           draft.medicalDevices.map(
         (device) {
           return MedicalDeviceData(
+            deviceId: device.deviceId,
             deviceName:
                 device.deviceName,
             mainUse:
                 device.mainUse,
+            isWornOrImplantedPermanently:
+                device
+                    .isWornOrImplantedPermanently,
           );
         },
       ).toList(),

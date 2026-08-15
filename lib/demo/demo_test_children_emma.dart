@@ -4,6 +4,7 @@ import '../models/child_profile_data.dart';
 import '../models/clothing_data.dart';
 import '../models/communication_data.dart';
 import '../models/identity_data.dart';
+import '../models/medical_device_data.dart';
 import '../models/other_information_data.dart';
 import '../models/overnight_stay_data.dart';
 import '../models/primary_care_doctor_data.dart';
@@ -30,6 +31,7 @@ class DemoTestChildrenEmma {
 
   static void _loadEmma() {
     const childId = 'test-emma';
+    const nightDeviceId = 'demo-emma-night-device';
 
     final existingChild =
         ChildRepository.instance.findByChildId(
@@ -80,7 +82,15 @@ class DemoTestChildrenEmma {
       discontinuedTreatments: [],
       emergencyTreatments: [],
       allergies: [],
-      medicalDevices: [],
+      medicalDevices: [
+        MedicalDeviceData(
+          deviceId: nightDeviceId,
+          deviceName:
+              'Appareil respiratoire de nuit',
+          mainUse: null,
+          isWornOrImplantedPermanently: false,
+        ),
+      ],
       contacts: [],
       primaryCareDoctor:
           PrimaryCareDoctorData(
@@ -97,19 +107,20 @@ class DemoTestChildrenEmma {
     ChildRepository.instance.saveActivityProfile(
       childId: childId,
       activityProfile:
-          _createEmmaActivityProfile(),
+          _createEmmaActivityProfile(nightDeviceId),
     );
   }
 
   static ActivityProfileData
-      _createEmmaActivityProfile() {
+      _createEmmaActivityProfile(
+    String nightDeviceId,
+  ) {
     return ActivityProfileData(
       aquaticActivity:
           AquaticActivityData(
         requiresAdaptations: true,
 
         // Proximité d'un point d'eau.
-        mayJumpIntoWater: true,
         requiresFlotationVestNearWater:
             true,
         requiresDedicatedAdultNearWater:
@@ -173,8 +184,7 @@ class DemoTestChildrenEmma {
         requiresAdaptations: true,
 
         usesNightDevice: true,
-        nightDeviceDetails:
-            'Appareil respiratoire de nuit',
+        nightDeviceIds: {nightDeviceId},
 
         requiresElectricity: true,
 

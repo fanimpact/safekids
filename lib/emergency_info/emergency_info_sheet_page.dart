@@ -6,6 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../models/complete_child_profile_data.dart';
+import '../models/trigger_factor_data.dart';
 import '../utils/age_utils.dart';
 import '../utils/pdf_text.dart';
 
@@ -261,6 +262,163 @@ class EmergencyInfoSheetPage extends StatelessWidget {
       );
     }
 
+    for (final allergy
+        in child.essentialInformation.allergies) {
+      if (allergy.hasEmergencyTreatment != true) {
+        continue;
+      }
+
+      final name =
+          allergy.emergencyTreatmentName?.trim();
+
+      if (name == null || name.isEmpty) {
+        continue;
+      }
+
+      final dosage =
+          allergy.emergencyTreatmentDosage?.trim();
+
+      final allergen = allergy.allergen?.trim();
+
+      final prefix =
+          allergen != null && allergen.isNotEmpty
+              ? '$allergen — $name'
+              : name;
+
+      lines.add(
+        dosage != null && dosage.isNotEmpty
+            ? '$prefix — $dosage'
+            : prefix,
+      );
+    }
+
+    return lines;
+  }
+
+  String? _detailOrFallback(String? value) {
+    final trimmed = value?.trim();
+
+    return trimmed != null && trimmed.isNotEmpty
+        ? trimmed
+        : null;
+  }
+
+  /// Facteurs déclenchants et sensibilités du profil santé, dans le
+  /// même ordre de priorité que sur la fiche "Ce qu'il faut savoir
+  /// sur...", du risque le plus direct au moins direct.
+  List<String> get _triggerFactorLines {
+    final triggerFactors =
+        child.essentialInformation.triggerFactors;
+
+    if (!triggerFactors.hasTriggerFactors) {
+      return [];
+    }
+
+    final lines = <String>[];
+
+    if (triggerFactors.waterContact) {
+      lines.add(
+        switch (triggerFactors.waterVigilance) {
+          WaterVigilance.mayJumpIntoWater =>
+            'Eau : l’enfant risque de se jeter dans l’eau',
+          WaterVigilance.cannotSwim =>
+            'Eau : l’enfant ne sait pas nager',
+          WaterVigilance.other =>
+            'Eau : ${_detailOrFallback(
+                  triggerFactors.otherWaterVigilance,
+                ) ??
+                'vigilance particulière'}',
+          null => 'Eau : vigilance particulière',
+        },
+      );
+    }
+
+    if (triggerFactors.height) {
+      lines.add(
+        switch (triggerFactors.heightVigilance) {
+          HeightVigilance.doesNotPerceiveDanger =>
+            'Hauteur : l’enfant ne perçoit pas le danger lié à la hauteur',
+          HeightVigilance.vertigoOrImportantFear =>
+            'Hauteur : l’enfant a des vertiges ou une peur importante de la hauteur',
+          HeightVigilance.other =>
+            'Hauteur : ${_detailOrFallback(
+                  triggerFactors.otherHeightVigilance,
+                ) ??
+                'vigilance particulière'}',
+          null => 'Hauteur : vigilance particulière',
+        },
+      );
+    }
+
+    if (triggerFactors.flashingLights == true) {
+      lines.add(
+        triggerFactors.requiresGlassesOutdoors
+            ? 'Photosensibilité (lumières clignotantes) : vigilance particulière, port de lunettes nécessaire en extérieur'
+            : 'Photosensibilité (lumières clignotantes) : vigilance particulière',
+      );
+    }
+
+    if (triggerFactors.animals) {
+      lines.add(
+        switch (triggerFactors.animalVigilance) {
+          AnimalVigilance.importantFear =>
+            'Animaux : l’enfant a une peur importante des animaux',
+          AnimalVigilance
+              .approachesWithoutPerceivingDanger =>
+            'Animaux : l’enfant peut s’approcher des animaux sans percevoir le danger',
+          AnimalVigilance.other =>
+            'Animaux : ${_detailOrFallback(
+                  triggerFactors.otherAnimalVigilance,
+                ) ??
+                'vigilance particulière'}',
+          null => 'Animaux : vigilance particulière',
+        },
+      );
+    }
+
+    if (triggerFactors.heat == true) {
+      lines.add('Chaleur : vigilance particulière');
+    }
+
+    if (triggerFactors.fatigueOrLackOfSleep == true) {
+      lines.add(
+        'Fatigue ou manque de sommeil : vigilance particulière',
+      );
+    }
+
+    if (triggerFactors.stressOrStrongEmotions ==
+        true) {
+      lines.add(
+        'Stress ou émotions fortes : vigilance particulière',
+      );
+    }
+
+    if (triggerFactors.physicalEffort == true) {
+      lines.add(
+        'Effort physique : vigilance particulière',
+      );
+    }
+
+    if (triggerFactors.noise == true) {
+      lines.add('Bruit : vigilance particulière');
+    }
+
+    if (triggerFactors.crowd == true) {
+      lines.add('Foule : vigilance particulière');
+    }
+
+    if (triggerFactors.confinedSpaces == true) {
+      lines.add(
+        'Espaces confinés : vigilance particulière',
+      );
+    }
+
+    final other = triggerFactors.other?.trim();
+
+    if (other != null && other.isNotEmpty) {
+      lines.add('Autre : $other');
+    }
+
     return lines;
   }
 
@@ -483,6 +641,13 @@ class EmergencyInfoSheetPage extends StatelessWidget {
             'Aucune allergie connue.',
           ),
 
+          if (_triggerFactorLines.isNotEmpty) ...[
+            pdfSectionTitle(
+              'Facteurs déclenchants et sensibilités',
+            ),
+            ..._triggerFactorLines.map(pdfBullet),
+          ],
+
           pdfSectionTitle(
             'Traitement d’urgence prescrit',
           ),
@@ -696,6 +861,15 @@ class EmergencyInfoSheetPage extends StatelessWidget {
               lines: _allergyLines,
               emptyMessage: 'Aucune allergie connue.',
             ),
+
+            if (_triggerFactorLines.isNotEmpty)
+              _sectionCard(
+                title:
+                    'Facteurs déclenchants et sensibilités',
+                icon: Icons.visibility_outlined,
+                lines: _triggerFactorLines,
+                emptyMessage: '',
+              ),
 
             _sectionCard(
               title: 'Traitement d’urgence prescrit',

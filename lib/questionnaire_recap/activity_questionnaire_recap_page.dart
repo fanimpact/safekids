@@ -99,18 +99,21 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
     }
 
     lines.add('À proximité d’un point d’eau');
-    lines.add(
-      _qaBool(
-        'Votre enfant risque-t-il de se jeter dans l’eau ?',
-        data.mayJumpIntoWater,
-      ),
-    );
-    final cannotSwim =
+
+    final waterVigilance =
         child
             .essentialInformation
             .triggerFactors
-            .waterVigilance ==
-        WaterVigilance.cannotSwim;
+            .waterVigilance;
+
+    if (waterVigilance == WaterVigilance.mayJumpIntoWater) {
+      lines.add(
+        'D’après le profil santé, l’enfant risque de se jeter dans l’eau.',
+      );
+    }
+
+    final cannotSwim =
+        waterVigilance == WaterVigilance.cannotSwim;
 
     if (cannotSwim) {
       lines.add(
@@ -327,10 +330,26 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
     );
 
     if (data.usesNightDevice) {
+      final deviceNames = child
+          .essentialInformation
+          .medicalDevices
+          .where(
+            (device) => data.nightDeviceIds
+                .contains(device.deviceId),
+          )
+          .map((device) => device.deviceName?.trim())
+          .where(
+            (name) => name != null && name.isNotEmpty,
+          )
+          .cast<String>()
+          .toList();
+
       lines.add(
-        _qaText(
-          'Précisez l’appareillage utilisé',
-          data.nightDeviceDetails,
+        _qa(
+          'Lequel (ou lesquels) ?',
+          deviceNames.isEmpty
+              ? 'Non renseigné'
+              : deviceNames.join(' et '),
         ),
       );
       lines.add(

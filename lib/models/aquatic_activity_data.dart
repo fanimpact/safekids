@@ -2,7 +2,6 @@ class AquaticActivityData {
   bool requiresAdaptations;
 
   // À proximité d'un point d'eau
-  bool mayJumpIntoWater;
   bool requiresFlotationVestNearWater;
   bool requiresDedicatedAdultNearWater;
 
@@ -20,7 +19,6 @@ class AquaticActivityData {
 
   AquaticActivityData({
     this.requiresAdaptations = false,
-    this.mayJumpIntoWater = false,
     this.requiresFlotationVestNearWater = false,
     this.requiresDedicatedAdultNearWater = false,
     this.requiresSpecialEquipment = false,

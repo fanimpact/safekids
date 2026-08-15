@@ -41,6 +41,7 @@ class DemoChildren {
   static void _loadTheo() {
     const childId = 'demo-theo';
     const epilepsyId = 'demo-theo-epilepsy';
+    const apneaMachineId = 'demo-theo-apnea-machine';
 
     final existingChild =
         ChildRepository.instance.findByChildId(
@@ -161,11 +162,14 @@ class DemoChildren {
         MedicalDeviceData(
           deviceName: 'Diabolos',
           mainUse: null,
+          isWornOrImplantedPermanently: true,
         ),
         MedicalDeviceData(
+          deviceId: apneaMachineId,
           deviceName:
               'Machine pour l’apnée du sommeil',
           mainUse: null,
+          isWornOrImplantedPermanently: false,
         ),
       ],
       contacts: [
@@ -191,17 +195,18 @@ class DemoChildren {
     ChildRepository.instance.saveActivityProfile(
       childId: childId,
       activityProfile:
-          _createTheoActivityProfile(),
+          _createTheoActivityProfile(apneaMachineId),
     );
   }
 
   static ActivityProfileData
-      _createTheoActivityProfile() {
+      _createTheoActivityProfile(
+    String apneaMachineId,
+  ) {
     return ActivityProfileData(
       aquaticActivity:
           AquaticActivityData(
         requiresAdaptations: true,
-        mayJumpIntoWater: false,
         requiresFlotationVestNearWater:
             false,
         requiresDedicatedAdultNearWater:
@@ -242,8 +247,7 @@ class DemoChildren {
           OvernightStayData(
         requiresAdaptations: true,
         usesNightDevice: true,
-        nightDeviceDetails:
-            'Machine pour l’apnée du sommeil',
+        nightDeviceIds: {apneaMachineId},
         requiresElectricity: true,
         powerFailureIsCritical: true,
         requiresNightSupervision: false,
@@ -290,6 +294,8 @@ class DemoChildren {
         'demo-noe-wasp-allergy';
     const sleepEpilepsyId =
         'demo-noe-sleep-epilepsy';
+    const apneaMachineId =
+        'demo-noe-apnea-machine';
 
     final existingChild =
         ChildRepository.instance.findByChildId(
@@ -400,9 +406,11 @@ class DemoChildren {
       ],
       medicalDevices: [
         MedicalDeviceData(
+          deviceId: apneaMachineId,
           deviceName:
               'Machine pour l’apnée du sommeil',
           mainUse: null,
+          isWornOrImplantedPermanently: false,
         ),
       ],
       contacts: [
@@ -428,17 +436,18 @@ class DemoChildren {
     ChildRepository.instance.saveActivityProfile(
       childId: childId,
       activityProfile:
-          _createNoeActivityProfile(),
+          _createNoeActivityProfile(apneaMachineId),
     );
   }
 
   static ActivityProfileData
-      _createNoeActivityProfile() {
+      _createNoeActivityProfile(
+    String apneaMachineId,
+  ) {
     return ActivityProfileData(
       aquaticActivity:
           AquaticActivityData(
         requiresAdaptations: false,
-        mayJumpIntoWater: false,
         requiresFlotationVestNearWater:
             false,
         requiresDedicatedAdultNearWater:
@@ -471,8 +480,7 @@ class DemoChildren {
           OvernightStayData(
         requiresAdaptations: true,
         usesNightDevice: true,
-        nightDeviceDetails:
-            'Machine pour l’apnée du sommeil',
+        nightDeviceIds: {apneaMachineId},
         requiresElectricity: true,
         powerFailureIsCritical: false,
         requiresNightSupervision: false,

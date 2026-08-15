@@ -6,6 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../models/complete_child_profile_data.dart';
+import '../models/medical_device_data.dart';
 import '../models/transport_data.dart';
 import '../models/trigger_factor_data.dart';
 import '../utils/age_utils.dart';
@@ -209,6 +210,10 @@ class CareInfoSheetPage extends StatelessWidget {
     return lines;
   }
 
+  /// Ne renvoie une ligne que si elle apporte une information en plus
+  /// du simple nom du traitement (dosage...) : le nom seul est déjà
+  /// couvert par la consigne "à garder à portée de main en permanence"
+  /// dans `_medicationGroups`, pas besoin de le répéter à l'identique.
   List<String> get _emergencyTreatmentLines {
     final lines = <String>[];
 
@@ -222,11 +227,11 @@ class CareInfoSheetPage extends StatelessWidget {
 
       final dosage = treatment.dosage?.trim();
 
-      lines.add(
-        dosage != null && dosage.isNotEmpty
-            ? '$name — $dosage'
-            : name,
-      );
+      if (dosage == null || dosage.isEmpty) {
+        continue;
+      }
+
+      lines.add('$name — $dosage');
     }
 
     return lines;
@@ -253,26 +258,38 @@ class CareInfoSheetPage extends StatelessWidget {
 
       final allergen = allergy.allergen?.trim();
 
+      final hasAllergen =
+          allergen != null && allergen.isNotEmpty;
+
+      final hasDosage =
+          dosage != null && dosage.isNotEmpty;
+
+      if (!hasAllergen && !hasDosage) {
+        continue;
+      }
+
       final prefix =
-          allergen != null && allergen.isNotEmpty
-              ? '$allergen — $name'
-              : name;
+          hasAllergen ? '$allergen — $name' : name;
 
       lines.add(
-        dosage != null && dosage.isNotEmpty
-            ? '$prefix — $dosage'
-            : prefix,
+        hasDosage ? '$prefix — $dosage' : prefix,
       );
     }
 
     return lines;
   }
 
-  List<String> get _medicalDeviceLines {
+  List<String> _medicalDeviceLines(
+    bool Function(MedicalDeviceData device) matches,
+  ) {
     final lines = <String>[];
 
     for (final device
         in child.essentialInformation.medicalDevices) {
+      if (!matches(device)) {
+        continue;
+      }
+
       final name = device.deviceName?.trim();
 
       if (name == null || name.isEmpty) {
@@ -289,6 +306,27 @@ class CareInfoSheetPage extends StatelessWidget {
     }
 
     return lines;
+  }
+
+  /// Dispositifs à emporter/préparer pour chaque sortie. Un dispositif
+  /// non renseigné (question pas encore répondue) est inclus par
+  /// défaut, pour ne jamais faire disparaître silencieusement une
+  /// information qui pourrait être nécessaire.
+  List<String> get _equipmentToBringLines {
+    return _medicalDeviceLines(
+      (device) =>
+          device.isWornOrImplantedPermanently != true,
+    );
+  }
+
+  /// Dispositifs portés ou implantés en permanence sur l'enfant : à
+  /// titre informatif uniquement, ils n'ont rien à préparer pour une
+  /// sortie.
+  List<String> get _permanentlyWornDeviceLines {
+    return _medicalDeviceLines(
+      (device) =>
+          device.isWornOrImplantedPermanently == true,
+    );
   }
 
   /// Noms (sans le détail de dosage) de tous les traitements d'urgence
@@ -440,6 +478,33 @@ class CareInfoSheetPage extends StatelessWidget {
       }
     }
 
+    final transitions = activityProfile.transitions;
+
+    if (transitions.transitionsMayCauseStress) {
+      lines.add(
+        'Transitions : les changements d’activité peuvent provoquer un stress important',
+      );
+    }
+
+    if (transitions.changesMustBeAnnounced) {
+      lines.add(
+        'Transitions : les changements de programme doivent être annoncés à l’avance',
+      );
+    }
+
+    final aquaticActivity =
+        activityProfile.aquaticActivity;
+
+    if (aquaticActivity.requiresSpecialEquipment) {
+      final details = aquaticActivity
+          .specialEquipmentDetails
+          ?.trim();
+
+      if (details != null && details.isNotEmpty) {
+        lines.add('Baignade : équipement nécessaire — $details');
+      }
+    }
+
     final transport = activityProfile.transport;
 
     if (transport.motionSickness &&
@@ -451,6 +516,42 @@ class CareInfoSheetPage extends StatelessWidget {
       lines.add(
         'Transport : mal des transports en ${_joinWithAnd(modes)}',
       );
+    }
+
+    if (transport.requiresSpecialEquipment) {
+      final details =
+          transport.specialEquipmentDetails?.trim();
+
+      if (details != null && details.isNotEmpty) {
+        lines.add('Transport : équipement nécessaire — $details');
+      }
+    }
+
+    if (transport.requiresSpecialAttention) {
+      final details =
+          transport.specialAttentionDetails?.trim();
+
+      if (details != null && details.isNotEmpty) {
+        lines.add('Transport : attention particulière — $details');
+      }
+    }
+
+    final otherInformation =
+        activityProfile.otherInformation;
+
+    if (otherInformation.hasOtherInformation) {
+      for (final details in [
+        otherInformation.details,
+        otherInformation.secondDetails,
+        otherInformation.thirdDetails,
+        otherInformation.fourthDetails,
+      ]) {
+        final trimmed = details?.trim();
+
+        if (trimmed != null && trimmed.isNotEmpty) {
+          lines.add('Information complémentaire : $trimmed');
+        }
+      }
     }
 
     return lines;
@@ -488,17 +589,36 @@ class CareInfoSheetPage extends StatelessWidget {
   // propres sections ci-dessous, pour éviter toute redondance.
   // ---------------------------------------------------------------------
 
+  /// Ordre de priorité fixe, valable pour tous les enfants (pas
+  /// déterminé par l'ordre de saisie dans le questionnaire) :
+  /// 1. En tête : pathologies, dispositifs portés en permanence,
+  ///    allergies.
+  /// 2. Facteurs pouvant directement déclencher un événement médical
+  ///    grave : eau, hauteur, photosensibilité, animaux.
+  /// 3. Vigilances générales : chaleur, fatigue, stress, effort
+  ///    physique, bruit, foule, espaces confinés, autre.
+  /// 4. Informations pratiques, tout ce qui vient du profil Activités :
+  ///    marche prolongée / effort physique intense, sécurité, puis
+  ///    habillage / toilettes / communication / transport.
   List<String> get _careVigilanceLines {
+    final triggerFactors =
+        child.essentialInformation.triggerFactors;
+
     final lines = <String>[
       ..._pathologyLines.map(
         (line) => 'Pathologie : $line',
       ),
+      ..._permanentlyWornDeviceLines.map(
+        (line) => 'Dispositif porté en permanence : $line',
+      ),
+      ..._allergyLines.map(
+        (line) => 'Allergie : $line',
+      ),
     ];
 
-    final triggerFactors =
-        child.essentialInformation.triggerFactors;
-
     if (triggerFactors.hasTriggerFactors) {
+      // Danger médical direct.
+
       final waterLine = _waterLine(triggerFactors);
 
       if (waterLine != null) {
@@ -510,32 +630,12 @@ class CareInfoSheetPage extends StatelessWidget {
       if (heightLine != null) {
         lines.add(heightLine);
       }
-    }
 
-    lines.addAll(
-      _allergyLines.map(
-        (line) => 'Allergie : $line',
-      ),
-    );
-
-    if (triggerFactors.hasTriggerFactors) {
-      if (triggerFactors.noise == true) {
-        lines.add('Bruit : vigilance particulière');
-      }
-
-      if (triggerFactors.crowd == true) {
-        lines.add('Foule : vigilance particulière');
-      }
-
-      if (triggerFactors.confinedSpaces == true) {
+      if (triggerFactors.flashingLights == true) {
         lines.add(
-          'Espaces confinés : vigilance particulière',
-        );
-      }
-
-      if (triggerFactors.physicalEffort == true) {
-        lines.add(
-          'Effort physique : vigilance particulière',
+          triggerFactors.requiresGlassesOutdoors
+              ? 'Photosensibilité (lumières clignotantes) : vigilance particulière, port de lunettes nécessaire en extérieur'
+              : 'Photosensibilité (lumières clignotantes) : vigilance particulière',
         );
       }
 
@@ -556,6 +656,8 @@ class CareInfoSheetPage extends StatelessWidget {
         );
       }
 
+      // Vigilances générales.
+
       if (triggerFactors.heat == true) {
         lines.add('Chaleur : vigilance particulière');
       }
@@ -574,14 +676,34 @@ class CareInfoSheetPage extends StatelessWidget {
         );
       }
 
-      if (triggerFactors.flashingLights == true) {
+      if (triggerFactors.physicalEffort == true) {
         lines.add(
-          triggerFactors.requiresGlassesOutdoors
-              ? 'Photosensibilité (lumières clignotantes) : vigilance particulière, port de lunettes nécessaire en extérieur'
-              : 'Photosensibilité (lumières clignotantes) : vigilance particulière',
+          'Effort physique : vigilance particulière',
         );
       }
+
+      if (triggerFactors.noise == true) {
+        lines.add('Bruit : vigilance particulière');
+      }
+
+      if (triggerFactors.crowd == true) {
+        lines.add('Foule : vigilance particulière');
+      }
+
+      if (triggerFactors.confinedSpaces == true) {
+        lines.add(
+          'Espaces confinés : vigilance particulière',
+        );
+      }
+
+      final other = triggerFactors.other?.trim();
+
+      if (other != null && other.isNotEmpty) {
+        lines.add('Autre : $other');
+      }
     }
+
+    // Informations pratiques (tout ce qui vient du profil Activités).
 
     lines.addAll(_walkingEffortVigilanceLines());
 
@@ -604,15 +726,66 @@ class CareInfoSheetPage extends StatelessWidget {
       }
     }
 
-    if (triggerFactors.hasTriggerFactors) {
-      final other = triggerFactors.other?.trim();
+    lines.addAll(_overnightStayLines);
 
-      if (other != null && other.isNotEmpty) {
-        lines.add('Autre : $other');
+    lines.addAll(_dailyLifeLines);
+
+    return lines;
+  }
+
+  /// Nuitée (profil Activités) : appareillage utilisé la nuit (résolu
+  /// depuis le dispositif médical déjà déclaré, jamais ressaisi ici),
+  /// besoin d'alimentation électrique de secours, surveillance
+  /// nocturne.
+  List<String> get _overnightStayLines {
+    final overnightStay =
+        child.activityProfile?.overnightStay;
+
+    if (overnightStay == null) {
+      return [];
+    }
+
+    final lines = <String>[];
+
+    if (overnightStay.usesNightDevice &&
+        overnightStay.nightDeviceIds.isNotEmpty) {
+      final deviceNames = child
+          .essentialInformation
+          .medicalDevices
+          .where(
+            (device) => overnightStay.nightDeviceIds
+                .contains(device.deviceId),
+          )
+          .map((device) => device.deviceName?.trim())
+          .where(
+            (name) => name != null && name.isNotEmpty,
+          )
+          .cast<String>()
+          .toList();
+
+      if (deviceNames.isNotEmpty) {
+        lines.add(
+          'Nuitée : utilise ${_joinWithAnd(deviceNames)} pendant la nuit',
+        );
       }
     }
 
-    lines.addAll(_dailyLifeLines);
+    if (overnightStay.requiresElectricity &&
+        overnightStay.powerFailureIsCritical) {
+      lines.add(
+        'Nuitée : alimentation électrique de secours nécessaire en cas de coupure',
+      );
+    }
+
+    if (overnightStay.requiresNightSupervision) {
+      final details = overnightStay
+          .nightSupervisionDetails
+          ?.trim();
+
+      if (details != null && details.isNotEmpty) {
+        lines.add('Nuitée : surveillance nécessaire — $details');
+      }
+    }
 
     return lines;
   }
@@ -645,11 +818,13 @@ class CareInfoSheetPage extends StatelessWidget {
 
   // ---------------------------------------------------------------------
   // Section 3 — "Matériel à prévoir".
-  // Récapitulatif des dispositifs médicaux, une seule fois (ils
-  // n'apparaissent plus dans la section vigilance/sécurité).
+  // Uniquement les dispositifs à emporter/préparer pour chaque sortie.
+  // Les dispositifs portés/implantés en permanence sont mentionnés dans
+  // la section 1 à la place, une seule fois au total.
   // ---------------------------------------------------------------------
 
-  List<String> get _equipmentLines => _medicalDeviceLines;
+  List<String> get _equipmentLines =>
+      _equipmentToBringLines;
 
   List<String> get _contactLines {
     final contacts = [

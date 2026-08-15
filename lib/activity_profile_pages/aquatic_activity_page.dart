@@ -25,7 +25,6 @@ class _AquaticActivityPageState
     extends State<AquaticActivityPage> {
   late bool _requiresAdaptations;
 
-  late bool _mayJumpIntoWater;
   late bool _requiresFlotationVestNearWater;
   late bool _requiresDedicatedAdultNearWater;
 
@@ -55,9 +54,6 @@ class _AquaticActivityPageState
 
     _requiresAdaptations =
         data.requiresAdaptations;
-
-    _mayJumpIntoWater =
-        data.mayJumpIntoWater;
 
     _requiresFlotationVestNearWater =
         data.requiresFlotationVestNearWater;
@@ -117,7 +113,6 @@ class _AquaticActivityPageState
       _requiresAdaptations = value;
 
       if (!value) {
-        _mayJumpIntoWater = false;
         _requiresFlotationVestNearWater = false;
         _requiresDedicatedAdultNearWater = false;
         _requiresSpecialEquipment = false;
@@ -134,7 +129,6 @@ class _AquaticActivityPageState
     data.requiresAdaptations = value;
 
     if (!value) {
-      data.mayJumpIntoWater = false;
       data.requiresFlotationVestNearWater = false;
       data.requiresDedicatedAdultNearWater = false;
       data.requiresSpecialEquipment = false;
@@ -148,36 +142,31 @@ class _AquaticActivityPageState
     }
   }
 
-  void _updateMayJumpIntoWater(
-    bool value,
-  ) {
-    setState(() {
-      _mayJumpIntoWater = value;
-    });
-
-    widget
-        .activityProfileController
-        .draft
-        .aquaticActivity
-        .mayJumpIntoWater = value;
-  }
-
-  bool get _cannotSwimPerHealthProfile {
+  WaterVigilance? get _waterVigilancePerHealthProfile {
     final childId =
         widget.activityProfileController.draft.childId;
 
     if (childId == null) {
-      return false;
+      return null;
     }
 
     final child =
         ChildRepository.instance.findByChildId(childId);
 
     return child
-            ?.essentialInformation
-            .triggerFactors
-            .waterVigilance ==
+        ?.essentialInformation
+        .triggerFactors
+        .waterVigilance;
+  }
+
+  bool get _cannotSwimPerHealthProfile {
+    return _waterVigilancePerHealthProfile ==
         WaterVigilance.cannotSwim;
+  }
+
+  bool get _mayJumpIntoWaterPerHealthProfile {
+    return _waterVigilancePerHealthProfile ==
+        WaterVigilance.mayJumpIntoWater;
   }
 
   void _updateRequiresFlotationVestNearWater(
@@ -439,15 +428,17 @@ class _AquaticActivityPageState
 
           const SizedBox(height: 20),
 
-          SkYesNoField(
-            label:
-                'Votre enfant risque-t-il de se jeter dans l’eau ?',
-            value: _mayJumpIntoWater,
-            onChanged:
-                _updateMayJumpIntoWater,
-          ),
+          if (_mayJumpIntoWaterPerHealthProfile) ...[
+            const Text(
+              'D’après le profil santé de l’enfant, il risque de se jeter dans l’eau.',
+              style: TextStyle(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
+          ],
 
           if (_cannotSwimPerHealthProfile) ...[
             const SizedBox(height: 12),

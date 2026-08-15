@@ -53,7 +53,7 @@ class WaterRules {
       );
     }
 
-    if (aquaticActivity.mayJumpIntoWater) {
+    if (waterVigilance == WaterVigilance.mayJumpIntoWater) {
       recommendations.add(
         Recommendation(
           id: 'water_may_jump_into_water',

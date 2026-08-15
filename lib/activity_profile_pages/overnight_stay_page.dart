@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../controllers/activity_profile_controller.dart';
+import '../models/medical_device_data.dart';
+import '../repositories/child_repository.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_text_field.dart';
 import '../widgets/sk_yes_no_field.dart';
@@ -28,9 +30,6 @@ class _OvernightStayPageState
   late bool _requiresNightSupervision;
 
   late final TextEditingController
-      _nightDeviceController;
-
-  late final TextEditingController
       _nightSupervisionController;
 
   @override
@@ -54,10 +53,6 @@ class _OvernightStayPageState
     _requiresNightSupervision =
         data.requiresNightSupervision;
 
-    _nightDeviceController = TextEditingController(
-      text: data.nightDeviceDetails ?? '',
-    );
-
     _nightSupervisionController =
         TextEditingController(
       text: data.nightSupervisionDetails ?? '',
@@ -66,10 +61,42 @@ class _OvernightStayPageState
 
   @override
   void dispose() {
-    _nightDeviceController.dispose();
     _nightSupervisionController.dispose();
 
     super.dispose();
+  }
+
+  List<MedicalDeviceData> get _declaredMedicalDevices {
+    final childId =
+        widget.activityProfileController.draft.childId;
+
+    if (childId == null) {
+      return [];
+    }
+
+    final child =
+        ChildRepository.instance.findByChildId(childId);
+
+    return child?.essentialInformation.medicalDevices ??
+        [];
+  }
+
+  void _toggleNightDeviceId(
+    String deviceId,
+    bool selected,
+  ) {
+    final data = widget
+        .activityProfileController
+        .draft
+        .overnightStay;
+
+    setState(() {
+      if (selected) {
+        data.nightDeviceIds.add(deviceId);
+      } else {
+        data.nightDeviceIds.remove(deviceId);
+      }
+    });
   }
 
   void _updateRequiresAdaptations(bool value) {
@@ -87,7 +114,6 @@ class _OvernightStayPageState
         _powerFailureIsCritical = false;
         _requiresNightSupervision = false;
 
-        _nightDeviceController.clear();
         _nightSupervisionController.clear();
       }
     });
@@ -96,7 +122,7 @@ class _OvernightStayPageState
 
     if (!value) {
       data.usesNightDevice = false;
-      data.nightDeviceDetails = null;
+      data.nightDeviceIds.clear();
 
       data.requiresElectricity = false;
       data.powerFailureIsCritical = false;
@@ -118,28 +144,16 @@ class _OvernightStayPageState
       if (!value) {
         _requiresElectricity = false;
         _powerFailureIsCritical = false;
-        _nightDeviceController.clear();
       }
     });
 
     data.usesNightDevice = value;
 
     if (!value) {
-      data.nightDeviceDetails = null;
+      data.nightDeviceIds.clear();
       data.requiresElectricity = false;
       data.powerFailureIsCritical = false;
     }
-  }
-
-  void _updateNightDeviceDetails(String value) {
-    final trimmedValue = value.trim();
-
-    widget
-            .activityProfileController
-            .draft
-            .overnightStay
-            .nightDeviceDetails =
-        trimmedValue.isEmpty ? null : trimmedValue;
   }
 
   void _updateRequiresElectricity(bool value) {
@@ -256,14 +270,53 @@ class _OvernightStayPageState
             if (_usesNightDevice) ...[
               const SizedBox(height: 12),
 
-              SkTextField(
-                label:
-                    'Précisez l’appareillage utilisé',
-                controller:
-                    _nightDeviceController,
-                onChanged:
-                    _updateNightDeviceDetails,
-              ),
+              if (_declaredMedicalDevices.isEmpty)
+                const Text(
+                  'Aucun dispositif médical renseigné pour cet enfant. Ajoutez-le d’abord dans le profil santé, section « Dispositifs médicaux », pour pouvoir le sélectionner ici.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontStyle: FontStyle.italic,
+                  ),
+                )
+              else ...[
+                const Text(
+                  'Lequel (ou lesquels) ?',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+
+                for (final device
+                    in _declaredMedicalDevices)
+                  CheckboxListTile(
+                    contentPadding:
+                        EdgeInsets.zero,
+                    controlAffinity:
+                        ListTileControlAffinity
+                            .leading,
+                    title: Text(
+                      device.deviceName
+                              ?.trim()
+                              .isNotEmpty ==
+                              true
+                          ? device.deviceName!
+                          : 'Dispositif sans nom',
+                    ),
+                    value: widget
+                        .activityProfileController
+                        .draft
+                        .overnightStay
+                        .nightDeviceIds
+                        .contains(device.deviceId),
+                    onChanged: (selected) {
+                      _toggleNightDeviceId(
+                        device.deviceId,
+                        selected ?? false,
+                      );
+                    },
+                  ),
+              ],
 
               const SizedBox(height: 24),
 

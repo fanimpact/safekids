@@ -25,20 +25,33 @@ class OvernightStayRules {
       return recommendations;
     }
 
-    // Appareil utilisé pendant la nuit.
-    if (overnightStay.usesNightDevice) {
-      final deviceDetails =
-          overnightStay.nightDeviceDetails?.trim();
+    // Appareil utilisé pendant la nuit : le nom vient du dispositif
+    // médical déjà déclaré dans le profil santé (une seule source),
+    // jamais ressaisi ici.
+    if (overnightStay.usesNightDevice &&
+        overnightStay.nightDeviceIds.isNotEmpty) {
+      final deviceNames = child
+          .essentialInformation
+          .medicalDevices
+          .where(
+            (device) => overnightStay.nightDeviceIds
+                .contains(device.deviceId),
+          )
+          .map((device) => device.deviceName?.trim())
+          .where(
+            (name) => name != null && name.isNotEmpty,
+          )
+          .cast<String>()
+          .toList();
 
-      if (deviceDetails != null &&
-          deviceDetails.isNotEmpty) {
+      if (deviceNames.isNotEmpty) {
         recommendations.add(
           Recommendation(
             id: 'overnight_night_device',
             category:
                 RecommendationCategory.equipment,
             childId: childId,
-            text: deviceDetails,
+            text: deviceNames.join(' et '),
           ),
         );
       }

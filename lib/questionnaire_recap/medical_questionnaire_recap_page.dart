@@ -722,6 +722,17 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
         _qaText('Nom du dispositif', device.deviceName),
       );
       lines.add(_qaText('À quoi sert-il ?', device.mainUse));
+      lines.add(
+        _qa(
+          'Comment ce dispositif est-il utilisé ?',
+          switch (device.isWornOrImplantedPermanently) {
+            true => 'Porté ou implanté en permanence',
+            false =>
+              'À emporter ou préparer pour chaque sortie',
+            null => 'Non renseigné',
+          },
+        ),
+      );
     }
 
     return lines;

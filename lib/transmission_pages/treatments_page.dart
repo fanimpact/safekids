@@ -217,6 +217,19 @@ class _TreatmentsPageState
     });
   }
 
+  void _updateMedicalDeviceWornPermanently(
+    int index,
+    bool value,
+  ) {
+    setState(() {
+      widget.transmissionController
+          .updateMedicalDeviceWornPermanently(
+        index,
+        value,
+      );
+    });
+  }
+
   void _continue() {
     Navigator.push(
       context,
@@ -1395,6 +1408,54 @@ class _TreatmentsPageState
                     value,
                   );
                 },
+              ),
+
+              const SizedBox(
+                height: 20,
+              ),
+
+              const Text(
+                "Comment ce dispositif est-il utilisé ?",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
+              RadioGroup<bool>(
+                groupValue:
+                    medicalDevices[index]
+                        .isWornOrImplantedPermanently,
+                onChanged: (value) {
+                  if (value == null) {
+                    return;
+                  }
+
+                  _updateMedicalDeviceWornPermanently(
+                    index,
+                    value,
+                  );
+                },
+                child: const Column(
+                  children: [
+                    RadioListTile<bool>(
+                      contentPadding:
+                          EdgeInsets.zero,
+                      title: Text(
+                        "Porté ou implanté en permanence",
+                      ),
+                      value: true,
+                    ),
+                    RadioListTile<bool>(
+                      contentPadding:
+                          EdgeInsets.zero,
+                      title: Text(
+                        "À emporter ou préparer pour chaque sortie",
+                      ),
+                      value: false,
+                    ),
+                  ],
+                ),
               ),
 
               if (medicalDevices
