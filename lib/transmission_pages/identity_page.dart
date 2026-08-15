@@ -5,7 +5,6 @@ import '../utils/date_format_utils.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_number_field.dart';
 import '../widgets/sk_text_field.dart';
-import '../widgets/sk_yes_no_field.dart';
 import 'diagnosed_pathologies_page.dart';
 
 class IdentityPage extends StatefulWidget {
@@ -28,7 +27,6 @@ class _IdentityPageState extends State<IdentityPage> {
 
   DateTime? _dateOfBirth;
   DateTime? _measurementsUpdatedAt;
-  bool? _hasDiagnosedPathologies;
 
   @override
   void initState() {
@@ -56,8 +54,6 @@ class _IdentityPageState extends State<IdentityPage> {
     _dateOfBirth = identity.dateOfBirth;
     _measurementsUpdatedAt =
         identity.measurementsUpdatedAt;
-    _hasDiagnosedPathologies =
-        identity.hasDiagnosedPathologies;
   }
 
   @override
@@ -121,27 +117,7 @@ class _IdentityPageState extends State<IdentityPage> {
         .updateMeasurementsUpdatedAt(selectedDate);
   }
 
-  void _updateDiagnosedPathologies(bool value) {
-    setState(() {
-      _hasDiagnosedPathologies = value;
-    });
-
-    widget.transmissionController
-        .updateHasDiagnosedPathologies(value);
-  }
-
   void _continue() {
-    if (_hasDiagnosedPathologies == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "Répondez à la question concernant la santé de votre enfant.",
-          ),
-        ),
-      );
-      return;
-    }
-
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -250,16 +226,6 @@ class _IdentityPageState extends State<IdentityPage> {
                 ),
               ),
             ],
-
-            const SizedBox(height: 30),
-
-            SkYesNoField(
-              label:
-                  "Votre enfant présente-t-il une ou plusieurs pathologies diagnostiquées ou allergies importantes nécessitant une vigilance particulière ?",
-              value: _hasDiagnosedPathologies,
-              onChanged:
-                  _updateDiagnosedPathologies,
-            ),
 
             const SizedBox(height: 30),
 

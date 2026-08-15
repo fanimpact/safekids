@@ -330,10 +330,6 @@ class EmergencyInfoSheetPage extends StatelessWidget {
     final triggerFactors =
         child.essentialInformation.triggerFactors;
 
-    if (!triggerFactors.hasTriggerFactors) {
-      return [];
-    }
-
     final lines = <String>[];
 
     if (triggerFactors.waterContact == true) {

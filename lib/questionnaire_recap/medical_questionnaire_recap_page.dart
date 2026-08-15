@@ -129,10 +129,6 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
                   identity.measurementsUpdatedAt!,
                 ),
         ),
-      _qaBool(
-        'Votre enfant présente-t-il une ou plusieurs pathologies diagnostiquées ou allergies importantes nécessitant une vigilance particulière ?',
-        identity.hasDiagnosedPathologies,
-      ),
     ];
   }
 
@@ -374,16 +370,7 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
     final triggerFactors =
         child.essentialInformation.triggerFactors;
 
-    final lines = <String>[
-      _qaBool(
-        'Votre enfant présente-t-il des facteurs déclencheurs ou des sensibilités nécessitant une vigilance particulière ?',
-        triggerFactors.hasTriggerFactors,
-      ),
-    ];
-
-    if (!triggerFactors.hasTriggerFactors) {
-      return lines;
-    }
+    final lines = <String>[];
 
     lines.add(
       _qaBool(

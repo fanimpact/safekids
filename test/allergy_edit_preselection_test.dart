@@ -101,14 +101,6 @@ void main() {
         'Camille',
       );
 
-      // Question combinée pathologies/allergies : Oui, pour pouvoir
-      // continuer vers la page qui contient les deux sections.
-      await answerYesNoField(
-        tester,
-        'pathologies diagnostiquées ou allergies',
-        true,
-      );
-
       await continueFromIdentityPage(tester);
 
       expect(find.byType(DiagnosedPathologiesPage), findsOneWidget);
@@ -160,6 +152,50 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(TriggerFactorsPage), findsOneWidget);
+
+      // Toutes les questions individuelles sont désormais posées à tout
+      // le monde (plus de question filtre) et obligatoires avant de
+      // continuer.
+      await answerYesNoField(
+        tester,
+        'lumières clignotantes',
+        false,
+      );
+      await answerYesNoField(
+        tester,
+        'chaleur nécessite',
+        false,
+      );
+      await answerYesNoField(
+        tester,
+        'fatigue ou le manque de sommeil',
+        false,
+      );
+      await answerYesNoField(
+        tester,
+        'bruit nécessite',
+        false,
+      );
+      await answerYesNoField(
+        tester,
+        'foule nécessite',
+        false,
+      );
+      await answerYesNoField(
+        tester,
+        'espaces confinés',
+        false,
+      );
+      await answerYesNoField(
+        tester,
+        'effort physique nécessite',
+        false,
+      );
+      await answerYesNoField(
+        tester,
+        'stress ou les émotions fortes',
+        false,
+      );
 
       await tester.ensureVisible(find.text('Continuer'));
       await tester.pumpAndSettle();
@@ -249,8 +285,8 @@ void main() {
   );
 
   testWidgets(
-    'Cas isolé : question combinée jamais répondue (hasDiagnosedPathologies '
-    'null) avec une allergie déjà enregistrée',
+    'Cas isolé : IdentityPage ne pose plus de question filtre, on continue '
+    'directement même sans hasDiagnosedPathologies renseigné',
     (tester) async {
       final savedProfile = ChildProfileData(
         childId: 'test-child-3',
@@ -280,15 +316,11 @@ void main() {
 
       await pumpFreshIdentityPage(tester, editController);
 
-      // La question combinée n'a jamais été répondue : il faut répondre
-      // pour pouvoir continuer (comportement voulu).
-      await answerYesNoField(
-        tester,
-        'pathologies diagnostiquées ou allergies',
-        false,
-      );
-
+      // Plus de question filtre à répondre sur IdentityPage : on doit
+      // pouvoir continuer directement.
       await continueFromIdentityPage(tester);
+
+      expect(find.byType(DiagnosedPathologiesPage), findsOneWidget);
 
       expect(
         yesNoValue(tester, 'une ou plusieurs allergies'),

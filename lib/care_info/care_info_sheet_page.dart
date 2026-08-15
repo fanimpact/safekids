@@ -628,91 +628,88 @@ class CareInfoSheetPage extends StatelessWidget {
       ),
     ];
 
-    if (triggerFactors.hasTriggerFactors) {
-      // Danger médical direct.
+    // Danger médical direct.
 
-      final waterLine = _waterLine(triggerFactors);
+    final waterLine = _waterLine(triggerFactors);
 
-      if (waterLine != null) {
-        lines.add(waterLine);
-      }
+    if (waterLine != null) {
+      lines.add(waterLine);
+    }
 
-      final heightLine = _heightLine(triggerFactors);
+    final heightLine = _heightLine(triggerFactors);
 
-      if (heightLine != null) {
-        lines.add(heightLine);
-      }
+    if (heightLine != null) {
+      lines.add(heightLine);
+    }
 
-      if (triggerFactors.flashingLights == true) {
-        lines.add(
-          triggerFactors.requiresGlassesOutdoors
-              ? 'Photosensibilité (lumières clignotantes) : vigilance particulière, port de lunettes nécessaire en extérieur'
-              : 'Photosensibilité (lumières clignotantes) : vigilance particulière',
-        );
-      }
+    if (triggerFactors.flashingLights == true) {
+      lines.add(
+        triggerFactors.requiresGlassesOutdoors
+            ? 'Photosensibilité (lumières clignotantes) : vigilance particulière, port de lunettes nécessaire en extérieur'
+            : 'Photosensibilité (lumières clignotantes) : vigilance particulière',
+      );
+    }
 
-      if (triggerFactors.animals == true) {
-        lines.add(
-          switch (triggerFactors.animalVigilance) {
-            AnimalVigilance.importantFear =>
-              'Animaux : l’enfant a une peur importante des animaux',
-            AnimalVigilance
-                .approachesWithoutPerceivingDanger =>
-              'Animaux : l’enfant peut s’approcher des animaux sans percevoir le danger',
-            AnimalVigilance.other =>
-              'Animaux : ${_detailOrFallback(
-                triggerFactors.otherAnimalVigilance,
-              )}',
-            null => 'Animaux : vigilance particulière',
-          },
-        );
-      }
+    if (triggerFactors.animals == true) {
+      lines.add(
+        switch (triggerFactors.animalVigilance) {
+          AnimalVigilance.importantFear =>
+            'Animaux : l’enfant a une peur importante des animaux',
+          AnimalVigilance
+              .approachesWithoutPerceivingDanger =>
+            'Animaux : l’enfant peut s’approcher des animaux sans percevoir le danger',
+          AnimalVigilance.other =>
+            'Animaux : ${_detailOrFallback(
+              triggerFactors.otherAnimalVigilance,
+            )}',
+          null => 'Animaux : vigilance particulière',
+        },
+      );
+    }
 
-      // Vigilances générales.
+    // Vigilances générales.
 
-      if (triggerFactors.heat == true) {
-        lines.add('Chaleur : vigilance particulière');
-      }
+    if (triggerFactors.heat == true) {
+      lines.add('Chaleur : vigilance particulière');
+    }
 
-      if (triggerFactors.fatigueOrLackOfSleep ==
-          true) {
-        lines.add(
-          'Fatigue ou manque de sommeil : vigilance particulière',
-        );
-      }
+    if (triggerFactors.fatigueOrLackOfSleep == true) {
+      lines.add(
+        'Fatigue ou manque de sommeil : vigilance particulière',
+      );
+    }
 
-      if (triggerFactors.stressOrStrongEmotions ==
-          true) {
-        lines.add(
-          'Stress ou émotions fortes : vigilance particulière',
-        );
-      }
+    if (triggerFactors.stressOrStrongEmotions ==
+        true) {
+      lines.add(
+        'Stress ou émotions fortes : vigilance particulière',
+      );
+    }
 
-      if (triggerFactors.physicalEffort == true) {
-        lines.add(
-          'Effort physique : vigilance particulière',
-        );
-      }
+    if (triggerFactors.physicalEffort == true) {
+      lines.add(
+        'Effort physique : vigilance particulière',
+      );
+    }
 
-      if (triggerFactors.noise == true) {
-        lines.add('Bruit : vigilance particulière');
-      }
+    if (triggerFactors.noise == true) {
+      lines.add('Bruit : vigilance particulière');
+    }
 
-      if (triggerFactors.crowd == true) {
-        lines.add('Foule : vigilance particulière');
-      }
+    if (triggerFactors.crowd == true) {
+      lines.add('Foule : vigilance particulière');
+    }
 
-      if (triggerFactors.confinedSpaces == true) {
-        lines.add(
-          'Espaces confinés : vigilance particulière',
-        );
-      }
+    if (triggerFactors.confinedSpaces == true) {
+      lines.add(
+        'Espaces confinés : vigilance particulière',
+      );
+    }
 
-      final other = triggerFactors.other?.trim();
+    final other = triggerFactors.other?.trim();
 
-      if (other != null && other.isNotEmpty) {
-        lines.add('Autre : $other');
-      }
+    if (other != null && other.isNotEmpty) {
+      lines.add('Autre : $other');
     }
 
     // Informations pratiques (tout ce qui vient du profil Activités).

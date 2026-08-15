@@ -23,8 +23,6 @@ class TriggerFactorsPage extends StatefulWidget {
 
 class _TriggerFactorsPageState
     extends State<TriggerFactorsPage> {
-  late bool _hasTriggerFactors;
-
   bool? _flashingLights;
   late bool _requiresGlassesOutdoors;
 
@@ -65,9 +63,6 @@ class _TriggerFactorsPageState
         .transmissionController
         .formData
         .triggerFactors;
-
-    _hasTriggerFactors =
-        triggerFactors.hasTriggerFactors;
 
     _flashingLights =
         triggerFactors.flashingLights;
@@ -152,49 +147,6 @@ class _TriggerFactorsPageState
     _otherController.dispose();
 
     super.dispose();
-  }
-
-  void _updateHasTriggerFactors(
-    bool value,
-  ) {
-    setState(() {
-      _hasTriggerFactors = value;
-
-      if (!value) {
-        _flashingLights = null;
-        _requiresGlassesOutdoors =
-            false;
-        _heat = null;
-        _fatigueOrLackOfSleep =
-            null;
-        _noise = null;
-        _crowd = null;
-        _confinedSpaces = null;
-        _physicalEffort = null;
-        _stressOrStrongEmotions =
-            null;
-
-        _waterContact = false;
-        _waterVigilance = null;
-        _otherWaterVigilanceController
-            .clear();
-
-        _animals = false;
-        _animalVigilance = null;
-        _otherAnimalVigilanceController
-            .clear();
-
-        _height = false;
-        _heightVigilance = null;
-        _otherHeightVigilanceController
-            .clear();
-
-        _otherController.clear();
-      }
-    });
-
-    widget.transmissionController
-        .updateHasTriggerFactors(value);
   }
 
   void _updateFlashingLights(
@@ -405,29 +357,27 @@ class _TriggerFactorsPageState
   }
 
   void _continue() {
-    if (_hasTriggerFactors) {
-      final hasUnansweredFactor =
-          _flashingLights == null ||
-              _heat == null ||
-              _fatigueOrLackOfSleep == null ||
-              _noise == null ||
-              _crowd == null ||
-              _confinedSpaces == null ||
-              _physicalEffort == null ||
-              _stressOrStrongEmotions == null;
+    final hasUnansweredFactor =
+        _flashingLights == null ||
+            _heat == null ||
+            _fatigueOrLackOfSleep == null ||
+            _noise == null ||
+            _crowd == null ||
+            _confinedSpaces == null ||
+            _physicalEffort == null ||
+            _stressOrStrongEmotions == null;
 
-      if (hasUnansweredFactor) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Répondez par oui ou par non à chaque facteur déclencheur avant de continuer.",
-            ),
+    if (hasUnansweredFactor) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Répondez par oui ou par non à chaque facteur déclencheur avant de continuer.",
           ),
-        );
+        ),
+      );
 
-        return;
-      }
+      return;
     }
 
     Navigator.push(
@@ -738,39 +688,25 @@ class _TriggerFactorsPageState
     return QuestionnairePage(
       title: '',
       subtitle:
-          'Votre enfant présente-t-il des facteurs déclencheurs ou des sensibilités nécessitant une vigilance particulière ?',
+          'Facteurs déclenchants et sensibilités nécessitant une vigilance particulière.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,
         children: [
-          SkYesNoField(
-            label:
-                'Votre enfant présente-t-il des facteurs déclencheurs ou des sensibilités nécessitant une vigilance particulière ?',
-            value:
-                _hasTriggerFactors,
-            onChanged:
-                _updateHasTriggerFactors,
+          const Text(
+            'Répondez à chaque question ci-dessous.',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight:
+                  FontWeight.bold,
+            ),
           ),
 
-          if (_hasTriggerFactors) ...[
-            const SizedBox(
-              height: 24,
-            ),
+          const SizedBox(
+            height: 12,
+          ),
 
-            const Text(
-              'Répondez à chaque question ci-dessous.',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight:
-                    FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(
-              height: 12,
-            ),
-
-            SkYesNoField(
+          SkYesNoField(
               label:
                   'Les lumières clignotantes (photosensibilité) nécessitent-elles une vigilance particulière pour votre enfant ?',
               value:
@@ -903,7 +839,6 @@ class _TriggerFactorsPageState
                   .transmissionController
                   .updateOtherTriggerFactor,
             ),
-          ],
 
           const SizedBox(
             height: 30,
