@@ -8,9 +8,76 @@ import '../emergency_mode/emergency_mode_button_list_page.dart';
 import '../emergency_mode/emergency_mode_child_picker_page.dart';
 import '../repositories/child_repository.dart';
 import '../sharing/create_share_link_page.dart';
+import '../utils/date_format_utils.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
+
+  String _offlineMessage(DateTime? lastSyncAt) {
+    if (lastSyncAt == null) {
+      return 'Hors connexion — données non synchronisées.';
+    }
+
+    final hour = lastSyncAt.hour
+        .toString()
+        .padLeft(2, '0');
+    final minute = lastSyncAt.minute
+        .toString()
+        .padLeft(2, '0');
+
+    return 'Hors connexion — données du '
+        '${formatShortDate(lastSyncAt)} à $hour:$minute.';
+  }
+
+  Widget _buildOfflineBanner() {
+    return ListenableBuilder(
+      listenable: ChildRepository.instance,
+      builder: (context, _) {
+        if (!ChildRepository.instance.isOffline) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Colors.orange.shade200,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.cloud_off,
+                  color: Colors.orange.shade800,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _offlineMessage(
+                      ChildRepository.instance.lastSyncAt,
+                    ),
+                    style: TextStyle(
+                      color: Colors.orange.shade900,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   void _showComingSoon(
     BuildContext context,
@@ -312,7 +379,11 @@ class HomePage extends StatelessWidget {
             crossAxisAlignment:
                 CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 28),
+              const SizedBox(height: 12),
+
+              _buildOfflineBanner(),
+
+              const SizedBox(height: 16),
 
               const Text(
                 'Que souhaitez-vous faire ?',

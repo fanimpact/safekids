@@ -17,7 +17,8 @@ void main() async {
   // L'app doit pouvoir s'ouvrir même sans réseau ou si Supabase est
   // indisponible (Mode Urgence en particulier ne doit jamais rester
   // bloqué faute de connexion) : on tente la synchronisation avec un
-  // délai maximum, mais on lance l'app dans tous les cas.
+  // délai maximum ; en cas d'échec, on affiche la dernière copie
+  // locale connue plutôt qu'une liste vide.
   try {
     await ensureSignedIn().timeout(
       const Duration(seconds: 10),
@@ -30,7 +31,14 @@ void main() async {
       'Synchronisation Supabase indisponible au '
       'démarrage : $error',
     );
+
+    await ChildRepository.instance
+        .loadFromLocalCacheIfAvailable();
   }
+
+  // Dès que le réseau revient (au démarrage ou plus tard pendant la
+  // session), retente une synchronisation en arrière-plan.
+  ChildRepository.instance.startAutoResync();
 
   runApp(
     const SafeKidsApp(),

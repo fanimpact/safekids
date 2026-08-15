@@ -1,3 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/activity_profile_data.dart';
@@ -31,17 +37,43 @@ import '../models/walking_effort_data.dart';
 /// fois au démarrage par [loadFromSupabase] : les lectures (`children`,
 /// `findByChildId`) restent synchrones pour ne rien changer aux ~30
 /// endroits de l'app qui les utilisent directement dans un `build()`.
-class ChildRepository {
+///
+/// Une copie persistante (survit à la fermeture de l'app) est écrite à
+/// chaque synchronisation réussie, et sert de secours au démarrage si
+/// Supabase est injoignable (pas de réseau, service indisponible) —
+/// indispensable pour que le Mode Urgence et la fiche secours
+/// fonctionnent hors-ligne. `ChangeNotifier` permet à l'écran d'accueil
+/// de savoir quand une resynchronisation en arrière-plan a réussi.
+class ChildRepository extends ChangeNotifier {
   ChildRepository._();
 
   static final ChildRepository instance = ChildRepository._();
 
+  static const _cacheKey = 'safekids_cached_children';
+  static const _cacheSyncedAtKey =
+      'safekids_cache_synced_at';
+
   final List<CompleteChildProfileData> _children = [];
+
+  bool _isOffline = false;
+  DateTime? _lastSyncAt;
+
+  StreamSubscription<List<ConnectivityResult>>?
+      _connectivitySubscription;
 
   SupabaseClient get _client => Supabase.instance.client;
 
   List<CompleteChildProfileData> get children =>
       List.unmodifiable(_children);
+
+  /// true si les données affichées viennent de la copie locale plutôt
+  /// que d'une synchronisation Supabase réussie.
+  bool get isOffline => _isOffline;
+
+  /// Date de la dernière synchronisation Supabase réussie (celle qui a
+  /// produit les données actuellement affichées, en ligne ou hors
+  /// ligne).
+  DateTime? get lastSyncAt => _lastSyncAt;
 
   CompleteChildProfileData? findByChildId(
     String childId,
@@ -59,8 +91,15 @@ class ChildRepository {
     final parentId = _client.auth.currentUser?.id;
 
     if (parentId == null) {
-      _children.clear();
-      return;
+      // Ne jamais réussir silencieusement ici : si on ne sait pas qui
+      // est le parent connecté (ex. session expirée et impossible à
+      // rafraîchir faute de réseau), l'appelant doit passer par le
+      // chemin d'échec pour se rabattre sur la copie locale au lieu
+      // d'afficher une liste vide comme si tout allait bien.
+      throw StateError(
+        'Synchronisation impossible : aucun utilisateur '
+        'Supabase connecté.',
+      );
     }
 
     final enfantsRows = await _client
@@ -102,6 +141,88 @@ class ChildRepository {
     _children
       ..clear()
       ..addAll(loaded);
+
+    await _saveToLocalCache();
+  }
+
+  /// Recharge la dernière copie locale connue (écrite lors de la
+  /// dernière synchronisation Supabase réussie). Utilisé au démarrage
+  /// quand Supabase est injoignable, pour que l'app s'ouvre quand même
+  /// avec les dernières données connues au lieu d'une liste vide —
+  /// notamment pour que le Mode Urgence et la fiche secours restent
+  /// utilisables sans réseau.
+  Future<bool> loadFromLocalCacheIfAvailable() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final raw = prefs.getString(_cacheKey);
+
+    if (raw == null) {
+      return false;
+    }
+
+    try {
+      final items = jsonDecode(raw) as List<dynamic>;
+
+      final loaded = items
+          .map(
+            (item) => _childFromCacheJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList();
+
+      _children
+        ..clear()
+        ..addAll(loaded);
+
+      final syncedAtRaw =
+          prefs.getString(_cacheSyncedAtKey);
+
+      _lastSyncAt = syncedAtRaw == null
+          ? null
+          : DateTime.tryParse(syncedAtRaw);
+      _isOffline = true;
+
+      notifyListeners();
+
+      return true;
+    } catch (error) {
+      debugPrint(
+        'Impossible de lire la copie locale des '
+        'enfants : $error',
+      );
+
+      return false;
+    }
+  }
+
+  /// Écoute les changements de connexion réseau et retente une
+  /// synchronisation Supabase dès qu'une connexion redevient
+  /// disponible — sans bloquer l'utilisateur (échec silencieux, on
+  /// réessaiera au prochain changement de réseau).
+  void startAutoResync() {
+    _connectivitySubscription ??= Connectivity()
+        .onConnectivityChanged
+        .listen((results) async {
+      final hasConnection = results.any(
+        (result) => result != ConnectivityResult.none,
+      );
+
+      if (!hasConnection) {
+        return;
+      }
+
+      try {
+        await loadFromSupabase().timeout(
+          const Duration(seconds: 10),
+        );
+      } catch (error) {
+        debugPrint(
+          'Resynchronisation Supabase toujours '
+          'indisponible après reconnexion : $error',
+        );
+      }
+    });
   }
 
   Future<void> addChild(
@@ -138,6 +259,8 @@ class ChildRepository {
         essentialInformation: child,
       ),
     );
+
+    await _saveToLocalCache();
   }
 
   Future<void> replaceChild(
@@ -170,6 +293,8 @@ class ChildRepository {
         );
 
     existing.essentialInformation = child;
+
+    await _saveToLocalCache();
   }
 
   Future<void> saveActivityProfile({
@@ -191,6 +316,16 @@ class ChildRepository {
 
     child.activityProfile = activityProfile;
     child.activityProfileCompleted = true;
+
+    await _saveToLocalCache();
+  }
+
+  /// Vide le cache en mémoire — utilisé par les tests pour vérifier
+  /// qu'une relecture (Supabase ou copie locale) reconstruit vraiment
+  /// les données, plutôt que de constater qu'elles sont "encore" là.
+  @visibleForTesting
+  void clearForTesting() {
+    _children.clear();
   }
 
   /// Ajoute uniquement au cache local, sans appel réseau — utilisé par
@@ -474,6 +609,93 @@ class ChildRepository {
         OtherInformationData(),
       ),
     );
+  }
+
+  // ---------------------------------------------------------------------
+  // Copie locale persistante (mode hors-ligne)
+  // ---------------------------------------------------------------------
+
+  Future<void> _saveToLocalCache() async {
+    _isOffline = false;
+    _lastSyncAt = DateTime.now();
+
+    final prefs = await SharedPreferences.getInstance();
+
+    final items = _children
+        .map(_childToCacheJson)
+        .toList();
+
+    await prefs.setString(_cacheKey, jsonEncode(items));
+    await prefs.setString(
+      _cacheSyncedAtKey,
+      _lastSyncAt!.toIso8601String(),
+    );
+
+    notifyListeners();
+  }
+
+  /// Assemble un enfant complet en un seul bloc JSON, en réutilisant
+  /// telles quelles les méthodes qui savent déjà le décomposer pour
+  /// Supabase (`_enfantRow`/`_santeRow`/`_activitesRow`) — même forme,
+  /// juste rassemblée en un objet local au lieu de trois lignes de
+  /// tables séparées.
+  Map<String, dynamic> _childToCacheJson(
+    CompleteChildProfileData child,
+  ) {
+    final essential = child.essentialInformation;
+    final childId = essential.childId ?? '';
+    final activityProfile = child.activityProfile;
+
+    return {
+      'enfant': _enfantRow(essential, ''),
+      'sante': _santeRow(childId, essential),
+      'activites': activityProfile == null
+          ? null
+          : _activitesRow(childId, activityProfile),
+      'activityProfileCompleted':
+          child.activityProfileCompleted,
+    };
+  }
+
+  CompleteChildProfileData _childFromCacheJson(
+    Map<String, dynamic> json,
+  ) {
+    final enfant = Map<String, dynamic>.from(
+      json['enfant'] as Map,
+    );
+    final childId = enfant['id'] as String;
+
+    final sante = json['sante'] == null
+        ? null
+        : Map<String, dynamic>.from(
+            json['sante'] as Map,
+          );
+
+    final activites = json['activites'] == null
+        ? null
+        : Map<String, dynamic>.from(
+            json['activites'] as Map,
+          );
+
+    return CompleteChildProfileData(
+      essentialInformation: _childProfileFromRows(
+        childId: childId,
+        enfant: enfant,
+        sante: sante,
+      ),
+      activityProfile: _activityProfileFromRow(activites),
+      activityProfileCompleted:
+          json['activityProfileCompleted'] as bool? ??
+              (activites != null),
+    );
+  }
+
+  /// Déclenche une écriture de la copie locale sans passer par
+  /// Supabase — utilisé par les tests pour vérifier l'aller-retour
+  /// (sauvegarde puis relecture) sans dépendre du réseau.
+  @visibleForTesting
+  Future<void> saveToLocalCacheForTesting() {
+    return _saveToLocalCache();
   }
 
   // ---------------------------------------------------------------------
