@@ -64,6 +64,16 @@ class _ActivityChildSelectionPageState
 
   @override
   Widget build(BuildContext context) {
+    // Sans ça, cette page pourrait continuer d'afficher un enfant
+    // supprimé/ajouté ailleurs entre-temps si elle reste en mémoire
+    // sous une autre page au lieu d'être rouverte à neuf.
+    return ListenableBuilder(
+      listenable: ChildRepository.instance,
+      builder: (context, _) => _buildScaffold(context),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
     final children =
         ChildRepository.instance.children;
 

@@ -48,81 +48,93 @@ class EmergencyInfoChildPickerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final children =
-        ChildRepository.instance.children;
+    // Sans ça, cette page pourrait continuer d'afficher un enfant
+    // supprimé/ajouté ailleurs entre-temps si elle reste en mémoire
+    // sous une autre page au lieu d'être rouverte à neuf.
+    return ListenableBuilder(
+      listenable: ChildRepository.instance,
+      builder: (context, _) {
+        final children =
+            ChildRepository.instance.children;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Informations pour les secours',
-        ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Pour quel enfant ?',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              Expanded(
-                child: children.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'Aucun enfant enregistré.',
-                          textAlign: TextAlign.center,
-                        ),
-                      )
-                    : ListView.separated(
-                        itemCount: children.length,
-                        separatorBuilder:
-                            (context, index) =>
-                                const Divider(),
-                        itemBuilder:
-                            (context, index) {
-                          final child =
-                              children[index];
-
-                          return ListTile(
-                            contentPadding:
-                                EdgeInsets.zero,
-                            leading: const CircleAvatar(
-                              child: Icon(
-                                Icons.child_care,
-                              ),
-                            ),
-                            title: Text(
-                              _displayName(child),
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight:
-                                    FontWeight.w600,
-                              ),
-                            ),
-                            trailing: const Icon(
-                              Icons.chevron_right,
-                            ),
-                            onTap: () => _openSheet(
-                              context,
-                              child,
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text(
+              'Informations pour les secours',
+            ),
           ),
-        ),
-      ),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Pour quel enfant ?',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Expanded(
+                    child: children.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Aucun enfant enregistré.',
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: children.length,
+                            separatorBuilder:
+                                (context, index) =>
+                                    const Divider(),
+                            itemBuilder:
+                                (context, index) {
+                              final child =
+                                  children[index];
+
+                              return ListTile(
+                                contentPadding:
+                                    EdgeInsets.zero,
+                                leading:
+                                    const CircleAvatar(
+                                  child: Icon(
+                                    Icons.child_care,
+                                  ),
+                                ),
+                                title: Text(
+                                  _displayName(child),
+                                  style:
+                                      const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight:
+                                        FontWeight
+                                            .w600,
+                                  ),
+                                ),
+                                trailing: const Icon(
+                                  Icons.chevron_right,
+                                ),
+                                onTap: () =>
+                                    _openSheet(
+                                  context,
+                                  child,
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

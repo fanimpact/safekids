@@ -298,23 +298,33 @@ class ChildrenPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final children =
-        ChildRepository.instance.children;
+    // Revenir sur cette page (ex. après une suppression) ne la
+    // reconstruit pas automatiquement de lui-même côté Flutter : sans
+    // ça, elle continuerait d'afficher une liste figée au moment où
+    // elle a été ouverte, même si un enfant vient d'être supprimé ou
+    // ajouté entre-temps.
+    return ListenableBuilder(
+      listenable: ChildRepository.instance,
+      builder: (context, _) {
+        final children =
+            ChildRepository.instance.children;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Mes enfants',
-        ),
-      ),
-      body: SafeArea(
-        child: children.isEmpty
-            ? _buildEmptyState(context)
-            : _buildChildrenList(
-                context,
-                children,
-              ),
-      ),
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text(
+              'Mes enfants',
+            ),
+          ),
+          body: SafeArea(
+            child: children.isEmpty
+                ? _buildEmptyState(context)
+                : _buildChildrenList(
+                    context,
+                    children,
+                  ),
+          ),
+        );
+      },
     );
   }
 }

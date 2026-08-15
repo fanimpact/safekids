@@ -53,6 +53,14 @@ class ChildRepository extends ChangeNotifier {
   static const _cacheSyncedAtKey =
       'safekids_cache_synced_at';
 
+  // Sur une connexion lente ou instable, une requête Supabase peut
+  // rester en attente indéfiniment sans jamais réussir ni échouer —
+  // l'app resterait alors bloquée (ex. indicateur de chargement qui
+  // tourne sans fin) sans jamais informer l'utilisateur. Cette limite
+  // force chaque écriture à échouer clairement au bout d'un moment
+  // raisonnable plutôt que de rester bloquée.
+  static const _writeTimeout = Duration(seconds: 15);
+
   final List<CompleteChildProfileData> _children = [];
 
   bool _isOffline = false;
@@ -246,13 +254,15 @@ class ChildRepository extends ChangeNotifier {
     // une erreur de doublon.
     await _client
         .from('enfants')
-        .upsert(_enfantRow(child, parentId));
+        .upsert(_enfantRow(child, parentId))
+        .timeout(_writeTimeout);
     await _client
         .from('profils_sante')
         .upsert(
           _santeRow(childId, child),
           onConflict: 'enfant_id',
-        );
+        )
+        .timeout(_writeTimeout);
 
     _children.add(
       CompleteChildProfileData(
@@ -284,15 +294,35 @@ class ChildRepository extends ChangeNotifier {
     await _client
         .from('enfants')
         .update(_enfantRow(child, parentId))
-        .eq('id', childId);
+        .eq('id', childId)
+        .timeout(_writeTimeout);
     await _client
         .from('profils_sante')
         .upsert(
           _santeRow(childId, child),
           onConflict: 'enfant_id',
-        );
+        )
+        .timeout(_writeTimeout);
 
     existing.essentialInformation = child;
+
+    await _saveToLocalCache();
+  }
+
+  /// Supprime définitivement le profil d'un enfant (informations
+  /// essentielles, profil santé, profil activités — les tables liées
+  /// sont configurées en suppression en cascade côté base de
+  /// données) et met à jour la copie locale en conséquence.
+  Future<void> deleteChild(String childId) async {
+    await _client
+        .from('enfants')
+        .delete()
+        .eq('id', childId)
+        .timeout(_writeTimeout);
+
+    _children.removeWhere(
+      (child) => child.childId == childId,
+    );
 
     await _saveToLocalCache();
   }
@@ -312,7 +342,8 @@ class ChildRepository extends ChangeNotifier {
         .upsert(
           _activitesRow(childId, activityProfile),
           onConflict: 'enfant_id',
-        );
+        )
+        .timeout(_writeTimeout);
 
     child.activityProfile = activityProfile;
     child.activityProfileCompleted = true;

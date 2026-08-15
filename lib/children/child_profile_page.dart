@@ -12,6 +12,7 @@ import '../models/child_profile_draft.dart';
 import '../models/complete_child_profile_data.dart';
 import '../questionnaire_recap/activity_questionnaire_recap_page.dart';
 import '../questionnaire_recap/medical_questionnaire_recap_page.dart';
+import '../repositories/child_repository.dart';
 import '../transmission_pages/identity_page.dart';
 import '../utils/age_utils.dart';
 import '../utils/child_name_utils.dart';
@@ -238,6 +239,108 @@ class ChildProfilePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmAndDeleteProfile(
+    BuildContext context,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Supprimer ce profil ?',
+        ),
+        content: Text(
+          'Le profil de $_displayName sera définitivement supprimé, ainsi que toutes les informations enregistrées (profil santé, profil activités, fiche secours). Cette action est irréversible.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    final childId = child.childId;
+
+    if (childId == null) {
+      return;
+    }
+
+    // Indicateur bloquant pendant la suppression : sans ça, une requête
+    // un peu lente donne l'impression que le bouton n'a rien fait.
+    // `barrierDismissible: false` empêche seulement de fermer la
+    // fenêtre en cliquant à côté — un raccourci "retour" (Échap, etc.)
+    // pouvait quand même la faire disparaître pendant que la
+    // suppression continuait en arrière-plan sans plus jamais donner
+    // de nouvelles : `PopScope(canPop: false)` bloque aussi ça.
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const PopScope(
+        canPop: false,
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+    );
+
+    try {
+      await ChildRepository.instance.deleteChild(
+        childId,
+      );
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+
+      // Referme l'indicateur de chargement.
+      Navigator.pop(context);
+
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text(
+            'Suppression impossible',
+          ),
+          content: Text(
+            'Le profil n\'a pas pu être supprimé. Vérifiez la '
+            'connexion et réessayez.\n\nDétail : $error',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+
+      return;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
+
+    // Referme l'indicateur de chargement.
+    Navigator.pop(context);
+
+    Navigator.pop(context);
   }
 
   @override
@@ -547,13 +650,8 @@ class ChildProfilePage extends StatelessWidget {
                 trailing: const Icon(
                   Icons.chevron_right,
                 ),
-                onTap: () {
-                  _showTemporaryMessage(
-                    context: context,
-                    message:
-                        'La suppression du profil sera ajoutée ultérieurement.',
-                  );
-                },
+                onTap: () =>
+                    _confirmAndDeleteProfile(context),
               ),
             ),
 
