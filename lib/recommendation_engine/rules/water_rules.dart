@@ -1,6 +1,5 @@
 import '../../models/activity_session/activity_session_data.dart';
 import '../../models/complete_child_profile_data.dart';
-import '../../models/trigger_factor_data.dart';
 import '../models/recommendation.dart';
 import '../models/recommendation_category.dart';
 
@@ -35,35 +34,13 @@ class WaterRules {
       return recommendations;
     }
 
-    // Informations communes dès qu'il y a
-    // un contexte lié à l'eau.
-
-    final waterVigilance =
-        child.essentialInformation.triggerFactors.waterVigilance;
-
-    if (waterVigilance == WaterVigilance.cannotSwim) {
-      recommendations.add(
-        Recommendation(
-          id: 'water_cannot_swim',
-          category:
-              RecommendationCategory.informationVigilance,
-          childId: childId,
-          text: 'L’enfant ne sait pas nager.',
-        ),
-      );
-    }
-
-    if (waterVigilance == WaterVigilance.mayJumpIntoWater) {
-      recommendations.add(
-        Recommendation(
-          id: 'water_may_jump_into_water',
-          category:
-              RecommendationCategory.informationVigilance,
-          childId: childId,
-          text: 'L’enfant peut se jeter dans l’eau.',
-        ),
-      );
-    }
+    // Le fait que l'enfant ne sache pas nager / risque de se jeter
+    // dans l'eau est un facteur déclenchant du profil santé : il est
+    // déjà généré par EnvironmentRules (waterTriggerRecommendations),
+    // sans dépendre de cette case "adaptations" (qui ne concerne que
+    // l'équipement/la surveillance ci-dessous) — pour ne pas le
+    // dupliquer, et surtout pour ne jamais le faire dépendre d'une
+    // case cochée ailleurs.
 
     // À proximité d'un point d'eau.
 
