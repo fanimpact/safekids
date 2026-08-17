@@ -28,7 +28,7 @@ class OvernightStayRules {
     // Appareil utilisé pendant la nuit : le nom vient du dispositif
     // médical déjà déclaré dans le profil santé (une seule source),
     // jamais ressaisi ici.
-    if (overnightStay.usesNightDevice &&
+    if (overnightStay.usesNightDevice == true &&
         overnightStay.nightDeviceIds.isNotEmpty) {
       final deviceNames = child
           .essentialInformation
@@ -60,7 +60,7 @@ class OvernightStayRules {
     // Surveillance nocturne :
     // on reprend uniquement la précision
     // réellement renseignée par le parent.
-    if (overnightStay.requiresNightSupervision) {
+    if (overnightStay.requiresNightSupervision == true) {
       final supervisionDetails =
           overnightStay
               .nightSupervisionDetails
@@ -92,8 +92,8 @@ class OvernightStayRules {
     // Une alimentation de secours n'est recommandée
     // que si la coupure est indiquée comme critique
     // pour cet enfant.
-    if (overnightStay.requiresElectricity &&
-        overnightStay.powerFailureIsCritical &&
+    if (overnightStay.requiresElectricity == true &&
+        overnightStay.powerFailureIsCritical == true &&
         electricityIsUncertainOrUnavailable) {
       recommendations.add(
         Recommendation(

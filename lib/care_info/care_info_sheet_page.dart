@@ -424,7 +424,7 @@ class CareInfoSheetPage extends StatelessWidget {
       );
     }
 
-    if (communication.usesCommunicationSupport) {
+    if (communication.usesCommunicationSupport == true) {
       final details = communication
           .communicationSupportDetails
           ?.trim();
@@ -451,7 +451,7 @@ class CareInfoSheetPage extends StatelessWidget {
     final aquaticActivity =
         activityProfile.aquaticActivity;
 
-    if (aquaticActivity.requiresSpecialEquipment) {
+    if (aquaticActivity.requiresSpecialEquipment == true) {
       final details = aquaticActivity
           .specialEquipmentDetails
           ?.trim();
@@ -463,7 +463,7 @@ class CareInfoSheetPage extends StatelessWidget {
 
     final transport = activityProfile.transport;
 
-    if (transport.motionSickness &&
+    if (transport.motionSickness == true &&
         transport.motionSicknessTransports.isNotEmpty) {
       final modes = transport.motionSicknessTransports
           .map(_transportModeLabel)
@@ -474,7 +474,7 @@ class CareInfoSheetPage extends StatelessWidget {
       );
     }
 
-    if (transport.requiresSpecialEquipment) {
+    if (transport.requiresSpecialEquipment == true) {
       final details =
           transport.specialEquipmentDetails?.trim();
 
@@ -483,7 +483,7 @@ class CareInfoSheetPage extends StatelessWidget {
       }
     }
 
-    if (transport.requiresSpecialAttention) {
+    if (transport.requiresSpecialAttention == true) {
       final details =
           transport.specialAttentionDetails?.trim();
 
@@ -669,7 +669,7 @@ class CareInfoSheetPage extends StatelessWidget {
         );
       }
 
-      if (safety.requiresSafetyEquipment) {
+      if (safety.requiresSafetyEquipment == true) {
         final details =
             safety.safetyEquipmentDetails?.trim();
 
@@ -700,7 +700,7 @@ class CareInfoSheetPage extends StatelessWidget {
 
     final lines = <String>[];
 
-    if (overnightStay.usesNightDevice &&
+    if (overnightStay.usesNightDevice == true &&
         overnightStay.nightDeviceIds.isNotEmpty) {
       final deviceNames = child
           .essentialInformation
@@ -723,14 +723,14 @@ class CareInfoSheetPage extends StatelessWidget {
       }
     }
 
-    if (overnightStay.requiresElectricity &&
-        overnightStay.powerFailureIsCritical) {
+    if (overnightStay.requiresElectricity == true &&
+        overnightStay.powerFailureIsCritical == true) {
       lines.add(
         'Nuitée : alimentation électrique de secours nécessaire en cas de coupure',
       );
     }
 
-    if (overnightStay.requiresNightSupervision) {
+    if (overnightStay.requiresNightSupervision == true) {
       final details = overnightStay
           .nightSupervisionDetails
           ?.trim();

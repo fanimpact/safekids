@@ -61,7 +61,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
     return '$question — $answer';
   }
 
-  String _qaBool(String question, bool value) {
+  String _qaBool(String question, bool? value) {
     return _qa(question, _yesNo(value));
   }
 
@@ -134,7 +134,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       ),
     );
 
-    if (data.requiresSpecialEquipment) {
+    if (data.requiresSpecialEquipment == true) {
       lines.add(
         _qaText(
           'Équipement nécessaire',
@@ -150,7 +150,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       ),
     );
 
-    if (data.requiresAdaptedSupervision) {
+    if (data.requiresAdaptedSupervision == true) {
       lines.add(
         _qaBool('Prévenir le maître-nageur', data.notifyLifeguard),
       );
@@ -175,7 +175,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       ),
     );
 
-    if (data.requiresOtherAdaptation) {
+    if (data.requiresOtherAdaptation == true) {
       lines.add(
         _qaText(
           'Précisez cette adaptation',
@@ -199,7 +199,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       ),
     ];
 
-    if (data.motionSickness) {
+    if (data.motionSickness == true) {
       lines.add(
         _qa(
           'Moyen(s) de transport concerné(s)',
@@ -217,7 +217,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
         ),
       );
 
-      if (data.takesMotionSicknessMedication) {
+      if (data.takesMotionSicknessMedication == true) {
         if (data.motionSicknessMedicationNames.isEmpty) {
           lines.add(_qaText('Nom du médicament', null));
         } else {
@@ -241,7 +241,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       ),
     );
 
-    if (data.requiresSpecialEquipment) {
+    if (data.requiresSpecialEquipment == true) {
       lines.add(
         _qaText(
           'Équipement nécessaire',
@@ -257,7 +257,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       ),
     );
 
-    if (data.requiresSpecialAttention) {
+    if (data.requiresSpecialAttention == true) {
       lines.add(
         _qaText(
           'Précisez l’attention nécessaire',
@@ -298,7 +298,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       ),
     ];
 
-    if (data.usesNightDevice) {
+    if (data.usesNightDevice == true) {
       final deviceNames = child
           .essentialInformation
           .medicalDevices
@@ -328,7 +328,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
         ),
       );
 
-      if (data.requiresElectricity) {
+      if (data.requiresElectricity == true) {
         lines.add(
           _qaBool(
             'Une panne d’électricité peut-elle compromettre la sécurité ou la santé de votre enfant ?',
@@ -345,7 +345,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       ),
     );
 
-    if (data.requiresNightSupervision) {
+    if (data.requiresNightSupervision == true) {
       lines.add(
         _qaText(
           'Précisez la surveillance nécessaire',
@@ -409,7 +409,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       ),
     );
 
-    if (data.usesCommunicationSupport) {
+    if (data.usesCommunicationSupport == true) {
       lines.add(
         _qaText(
           'Précisez le support de communication utilisé',
@@ -456,7 +456,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       ),
     );
 
-    if (data.requiresSafetyEquipment) {
+    if (data.requiresSafetyEquipment == true) {
       lines.add(
         _qaText(
           'Précisez l’équipement de sécurité nécessaire',

@@ -23,14 +23,14 @@ class AquaticActivityPage extends StatefulWidget {
 
 class _AquaticActivityPageState
     extends State<AquaticActivityPage> {
-  late bool _requiresFlotationVestNearWater;
-  late bool _requiresDedicatedAdultNearWater;
+  bool? _requiresFlotationVestNearWater;
+  bool? _requiresDedicatedAdultNearWater;
 
-  late bool _requiresSpecialEquipment;
-  late bool _requiresAdaptedSupervision;
+  bool? _requiresSpecialEquipment;
+  bool? _requiresAdaptedSupervision;
   late bool _notifyLifeguard;
   late bool _requiresDedicatedAdult;
-  late bool _requiresOtherAdaptation;
+  bool? _requiresOtherAdaptation;
 
   late final TextEditingController
       _specialEquipmentController;
@@ -306,6 +306,27 @@ class _AquaticActivityPageState
   }
 
   void _continue() {
+    final hasUnansweredQuestion =
+        (_cannotSwimPerHealthProfile &&
+                _requiresFlotationVestNearWater ==
+                    null) ||
+            _requiresDedicatedAdultNearWater == null ||
+            _requiresSpecialEquipment == null ||
+            _requiresAdaptedSupervision == null ||
+            _requiresOtherAdaptation == null;
+
+    if (hasUnansweredQuestion) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Répondez par oui ou par non à chaque question avant de continuer.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     widget.activityProfileController
         .validateDraft();
 
@@ -434,7 +455,7 @@ class _AquaticActivityPageState
                 _updateRequiresSpecialEquipment,
           ),
 
-          if (_requiresSpecialEquipment) ...[
+          if (_requiresSpecialEquipment == true) ...[
             const SizedBox(height: 12),
 
             SkTextField(
@@ -470,7 +491,7 @@ class _AquaticActivityPageState
                 _updateRequiresAdaptedSupervision,
           ),
 
-          if (_requiresAdaptedSupervision) ...[
+          if (_requiresAdaptedSupervision == true) ...[
             const SizedBox(height: 12),
 
             _buildCheckbox(
@@ -517,7 +538,7 @@ class _AquaticActivityPageState
                 _updateRequiresOtherAdaptation,
           ),
 
-          if (_requiresOtherAdaptation) ...[
+          if (_requiresOtherAdaptation == true) ...[
             const SizedBox(height: 12),
 
             SkTextField(

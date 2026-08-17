@@ -7,7 +7,7 @@ class CommunicationData {
 
   bool verifyUnderstandingIndividually;
 
-  bool usesCommunicationSupport;
+  bool? usesCommunicationSupport;
   String? communicationSupportDetails;
 
   CommunicationData({
@@ -15,7 +15,7 @@ class CommunicationData {
     this.useSimpleInstructions = false,
     this.mayAppearToUnderstand = false,
     this.verifyUnderstandingIndividually = false,
-    this.usesCommunicationSupport = false,
+    this.usesCommunicationSupport,
     this.communicationSupportDetails,
   });
 
@@ -49,8 +49,7 @@ class CommunicationData {
                   as bool? ??
               false,
       usesCommunicationSupport:
-          json['usesCommunicationSupport'] as bool? ??
-              false,
+          json['usesCommunicationSupport'] as bool?,
       communicationSupportDetails:
           json['communicationSupportDetails']
               as String?,

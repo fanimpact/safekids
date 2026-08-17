@@ -3,13 +3,13 @@ class SafetyData {
 
   bool mayLeaveGroupSuddenly;
 
-  bool requiresSafetyEquipment;
+  bool? requiresSafetyEquipment;
   String? safetyEquipmentDetails;
 
   SafetyData({
     this.requiresAdaptations = false,
     this.mayLeaveGroupSuddenly = false,
-    this.requiresSafetyEquipment = false,
+    this.requiresSafetyEquipment,
     this.safetyEquipmentDetails,
   });
 
@@ -33,8 +33,7 @@ class SafetyData {
           json['mayLeaveGroupSuddenly'] as bool? ??
               false,
       requiresSafetyEquipment:
-          json['requiresSafetyEquipment'] as bool? ??
-              false,
+          json['requiresSafetyEquipment'] as bool?,
       safetyEquipmentDetails:
           json['safetyEquipmentDetails'] as String?,
     );

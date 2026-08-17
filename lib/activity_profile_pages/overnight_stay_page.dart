@@ -23,10 +23,10 @@ class OvernightStayPage extends StatefulWidget {
 
 class _OvernightStayPageState
     extends State<OvernightStayPage> {
-  late bool _usesNightDevice;
-  late bool _requiresElectricity;
-  late bool _powerFailureIsCritical;
-  late bool _requiresNightSupervision;
+  bool? _usesNightDevice;
+  bool? _requiresElectricity;
+  bool? _powerFailureIsCritical;
+  bool? _requiresNightSupervision;
 
   late final TextEditingController
       _nightSupervisionController;
@@ -106,8 +106,8 @@ class _OvernightStayPageState
       _usesNightDevice = value;
 
       if (!value) {
-        _requiresElectricity = false;
-        _powerFailureIsCritical = false;
+        _requiresElectricity = null;
+        _powerFailureIsCritical = null;
       }
     });
 
@@ -115,8 +115,8 @@ class _OvernightStayPageState
 
     if (!value) {
       data.nightDeviceIds.clear();
-      data.requiresElectricity = false;
-      data.powerFailureIsCritical = false;
+      data.requiresElectricity = null;
+      data.powerFailureIsCritical = null;
     }
   }
 
@@ -130,14 +130,14 @@ class _OvernightStayPageState
       _requiresElectricity = value;
 
       if (!value) {
-        _powerFailureIsCritical = false;
+        _powerFailureIsCritical = null;
       }
     });
 
     data.requiresElectricity = value;
 
     if (!value) {
-      data.powerFailureIsCritical = false;
+      data.powerFailureIsCritical = null;
     }
   }
 
@@ -190,6 +190,27 @@ class _OvernightStayPageState
   }
 
   void _continue() {
+    final hasUnansweredQuestion =
+        _usesNightDevice == null ||
+            (_usesNightDevice == true &&
+                _requiresElectricity == null) ||
+            (_usesNightDevice == true &&
+                _requiresElectricity == true &&
+                _powerFailureIsCritical == null) ||
+            _requiresNightSupervision == null;
+
+    if (hasUnansweredQuestion) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Répondez par oui ou par non à chaque question avant de continuer.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     widget.activityProfileController.validateDraft();
 
     Navigator.push(
@@ -220,7 +241,7 @@ class _OvernightStayPageState
               onChanged: _updateUsesNightDevice,
             ),
 
-            if (_usesNightDevice) ...[
+            if (_usesNightDevice == true) ...[
               const SizedBox(height: 12),
 
               if (_declaredMedicalDevices.isEmpty)
@@ -281,7 +302,7 @@ class _OvernightStayPageState
                     _updateRequiresElectricity,
               ),
 
-              if (_requiresElectricity) ...[
+              if (_requiresElectricity == true) ...[
                 const SizedBox(height: 24),
 
                 SkYesNoField(
@@ -306,7 +327,7 @@ class _OvernightStayPageState
                   _updateRequiresNightSupervision,
             ),
 
-            if (_requiresNightSupervision) ...[
+            if (_requiresNightSupervision == true) ...[
               const SizedBox(height: 12),
 
               SkTextField(

@@ -46,7 +46,8 @@ class TransportRules {
         ),
       );
 
-      if (transport.takesMotionSicknessMedication) {
+      if (transport.takesMotionSicknessMedication ==
+          true) {
         final medicationName =
             transport.motionSicknessMedicationNames[mode]?.trim();
 
@@ -67,7 +68,7 @@ class TransportRules {
       }
     }
 
-    if (transport.requiresSpecialEquipment) {
+    if (transport.requiresSpecialEquipment == true) {
       final equipmentDetails =
           transport.specialEquipmentDetails?.trim();
 
@@ -85,7 +86,7 @@ class TransportRules {
       }
     }
 
-    if (transport.requiresSpecialAttention) {
+    if (transport.requiresSpecialAttention == true) {
       final attentionDetails =
           transport.specialAttentionDetails?.trim();
 

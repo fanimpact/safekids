@@ -30,7 +30,7 @@ class SafetyRules {
       );
     }
 
-    if (safety.requiresSafetyEquipment) {
+    if (safety.requiresSafetyEquipment == true) {
       final equipmentDetails =
           safety.safetyEquipmentDetails?.trim();
 

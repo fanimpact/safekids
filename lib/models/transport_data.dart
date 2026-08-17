@@ -12,29 +12,29 @@ enum TransportMode {
 class TransportData {
   bool requiresAdaptations;
 
-  bool motionSickness;
+  bool? motionSickness;
 
   Set<TransportMode> motionSicknessTransports;
 
-  bool takesMotionSicknessMedication;
+  bool? takesMotionSicknessMedication;
 
   Map<TransportMode, String> motionSicknessMedicationNames;
 
-  bool requiresSpecialEquipment;
+  bool? requiresSpecialEquipment;
   String? specialEquipmentDetails;
 
-  bool requiresSpecialAttention;
+  bool? requiresSpecialAttention;
   String? specialAttentionDetails;
 
   TransportData({
     this.requiresAdaptations = false,
-    this.motionSickness = false,
+    this.motionSickness,
     Set<TransportMode>? motionSicknessTransports,
-    this.takesMotionSicknessMedication = false,
+    this.takesMotionSicknessMedication,
     Map<TransportMode, String>? motionSicknessMedicationNames,
-    this.requiresSpecialEquipment = false,
+    this.requiresSpecialEquipment,
     this.specialEquipmentDetails,
-    this.requiresSpecialAttention = false,
+    this.requiresSpecialAttention,
     this.specialAttentionDetails,
   })  : motionSicknessTransports =
             motionSicknessTransports ?? <TransportMode>{},
@@ -75,7 +75,7 @@ class TransportData {
           json['requiresAdaptations'] as bool? ??
               false,
       motionSickness:
-          json['motionSickness'] as bool? ?? false,
+          json['motionSickness'] as bool?,
       motionSicknessTransports:
           (json['motionSicknessTransports']
                       as List<dynamic>?)
@@ -90,8 +90,7 @@ class TransportData {
               {},
       takesMotionSicknessMedication:
           json['takesMotionSicknessMedication']
-              as bool? ??
-              false,
+              as bool?,
       motionSicknessMedicationNames:
           medicationNames == null
               ? null
@@ -99,13 +98,11 @@ class TransportData {
                   medicationNames,
                 ),
       requiresSpecialEquipment:
-          json['requiresSpecialEquipment'] as bool? ??
-              false,
+          json['requiresSpecialEquipment'] as bool?,
       specialEquipmentDetails:
           json['specialEquipmentDetails'] as String?,
       requiresSpecialAttention:
-          json['requiresSpecialAttention'] as bool? ??
-              false,
+          json['requiresSpecialAttention'] as bool?,
       specialAttentionDetails:
           json['specialAttentionDetails'] as String?,
     );

@@ -20,10 +20,10 @@ class TransportPage extends StatefulWidget {
 }
 
 class _TransportPageState extends State<TransportPage> {
-  late bool _motionSickness;
-  late bool _takesMotionSicknessMedication;
-  late bool _requiresSpecialEquipment;
-  late bool _requiresSpecialAttention;
+  bool? _motionSickness;
+  bool? _takesMotionSicknessMedication;
+  bool? _requiresSpecialEquipment;
+  bool? _requiresSpecialAttention;
 
   late final TextEditingController _specialEquipmentController;
   late final TextEditingController _specialAttentionController;
@@ -109,7 +109,7 @@ class _TransportPageState extends State<TransportPage> {
       _motionSickness = value;
 
       if (!value) {
-        _takesMotionSicknessMedication = false;
+        _takesMotionSicknessMedication = null;
 
         for (final controller
             in _medicationControllers.values) {
@@ -122,7 +122,7 @@ class _TransportPageState extends State<TransportPage> {
 
     if (!value) {
       data.motionSicknessTransports.clear();
-      data.takesMotionSicknessMedication = false;
+      data.takesMotionSicknessMedication = null;
       data.motionSicknessMedicationNames.clear();
     }
   }
@@ -157,11 +157,11 @@ class _TransportPageState extends State<TransportPage> {
           data.motionSicknessTransports;
 
       if (selectedTransports.isEmpty) {
-        _takesMotionSicknessMedication = false;
-        data.takesMotionSicknessMedication = false;
+        _takesMotionSicknessMedication = null;
+        data.takesMotionSicknessMedication = null;
         data.motionSicknessMedicationNames.clear();
       } else if (selectedTransports.length == 1 &&
-          _takesMotionSicknessMedication) {
+          _takesMotionSicknessMedication == true) {
         final onlyTransport =
             selectedTransports.first;
 
@@ -323,6 +323,31 @@ class _TransportPageState extends State<TransportPage> {
   }
 
   void _continue() {
+    final selectedTransports = widget
+        .activityProfileController
+        .draft
+        .transport
+        .motionSicknessTransports;
+
+    final hasUnansweredQuestion =
+        _motionSickness == null ||
+            (selectedTransports.isNotEmpty &&
+                _takesMotionSicknessMedication == null) ||
+            _requiresSpecialEquipment == null ||
+            _requiresSpecialAttention == null;
+
+    if (hasUnansweredQuestion) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Répondez par oui ou par non à chaque question avant de continuer.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     widget.activityProfileController.validateDraft();
 
     Navigator.push(
@@ -385,7 +410,7 @@ class _TransportPageState extends State<TransportPage> {
             onChanged: _updateMotionSickness,
           ),
 
-          if (_motionSickness) ...[
+          if (_motionSickness == true) ...[
               const SizedBox(height: 16),
 
               const Text(
@@ -426,7 +451,8 @@ class _TransportPageState extends State<TransportPage> {
                       _updateTakesMotionSicknessMedication,
                 ),
 
-                if (_takesMotionSicknessMedication &&
+                if (_takesMotionSicknessMedication ==
+                        true &&
                     hasOneSelectedTransport) ...[
                   const SizedBox(height: 12),
 
@@ -443,7 +469,8 @@ class _TransportPageState extends State<TransportPage> {
                   ),
                 ],
 
-                if (_takesMotionSicknessMedication &&
+                if (_takesMotionSicknessMedication ==
+                        true &&
                     hasSeveralSelectedTransports) ...[
                   const SizedBox(height: 16),
 
@@ -515,7 +542,7 @@ class _TransportPageState extends State<TransportPage> {
                   _updateRequiresSpecialEquipment,
             ),
 
-            if (_requiresSpecialEquipment) ...[
+            if (_requiresSpecialEquipment == true) ...[
               const SizedBox(height: 12),
 
               SkTextField(
@@ -550,7 +577,7 @@ class _TransportPageState extends State<TransportPage> {
                   _updateRequiresSpecialAttention,
             ),
 
-            if (_requiresSpecialAttention) ...[
+            if (_requiresSpecialAttention == true) ...[
               const SizedBox(height: 12),
 
               SkTextField(

@@ -2,32 +2,32 @@ class AquaticActivityData {
   bool requiresAdaptations;
 
   // À proximité d'un point d'eau
-  bool requiresFlotationVestNearWater;
-  bool requiresDedicatedAdultNearWater;
+  bool? requiresFlotationVestNearWater;
+  bool? requiresDedicatedAdultNearWater;
 
   // Baignade
-  bool requiresSpecialEquipment;
+  bool? requiresSpecialEquipment;
   String? specialEquipmentDetails;
 
-  bool requiresAdaptedSupervision;
+  bool? requiresAdaptedSupervision;
   bool notifyLifeguard;
   bool requiresDedicatedAdult;
   String? otherSupervisionDetails;
 
-  bool requiresOtherAdaptation;
+  bool? requiresOtherAdaptation;
   String? otherAdaptationDetails;
 
   AquaticActivityData({
     this.requiresAdaptations = false,
-    this.requiresFlotationVestNearWater = false,
-    this.requiresDedicatedAdultNearWater = false,
-    this.requiresSpecialEquipment = false,
+    this.requiresFlotationVestNearWater,
+    this.requiresDedicatedAdultNearWater,
+    this.requiresSpecialEquipment,
     this.specialEquipmentDetails,
-    this.requiresAdaptedSupervision = false,
+    this.requiresAdaptedSupervision,
     this.notifyLifeguard = false,
     this.requiresDedicatedAdult = false,
     this.otherSupervisionDetails,
-    this.requiresOtherAdaptation = false,
+    this.requiresOtherAdaptation,
     this.otherAdaptationDetails,
   });
 
@@ -62,20 +62,16 @@ class AquaticActivityData {
               false,
       requiresFlotationVestNearWater:
           json['requiresFlotationVestNearWater']
-                  as bool? ??
-              false,
+              as bool?,
       requiresDedicatedAdultNearWater:
           json['requiresDedicatedAdultNearWater']
-                  as bool? ??
-              false,
+              as bool?,
       requiresSpecialEquipment:
-          json['requiresSpecialEquipment'] as bool? ??
-              false,
+          json['requiresSpecialEquipment'] as bool?,
       specialEquipmentDetails:
           json['specialEquipmentDetails'] as String?,
       requiresAdaptedSupervision:
-          json['requiresAdaptedSupervision'] as bool? ??
-              false,
+          json['requiresAdaptedSupervision'] as bool?,
       notifyLifeguard:
           json['notifyLifeguard'] as bool? ?? false,
       requiresDedicatedAdult:
@@ -84,8 +80,7 @@ class AquaticActivityData {
       otherSupervisionDetails:
           json['otherSupervisionDetails'] as String?,
       requiresOtherAdaptation:
-          json['requiresOtherAdaptation'] as bool? ??
-              false,
+          json['requiresOtherAdaptation'] as bool?,
       otherAdaptationDetails:
           json['otherAdaptationDetails'] as String?,
     );

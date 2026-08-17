@@ -24,7 +24,7 @@ class _CommunicationPageState
   late bool _useSimpleInstructions;
   late bool _mayAppearToUnderstand;
   late bool _verifyUnderstandingIndividually;
-  late bool _usesCommunicationSupport;
+  bool? _usesCommunicationSupport;
 
   late final TextEditingController
       _communicationSupportController;
@@ -151,6 +151,18 @@ class _CommunicationPageState
   }
 
   void _continue() {
+    if (_usesCommunicationSupport == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Répondez par oui ou par non à chaque question avant de continuer.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     widget.activityProfileController
         .validateDraft();
 
@@ -230,7 +242,7 @@ class _CommunicationPageState
               onChanged:
                   _updateUsesCommunicationSupport,
             ),
-            if (_usesCommunicationSupport) ...[
+            if (_usesCommunicationSupport == true) ...[
               const SizedBox(height: 12),
               SkTextField(
                 label:

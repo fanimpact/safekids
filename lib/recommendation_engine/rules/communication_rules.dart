@@ -46,7 +46,7 @@ class CommunicationRules {
       );
     }
 
-    if (communication.usesCommunicationSupport) {
+    if (communication.usesCommunicationSupport == true) {
       final supportDetails =
           communication
               .communicationSupportDetails

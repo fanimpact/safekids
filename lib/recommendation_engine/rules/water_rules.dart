@@ -41,7 +41,8 @@ class WaterRules {
 
     if (hasWaterNearby &&
         aquaticActivity
-            .requiresFlotationVestNearWater) {
+                .requiresFlotationVestNearWater ==
+            true) {
       recommendations.add(
         Recommendation(
           id: 'water_flotation_vest_near_water',
@@ -56,7 +57,8 @@ class WaterRules {
     final requiresDedicatedAdult =
         (hasWaterNearby &&
                 aquaticActivity
-                    .requiresDedicatedAdultNearWater) ||
+                        .requiresDedicatedAdultNearWater ==
+                    true) ||
             (hasSwimming &&
                 aquaticActivity
                     .requiresDedicatedAdult);
@@ -76,8 +78,8 @@ class WaterRules {
     // Règles spécifiques à une baignade réelle.
 
     if (hasSwimming) {
-      if (aquaticActivity
-          .requiresSpecialEquipment) {
+      if (aquaticActivity.requiresSpecialEquipment ==
+          true) {
         final equipmentDetails =
             aquaticActivity
                 .specialEquipmentDetails
@@ -103,8 +105,8 @@ class WaterRules {
       // On affiche uniquement la précision
       // renseignée par le parent.
 
-      if (aquaticActivity
-          .requiresAdaptedSupervision) {
+      if (aquaticActivity.requiresAdaptedSupervision ==
+          true) {
         final supervisionDetails =
             aquaticActivity
                 .otherSupervisionDetails
@@ -145,8 +147,8 @@ class WaterRules {
       // reprendre exactement la précision
       // renseignée dans le profil parent.
 
-      if (aquaticActivity
-          .requiresOtherAdaptation) {
+      if (aquaticActivity.requiresOtherAdaptation ==
+          true) {
         final adaptationDetails =
             aquaticActivity
                 .otherAdaptationDetails

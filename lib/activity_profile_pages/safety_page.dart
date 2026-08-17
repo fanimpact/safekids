@@ -21,7 +21,7 @@ class SafetyPage extends StatefulWidget {
 
 class _SafetyPageState extends State<SafetyPage> {
   late bool _mayLeaveGroupSuddenly;
-  late bool _requiresSafetyEquipment;
+  bool? _requiresSafetyEquipment;
 
   late final TextEditingController
       _safetyEquipmentController;
@@ -108,6 +108,18 @@ class _SafetyPageState extends State<SafetyPage> {
   }
 
   void _continue() {
+    if (_requiresSafetyEquipment == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Répondez par oui ou par non à chaque question avant de continuer.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     widget.activityProfileController
         .validateDraft();
 
@@ -174,7 +186,7 @@ class _SafetyPageState extends State<SafetyPage> {
                 _updateRequiresSafetyEquipment,
           ),
 
-          if (_requiresSafetyEquipment) ...[
+          if (_requiresSafetyEquipment == true) ...[
             const SizedBox(height: 12),
 
             SkTextField(
