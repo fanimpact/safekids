@@ -3,7 +3,11 @@ class CommunicationData {
 
   bool useSimpleInstructions;
 
-  bool mayAppearToUnderstand;
+  /// Question filtre de la section : si "Non" (ou pas encore répondu),
+  /// les autres questions détaillées ne sont pas affichées — seuls les
+  /// parents concernés par un souci de communication ont besoin d'y
+  /// répondre.
+  bool? mayAppearToUnderstand;
 
   bool verifyUnderstandingIndividually;
 
@@ -13,7 +17,7 @@ class CommunicationData {
   CommunicationData({
     this.requiresAdaptations = false,
     this.useSimpleInstructions = false,
-    this.mayAppearToUnderstand = false,
+    this.mayAppearToUnderstand,
     this.verifyUnderstandingIndividually = false,
     this.usesCommunicationSupport,
     this.communicationSupportDetails,
@@ -42,8 +46,7 @@ class CommunicationData {
           json['useSimpleInstructions'] as bool? ??
               false,
       mayAppearToUnderstand:
-          json['mayAppearToUnderstand'] as bool? ??
-              false,
+          json['mayAppearToUnderstand'] as bool?,
       verifyUnderstandingIndividually:
           json['verifyUnderstandingIndividually']
                   as bool? ??

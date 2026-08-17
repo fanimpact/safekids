@@ -1,12 +1,14 @@
 class TransitionsData {
-  bool requiresAdaptations;
+  /// Question filtre de la section : si "Non" (ou pas encore répondu),
+  /// les questions détaillées ne sont pas affichées.
+  bool? requiresAdaptations;
 
   bool transitionsMayCauseStress;
 
   bool changesMustBeAnnounced;
 
   TransitionsData({
-    this.requiresAdaptations = false,
+    this.requiresAdaptations,
     this.transitionsMayCauseStress = false,
     this.changesMustBeAnnounced = false,
   });
@@ -24,8 +26,7 @@ class TransitionsData {
   ) {
     return TransitionsData(
       requiresAdaptations:
-          json['requiresAdaptations'] as bool? ??
-              false,
+          json['requiresAdaptations'] as bool?,
       transitionsMayCauseStress:
           json['transitionsMayCauseStress'] as bool? ??
               false,

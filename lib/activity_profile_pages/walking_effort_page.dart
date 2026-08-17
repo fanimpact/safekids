@@ -20,8 +20,8 @@ class WalkingEffortPage extends StatefulWidget {
 
 class _WalkingEffortPageState
     extends State<WalkingEffortPage> {
-  late bool _prolongedWalkingRequiresVigilance;
-  late bool _intensePhysicalEffortRequiresVigilance;
+  bool? _prolongedWalkingRequiresVigilance;
+  bool? _intensePhysicalEffortRequiresVigilance;
 
   @override
   void initState() {
@@ -68,6 +68,20 @@ class _WalkingEffortPageState
   }
 
   void _continue() {
+    if (_prolongedWalkingRequiresVigilance == null ||
+        _intensePhysicalEffortRequiresVigilance ==
+            null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Répondez par oui ou par non à chaque question avant de continuer.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     widget.activityProfileController.validateDraft();
 
     Navigator.push(

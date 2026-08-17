@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:safekids/activity_profile_pages/aquatic_activity_page.dart';
-import 'package:safekids/activity_profile_pages/communication_page.dart';
 import 'package:safekids/activity_profile_pages/overnight_stay_page.dart';
 import 'package:safekids/activity_profile_pages/safety_page.dart';
-import 'package:safekids/activity_profile_pages/transitions_page.dart';
 import 'package:safekids/activity_profile_pages/transport_page.dart';
+import 'package:safekids/activity_profile_pages/walking_effort_page.dart';
 import 'package:safekids/controllers/activity_profile_controller.dart';
 import 'package:safekids/widgets/sk_yes_no_field.dart';
 
 /// Vérifie que les questions filtres "Votre enfant a-t-il besoin
 /// d'adaptations particulières pour X ?" ont bien disparu des sections
-/// eau/baignade, transport, nuitée, communication, transitions et
-/// sécurité du profil activités, et que les questions détaillées de
-/// chaque section sont affichées directement, sans qu'aucune réponse
-/// préalable soit nécessaire — même correction que celle faite pour
-/// les facteurs déclenchants.
+/// eau/baignade, transport, nuitée et sécurité du profil activités
+/// (communication et transitions ont volontairement retrouvé une
+/// question filtre depuis, voir
+/// communication_transitions_filter_question_test.dart), et que les
+/// questions détaillées de chaque section sont affichées directement,
+/// sans qu'aucune réponse préalable soit nécessaire — même correction
+/// que celle faite pour les facteurs déclenchants.
 ///
 /// Corrige aussi une régression signalée par l'utilisatrice : sans
 /// question filtre, chaque sous-question affichait "Non" présélectionné
@@ -86,6 +87,49 @@ void main() {
   );
 
   testWidgets(
+    'Marche prolongée / effort physique : aucune réponse '
+    'présélectionnée, on ne peut pas continuer sans répondre',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WalkingEffortPage(
+            activityProfileController:
+                ActivityProfileController(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        yesNoValue(tester, 'La marche prolongée'),
+        isNull,
+        reason:
+            'Aucune réponse ne doit être présélectionnée par défaut.',
+      );
+      expect(
+        yesNoValue(tester, 'Un effort physique intense'),
+        isNull,
+      );
+
+      await tester.ensureVisible(find.text('Continuer'));
+      await tester.tap(find.text('Continuer'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('avant de continuer'),
+        findsOneWidget,
+        reason:
+            'On ne doit pas pouvoir continuer sans avoir répondu à '
+            'chaque question.',
+      );
+      expect(
+        find.byType(WalkingEffortPage),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
     'Nuitée : aucune réponse présélectionnée, on ne peut pas '
     'continuer sans répondre',
     (tester) async {
@@ -129,92 +173,8 @@ void main() {
   );
 
   testWidgets(
-    'Communication : aucune réponse présélectionnée, on ne peut pas '
-    'continuer sans répondre',
-    (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: CommunicationPage(
-            activityProfileController:
-                ActivityProfileController(),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(
-        find.textContaining(
-          'des adaptations particulières concernant la communication',
-        ),
-        findsNothing,
-      );
-      expect(
-        find.text(
-          'Les consignes doivent être formulées avec des mots simples.',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.text(
-          'Votre enfant utilise-t-il un support de communication particulier ?',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        yesNoValue(tester, 'un support de communication'),
-        isNull,
-      );
-
-      await tester.ensureVisible(find.text('Continuer'));
-      await tester.tap(find.text('Continuer'));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.textContaining('avant de continuer'),
-        findsOneWidget,
-      );
-      expect(find.byType(CommunicationPage), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'Transitions : aucune question filtre, les questions détaillées '
-    'sont visibles directement',
-    (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TransitionsPage(
-            activityProfileController:
-                ActivityProfileController(),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(
-        find.textContaining(
-          'des adaptations particulières lors des transitions',
-        ),
-        findsNothing,
-      );
-      expect(
-        find.text(
-          'Les changements d’activité peuvent provoquer un stress important.',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.text(
-          'Les changements de programme doivent être annoncés à l’avance.',
-        ),
-        findsOneWidget,
-      );
-    },
-  );
-
-  testWidgets(
-    'Sécurité : aucune réponse présélectionnée, on ne peut pas '
-    'continuer sans répondre',
+    'Sécurité : aucune réponse présélectionnée sur les deux '
+    'questions, on ne peut pas continuer sans répondre',
     (tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -234,15 +194,22 @@ void main() {
       );
       expect(
         find.text(
-          'Votre enfant a déjà quitté brusquement un groupe.',
+          'Votre enfant a-t-il déjà quitté brusquement un groupe ?',
         ),
         findsOneWidget,
+        reason:
+            'Doit être une vraie question Oui/Non, pas une case à '
+            'cocher facultative.',
       );
       expect(
         find.text(
           'Votre enfant nécessite-t-il un équipement de sécurité particulier ?',
         ),
         findsOneWidget,
+      );
+      expect(
+        yesNoValue(tester, 'quitté brusquement un groupe'),
+        isNull,
       );
       expect(
         yesNoValue(tester, 'un équipement de sécurité'),

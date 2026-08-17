@@ -1,10 +1,10 @@
 class WalkingEffortData {
-  bool prolongedWalkingRequiresVigilance;
-  bool intensePhysicalEffortRequiresVigilance;
+  bool? prolongedWalkingRequiresVigilance;
+  bool? intensePhysicalEffortRequiresVigilance;
 
   WalkingEffortData({
-    this.prolongedWalkingRequiresVigilance = false,
-    this.intensePhysicalEffortRequiresVigilance = false,
+    this.prolongedWalkingRequiresVigilance,
+    this.intensePhysicalEffortRequiresVigilance,
   });
 
   Map<String, dynamic> toJson() => {
@@ -20,12 +20,10 @@ class WalkingEffortData {
     return WalkingEffortData(
       prolongedWalkingRequiresVigilance:
           json['prolongedWalkingRequiresVigilance']
-                  as bool? ??
-              false,
+              as bool?,
       intensePhysicalEffortRequiresVigilance:
           json['intensePhysicalEffortRequiresVigilance']
-                  as bool? ??
-              false,
+              as bool?,
     );
   }
 }

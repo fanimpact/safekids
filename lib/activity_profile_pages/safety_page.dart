@@ -20,7 +20,7 @@ class SafetyPage extends StatefulWidget {
 }
 
 class _SafetyPageState extends State<SafetyPage> {
-  late bool _mayLeaveGroupSuddenly;
+  bool? _mayLeaveGroupSuddenly;
   bool? _requiresSafetyEquipment;
 
   late final TextEditingController
@@ -54,19 +54,17 @@ class _SafetyPageState extends State<SafetyPage> {
   }
 
   void _updateMayLeaveGroupSuddenly(
-    bool? value,
+    bool value,
   ) {
-    final newValue = value ?? false;
-
     setState(() {
-      _mayLeaveGroupSuddenly = newValue;
+      _mayLeaveGroupSuddenly = value;
     });
 
     widget
         .activityProfileController
         .draft
         .safety
-        .mayLeaveGroupSuddenly = newValue;
+        .mayLeaveGroupSuddenly = value;
   }
 
   void _updateRequiresSafetyEquipment(
@@ -108,7 +106,8 @@ class _SafetyPageState extends State<SafetyPage> {
   }
 
   void _continue() {
-    if (_requiresSafetyEquipment == null) {
+    if (_mayLeaveGroupSuddenly == null ||
+        _requiresSafetyEquipment == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -136,26 +135,6 @@ class _SafetyPageState extends State<SafetyPage> {
     );
   }
 
-  Widget _buildCheckbox({
-    required String label,
-    required bool value,
-    required ValueChanged<bool?> onChanged,
-  }) {
-    return CheckboxListTile(
-      contentPadding: EdgeInsets.zero,
-      controlAffinity:
-          ListTileControlAffinity.leading,
-      title: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 16,
-        ),
-      ),
-      value: value,
-      onChanged: onChanged,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
@@ -166,9 +145,9 @@ class _SafetyPageState extends State<SafetyPage> {
         crossAxisAlignment:
             CrossAxisAlignment.stretch,
         children: [
-          _buildCheckbox(
+          SkYesNoField(
             label:
-                'Votre enfant a déjà quitté brusquement un groupe.',
+                'Votre enfant a-t-il déjà quitté brusquement un groupe ?',
             value:
                 _mayLeaveGroupSuddenly,
             onChanged:

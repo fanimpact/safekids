@@ -372,14 +372,16 @@ class CareInfoSheetPage extends StatelessWidget {
     final lines = <String>[];
 
     if (walkingEffort
-        .prolongedWalkingRequiresVigilance) {
+            .prolongedWalkingRequiresVigilance ==
+        true) {
       lines.add(
         'Marche prolongée : vigilance particulière',
       );
     }
 
     if (walkingEffort
-        .intensePhysicalEffortRequiresVigilance) {
+            .intensePhysicalEffortRequiresVigilance ==
+        true) {
       lines.add(
         'Effort physique intense : vigilance particulière',
       );
@@ -419,7 +421,7 @@ class CareInfoSheetPage extends StatelessWidget {
       );
     }
 
-    if (communication.mayAppearToUnderstand ||
+    if (communication.mayAppearToUnderstand == true ||
         communication.verifyUnderstandingIndividually) {
       lines.add(
         'Communication : vérifier sa compréhension individuellement',
@@ -665,7 +667,7 @@ class CareInfoSheetPage extends StatelessWidget {
     final safety = child.activityProfile?.safety;
 
     if (safety != null) {
-      if (safety.mayLeaveGroupSuddenly) {
+      if (safety.mayLeaveGroupSuddenly == true) {
         lines.add(
           'Sécurité : l’enfant peut quitter le groupe soudainement',
         );

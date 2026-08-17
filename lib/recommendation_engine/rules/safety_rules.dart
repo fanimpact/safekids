@@ -17,7 +17,7 @@ class SafetyRules {
       return recommendations;
     }
 
-    if (safety.mayLeaveGroupSuddenly) {
+    if (safety.mayLeaveGroupSuddenly == true) {
       recommendations.add(
         Recommendation(
           id: 'safety_may_leave_group_suddenly',

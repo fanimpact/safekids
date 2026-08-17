@@ -21,8 +21,8 @@ class CommunicationPage extends StatefulWidget {
 
 class _CommunicationPageState
     extends State<CommunicationPage> {
+  bool? _mayAppearToUnderstand;
   late bool _useSimpleInstructions;
-  late bool _mayAppearToUnderstand;
   late bool _verifyUnderstandingIndividually;
   bool? _usesCommunicationSupport;
 
@@ -38,10 +38,10 @@ class _CommunicationPageState
         .draft
         .communication;
 
-    _useSimpleInstructions =
-        data.useSimpleInstructions;
     _mayAppearToUnderstand =
         data.mayAppearToUnderstand;
+    _useSimpleInstructions =
+        data.useSimpleInstructions;
     _verifyUnderstandingIndividually =
         data.verifyUnderstandingIndividually;
     _usesCommunicationSupport =
@@ -61,6 +61,35 @@ class _CommunicationPageState
     super.dispose();
   }
 
+  void _updateMayAppearToUnderstand(
+    bool value,
+  ) {
+    final data = widget
+        .activityProfileController
+        .draft
+        .communication;
+
+    setState(() {
+      _mayAppearToUnderstand = value;
+
+      if (!value) {
+        _useSimpleInstructions = false;
+        _verifyUnderstandingIndividually = false;
+        _usesCommunicationSupport = null;
+        _communicationSupportController.clear();
+      }
+    });
+
+    data.mayAppearToUnderstand = value;
+
+    if (!value) {
+      data.useSimpleInstructions = false;
+      data.verifyUnderstandingIndividually = false;
+      data.usesCommunicationSupport = null;
+      data.communicationSupportDetails = null;
+    }
+  }
+
   void _updateUseSimpleInstructions(
       bool? value) {
     final newValue = value ?? false;
@@ -74,21 +103,6 @@ class _CommunicationPageState
         .draft
         .communication
         .useSimpleInstructions = newValue;
-  }
-
-  void _updateMayAppearToUnderstand(
-      bool? value) {
-    final newValue = value ?? false;
-
-    setState(() {
-      _mayAppearToUnderstand = newValue;
-    });
-
-    widget
-        .activityProfileController
-        .draft
-        .communication
-        .mayAppearToUnderstand = newValue;
   }
 
   void
@@ -151,7 +165,12 @@ class _CommunicationPageState
   }
 
   void _continue() {
-    if (_usesCommunicationSupport == null) {
+    final hasUnansweredQuestion =
+        _mayAppearToUnderstand == null ||
+            (_mayAppearToUnderstand == true &&
+                _usesCommunicationSupport == null);
+
+    if (hasUnansweredQuestion) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -209,21 +228,24 @@ class _CommunicationPageState
         crossAxisAlignment:
             CrossAxisAlignment.stretch,
         children: [
-          _buildCheckbox(
+          SkYesNoField(
+            label:
+                'Votre enfant peut-il donner l’impression d’avoir compris une consigne alors que ce n’est pas le cas ?',
+            value: _mayAppearToUnderstand,
+            onChanged:
+                _updateMayAppearToUnderstand,
+          ),
+
+          if (_mayAppearToUnderstand == true) ...[
+            const SizedBox(height: 24),
+
+            _buildCheckbox(
               label:
                   'Les consignes doivent être formulées avec des mots simples.',
               value:
                   _useSimpleInstructions,
               onChanged:
                   _updateUseSimpleInstructions,
-            ),
-            _buildCheckbox(
-              label:
-                  'Votre enfant peut donner l’impression d’avoir compris une consigne alors que ce n’est pas le cas.',
-              value:
-                  _mayAppearToUnderstand,
-              onChanged:
-                  _updateMayAppearToUnderstand,
             ),
             _buildCheckbox(
               label:
@@ -263,6 +285,8 @@ class _CommunicationPageState
                 ),
               ),
             ],
+          ],
+
           const SizedBox(height: 30),
           FilledButton(
             onPressed: _continue,

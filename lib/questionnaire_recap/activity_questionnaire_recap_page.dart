@@ -386,14 +386,19 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
 
     final lines = <String>[
       _qaBool(
-        'Les consignes doivent être formulées avec des mots simples.',
-        data.useSimpleInstructions,
+        'Votre enfant peut-il donner l’impression d’avoir compris une consigne alors que ce n’est pas le cas ?',
+        data.mayAppearToUnderstand,
       ),
     ];
+
+    if (data.mayAppearToUnderstand != true) {
+      return lines;
+    }
+
     lines.add(
       _qaBool(
-        'Votre enfant peut donner l’impression d’avoir compris une consigne alors que ce n’est pas le cas.',
-        data.mayAppearToUnderstand,
+        'Les consignes doivent être formulées avec des mots simples.',
+        data.useSimpleInstructions,
       ),
     );
     lines.add(
@@ -426,16 +431,31 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
   ) {
     final data = profile.transitions;
 
-    return [
+    final lines = <String>[
+      _qaBool(
+        'Votre enfant nécessite-t-il des adaptations particulières lors des transitions ou des changements d’activité, par rapport à un enfant de son âge ?',
+        data.requiresAdaptations,
+      ),
+    ];
+
+    if (data.requiresAdaptations != true) {
+      return lines;
+    }
+
+    lines.add(
       _qaBool(
         'Les changements d’activité peuvent provoquer un stress important.',
         data.transitionsMayCauseStress,
       ),
+    );
+    lines.add(
       _qaBool(
         'Les changements de programme doivent être annoncés à l’avance.',
         data.changesMustBeAnnounced,
       ),
-    ];
+    );
+
+    return lines;
   }
 
   List<String> _safetyLines(
@@ -445,7 +465,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
 
     final lines = <String>[
       _qaBool(
-        'Votre enfant a déjà quitté brusquement un groupe.',
+        'Votre enfant a-t-il déjà quitté brusquement un groupe ?',
         data.mayLeaveGroupSuddenly,
       ),
     ];

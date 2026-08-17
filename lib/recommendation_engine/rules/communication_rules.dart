@@ -33,7 +33,7 @@ class CommunicationRules {
     // Si l'une des deux situations est présente,
     // ou si les deux le sont, une seule recommandation
     // est générée.
-    if (communication.mayAppearToUnderstand ||
+    if (communication.mayAppearToUnderstand == true ||
         communication.verifyUnderstandingIndividually) {
       recommendations.add(
         Recommendation(

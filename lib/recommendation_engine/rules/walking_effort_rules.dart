@@ -22,7 +22,8 @@ class WalkingEffortRules {
 
     if (activity.hasProlongedWalking == true &&
         walkingEffort
-            .prolongedWalkingRequiresVigilance) {
+                .prolongedWalkingRequiresVigilance ==
+            true) {
       recommendations.add(
         Recommendation(
           id: 'prolonged_walking_vigilance',
@@ -39,7 +40,8 @@ class WalkingEffortRules {
     if (activity.hasSignificantPhysicalEffort ==
             true &&
         walkingEffort
-            .intensePhysicalEffortRequiresVigilance) {
+                .intensePhysicalEffortRequiresVigilance ==
+            true) {
       recommendations.add(
         Recommendation(
           id:
