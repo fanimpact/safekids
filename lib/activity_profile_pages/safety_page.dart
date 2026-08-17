@@ -147,7 +147,7 @@ class _SafetyPageState extends State<SafetyPage> {
         children: [
           SkYesNoField(
             label:
-                'Votre enfant a-t-il déjà quitté brusquement un groupe ?',
+                'Votre enfant est-il susceptible de quitter brusquement le groupe ?',
             value:
                 _mayLeaveGroupSuddenly,
             onChanged:

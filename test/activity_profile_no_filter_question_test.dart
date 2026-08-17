@@ -194,7 +194,7 @@ void main() {
       );
       expect(
         find.text(
-          'Votre enfant a-t-il déjà quitté brusquement un groupe ?',
+          'Votre enfant est-il susceptible de quitter brusquement le groupe ?',
         ),
         findsOneWidget,
         reason:
@@ -208,7 +208,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        yesNoValue(tester, 'quitté brusquement un groupe'),
+        yesNoValue(tester, 'quitter brusquement le groupe'),
         isNull,
       );
       expect(

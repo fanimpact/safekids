@@ -471,7 +471,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
 
     final lines = <String>[
       _qaBool(
-        'Votre enfant a-t-il déjà quitté brusquement un groupe ?',
+        'Votre enfant est-il susceptible de quitter brusquement le groupe ?',
         data.mayLeaveGroupSuddenly,
       ),
     ];
