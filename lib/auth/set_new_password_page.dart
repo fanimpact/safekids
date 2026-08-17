@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'auth/account_service.dart';
-import 'home/home_page.dart';
-import 'widgets/sk_password_field.dart';
+import '../home/home_page.dart';
+import '../widgets/sk_password_field.dart';
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+/// Affiché quand l'app est ouverte via le lien "mot de passe oublié"
+/// reçu par email (`safekids://auth-callback`) : Supabase a déjà
+/// établi une session temporaire à ce stade, il ne reste qu'à définir
+/// le nouveau mot de passe.
+class SetNewPasswordPage extends StatefulWidget {
+  const SetNewPasswordPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<SetNewPasswordPage> createState() =>
+      _SetNewPasswordPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
-  final _emailController = TextEditingController();
+class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -20,7 +24,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   void dispose() {
-    _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -36,14 +39,8 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _submit() async {
-    final email = _emailController.text.trim();
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
-
-    if (email.isEmpty || !email.contains('@')) {
-      _showError('Saisissez une adresse email valide.');
-      return;
-    }
 
     if (password.length < 8) {
       _showError(
@@ -53,9 +50,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     if (password != confirmPassword) {
-      _showError(
-        'Les deux mots de passe ne correspondent pas.',
-      );
+      _showError('Les deux mots de passe ne correspondent pas.');
       return;
     }
 
@@ -64,20 +59,20 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-      await AccountService.instance.createAccount(
-        email: email,
-        password: password,
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(password: password),
       );
 
       if (!mounted) {
         return;
       }
 
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
           builder: (context) => const HomePage(),
         ),
+        (route) => false,
       );
     } catch (error) {
       if (!mounted) {
@@ -85,7 +80,7 @@ class _RegisterPageState extends State<RegisterPage> {
       }
 
       _showError(
-        'Impossible de créer le compte : $error',
+        'Impossible de mettre à jour le mot de passe : $error',
       );
     } finally {
       if (mounted) {
@@ -100,7 +95,8 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Créer un compte'),
+        title: const Text('Nouveau mot de passe'),
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -109,20 +105,16 @@ class _RegisterPageState extends State<RegisterPage> {
           children: [
             const SizedBox(height: 20),
 
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Adresse e-mail',
-                border: OutlineInputBorder(),
-              ),
+            const Text(
+              'Choisissez votre nouveau mot de passe.',
+              style: TextStyle(fontSize: 16),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             SkPasswordField(
               controller: _passwordController,
-              label: 'Mot de passe',
+              label: 'Nouveau mot de passe',
               helperText: '8 caractères minimum.',
             ),
 
@@ -145,7 +137,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         strokeWidth: 2,
                       ),
                     )
-                  : const Text('Créer mon compte'),
+                  : const Text('Valider'),
             ),
           ],
         ),

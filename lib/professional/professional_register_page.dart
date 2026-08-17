@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
 
-import 'auth/account_service.dart';
-import 'home/home_page.dart';
-import 'widgets/sk_password_field.dart';
+import '../auth/account_service.dart';
+import '../widgets/sk_password_field.dart';
+import 'establishment_home_page.dart';
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+/// Création d'un compte professionnel — mêmes mécanismes que côté
+/// parent (email + mot de passe, vérification par email uniquement sur
+/// nouvel appareil), simplement sans conversion de session anonyme
+/// préalable côté données enfant : un membre du personnel n'a rien à
+/// préserver, contrairement à un parent qui peut déjà avoir des enfants
+/// enregistrés.
+class ProfessionalRegisterPage extends StatefulWidget {
+  const ProfessionalRegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<ProfessionalRegisterPage> createState() =>
+      _ProfessionalRegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _ProfessionalRegisterPageState
+    extends State<ProfessionalRegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -53,9 +61,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     if (password != confirmPassword) {
-      _showError(
-        'Les deux mots de passe ne correspondent pas.',
-      );
+      _showError('Les deux mots de passe ne correspondent pas.');
       return;
     }
 
@@ -64,7 +70,7 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-      await AccountService.instance.createAccount(
+      await AccountService.instance.createSeparateAccount(
         email: email,
         password: password,
       );
@@ -76,7 +82,7 @@ class _RegisterPageState extends State<RegisterPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const HomePage(),
+          builder: (context) => const EstablishmentHomePage(),
         ),
       );
     } catch (error) {
@@ -100,7 +106,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Créer un compte'),
+        title: const Text('Créer un compte professionnel'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -113,7 +119,7 @@ class _RegisterPageState extends State<RegisterPage> {
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
-                labelText: 'Adresse e-mail',
+                labelText: 'Adresse e-mail professionnelle',
                 border: OutlineInputBorder(),
               ),
             ),

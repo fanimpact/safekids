@@ -7,7 +7,9 @@ import '../emergency_info/emergency_info_sheet_page.dart';
 import '../emergency_mode/emergency_mode_button_list_page.dart';
 import '../emergency_mode/emergency_mode_child_picker_page.dart';
 import '../repositories/child_repository.dart';
+import '../sharing/create_establishment_link_page.dart';
 import '../sharing/create_share_link_page.dart';
+import '../sharing/establishment_attachments_page.dart';
 import '../utils/date_format_utils.dart';
 
 class HomePage extends StatelessWidget {
@@ -244,6 +246,44 @@ class HomePage extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) =>
                             const CreateShareLinkPage(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.school_outlined,
+                  ),
+                  title: const Text(
+                    'Rattacher à un établissement',
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const CreateEstablishmentLinkPage(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.fact_check_outlined,
+                  ),
+                  title: const Text(
+                    'Mes rattachements établissement',
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const EstablishmentAttachmentsPage(),
                       ),
                     );
                   },

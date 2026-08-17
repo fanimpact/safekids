@@ -24,6 +24,13 @@ migrate_working_dir/
 # Supabase CLI local cache (metadata only, regenerated automatically)
 supabase/.temp/
 
+# Secrets locaux (cles API, jamais commits - les vraies valeurs vivent
+# uniquement dans les secrets Supabase, cote serveur)
+.env
+.env.*
+supabase/.env
+supabase/.env.*
+
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.

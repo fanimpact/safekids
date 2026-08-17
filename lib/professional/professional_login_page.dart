@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 
-import 'auth/account_service.dart';
-import 'home/home_page.dart';
-import 'widgets/sk_password_field.dart';
+import '../auth/account_service.dart';
+import '../auth/device_verification_page.dart';
+import '../widgets/sk_password_field.dart';
+import 'establishment_home_page.dart';
+import 'professional_register_page.dart';
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+class ProfessionalLoginPage extends StatefulWidget {
+  const ProfessionalLoginPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<ProfessionalLoginPage> createState() =>
+      _ProfessionalLoginPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _ProfessionalLoginPageState
+    extends State<ProfessionalLoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
 
   bool _isSubmitting = false;
 
@@ -22,7 +25,6 @@ class _RegisterPageState extends State<RegisterPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -35,27 +37,15 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  static Widget _buildEstablishmentHome(BuildContext context) =>
+      const EstablishmentHomePage();
+
   Future<void> _submit() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    final confirmPassword = _confirmPasswordController.text;
 
-    if (email.isEmpty || !email.contains('@')) {
-      _showError('Saisissez une adresse email valide.');
-      return;
-    }
-
-    if (password.length < 8) {
-      _showError(
-        'Le mot de passe doit contenir au moins 8 caractères.',
-      );
-      return;
-    }
-
-    if (password != confirmPassword) {
-      _showError(
-        'Les deux mots de passe ne correspondent pas.',
-      );
+    if (email.isEmpty || password.isEmpty) {
+      _showError('Saisissez votre email et votre mot de passe.');
       return;
     }
 
@@ -64,10 +54,13 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-      await AccountService.instance.createAccount(
+      await AccountService.instance.signIn(
         email: email,
         password: password,
       );
+
+      final isRecognized =
+          await AccountService.instance.isCurrentDeviceRecognized();
 
       if (!mounted) {
         return;
@@ -76,17 +69,17 @@ class _RegisterPageState extends State<RegisterPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const HomePage(),
+          builder: (context) => isRecognized
+              ? const EstablishmentHomePage()
+              : const DeviceVerificationPage(
+                  buildNextPage: _buildEstablishmentHome,
+                ),
         ),
       );
     } catch (error) {
-      if (!mounted) {
-        return;
+      if (mounted) {
+        _showError('Connexion refusée : $error');
       }
-
-      _showError(
-        'Impossible de créer le compte : $error',
-      );
     } finally {
       if (mounted) {
         setState(() {
@@ -100,7 +93,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Créer un compte'),
+        title: const Text('Espace professionnel — Connexion'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -113,7 +106,7 @@ class _RegisterPageState extends State<RegisterPage> {
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
-                labelText: 'Adresse e-mail',
+                labelText: 'Adresse e-mail professionnelle',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -123,14 +116,6 @@ class _RegisterPageState extends State<RegisterPage> {
             SkPasswordField(
               controller: _passwordController,
               label: 'Mot de passe',
-              helperText: '8 caractères minimum.',
-            ),
-
-            const SizedBox(height: 20),
-
-            SkPasswordField(
-              controller: _confirmPasswordController,
-              label: 'Confirmer le mot de passe',
             ),
 
             const SizedBox(height: 30),
@@ -145,7 +130,22 @@ class _RegisterPageState extends State<RegisterPage> {
                         strokeWidth: 2,
                       ),
                     )
-                  : const Text('Créer mon compte'),
+                  : const Text('Se connecter'),
+            ),
+
+            const SizedBox(height: 15),
+
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const ProfessionalRegisterPage(),
+                  ),
+                );
+              },
+              child: const Text('Créer un compte professionnel'),
             ),
           ],
         ),

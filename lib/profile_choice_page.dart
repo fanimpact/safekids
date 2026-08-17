@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'particulier_home_page.dart';
+import 'professional/professional_entry_page.dart';
 
 class ProfileChoicePage extends StatelessWidget {
   const ProfileChoicePage({
@@ -25,7 +26,15 @@ class ProfileChoicePage extends StatelessWidget {
               width: double.infinity,
               height: 80,
               child: FilledButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const ProfessionalEntryPage(),
+                    ),
+                  );
+                },
                 icon: const Icon(
                   Icons.school,
                 ),

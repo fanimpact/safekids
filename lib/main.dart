@@ -1,10 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'auth/app_auth.dart';
+import 'auth/set_new_password_page.dart';
 import 'config/supabase_config.dart';
 import 'repositories/child_repository.dart';
 import 'welcome_page.dart';
+
+/// Permet de naviguer depuis en dehors de l'arbre de widgets, pour le
+/// cas où l'app est ouverte "à froid" via le lien "mot de passe
+/// oublié" reçu par email (safekids://auth-callback) : l'évènement
+/// Supabase peut arriver avant qu'un contexte d'écran ne soit prêt.
+final navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,14 +54,51 @@ void main() async {
   );
 }
 
-class SafeKidsApp extends StatelessWidget {
+class SafeKidsApp extends StatefulWidget {
   const SafeKidsApp({
     super.key,
   });
 
   @override
+  State<SafeKidsApp> createState() => _SafeKidsAppState();
+}
+
+class _SafeKidsAppState extends State<SafeKidsApp> {
+  late final StreamSubscription<AuthState> _authSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Ouvrir l'app via le lien "mot de passe oublié" (safekids://
+    // auth-callback) déclenche cet évènement une fois la session
+    // temporaire établie par Supabase : on bascule alors directement
+    // sur l'écran de saisie du nouveau mot de passe, y compris si
+    // l'app vient d'être lancée à froid par ce lien.
+    _authSubscription =
+        Supabase.instance.client.auth.onAuthStateChange.listen(
+      (state) {
+        if (state.event == AuthChangeEvent.passwordRecovery) {
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (context) => const SetNewPasswordPage(),
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'SafeKids',
       theme: ThemeData(
