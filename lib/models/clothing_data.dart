@@ -1,8 +1,8 @@
 class ClothingData {
-  bool requiresAssistance;
+  bool? requiresAssistance;
 
   ClothingData({
-    this.requiresAssistance = false,
+    this.requiresAssistance,
   });
 
   Map<String, dynamic> toJson() => {
@@ -14,7 +14,7 @@ class ClothingData {
   ) {
     return ClothingData(
       requiresAssistance:
-          json['requiresAssistance'] as bool? ?? false,
+          json['requiresAssistance'] as bool?,
     );
   }
 }

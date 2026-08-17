@@ -19,7 +19,7 @@ class ClothingPage extends StatefulWidget {
 }
 
 class _ClothingPageState extends State<ClothingPage> {
-  late bool _requiresAssistance;
+  bool? _requiresAssistance;
 
   @override
   void initState() {
@@ -45,6 +45,18 @@ class _ClothingPageState extends State<ClothingPage> {
   }
 
   void _continue() {
+    if (_requiresAssistance == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Répondez par oui ou par non avant de continuer.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     widget.activityProfileController.validateDraft();
 
     Navigator.push(

@@ -17,7 +17,7 @@ class ToiletsRules {
       return recommendations;
     }
 
-    if (toilets.requiresAssistance) {
+    if (toilets.requiresAssistance == true) {
       recommendations.add(
         Recommendation(
           id: 'toilets_assistance',

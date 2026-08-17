@@ -20,7 +20,7 @@ class ClothingRules {
     }
 
     if (activity.hasClothingChange == true &&
-        clothing.requiresAssistance) {
+        clothing.requiresAssistance == true) {
       recommendations.add(
         Recommendation(
           id: 'clothing_change_assistance',

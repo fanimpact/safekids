@@ -397,13 +397,15 @@ class CareInfoSheetPage extends StatelessWidget {
 
     final lines = <String>[];
 
-    if (activityProfile.clothing.requiresAssistance) {
+    if (activityProfile.clothing.requiresAssistance ==
+        true) {
       lines.add(
         'Habillage : besoin d’aide pour changer de tenue',
       );
     }
 
-    if (activityProfile.toilets.requiresAssistance) {
+    if (activityProfile.toilets.requiresAssistance ==
+        true) {
       lines.add(
         'Toilettes : besoin d’accompagnement',
       );
