@@ -273,12 +273,31 @@ class EmergencyInfoSheetPage extends StatelessWidget {
         continue;
       }
 
+      final details = <String>[];
+
       final dosage = treatment.dosage?.trim();
 
+      if (dosage != null && dosage.isNotEmpty) {
+        details.add(dosage);
+      }
+
+      final condition =
+          treatment.administrationCondition?.trim();
+
+      if (condition != null && condition.isNotEmpty) {
+        details.add(condition);
+      }
+
+      final method = treatment.administrationMethod?.trim();
+
+      if (method != null && method.isNotEmpty) {
+        details.add(method);
+      }
+
       lines.add(
-        dosage != null && dosage.isNotEmpty
-            ? '$name — $dosage'
-            : name,
+        details.isEmpty
+            ? name
+            : '$name — ${details.join(' — ')}',
       );
     }
 
@@ -338,7 +357,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
 
     if (triggerFactors.flashingLights == true) {
       lines.add(
-        triggerFactors.requiresGlassesOutdoors
+        triggerFactors.requiresGlassesOutdoors == true
             ? 'Photosensibilité (lumières clignotantes) : vigilance particulière, port de lunettes nécessaire en extérieur'
             : 'Photosensibilité (lumières clignotantes) : vigilance particulière',
       );

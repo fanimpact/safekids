@@ -193,19 +193,6 @@ class _TreatmentsPageState
     });
   }
 
-  void _updateAllergyHasDailyTreatment(
-    int index,
-    bool value,
-  ) {
-    setState(() {
-      widget.transmissionController
-          .updateAllergyHasDailyTreatment(
-        index,
-        value,
-      );
-    });
-  }
-
   void _addMedicalDevice() {
     setState(() {
       widget.transmissionController
@@ -236,6 +223,21 @@ class _TreatmentsPageState
   }
 
   void _continue() {
+    if (_hasDailyTreatments == null ||
+        _hasDiscontinuedTreatments == null ||
+        _hasEmergencyTreatments == null ||
+        _hasMedicalDevices == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Répondez par oui ou par non à chaque question avant de continuer.",
+          ),
+        ),
+      );
+
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -1165,80 +1167,8 @@ class _TreatmentsPageState
                 height: 16,
               ),
 
-              SkYesNoField(
-                label:
-                    "Votre enfant suit-il un traitement quotidien pour cette allergie ?",
-                value:
-                    allergies[index]
-                        .hasDailyTreatment,
-                onChanged: (value) {
-                  _updateAllergyHasDailyTreatment(
-                    index,
-                    value,
-                  );
-                },
-              ),
-
-              if (allergies[index]
-                      .hasDailyTreatment ==
-                  true) ...[
-                const SizedBox(
-                  height: 20,
-                ),
-
-                SkTextField(
-                  label:
-                      "Nom du traitement quotidien",
-                  controller:
-                      _controllers.of(
-                    '${allergies[index].allergyId}_dailyTreatmentName',
-                    allergies[index]
-                                .dailyTreatmentName ??
-                            '',
-                  ),
-                  onChanged:
-                      (value) {
-                    widget
-                        .transmissionController
-                        .updateAllergyDailyTreatmentName(
-                      index,
-                      value,
-                    );
-                  },
-                ),
-
-                const SizedBox(
-                  height: 20,
-                ),
-
-                SkTextField(
-                  label:
-                      "Posologie",
-                  controller:
-                      _controllers.of(
-                    '${allergies[index].allergyId}_dailyTreatmentDosage',
-                    allergies[index]
-                                .dailyTreatmentDosage ??
-                            '',
-                  ),
-                  onChanged:
-                      (value) {
-                    widget
-                        .transmissionController
-                        .updateAllergyDailyTreatmentDosage(
-                      index,
-                      value,
-                    );
-                  },
-                ),
-              ],
-
-              const SizedBox(
-                height: 20,
-              ),
-
               const Text(
-                "Si un traitement d’urgence est nécessaire pour cette allergie, ajoutez-le dans la section « Traitements d’urgence » ci-dessus et cochez cette allergie dans « Ce traitement est-il lié à une ou plusieurs allergies renseignées ? ».",
+                "Si un traitement (quotidien ou d’urgence) est nécessaire pour cette allergie, ajoutez-le dans la section correspondante ci-dessus et cochez cette allergie dans « Ce traitement est-il lié à une ou plusieurs allergies renseignées ? ».",
                 style: TextStyle(
                   fontSize: 14,
                   fontStyle:

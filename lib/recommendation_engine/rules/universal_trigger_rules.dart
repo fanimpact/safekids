@@ -32,7 +32,7 @@ class UniversalTriggerRules {
     }
 
     if (triggerFactors.flashingLights == true &&
-        triggerFactors.requiresGlassesOutdoors) {
+        triggerFactors.requiresGlassesOutdoors == true) {
       recommendations.add(
         Recommendation(
           id: 'photosensitivity_glasses',

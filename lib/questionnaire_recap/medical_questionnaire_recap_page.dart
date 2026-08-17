@@ -170,7 +170,7 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
 
       final professional = pathology.referringProfessional;
 
-      if (pathology.hasReferringProfessional &&
+      if (pathology.hasReferringProfessional == true &&
           professional != null) {
         lines.add(
           _qaText(
@@ -628,51 +628,6 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
     return lines;
   }
 
-  List<String> get _allergyTreatmentLines {
-    final allergies =
-        child.essentialInformation.allergies;
-
-    if (allergies.isEmpty) {
-      return ['Aucune allergie déclarée.'];
-    }
-
-    final lines = <String>[];
-
-    for (final allergy in allergies) {
-      final allergen = allergy.allergen?.trim();
-
-      lines.add(
-        allergen != null && allergen.isNotEmpty
-            ? allergen
-            : 'Allergie',
-      );
-      lines.add(
-        _qaBool(
-          'Votre enfant suit-il un traitement quotidien pour cette allergie ?',
-          allergy.hasDailyTreatment,
-        ),
-      );
-
-      if (allergy.hasDailyTreatment == true) {
-        lines.add(
-          _qaText(
-            'Nom du traitement quotidien',
-            allergy.dailyTreatmentName,
-          ),
-        );
-        lines.add(
-          _qaText(
-            'Posologie',
-            allergy.dailyTreatmentDosage,
-          ),
-        );
-      }
-
-    }
-
-    return lines;
-  }
-
   List<String> get _medicalDeviceLines {
     final devices =
         child.essentialInformation.medicalDevices;
@@ -799,11 +754,6 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
         title: 'Traitements d’urgence',
         icon: Icons.medical_services_outlined,
         lines: _emergencyTreatmentLines,
-      ),
-      _RecapSection(
-        title: 'Traitement lié à chaque allergie',
-        icon: Icons.healing_outlined,
-        lines: _allergyTreatmentLines,
       ),
       _RecapSection(
         title: 'Dispositifs médicaux',

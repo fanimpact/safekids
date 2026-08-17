@@ -20,7 +20,7 @@ class TriggerFactorData {
   bool hasTriggerFactors;
 
   bool? flashingLights;
-  bool requiresGlassesOutdoors;
+  bool? requiresGlassesOutdoors;
 
   bool? heat;
   bool? fatigueOrLackOfSleep;
@@ -47,7 +47,7 @@ class TriggerFactorData {
   TriggerFactorData({
     this.hasTriggerFactors = false,
     this.flashingLights,
-    this.requiresGlassesOutdoors = false,
+    this.requiresGlassesOutdoors,
     this.heat,
     this.fatigueOrLackOfSleep,
     this.noise,
@@ -100,8 +100,7 @@ class TriggerFactorData {
           json['hasTriggerFactors'] as bool? ?? false,
       flashingLights: json['flashingLights'] as bool?,
       requiresGlassesOutdoors:
-          json['requiresGlassesOutdoors'] as bool? ??
-              false,
+          json['requiresGlassesOutdoors'] as bool?,
       heat: json['heat'] as bool?,
       fatigueOrLackOfSleep:
           json['fatigueOrLackOfSleep'] as bool?,

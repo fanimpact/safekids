@@ -394,9 +394,6 @@ class DemoChildren {
               'Piqûres de guêpe',
           observedReaction:
               'Gonflement important',
-          hasDailyTreatment: false,
-          dailyTreatmentName: null,
-          dailyTreatmentDosage: null,
         ),
       ],
       medicalDevices: [

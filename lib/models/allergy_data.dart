@@ -7,10 +7,6 @@ class AllergyData {
 
   String? observedReaction;
 
-  bool? hasDailyTreatment;
-  String? dailyTreatmentName;
-  String? dailyTreatmentDosage;
-
   /// Étapes à suivre en cas d'urgence liée à cette allergie,
   /// dans l'ordre, saisies par le parent. Affichées numérotées
   /// automatiquement dans le Mode Urgence.
@@ -20,9 +16,6 @@ class AllergyData {
     String? allergyId,
     this.allergen,
     this.observedReaction,
-    this.hasDailyTreatment,
-    this.dailyTreatmentName,
-    this.dailyTreatmentDosage,
     List<String>? emergencyInstructionSteps,
   })  : allergyId =
             allergyId ?? _createAllergyId(),
@@ -38,9 +31,6 @@ class AllergyData {
         'allergyId': allergyId,
         'allergen': allergen,
         'observedReaction': observedReaction,
-        'hasDailyTreatment': hasDailyTreatment,
-        'dailyTreatmentName': dailyTreatmentName,
-        'dailyTreatmentDosage': dailyTreatmentDosage,
         'emergencyInstructionSteps':
             emergencyInstructionSteps,
       };
@@ -53,12 +43,6 @@ class AllergyData {
       allergen: json['allergen'] as String?,
       observedReaction:
           json['observedReaction'] as String?,
-      hasDailyTreatment:
-          json['hasDailyTreatment'] as bool?,
-      dailyTreatmentName:
-          json['dailyTreatmentName'] as String?,
-      dailyTreatmentDosage:
-          json['dailyTreatmentDosage'] as String?,
       emergencyInstructionSteps:
           (json['emergencyInstructionSteps']
                   as List<dynamic>?)

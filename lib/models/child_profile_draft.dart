@@ -294,12 +294,6 @@ class ChildProfileDraft {
             allergen: allergy.allergen,
             observedReaction:
                 allergy.observedReaction,
-            hasDailyTreatment:
-                allergy.hasDailyTreatment,
-            dailyTreatmentName:
-                allergy.dailyTreatmentName,
-            dailyTreatmentDosage:
-                allergy.dailyTreatmentDosage,
             emergencyInstructionSteps:
                 List<String>.from(
               allergy.emergencyInstructionSteps,

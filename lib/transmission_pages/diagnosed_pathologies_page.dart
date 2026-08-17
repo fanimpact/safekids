@@ -267,6 +267,24 @@ class _DiagnosedPathologiesPageState
       return;
     }
 
+    final draft = widget.transmissionController.formData;
+
+    final hasUnansweredPathology = _hasPathologies == true &&
+        draft.pathologies.any(
+          (pathology) => pathology.hasReferringProfessional == null,
+        );
+
+    if (hasUnansweredPathology) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Répondez par oui ou par non à chaque question avant de continuer.",
+          ),
+        ),
+      );
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -371,8 +389,9 @@ class _DiagnosedPathologiesPageState
                   );
                 },
               ),
-                            if (pathologies[index]
-                  .hasReferringProfessional) ...[
+              if (pathologies[index]
+                      .hasReferringProfessional ==
+                  true) ...[
                 const SizedBox(height: 20),
 
                 SkTextField(

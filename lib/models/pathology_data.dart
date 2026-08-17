@@ -10,7 +10,7 @@ class PathologyData {
   /// Date ou période approximative
   String? approximateDiagnosisDate;
 
-  bool hasReferringProfessional;
+  bool? hasReferringProfessional;
 
   MedicalProfessionalData? referringProfessional;
 
@@ -23,7 +23,7 @@ class PathologyData {
     String? pathologyId,
     this.name,
     this.approximateDiagnosisDate,
-    this.hasReferringProfessional = false,
+    this.hasReferringProfessional,
     this.referringProfessional,
     List<String>? emergencyInstructionSteps,
   })  : pathologyId =
@@ -63,8 +63,7 @@ class PathologyData {
               as String?,
       hasReferringProfessional:
           json['hasReferringProfessional']
-              as bool? ??
-              false,
+              as bool?,
       referringProfessional:
           referringProfessional == null
               ? null

@@ -196,6 +196,21 @@ void main() {
         'stress ou les émotions fortes',
         false,
       );
+      await answerYesNoField(
+        tester,
+        'contact avec l’eau',
+        false,
+      );
+      await answerYesNoField(
+        tester,
+        'présence d’animaux',
+        false,
+      );
+      await answerYesNoField(
+        tester,
+        'hauteur nécessite',
+        false,
+      );
 
       await tester.ensureVisible(find.text('Continuer'));
       await tester.pumpAndSettle();

@@ -417,7 +417,7 @@ class TransmissionController {
       triggerFactors.flashingLights =
           null;
       triggerFactors.requiresGlassesOutdoors =
-          false;
+          null;
       triggerFactors.heat = null;
       triggerFactors.fatigueOrLackOfSleep =
           null;
@@ -463,7 +463,7 @@ class TransmissionController {
     if (!value) {
       triggerFactors
               .requiresGlassesOutdoors =
-          false;
+          null;
     }
   }
 
@@ -1064,39 +1064,6 @@ class TransmissionController {
     _draft
         .allergies[allergyIndex]
         .emergencyInstructionSteps[stepIndex] =
-        value.trim();
-  }
-
-  void updateAllergyHasDailyTreatment(
-    int index,
-    bool value,
-  ) {
-    final allergy =
-        _draft.allergies[index];
-
-    allergy.hasDailyTreatment = value;
-
-    if (!value) {
-      allergy.dailyTreatmentName = null;
-      allergy.dailyTreatmentDosage = null;
-    }
-  }
-
-  void updateAllergyDailyTreatmentName(
-    int index,
-    String value,
-  ) {
-    _draft.allergies[index]
-            .dailyTreatmentName =
-        value.trim();
-  }
-
-  void updateAllergyDailyTreatmentDosage(
-    int index,
-    String value,
-  ) {
-    _draft.allergies[index]
-            .dailyTreatmentDosage =
         value.trim();
   }
 

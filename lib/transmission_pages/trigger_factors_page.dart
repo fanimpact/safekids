@@ -24,7 +24,7 @@ class TriggerFactorsPage extends StatefulWidget {
 class _TriggerFactorsPageState
     extends State<TriggerFactorsPage> {
   bool? _flashingLights;
-  late bool _requiresGlassesOutdoors;
+  bool? _requiresGlassesOutdoors;
 
   bool? _heat;
   bool? _fatigueOrLackOfSleep;
@@ -157,7 +157,7 @@ class _TriggerFactorsPageState
 
       if (!value) {
         _requiresGlassesOutdoors =
-            false;
+            null;
       }
     });
 
@@ -359,13 +359,18 @@ class _TriggerFactorsPageState
   void _continue() {
     final hasUnansweredFactor =
         _flashingLights == null ||
+            (_flashingLights == true &&
+                _requiresGlassesOutdoors == null) ||
             _heat == null ||
             _fatigueOrLackOfSleep == null ||
             _noise == null ||
             _crowd == null ||
             _confinedSpaces == null ||
             _physicalEffort == null ||
-            _stressOrStrongEmotions == null;
+            _stressOrStrongEmotions == null ||
+            _waterContact == null ||
+            _animals == null ||
+            _height == null;
 
     if (hasUnansweredFactor) {
       ScaffoldMessenger.of(context)

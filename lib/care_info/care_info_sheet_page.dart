@@ -152,11 +152,22 @@ class CareInfoSheetPage extends StatelessWidget {
       final date =
           pathology.approximateDiagnosisDate?.trim();
 
-      lines.add(
-        date != null && date.isNotEmpty
-            ? '$name (diagnostiquée : $date)'
-            : name,
-      );
+      var line = date != null && date.isNotEmpty
+          ? '$name (diagnostiquée : $date)'
+          : name;
+
+      final professionalName = pathology
+          .hasReferringProfessional ==
+              true
+          ? pathology.referringProfessional?.name?.trim()
+          : null;
+
+      if (professionalName != null &&
+          professionalName.isNotEmpty) {
+        line = '$line — suivi par $professionalName';
+      }
+
+      lines.add(line);
     }
 
     return lines;
@@ -237,13 +248,32 @@ class CareInfoSheetPage extends StatelessWidget {
         continue;
       }
 
+      final details = <String>[];
+
       final dosage = treatment.dosage?.trim();
 
-      if (dosage == null || dosage.isEmpty) {
+      if (dosage != null && dosage.isNotEmpty) {
+        details.add(dosage);
+      }
+
+      final condition =
+          treatment.administrationCondition?.trim();
+
+      if (condition != null && condition.isNotEmpty) {
+        details.add(condition);
+      }
+
+      final method = treatment.administrationMethod?.trim();
+
+      if (method != null && method.isNotEmpty) {
+        details.add(method);
+      }
+
+      if (details.isEmpty) {
         continue;
       }
 
-      lines.add('$name — $dosage');
+      lines.add('$name — ${details.join(' — ')}');
     }
 
     return lines;
@@ -455,6 +485,20 @@ class CareInfoSheetPage extends StatelessWidget {
     final aquaticActivity =
         activityProfile.aquaticActivity;
 
+    if (aquaticActivity.requiresFlotationVestNearWater ==
+        true) {
+      lines.add(
+        'Baignade : gilet de flottaison nécessaire à proximité d’un point d’eau',
+      );
+    }
+
+    if (aquaticActivity.requiresDedicatedAdultNearWater ==
+        true) {
+      lines.add(
+        'Baignade : adulte dédié nécessaire à proximité d’un point d’eau',
+      );
+    }
+
     if (aquaticActivity.requiresSpecialEquipment == true) {
       final details = aquaticActivity
           .specialEquipmentDetails
@@ -462,6 +506,39 @@ class CareInfoSheetPage extends StatelessWidget {
 
       if (details != null && details.isNotEmpty) {
         lines.add('Baignade : équipement nécessaire — $details');
+      }
+    }
+
+    if (aquaticActivity.requiresAdaptedSupervision ==
+        true) {
+      final otherSupervisionDetails = aquaticActivity
+          .otherSupervisionDetails
+          ?.trim();
+
+      final supervisionDetails = <String>[
+        if (aquaticActivity.notifyLifeguard)
+          'prévenir le maître-nageur',
+        if (aquaticActivity.requiresDedicatedAdult)
+          'adulte dédié',
+        if (otherSupervisionDetails != null &&
+            otherSupervisionDetails.isNotEmpty)
+          otherSupervisionDetails,
+      ];
+
+      if (supervisionDetails.isNotEmpty) {
+        lines.add(
+          'Baignade : surveillance adaptée — ${_joinWithAnd(supervisionDetails)}',
+        );
+      }
+    }
+
+    if (aquaticActivity.requiresOtherAdaptation == true) {
+      final details = aquaticActivity
+          .otherAdaptationDetails
+          ?.trim();
+
+      if (details != null && details.isNotEmpty) {
+        lines.add('Baignade : $details');
       }
     }
 
@@ -475,6 +552,20 @@ class CareInfoSheetPage extends StatelessWidget {
 
       lines.add(
         'Transport : mal des transports en ${_joinWithAnd(modes)}',
+      );
+    }
+
+    if (transport.motionSickness == true &&
+        transport.takesMotionSicknessMedication == true) {
+      final names = transport
+          .motionSicknessMedicationNames.values
+          .where((name) => name.trim().isNotEmpty)
+          .toList();
+
+      lines.add(
+        names.isEmpty
+            ? 'Transport : traitement contre le mal des transports nécessaire'
+            : 'Transport : traitement contre le mal des transports — ${_joinWithAnd(names)}',
       );
     }
 
@@ -592,7 +683,7 @@ class CareInfoSheetPage extends StatelessWidget {
 
     if (triggerFactors.flashingLights == true) {
       lines.add(
-        triggerFactors.requiresGlassesOutdoors
+        triggerFactors.requiresGlassesOutdoors == true
             ? 'Photosensibilité (lumières clignotantes) : vigilance particulière, port de lunettes nécessaire en extérieur'
             : 'Photosensibilité (lumières clignotantes) : vigilance particulière',
       );
