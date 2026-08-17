@@ -23,8 +23,6 @@ class AquaticActivityPage extends StatefulWidget {
 
 class _AquaticActivityPageState
     extends State<AquaticActivityPage> {
-  late bool _requiresAdaptations;
-
   late bool _requiresFlotationVestNearWater;
   late bool _requiresDedicatedAdultNearWater;
 
@@ -51,9 +49,6 @@ class _AquaticActivityPageState
         .activityProfileController
         .draft
         .aquaticActivity;
-
-    _requiresAdaptations =
-        data.requiresAdaptations;
 
     _requiresFlotationVestNearWater =
         data.requiresFlotationVestNearWater;
@@ -99,47 +94,6 @@ class _AquaticActivityPageState
     _otherAdaptationController.dispose();
 
     super.dispose();
-  }
-
-  void _updateRequiresAdaptations(
-    bool value,
-  ) {
-    final data = widget
-        .activityProfileController
-        .draft
-        .aquaticActivity;
-
-    setState(() {
-      _requiresAdaptations = value;
-
-      if (!value) {
-        _requiresFlotationVestNearWater = false;
-        _requiresDedicatedAdultNearWater = false;
-        _requiresSpecialEquipment = false;
-        _specialEquipmentController.clear();
-        _requiresAdaptedSupervision = false;
-        _notifyLifeguard = false;
-        _requiresDedicatedAdult = false;
-        _otherSupervisionController.clear();
-        _requiresOtherAdaptation = false;
-        _otherAdaptationController.clear();
-      }
-    });
-
-    data.requiresAdaptations = value;
-
-    if (!value) {
-      data.requiresFlotationVestNearWater = false;
-      data.requiresDedicatedAdultNearWater = false;
-      data.requiresSpecialEquipment = false;
-      data.specialEquipmentDetails = null;
-      data.requiresAdaptedSupervision = false;
-      data.notifyLifeguard = false;
-      data.requiresDedicatedAdult = false;
-      data.otherSupervisionDetails = null;
-      data.requiresOtherAdaptation = false;
-      data.otherAdaptationDetails = null;
-    }
   }
 
   WaterVigilance? get _waterVigilancePerHealthProfile {
@@ -411,17 +365,6 @@ class _AquaticActivityPageState
         crossAxisAlignment:
             CrossAxisAlignment.stretch,
         children: [
-          SkYesNoField(
-            label:
-                'Votre enfant nécessite-t-il des adaptations particulières en présence d’un point d’eau (baignade ou hors baignade) ?',
-            value: _requiresAdaptations,
-            onChanged:
-                _updateRequiresAdaptations,
-          ),
-
-          if (_requiresAdaptations) ...[
-          const SizedBox(height: 32),
-
           _buildSectionTitle(
             'À proximité d’un point d’eau',
           ),
@@ -588,7 +531,6 @@ class _AquaticActivityPageState
               helperText:
                   'Réponse courte recommandée (quelques mots ou une phrase courte).',
             ),
-          ],
           ],
 
           const SizedBox(height: 30),

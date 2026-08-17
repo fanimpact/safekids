@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:safekids/activity_profile_pages/aquatic_activity_page.dart';
 import 'package:safekids/activity_profile_pages/communication_page.dart';
 import 'package:safekids/activity_profile_pages/overnight_stay_page.dart';
 import 'package:safekids/activity_profile_pages/safety_page.dart';
@@ -9,12 +10,13 @@ import 'package:safekids/controllers/activity_profile_controller.dart';
 
 /// Vérifie que les questions filtres "Votre enfant a-t-il besoin
 /// d'adaptations particulières pour X ?" ont bien disparu des sections
-/// transport, nuitée, communication, transitions et sécurité du profil
-/// activités, et que les questions détaillées de chaque section sont
-/// affichées directement, sans qu'aucune réponse préalable soit
-/// nécessaire — même correction que celle faite pour les facteurs
-/// déclenchants : un parent ne doit plus pouvoir répondre "Non" par
-/// réflexe à une question filtre et cacher ainsi une vraie information.
+/// eau/baignade, transport, nuitée, communication, transitions et
+/// sécurité du profil activités, et que les questions détaillées de
+/// chaque section sont affichées directement, sans qu'aucune réponse
+/// préalable soit nécessaire — même correction que celle faite pour
+/// les facteurs déclenchants : un parent ne doit plus pouvoir répondre
+/// "Non" par réflexe à une question filtre et cacher ainsi une vraie
+/// information.
 void main() {
   testWidgets(
     'Transport : aucune question filtre, la question sur le mal des '
@@ -173,6 +175,41 @@ void main() {
       expect(
         find.text(
           'Votre enfant nécessite-t-il un équipement de sécurité particulier ?',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'Eau / baignade : aucune question filtre, les questions détaillées '
+    'sont visibles directement',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: AquaticActivityPage(
+            activityProfileController:
+                ActivityProfileController(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(
+          'des adaptations particulières en présence d’un point d’eau',
+        ),
+        findsNothing,
+      );
+      expect(
+        find.text(
+          'Votre enfant a-t-il besoin d’un adulte dédié à proximité d’un point d’eau pour assurer sa sécurité ?',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Votre enfant nécessite-t-il un équipement particulier ?',
         ),
         findsOneWidget,
       );

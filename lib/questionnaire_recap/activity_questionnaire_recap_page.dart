@@ -88,17 +88,8 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
     final data = profile.aquaticActivity;
 
     final lines = <String>[
-      _qaBool(
-        'Votre enfant nécessite-t-il des adaptations particulières en présence d’un point d’eau (baignade ou hors baignade) ?',
-        data.requiresAdaptations,
-      ),
+      'À proximité d’un point d’eau',
     ];
-
-    if (!data.requiresAdaptations) {
-      return lines;
-    }
-
-    lines.add('À proximité d’un point d’eau');
 
     final waterVigilance =
         child

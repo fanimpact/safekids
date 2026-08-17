@@ -30,17 +30,12 @@ class WaterRules {
       return recommendations;
     }
 
-    if (!aquaticActivity.requiresAdaptations) {
-      return recommendations;
-    }
-
     // Le fait que l'enfant ne sache pas nager / risque de se jeter
     // dans l'eau est un facteur déclenchant du profil santé : il est
     // déjà généré par EnvironmentRules (waterTriggerRecommendations),
-    // sans dépendre de cette case "adaptations" (qui ne concerne que
-    // l'équipement/la surveillance ci-dessous) — pour ne pas le
-    // dupliquer, et surtout pour ne jamais le faire dépendre d'une
-    // case cochée ailleurs.
+    // sans dépendre des questions d'équipement/surveillance ci-dessous
+    // — pour ne pas le dupliquer, et surtout pour ne jamais le faire
+    // dépendre d'une case cochée ailleurs.
 
     // À proximité d'un point d'eau.
 
