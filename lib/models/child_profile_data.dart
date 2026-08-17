@@ -369,15 +369,6 @@ class ChildProfileData {
             dailyTreatmentDosage:
                 allergy
                     .dailyTreatmentDosage,
-            hasEmergencyTreatment:
-                allergy
-                    .hasEmergencyTreatment,
-            emergencyTreatmentName:
-                allergy
-                    .emergencyTreatmentName,
-            emergencyTreatmentDosage:
-                allergy
-                    .emergencyTreatmentDosage,
             emergencyInstructionSteps:
                 List<String>.from(
               allergy

@@ -282,36 +282,6 @@ class EmergencyInfoSheetPage extends StatelessWidget {
       );
     }
 
-    for (final allergy
-        in child.essentialInformation.allergies) {
-      if (allergy.hasEmergencyTreatment != true) {
-        continue;
-      }
-
-      final name =
-          allergy.emergencyTreatmentName?.trim();
-
-      if (name == null || name.isEmpty) {
-        continue;
-      }
-
-      final dosage =
-          allergy.emergencyTreatmentDosage?.trim();
-
-      final allergen = allergy.allergen?.trim();
-
-      final prefix =
-          allergen != null && allergen.isNotEmpty
-              ? '$allergen — $name'
-              : name;
-
-      lines.add(
-        dosage != null && dosage.isNotEmpty
-            ? '$prefix — $dosage'
-            : prefix,
-      );
-    }
-
     return lines;
   }
 

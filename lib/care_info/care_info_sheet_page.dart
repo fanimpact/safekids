@@ -249,48 +249,6 @@ class CareInfoSheetPage extends StatelessWidget {
     return lines;
   }
 
-  List<String> get _allergyEmergencyTreatmentLines {
-    final lines = <String>[];
-
-    for (final allergy
-        in child.essentialInformation.allergies) {
-      if (allergy.hasEmergencyTreatment != true) {
-        continue;
-      }
-
-      final name =
-          allergy.emergencyTreatmentName?.trim();
-
-      if (name == null || name.isEmpty) {
-        continue;
-      }
-
-      final dosage =
-          allergy.emergencyTreatmentDosage?.trim();
-
-      final allergen = allergy.allergen?.trim();
-
-      final hasAllergen =
-          allergen != null && allergen.isNotEmpty;
-
-      final hasDosage =
-          dosage != null && dosage.isNotEmpty;
-
-      if (!hasAllergen && !hasDosage) {
-        continue;
-      }
-
-      final prefix =
-          hasAllergen ? '$allergen — $name' : name;
-
-      lines.add(
-        hasDosage ? '$prefix — $dosage' : prefix,
-      );
-    }
-
-    return lines;
-  }
-
   List<String> _medicalDeviceLines(
     bool Function(MedicalDeviceData device) matches,
   ) {
@@ -350,20 +308,6 @@ class CareInfoSheetPage extends StatelessWidget {
     for (final treatment
         in child.essentialInformation.emergencyTreatments) {
       final name = treatment.medicationName?.trim();
-
-      if (name != null && name.isNotEmpty) {
-        names.add(name);
-      }
-    }
-
-    for (final allergy
-        in child.essentialInformation.allergies) {
-      if (allergy.hasEmergencyTreatment != true) {
-        continue;
-      }
-
-      final name =
-          allergy.emergencyTreatmentName?.trim();
 
       if (name != null && name.isNotEmpty) {
         names.add(name);
@@ -810,7 +754,6 @@ class CareInfoSheetPage extends StatelessWidget {
       if (_emergencyMedicationNames.isNotEmpty)
         'Traitement d’urgence à garder à portée de main en permanence : ${_joinWithAnd(_emergencyMedicationNames)}',
       ..._emergencyTreatmentLines,
-      ..._allergyEmergencyTreatmentLines,
     ];
 
     return [

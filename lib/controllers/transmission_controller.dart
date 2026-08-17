@@ -1100,42 +1100,6 @@ class TransmissionController {
         value.trim();
   }
 
-  void updateAllergyHasEmergencyTreatment(
-    int index,
-    bool value,
-  ) {
-    final allergy =
-        _draft.allergies[index];
-
-    allergy.hasEmergencyTreatment =
-        value;
-
-    if (!value) {
-      allergy.emergencyTreatmentName =
-          null;
-      allergy.emergencyTreatmentDosage =
-          null;
-    }
-  }
-
-  void updateAllergyEmergencyTreatmentName(
-    int index,
-    String value,
-  ) {
-    _draft.allergies[index]
-            .emergencyTreatmentName =
-        value.trim();
-  }
-
-  void updateAllergyEmergencyTreatmentDosage(
-    int index,
-    String value,
-  ) {
-    _draft.allergies[index]
-            .emergencyTreatmentDosage =
-        value.trim();
-  }
-
   // DISPOSITIFS MÉDICAUX
 
   void updateHasMedicalDevices(bool value) {

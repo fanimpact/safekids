@@ -668,27 +668,6 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
         );
       }
 
-      lines.add(
-        _qaBool(
-          'Votre enfant dispose-t-il d’un traitement d’urgence pour cette allergie ?',
-          allergy.hasEmergencyTreatment,
-        ),
-      );
-
-      if (allergy.hasEmergencyTreatment == true) {
-        lines.add(
-          _qaText(
-            'Nom du traitement d’urgence',
-            allergy.emergencyTreatmentName,
-          ),
-        );
-        lines.add(
-          _qaText(
-            'Posologie',
-            allergy.emergencyTreatmentDosage,
-          ),
-        );
-      }
     }
 
     return lines;

@@ -397,9 +397,6 @@ class DemoChildren {
           hasDailyTreatment: false,
           dailyTreatmentName: null,
           dailyTreatmentDosage: null,
-          hasEmergencyTreatment: false,
-          emergencyTreatmentName: null,
-          emergencyTreatmentDosage: null,
         ),
       ],
       medicalDevices: [

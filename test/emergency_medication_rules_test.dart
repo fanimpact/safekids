@@ -191,82 +191,6 @@ void main() {
   );
 
   test(
-    'Allergie - traitement urgence est repris avec dosage et allergène',
-    () {
-      final child = _createTestChild(
-        childId: 'test-allergy-emergency',
-        allergies: [
-          AllergyData(
-            allergyId: 'allergy-arachide',
-            allergen: 'Arachide',
-            hasEmergencyTreatment: true,
-            emergencyTreatmentName:
-                'Auto-injecteur test',
-            emergencyTreatmentDosage:
-                '0,3 mg',
-          ),
-        ],
-      );
-
-      final recommendations = rules.evaluate(child);
-
-      expect(
-        recommendations.length,
-        1,
-      );
-
-      expect(
-        recommendations.first.id,
-        'allergy_emergency_treatment_0',
-      );
-
-      expect(
-        recommendations.first.category,
-        RecommendationCategory.emergencyMedication,
-      );
-
-      expect(
-        recommendations.first.text,
-        contains('Arachide'),
-      );
-
-      expect(
-        recommendations.first.text,
-        contains('Auto-injecteur test'),
-      );
-
-      expect(
-        recommendations.first.text,
-        contains('Dosage : 0,3 mg'),
-      );
-    },
-  );
-
-  test(
-    'Allergie - aucun traitement urgence ne génère rien',
-    () {
-      final child = _createTestChild(
-        childId: 'test-allergy-no-emergency',
-        allergies: [
-          AllergyData(
-            allergen: 'Pollen',
-            hasEmergencyTreatment: false,
-            emergencyTreatmentName:
-                'Médicament non utilisé',
-          ),
-        ],
-      );
-
-      final recommendations = rules.evaluate(child);
-
-      expect(
-        recommendations,
-        isEmpty,
-      );
-    },
-  );
-
-  test(
     'Médicament urgence vide est ignoré',
     () {
       final child = _createTestChild(
@@ -289,47 +213,44 @@ void main() {
   );
 
   test(
-    'Traitement général et traitement allergie peuvent apparaître ensemble',
+    'Un traitement d’urgence lié à une allergie ne génère qu’une seule '
+    'recommandation (plus de saisie séparée possible sur l’allergie '
+    'elle-même)',
     () {
+      const allergyId = 'test-allergy-single-path';
+
       final child = _createTestChild(
-        childId: 'test-both-emergency-sources',
-        emergencyTreatments: [
-          EmergencyTreatmentData(
-            medicationName:
-                'Traitement urgence général',
-          ),
-        ],
+        childId: 'test-single-emergency-source',
         allergies: [
           AllergyData(
+            allergyId: allergyId,
             allergen: 'Guêpe',
-            hasEmergencyTreatment: true,
-            emergencyTreatmentName:
-                'Traitement urgence allergie',
+          ),
+        ],
+        emergencyTreatments: [
+          EmergencyTreatmentData(
+            medicationName: 'Traitement urgence guêpe',
+            relatedAllergyIds: const [
+              allergyId,
+            ],
           ),
         ],
       );
 
       final recommendations = rules.evaluate(child);
 
-      final ids = recommendations
-          .map(
-            (recommendation) => recommendation.id,
-          )
-          .toSet();
-
-      expect(
-        ids,
-        contains('emergency_treatment_0'),
-      );
-
-      expect(
-        ids,
-        contains('allergy_emergency_treatment_0'),
-      );
-
       expect(
         recommendations.length,
-        2,
+        1,
+        reason:
+            'Un seul chemin de saisie existe désormais pour un '
+            'traitement d’urgence lié à une allergie : la liste '
+            'générale des traitements d’urgence.',
+      );
+
+      expect(
+        recommendations.first.id,
+        'emergency_treatment_0',
       );
     },
   );

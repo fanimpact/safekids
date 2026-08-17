@@ -206,19 +206,6 @@ class _TreatmentsPageState
     });
   }
 
-  void _updateAllergyHasEmergencyTreatment(
-    int index,
-    bool value,
-  ) {
-    setState(() {
-      widget.transmissionController
-          .updateAllergyHasEmergencyTreatment(
-        index,
-        value,
-      );
-    });
-  }
-
   void _addMedicalDevice() {
     setState(() {
       widget.transmissionController
@@ -1247,76 +1234,17 @@ class _TreatmentsPageState
               ],
 
               const SizedBox(
-                height: 24,
+                height: 20,
               ),
 
-              SkYesNoField(
-                label:
-                    "Votre enfant dispose-t-il d’un traitement d’urgence pour cette allergie ?",
-                value:
-                    allergies[index]
-                        .hasEmergencyTreatment,
-                onChanged: (value) {
-                  _updateAllergyHasEmergencyTreatment(
-                    index,
-                    value,
-                  );
-                },
+              const Text(
+                "Si un traitement d’urgence est nécessaire pour cette allergie, ajoutez-le dans la section « Traitements d’urgence » ci-dessus et cochez cette allergie dans « Ce traitement est-il lié à une ou plusieurs allergies renseignées ? ».",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontStyle:
+                      FontStyle.italic,
+                ),
               ),
-
-              if (allergies[index]
-                      .hasEmergencyTreatment ==
-                  true) ...[
-                const SizedBox(
-                  height: 20,
-                ),
-
-                SkTextField(
-                  label:
-                      "Nom du traitement d’urgence",
-                  controller:
-                      _controllers.of(
-                    '${allergies[index].allergyId}_emergencyTreatmentName',
-                    allergies[index]
-                                .emergencyTreatmentName ??
-                            '',
-                  ),
-                  onChanged:
-                      (value) {
-                    widget
-                        .transmissionController
-                        .updateAllergyEmergencyTreatmentName(
-                      index,
-                      value,
-                    );
-                  },
-                ),
-
-                const SizedBox(
-                  height: 20,
-                ),
-
-                SkTextField(
-                  label:
-                      "Posologie",
-                  controller:
-                      _controllers.of(
-                    '${allergies[index].allergyId}_emergencyTreatmentDosage',
-                    allergies[index]
-                                .emergencyTreatmentDosage ??
-                            '',
-                  ),
-                  onChanged:
-                      (value) {
-                    widget
-                        .transmissionController
-                        .updateAllergyEmergencyTreatmentDosage(
-                      index,
-                      value,
-                    );
-                  },
-                ),
-              ],
 
               const SizedBox(
                 height: 28,
