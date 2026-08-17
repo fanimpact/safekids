@@ -20,7 +20,6 @@ class TransportPage extends StatefulWidget {
 }
 
 class _TransportPageState extends State<TransportPage> {
-  late bool _requiresAdaptations;
   late bool _motionSickness;
   late bool _takesMotionSicknessMedication;
   late bool _requiresSpecialEquipment;
@@ -39,7 +38,6 @@ class _TransportPageState extends State<TransportPage> {
     final data =
         widget.activityProfileController.draft.transport;
 
-    _requiresAdaptations = data.requiresAdaptations;
     _motionSickness = data.motionSickness;
 
     _takesMotionSicknessMedication =
@@ -100,46 +98,6 @@ class _TransportPageState extends State<TransportPage> {
         return 'Bateau / Ferry';
       case TransportMode.other:
         return 'Autre';
-    }
-  }
-
-  void _updateRequiresAdaptations(bool value) {
-    final data =
-        widget.activityProfileController.draft.transport;
-
-    setState(() {
-      _requiresAdaptations = value;
-
-      if (!value) {
-        _motionSickness = false;
-        _takesMotionSicknessMedication = false;
-        _requiresSpecialEquipment = false;
-        _requiresSpecialAttention = false;
-
-        _specialEquipmentController.clear();
-        _specialAttentionController.clear();
-
-        for (final controller
-            in _medicationControllers.values) {
-          controller.clear();
-        }
-      }
-    });
-
-    data.requiresAdaptations = value;
-
-    if (!value) {
-      data.motionSickness = false;
-      data.motionSicknessTransports.clear();
-
-      data.takesMotionSicknessMedication = false;
-      data.motionSicknessMedicationNames.clear();
-
-      data.requiresSpecialEquipment = false;
-      data.specialEquipmentDetails = null;
-
-      data.requiresSpecialAttention = false;
-      data.specialAttentionDetails = null;
     }
   }
 
@@ -422,23 +380,12 @@ class _TransportPageState extends State<TransportPage> {
         children: [
           SkYesNoField(
             label:
-                'Votre enfant nécessite-t-il des adaptations particulières lors des transports ?',
-            value: _requiresAdaptations,
-            onChanged:
-                _updateRequiresAdaptations,
+                'Votre enfant a-t-il le mal des transports ?',
+            value: _motionSickness,
+            onChanged: _updateMotionSickness,
           ),
 
-          if (_requiresAdaptations) ...[
-            const SizedBox(height: 24),
-
-            SkYesNoField(
-              label:
-                  'Votre enfant a-t-il le mal des transports ?',
-              value: _motionSickness,
-              onChanged: _updateMotionSickness,
-            ),
-
-            if (_motionSickness) ...[
+          if (_motionSickness) ...[
               const SizedBox(height: 16),
 
               const Text(
@@ -627,7 +574,6 @@ class _TransportPageState extends State<TransportPage> {
                 ),
               ),
             ],
-          ],
 
           const SizedBox(height: 30),
 

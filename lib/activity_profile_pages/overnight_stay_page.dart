@@ -23,7 +23,6 @@ class OvernightStayPage extends StatefulWidget {
 
 class _OvernightStayPageState
     extends State<OvernightStayPage> {
-  late bool _requiresAdaptations;
   late bool _usesNightDevice;
   late bool _requiresElectricity;
   late bool _powerFailureIsCritical;
@@ -40,8 +39,6 @@ class _OvernightStayPageState
         .activityProfileController
         .draft
         .overnightStay;
-
-    _requiresAdaptations = data.requiresAdaptations;
 
     _usesNightDevice = data.usesNightDevice;
 
@@ -97,39 +94,6 @@ class _OvernightStayPageState
         data.nightDeviceIds.remove(deviceId);
       }
     });
-  }
-
-  void _updateRequiresAdaptations(bool value) {
-    final data = widget
-        .activityProfileController
-        .draft
-        .overnightStay;
-
-    setState(() {
-      _requiresAdaptations = value;
-
-      if (!value) {
-        _usesNightDevice = false;
-        _requiresElectricity = false;
-        _powerFailureIsCritical = false;
-        _requiresNightSupervision = false;
-
-        _nightSupervisionController.clear();
-      }
-    });
-
-    data.requiresAdaptations = value;
-
-    if (!value) {
-      data.usesNightDevice = false;
-      data.nightDeviceIds.clear();
-
-      data.requiresElectricity = false;
-      data.powerFailureIsCritical = false;
-
-      data.requiresNightSupervision = false;
-      data.nightSupervisionDetails = null;
-    }
   }
 
   void _updateUsesNightDevice(bool value) {
@@ -251,18 +215,7 @@ class _OvernightStayPageState
         children: [
           SkYesNoField(
             label:
-                'Votre enfant nécessite-t-il des adaptations particulières lors d’un séjour avec nuitée, par rapport à un enfant de son âge ?',
-            value: _requiresAdaptations,
-            onChanged:
-                _updateRequiresAdaptations,
-          ),
-
-          if (_requiresAdaptations) ...[
-            const SizedBox(height: 24),
-
-            SkYesNoField(
-              label:
-                  'Votre enfant utilise-t-il un appareillage pendant la nuit ?',
+                'Votre enfant utilise-t-il un appareillage pendant la nuit ?',
               value: _usesNightDevice,
               onChanged: _updateUsesNightDevice,
             ),
@@ -365,7 +318,6 @@ class _OvernightStayPageState
                     _updateNightSupervisionDetails,
               ),
             ],
-          ],
 
           const SizedBox(height: 30),
 

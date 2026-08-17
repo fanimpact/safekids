@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../controllers/activity_profile_controller.dart';
 import '../widgets/questionnaire_page.dart';
-import '../widgets/sk_yes_no_field.dart';
 import 'safety_page.dart';
 
 class TransitionsPage extends StatefulWidget {
@@ -20,7 +19,6 @@ class TransitionsPage extends StatefulWidget {
 
 class _TransitionsPageState
     extends State<TransitionsPage> {
-  late bool _requiresAdaptations;
   late bool _transitionsMayCauseStress;
   late bool _changesMustBeAnnounced;
 
@@ -33,37 +31,11 @@ class _TransitionsPageState
         .draft
         .transitions;
 
-    _requiresAdaptations =
-        data.requiresAdaptations;
-
     _transitionsMayCauseStress =
         data.transitionsMayCauseStress;
 
     _changesMustBeAnnounced =
         data.changesMustBeAnnounced;
-  }
-
-  void _updateRequiresAdaptations(bool value) {
-    final data = widget
-        .activityProfileController
-        .draft
-        .transitions;
-
-    setState(() {
-      _requiresAdaptations = value;
-
-      if (!value) {
-        _transitionsMayCauseStress = false;
-        _changesMustBeAnnounced = false;
-      }
-    });
-
-    data.requiresAdaptations = value;
-
-    if (!value) {
-      data.transitionsMayCauseStress = false;
-      data.changesMustBeAnnounced = false;
-    }
   }
 
   void _updateTransitionsMayCauseStress(
@@ -143,35 +115,23 @@ class _TransitionsPageState
         crossAxisAlignment:
             CrossAxisAlignment.stretch,
         children: [
-          SkYesNoField(
+          _buildCheckbox(
             label:
-                'Votre enfant nécessite-t-il des adaptations particulières lors des transitions ou des changements d’activité, par rapport à un enfant de son âge ?',
-            value: _requiresAdaptations,
+                'Les changements d’activité peuvent provoquer un stress important.',
+            value:
+                _transitionsMayCauseStress,
             onChanged:
-                _updateRequiresAdaptations,
+                _updateTransitionsMayCauseStress,
           ),
 
-          if (_requiresAdaptations) ...[
-            const SizedBox(height: 24),
-
-            _buildCheckbox(
-              label:
-                  'Les changements d’activité peuvent provoquer un stress important.',
-              value:
-                  _transitionsMayCauseStress,
-              onChanged:
-                  _updateTransitionsMayCauseStress,
-            ),
-
-            _buildCheckbox(
-              label:
-                  'Les changements de programme doivent être annoncés à l’avance.',
-              value:
-                  _changesMustBeAnnounced,
-              onChanged:
-                  _updateChangesMustBeAnnounced,
-            ),
-          ],
+          _buildCheckbox(
+            label:
+                'Les changements de programme doivent être annoncés à l’avance.',
+            value:
+                _changesMustBeAnnounced,
+            onChanged:
+                _updateChangesMustBeAnnounced,
+          ),
 
           const SizedBox(height: 30),
 

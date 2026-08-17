@@ -20,7 +20,6 @@ class SafetyPage extends StatefulWidget {
 }
 
 class _SafetyPageState extends State<SafetyPage> {
-  late bool _requiresAdaptations;
   late bool _mayLeaveGroupSuddenly;
   late bool _requiresSafetyEquipment;
 
@@ -35,9 +34,6 @@ class _SafetyPageState extends State<SafetyPage> {
         .activityProfileController
         .draft
         .safety;
-
-    _requiresAdaptations =
-        data.requiresAdaptations;
 
     _mayLeaveGroupSuddenly =
         data.mayLeaveGroupSuddenly;
@@ -55,33 +51,6 @@ class _SafetyPageState extends State<SafetyPage> {
   void dispose() {
     _safetyEquipmentController.dispose();
     super.dispose();
-  }
-
-  void _updateRequiresAdaptations(
-    bool value,
-  ) {
-    final data = widget
-        .activityProfileController
-        .draft
-        .safety;
-
-    setState(() {
-      _requiresAdaptations = value;
-
-      if (!value) {
-        _mayLeaveGroupSuddenly = false;
-        _requiresSafetyEquipment = false;
-        _safetyEquipmentController.clear();
-      }
-    });
-
-    data.requiresAdaptations = value;
-
-    if (!value) {
-      data.mayLeaveGroupSuddenly = false;
-      data.requiresSafetyEquipment = false;
-      data.safetyEquipmentDetails = null;
-    }
   }
 
   void _updateMayLeaveGroupSuddenly(
@@ -185,62 +154,49 @@ class _SafetyPageState extends State<SafetyPage> {
         crossAxisAlignment:
             CrossAxisAlignment.stretch,
         children: [
-          SkYesNoField(
+          _buildCheckbox(
             label:
-                'Votre enfant nécessite-t-il des adaptations particulières concernant sa sécurité, par rapport à un enfant de son âge ?',
+                'Votre enfant a déjà quitté brusquement un groupe.',
             value:
-                _requiresAdaptations,
+                _mayLeaveGroupSuddenly,
             onChanged:
-                _updateRequiresAdaptations,
+                _updateMayLeaveGroupSuddenly,
           ),
 
-          if (_requiresAdaptations) ...[
-            const SizedBox(height: 24),
+          const SizedBox(height: 24),
 
-            _buildCheckbox(
+          SkYesNoField(
+            label:
+                'Votre enfant nécessite-t-il un équipement de sécurité particulier ?',
+            value:
+                _requiresSafetyEquipment,
+            onChanged:
+                _updateRequiresSafetyEquipment,
+          ),
+
+          if (_requiresSafetyEquipment) ...[
+            const SizedBox(height: 12),
+
+            SkTextField(
               label:
-                  'Votre enfant a déjà quitté brusquement un groupe.',
-              value:
-                  _mayLeaveGroupSuddenly,
+                  'Précisez l’équipement de sécurité nécessaire',
+              controller:
+                  _safetyEquipmentController,
               onChanged:
-                  _updateMayLeaveGroupSuddenly,
+                  _updateSafetyEquipmentDetails,
+              maxLength: 100,
+              helperText:
+                  'Réponse courte recommandée (quelques mots ou une phrase courte).',
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
 
-            SkYesNoField(
-              label:
-                  'Votre enfant nécessite-t-il un équipement de sécurité particulier ?',
-              value:
-                  _requiresSafetyEquipment,
-              onChanged:
-                  _updateRequiresSafetyEquipment,
+            const Text(
+              'Exemples : casque de protection, autre équipement indispensable à sa sécurité.',
+              style: TextStyle(
+                fontSize: 14,
+              ),
             ),
-
-            if (_requiresSafetyEquipment) ...[
-              const SizedBox(height: 12),
-
-              SkTextField(
-                label:
-                    'Précisez l’équipement de sécurité nécessaire',
-                controller:
-                    _safetyEquipmentController,
-                onChanged:
-                    _updateSafetyEquipmentDetails,
-                maxLength: 100,
-                helperText:
-                    'Réponse courte recommandée (quelques mots ou une phrase courte).',
-              ),
-
-              const SizedBox(height: 8),
-
-              const Text(
-                'Exemples : casque de protection, autre équipement indispensable à sa sécurité.',
-                style: TextStyle(
-                  fontSize: 14,
-                ),
-              ),
-            ],
           ],
 
           const SizedBox(height: 30),

@@ -203,21 +203,10 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
 
     final lines = <String>[
       _qaBool(
-        'Votre enfant nécessite-t-il des adaptations particulières lors des transports ?',
-        data.requiresAdaptations,
-      ),
-    ];
-
-    if (!data.requiresAdaptations) {
-      return lines;
-    }
-
-    lines.add(
-      _qaBool(
         'Votre enfant a-t-il le mal des transports ?',
         data.motionSickness,
       ),
-    );
+    ];
 
     if (data.motionSickness) {
       lines.add(
@@ -313,21 +302,10 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
 
     final lines = <String>[
       _qaBool(
-        'Votre enfant nécessite-t-il des adaptations particulières lors d’un séjour avec nuitée, par rapport à un enfant de son âge ?',
-        data.requiresAdaptations,
-      ),
-    ];
-
-    if (!data.requiresAdaptations) {
-      return lines;
-    }
-
-    lines.add(
-      _qaBool(
         'Votre enfant utilise-t-il un appareillage pendant la nuit ?',
         data.usesNightDevice,
       ),
-    );
+    ];
 
     if (data.usesNightDevice) {
       final deviceNames = child
@@ -417,21 +395,10 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
 
     final lines = <String>[
       _qaBool(
-        'Votre enfant nécessite-t-il des adaptations particulières concernant la communication, par rapport à un enfant de son âge ?',
-        data.requiresAdaptations,
-      ),
-    ];
-
-    if (!data.requiresAdaptations) {
-      return lines;
-    }
-
-    lines.add(
-      _qaBool(
         'Les consignes doivent être formulées avec des mots simples.',
         data.useSimpleInstructions,
       ),
-    );
+    ];
     lines.add(
       _qaBool(
         'Votre enfant peut donner l’impression d’avoir compris une consigne alors que ce n’est pas le cas.',
@@ -468,31 +435,16 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
   ) {
     final data = profile.transitions;
 
-    final lines = <String>[
-      _qaBool(
-        'Votre enfant nécessite-t-il des adaptations particulières lors des transitions ou des changements d’activité, par rapport à un enfant de son âge ?',
-        data.requiresAdaptations,
-      ),
-    ];
-
-    if (!data.requiresAdaptations) {
-      return lines;
-    }
-
-    lines.add(
+    return [
       _qaBool(
         'Les changements d’activité peuvent provoquer un stress important.',
         data.transitionsMayCauseStress,
       ),
-    );
-    lines.add(
       _qaBool(
         'Les changements de programme doivent être annoncés à l’avance.',
         data.changesMustBeAnnounced,
       ),
-    );
-
-    return lines;
+    ];
   }
 
   List<String> _safetyLines(
@@ -502,21 +454,10 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
 
     final lines = <String>[
       _qaBool(
-        'Votre enfant nécessite-t-il des adaptations particulières concernant sa sécurité, par rapport à un enfant de son âge ?',
-        data.requiresAdaptations,
-      ),
-    ];
-
-    if (!data.requiresAdaptations) {
-      return lines;
-    }
-
-    lines.add(
-      _qaBool(
         'Votre enfant a déjà quitté brusquement un groupe.',
         data.mayLeaveGroupSuddenly,
       ),
-    );
+    ];
     lines.add(
       _qaBool(
         'Votre enfant nécessite-t-il un équipement de sécurité particulier ?',
