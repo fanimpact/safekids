@@ -45,12 +45,15 @@ void main() {
 
         expect(
           find.text(
-            'Votre enfant peut-il donner l’impression d’avoir compris une consigne alors que ce n’est pas le cas ?',
+            'Votre enfant nécessite-t-il des adaptations particulières concernant la communication, par rapport à un enfant de son âge ?',
           ),
           findsOneWidget,
         );
         expect(
-          yesNoValue(tester, 'donner l’impression d’avoir compris'),
+          yesNoValue(
+            tester,
+            'des adaptations particulières concernant la communication',
+          ),
           isNull,
         );
         expect(
@@ -96,7 +99,7 @@ void main() {
             (widget) =>
                 widget is SkYesNoField &&
                 widget.label.contains(
-                  'donner l’impression d’avoir compris',
+                  'des adaptations particulières concernant la communication',
                 ),
           ),
         );
@@ -106,6 +109,24 @@ void main() {
         expect(
           find.text(
             'Les consignes doivent être formulées avec des mots simples.',
+          ),
+          findsOneWidget,
+          reason:
+              'Les trois éléments (mots simples, peut donner '
+              'l\'impression d\'avoir compris, vérifier '
+              'individuellement) sont des cases à cocher '
+              'indépendantes, pas une question filtre suivie de '
+              'sous-éléments.',
+        );
+        expect(
+          find.text(
+            'Votre enfant peut donner l’impression d’avoir compris une consigne alors que ce n’est pas le cas.',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            'Il est préférable de vérifier individuellement que les consignes ont été comprises.',
           ),
           findsOneWidget,
         );

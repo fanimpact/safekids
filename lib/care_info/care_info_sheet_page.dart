@@ -421,7 +421,7 @@ class CareInfoSheetPage extends StatelessWidget {
       );
     }
 
-    if (communication.mayAppearToUnderstand == true ||
+    if (communication.mayAppearToUnderstand ||
         communication.verifyUnderstandingIndividually) {
       lines.add(
         'Communication : vérifier sa compréhension individuellement',

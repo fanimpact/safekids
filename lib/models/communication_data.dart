@@ -1,13 +1,13 @@
 class CommunicationData {
-  bool requiresAdaptations;
+  /// Question filtre de la section : si "Non" (ou pas encore répondu),
+  /// les questions détaillées ne sont pas affichées — seuls les
+  /// parents concernés par un souci de communication ont besoin d'y
+  /// répondre.
+  bool? requiresAdaptations;
 
   bool useSimpleInstructions;
 
-  /// Question filtre de la section : si "Non" (ou pas encore répondu),
-  /// les autres questions détaillées ne sont pas affichées — seuls les
-  /// parents concernés par un souci de communication ont besoin d'y
-  /// répondre.
-  bool? mayAppearToUnderstand;
+  bool mayAppearToUnderstand;
 
   bool verifyUnderstandingIndividually;
 
@@ -15,9 +15,9 @@ class CommunicationData {
   String? communicationSupportDetails;
 
   CommunicationData({
-    this.requiresAdaptations = false,
+    this.requiresAdaptations,
     this.useSimpleInstructions = false,
-    this.mayAppearToUnderstand,
+    this.mayAppearToUnderstand = false,
     this.verifyUnderstandingIndividually = false,
     this.usesCommunicationSupport,
     this.communicationSupportDetails,
@@ -40,13 +40,13 @@ class CommunicationData {
   ) {
     return CommunicationData(
       requiresAdaptations:
-          json['requiresAdaptations'] as bool? ??
-              false,
+          json['requiresAdaptations'] as bool?,
       useSimpleInstructions:
           json['useSimpleInstructions'] as bool? ??
               false,
       mayAppearToUnderstand:
-          json['mayAppearToUnderstand'] as bool?,
+          json['mayAppearToUnderstand'] as bool? ??
+              false,
       verifyUnderstandingIndividually:
           json['verifyUnderstandingIndividually']
                   as bool? ??

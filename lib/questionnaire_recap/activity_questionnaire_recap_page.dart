@@ -386,12 +386,12 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
 
     final lines = <String>[
       _qaBool(
-        'Votre enfant peut-il donner l’impression d’avoir compris une consigne alors que ce n’est pas le cas ?',
-        data.mayAppearToUnderstand,
+        'Votre enfant nécessite-t-il des adaptations particulières concernant la communication, par rapport à un enfant de son âge ?',
+        data.requiresAdaptations,
       ),
     ];
 
-    if (data.mayAppearToUnderstand != true) {
+    if (data.requiresAdaptations != true) {
       return lines;
     }
 
@@ -399,6 +399,12 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       _qaBool(
         'Les consignes doivent être formulées avec des mots simples.',
         data.useSimpleInstructions,
+      ),
+    );
+    lines.add(
+      _qaBool(
+        'Votre enfant peut donner l’impression d’avoir compris une consigne alors que ce n’est pas le cas.',
+        data.mayAppearToUnderstand,
       ),
     );
     lines.add(
