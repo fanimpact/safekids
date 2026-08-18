@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../care_info/care_info_sheet_page.dart';
 import '../emergency_info/emergency_info_sheet_page.dart';
-import '../emergency_mode/emergency_mode_button_list_page.dart';
 import '../models/complete_child_profile_data.dart';
 import '../questionnaire_recap/activity_questionnaire_recap_page.dart';
 import 'professional_child_repository.dart';
 
-/// Les 4 fiches accessibles au personnel pour un enfant rattaché à son
+/// Les 3 fiches accessibles au personnel pour un enfant rattaché à son
 /// établissement — chaque ouverture est journalisée (traçabilité RGPD,
 /// voir `journal_consultations_fiche`). Réutilise telles quelles les
 /// pages déjà construites côté parent : elles n'ont besoin que d'un
 /// `CompleteChildProfileData` et ne font aucun appel réseau propre.
+///
+/// Le Mode Urgence n'est plus accessible d'ici : promu au niveau
+/// supérieur (accueil de l'espace professionnel), avec son propre
+/// sélecteur d'enfant, pour éviter le doublon.
 class ProfessionalChildDetailPage extends StatelessWidget {
   final CompleteChildProfileData child;
 
@@ -59,28 +62,6 @@ class ProfessionalChildDetailPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            Card(
-              color: Colors.red.shade50,
-              child: ListTile(
-                leading: Icon(
-                  Icons.emergency_outlined,
-                  color: Colors.red.shade700,
-                ),
-                title: const Text('Mode Urgence'),
-                subtitle: const Text(
-                  'En cas de crise : instructions et actions rapides.',
-                ),
-                onTap: () => _openFiche(
-                  context,
-                  typeFiche: 'mode_urgence',
-                  builder: (context) =>
-                      EmergencyModeButtonListPage(child: child),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
             Card(
               child: ListTile(
                 leading: const Icon(Icons.medical_information_outlined),

@@ -1,79 +1,73 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../models/activity_session/activity_session_codec.dart';
 import '../models/activity_session/activity_session_data.dart';
 import '../models/activity_session/complete_activity_session_data.dart';
 
+/// Sauvegarde/liste les activités préparées par le parent connecté
+/// (table `activites_preparees`, `parent_id = auth.uid()`) — les
+/// recommandations elles-mêmes ne sont jamais stockées, seule la
+/// description de la sortie l'est ; elles sont recalculées à chaque
+/// ouverture à partir du profil le plus à jour de chaque enfant.
 class ActivitySessionRepository {
   ActivitySessionRepository._();
 
   static final ActivitySessionRepository instance =
       ActivitySessionRepository._();
 
-  final List<CompleteActivitySessionData> _activities = [];
+  SupabaseClient get _client => Supabase.instance.client;
 
-  List<CompleteActivitySessionData> get activities =>
-      List.unmodifiable(_activities);
-
-  CompleteActivitySessionData addActivity(
+  Future<CompleteActivitySessionData> saveActivity(
     ActivitySessionData activity, {
     List<String> childIds = const [],
-  }) {
-    final completeActivity =
-        CompleteActivitySessionData(
-      activity: activity,
-      childIds: List.unmodifiable(childIds),
-    );
+  }) async {
+    final userId = _client.auth.currentUser?.id;
 
-    _activities.add(completeActivity);
-
-    return completeActivity;
-  }
-
-  void clearActivities() {
-    _activities.clear();
-  }
-
-  void ensureDemoActivityExists() {
-    final demoAlreadyExists = _activities.any(
-      (activity) =>
-          activity.activityName ==
-          'Activité test SafeKids',
-    );
-
-    if (demoAlreadyExists) {
-      return;
+    if (userId == null) {
+      throw StateError(
+        'Aucun utilisateur connecté.',
+      );
     }
 
-    _activities.add(
-      CompleteActivitySessionData(
-        activity: ActivitySessionData(
-          activityName: 'Activité test SafeKids',
-          date: DateTime.now(),
-          location: 'Lieu de démonstration',
+    final row = await _client
+        .from('activites_preparees')
+        .insert({
+          'cree_par': userId,
+          'parent_id': userId,
+          'nom_activite': activity.activityName,
+          'date_activite':
+              activity.date?.toUtc().toIso8601String(),
+          'lieu': activity.location,
+          'description':
+              ActivitySessionCodec.descriptionToJson(
+            activity,
+          ),
+          'enfants_ids': childIds,
+          'modifie_par': userId,
+        })
+        .select()
+        .single();
 
-          hasWaterNearby: true,
-          childrenWillEnterWater: true,
-          swimmingSupervisedByLifeguard: true,
+    return ActivitySessionCodec.completeFromRow(row);
+  }
 
-          hasProlongedWalking: true,
-          hasSignificantPhysicalEffort: false,
+  Future<List<CompleteActivitySessionData>>
+      listActivities() async {
+    final userId = _client.auth.currentUser?.id;
 
-          hasTransport: true,
-          transportTypes: {},
+    if (userId == null) {
+      return [];
+    }
 
-          hasOvernightStay: false,
-          collectiveAccommodation: false,
-          electricityMayBeUnavailable: null,
-          phoneNetworkMayBeUnavailable: null,
+    final rows = await _client
+        .from('activites_preparees')
+        .select()
+        .eq('parent_id', userId)
+        .order('cree_le', ascending: false);
 
-          hasHeightActivity: false,
-          hasAnimalContact: true,
-
-          hasLoudEnvironment: true,
-          hasLargeCrowd: false,
-          hasConfinedSpace: false,
-
-          hasClothingChange: true,
-        ),
-      ),
-    );
+    return (rows as List<dynamic>)
+        .cast<Map<String, dynamic>>()
+        .map(ActivitySessionCodec.completeFromRow)
+        .toList();
   }
 }

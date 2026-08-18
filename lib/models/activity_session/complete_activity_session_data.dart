@@ -1,6 +1,10 @@
 import 'activity_session_data.dart';
 
 class CompleteActivitySessionData {
+  /// Identifiant de la ligne `activites_preparees` côté Supabase — null
+  /// tant que l'activité n'a pas encore été sauvegardée.
+  String? id;
+
   ActivitySessionData activity;
 
   final List<String> childIds;
@@ -10,6 +14,7 @@ class CompleteActivitySessionData {
   bool recommendationsGenerated;
 
   CompleteActivitySessionData({
+    this.id,
     required this.activity,
     this.childIds = const [],
     this.questionnaireCompleted = true,

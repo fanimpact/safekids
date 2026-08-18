@@ -8,9 +8,16 @@ import 'saved_activities_info_page.dart';
 class ActivitiesHomePage extends StatelessWidget {
   final CompleteChildProfileData? selectedChild;
 
+  /// Renseigné uniquement côté espace professionnel : route les
+  /// nouvelles activités vers la sauvegarde partagée de cet
+  /// établissement plutôt que vers celle du parent (voir
+  /// `ActivitySessionData.etablissementId`).
+  final String? etablissementId;
+
   const ActivitiesHomePage({
     super.key,
     this.selectedChild,
+    this.etablissementId,
   });
 
   String? get _childDisplayName {
@@ -32,7 +39,9 @@ class ActivitiesHomePage extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (context) =>
-            const ActivitySessionStartPage(),
+            ActivitySessionStartPage(
+          etablissementId: etablissementId,
+        ),
       ),
     );
   }
@@ -44,7 +53,9 @@ class ActivitiesHomePage extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (context) =>
-            const SavedActivitiesInfoPage(),
+            SavedActivitiesInfoPage(
+          etablissementId: etablissementId,
+        ),
       ),
     );
   }

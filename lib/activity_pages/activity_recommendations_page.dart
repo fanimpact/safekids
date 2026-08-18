@@ -7,7 +7,9 @@ import 'package:printing/printing.dart';
 
 import '../models/activity_session/complete_activity_session_data.dart';
 import '../models/complete_child_profile_data.dart';
+import '../professional/establishment_activity_service.dart';
 import '../recommendation_engine/models/activity_recommendation_result.dart';
+import '../recommendation_engine/models/child_recommendation_result.dart';
 import '../recommendation_engine/models/recommendation.dart';
 import '../recommendation_engine/models/recommendation_category.dart';
 import '../repositories/child_repository.dart';
@@ -16,22 +18,130 @@ import '../utils/date_format_utils.dart';
 import '../utils/pdf_text.dart';
 import 'activities_home_page.dart';
 
-class ActivityRecommendationsPage extends StatelessWidget {
+class ActivityRecommendationsPage extends StatefulWidget {
   final CompleteActivitySessionData activitySession;
   final ActivityRecommendationResult recommendationResult;
   final CompleteChildProfileData? Function(String childId) findChild;
+
+  /// Recommandations déjà masquées par l'utilisateur connecté pour
+  /// cette activité — `null` côté parent, qui n'a pas cette
+  /// fonctionnalité.
+  final Set<String>? initialMaskedKeys;
+
+  /// Persiste un changement de masquage (voir
+  /// `EstablishmentActivityService.toggleMask`) — `null` côté parent :
+  /// dans ce cas aucune icône de masquage n'est affichée.
+  final Future<void> Function(String cle, bool masquer)?
+      onToggleMask;
 
   ActivityRecommendationsPage({
     super.key,
     required this.activitySession,
     required this.recommendationResult,
     CompleteChildProfileData? Function(String childId)? findChild,
+    this.initialMaskedKeys,
+    this.onToggleMask,
   }) : findChild = findChild ?? ChildRepository.instance.findByChildId;
+
+  @override
+  State<ActivityRecommendationsPage> createState() =>
+      _ActivityRecommendationsPageState();
+}
+
+class _ActivityRecommendationsPageState
+    extends State<ActivityRecommendationsPage> {
+  late Set<String> _maskedKeys;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _maskedKeys = {...?widget.initialMaskedKeys};
+  }
+
+  bool get _canMask => widget.onToggleMask != null;
+
+  String _maskKeyFor(Recommendation recommendation) {
+    return EstablishmentActivityService.maskKey(
+      enfantId: recommendation.childId,
+      recommandationId: recommendation.id,
+    );
+  }
+
+  Future<void> _handleToggleMask(
+    String cle,
+    bool masquer,
+  ) async {
+    final onToggleMask = widget.onToggleMask;
+
+    if (onToggleMask == null) {
+      return;
+    }
+
+    setState(() {
+      if (masquer) {
+        _maskedKeys.add(cle);
+      } else {
+        _maskedKeys.remove(cle);
+      }
+    });
+
+    try {
+      await onToggleMask(cle, masquer);
+    } catch (_) {
+      // La persistance a échoué : on revient sur l'état visuel pour ne
+      // pas laisser croire que le masquage a été enregistré.
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        if (masquer) {
+          _maskedKeys.remove(cle);
+        } else {
+          _maskedKeys.add(cle);
+        }
+      });
+    }
+  }
+
+  /// Version filtrée utilisée UNIQUEMENT pour l'impression/export PDF :
+  /// une recommandation masquée par l'utilisateur connecté n'y figure
+  /// jamais (les critiques restent toujours incluses). L'écran, lui,
+  /// continue d'afficher toutes les lignes pour que le geste de
+  /// masquage reste réversible directement depuis la fiche.
+  ActivityRecommendationResult get _printableResult {
+    if (!_canMask) {
+      return widget.recommendationResult;
+    }
+
+    bool notMasked(Recommendation recommendation) {
+      return recommendation.isCritical ||
+          !_maskedKeys.contains(_maskKeyFor(recommendation));
+    }
+
+    return ActivityRecommendationResult(
+      childResults: widget.recommendationResult.childResults
+          .map(
+            (result) => ChildRecommendationResult(
+              childId: result.childId,
+              recommendations: result.recommendations
+                  .where(notMasked)
+                  .toList(),
+            ),
+          )
+          .toList(),
+      globalRecommendations: widget
+          .recommendationResult.globalRecommendations
+          .where(notMasked)
+          .toList(),
+    );
+  }
 
   String _childDisplayName(
     String childId,
   ) {
-    final child = findChild(
+    final child = widget.findChild(
       childId,
     );
 
@@ -78,7 +188,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
   String? _childMeasurementDetails(
     String childId,
   ) {
-    final child = findChild(
+    final child = widget.findChild(
       childId,
     );
 
@@ -136,7 +246,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
   Widget _buildChildrenIdentitySummary() {
     final lines = <Widget>[];
 
-    for (final childId in activitySession.childIds) {
+    for (final childId in widget.activitySession.childIds) {
       final details = _childMeasurementDetails(childId);
 
       lines.add(
@@ -180,7 +290,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
   List<pw.Widget> _pdfChildrenIdentitySummary() {
     final widgets = <pw.Widget>[];
 
-    for (final childId in activitySession.childIds) {
+    for (final childId in widget.activitySession.childIds) {
       final details = _childMeasurementDetails(childId);
       final name = _childDisplayName(childId);
 
@@ -225,10 +335,10 @@ class ActivityRecommendationsPage extends StatelessWidget {
   }
 
   List<Recommendation> _recommendationsForChild(
+    ActivityRecommendationResult result,
     String childId,
   ) {
-    final results =
-        recommendationResult.childResults.where(
+    final results = result.childResults.where(
       (result) => result.childId == childId,
     );
 
@@ -240,10 +350,11 @@ class ActivityRecommendationsPage extends StatelessWidget {
   }
 
   List<Recommendation> _recommendationsForChildAndCategory(
+    ActivityRecommendationResult result,
     String childId,
     RecommendationCategory category,
   ) {
-    return _recommendationsForChild(childId)
+    return _recommendationsForChild(result, childId)
         .where(
           (recommendation) =>
               recommendation.category == category,
@@ -254,7 +365,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
   List<String> _allergyTexts(
     String childId,
   ) {
-    final child = findChild(
+    final child = widget.findChild(
       childId,
     );
 
@@ -357,13 +468,15 @@ class ActivityRecommendationsPage extends StatelessWidget {
   }
 
   Map<String, Map<String, List<Recommendation>>>
-      _buildSituationGroups() {
+      _buildSituationGroups(
+    ActivityRecommendationResult result,
+  ) {
     final groups =
         <String, Map<String, List<Recommendation>>>{};
 
-    for (final childId in activitySession.childIds) {
+    for (final childId in widget.activitySession.childIds) {
       final recommendations =
-          _recommendationsForChild(childId);
+          _recommendationsForChild(result, childId);
 
       for (final recommendation
           in recommendations) {
@@ -482,12 +595,89 @@ class ActivityRecommendationsPage extends StatelessWidget {
     );
   }
 
+  /// Ligne d'une recommandation sur la fiche, avec — quand le
+  /// masquage est disponible (espace professionnel) et que la
+  /// recommandation n'est pas critique — une icône œil permettant de
+  /// la masquer/afficher pour soi, sans jamais retirer la ligne de la
+  /// fiche : c'est ce qui rend le geste réversible. Seule l'impression
+  /// PDF exclut réellement les recommandations masquées (voir
+  /// `_printableResult`).
+  Widget _buildRecommendationLine(
+    Recommendation recommendation, {
+    Widget? leadingIcon,
+  }) {
+    final canMaskThis =
+        _canMask && !recommendation.isCritical;
+
+    final cle = _maskKeyFor(recommendation);
+    final masque = canMaskThis && _maskedKeys.contains(cle);
+
+    return Padding(
+      padding: const EdgeInsets.only(
+        bottom: 8,
+      ),
+      child: Row(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(
+              top: leadingIcon == null ? 7 : 0,
+            ),
+            child: leadingIcon ??
+                const Icon(
+                  Icons.circle,
+                  size: 6,
+                ),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              recommendation.text,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.4,
+                color: masque
+                    ? Colors.black45
+                    : null,
+                decoration: masque
+                    ? TextDecoration.lineThrough
+                    : null,
+              ),
+            ),
+          ),
+          if (canMaskThis)
+            IconButton(
+              icon: Icon(
+                masque
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                size: 18,
+              ),
+              tooltip: masque
+                  ? 'Afficher pour moi'
+                  : 'Masquer pour moi',
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.only(left: 8),
+              onPressed: () => _handleToggleMask(
+                cle,
+                !masque,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildImportantPoints() {
+    final result = widget.recommendationResult;
     final childrenWidgets = <Widget>[];
 
-    for (final childId in activitySession.childIds) {
+    for (final childId in widget.activitySession.childIds) {
       final vigilanceRecommendations =
           _recommendationsForChildAndCategory(
+        result,
         childId,
         RecommendationCategory
             .informationVigilance,
@@ -498,6 +688,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
 
       final additionalInformation =
           _recommendationsForChildAndCategory(
+        result,
         childId,
         RecommendationCategory
             .additionalInformation,
@@ -525,14 +716,14 @@ class ActivityRecommendationsPage extends StatelessWidget {
 
               for (final recommendation
                   in vigilanceRecommendations)
-                _buildBullet(
-                  recommendation.text,
+                _buildRecommendationLine(
+                  recommendation,
                 ),
 
               for (final recommendation
                   in additionalInformation)
-                _buildBullet(
-                  recommendation.text,
+                _buildRecommendationLine(
+                  recommendation,
                 ),
             ],
           ),
@@ -540,16 +731,13 @@ class ActivityRecommendationsPage extends StatelessWidget {
       );
     }
 
-    final globalVigilances =
-        recommendationResult
-            .globalRecommendations
-            .where(
-              (recommendation) =>
-                  recommendation.category ==
-                  RecommendationCategory
-                      .informationVigilance,
-            )
-            .toList();
+    final globalVigilances = result.globalRecommendations
+        .where(
+          (recommendation) =>
+              recommendation.category ==
+              RecommendationCategory.informationVigilance,
+        )
+        .toList();
 
     if (childrenWidgets.isEmpty &&
         globalVigilances.isEmpty) {
@@ -585,8 +773,8 @@ class ActivityRecommendationsPage extends StatelessWidget {
 
               for (final recommendation
                   in globalVigilances)
-                _buildBullet(
-                  recommendation.text,
+                _buildRecommendationLine(
+                  recommendation,
                 ),
 
               const Divider(
@@ -603,7 +791,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
 
   Widget _buildSituations() {
     final groups =
-        _buildSituationGroups();
+        _buildSituationGroups(widget.recommendationResult);
 
     if (groups.isEmpty) {
       return const SizedBox.shrink();
@@ -667,7 +855,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
               ),
 
               for (final childId
-                  in activitySession.childIds)
+                  in widget.activitySession.childIds)
                 if (groups[situation]!
                     .containsKey(childId)) ...[
                   _buildChildTitle(childId),
@@ -675,8 +863,8 @@ class ActivityRecommendationsPage extends StatelessWidget {
                   for (final recommendation
                       in groups[situation]![
                           childId]!)
-                    _buildBullet(
-                      recommendation.text,
+                    _buildRecommendationLine(
+                      recommendation,
                     ),
 
                   const SizedBox(height: 8),
@@ -695,11 +883,13 @@ class ActivityRecommendationsPage extends StatelessWidget {
   }
 
   Widget _buildEmergencyMedications() {
+    final result = widget.recommendationResult;
     final childWidgets = <Widget>[];
 
-    for (final childId in activitySession.childIds) {
+    for (final childId in widget.activitySession.childIds) {
       final medications =
           _recommendationsForChildAndCategory(
+        result,
         childId,
         RecommendationCategory
             .emergencyMedication,
@@ -722,8 +912,8 @@ class ActivityRecommendationsPage extends StatelessWidget {
 
               for (final medication
                   in medications)
-                _buildBullet(
-                  medication.text,
+                _buildRecommendationLine(
+                  medication,
                 ),
             ],
           ),
@@ -768,17 +958,20 @@ class ActivityRecommendationsPage extends StatelessWidget {
   }
 
   Widget _buildEquipmentSummary() {
+    final result = widget.recommendationResult;
     final childWidgets = <Widget>[];
 
-    for (final childId in activitySession.childIds) {
+    for (final childId in widget.activitySession.childIds) {
       final equipment =
           _recommendationsForChildAndCategory(
+        result,
         childId,
         RecommendationCategory.equipment,
       );
 
       final rememberToTake =
           _recommendationsForChildAndCategory(
+        result,
         childId,
         RecommendationCategory.rememberToTake,
       );
@@ -804,34 +997,12 @@ class ActivityRecommendationsPage extends StatelessWidget {
               _buildChildTitle(childId),
 
               for (final item in allItems)
-                Padding(
-                  padding:
-                      const EdgeInsets.only(
-                    bottom: 8,
-                  ),
-                  child: Row(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                    children: [
-                      const Icon(
-                        Icons
-                            .check_box_outline_blank,
-                        size: 20,
-                      ),
-                      const SizedBox(
-                        width: 9,
-                      ),
-                      Expanded(
-                        child: Text(
-                          item.text,
-                          style:
-                              const TextStyle(
-                            fontSize: 15,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
+                _buildRecommendationLine(
+                  item,
+                  leadingIcon: const Icon(
+                    Icons
+                        .check_box_outline_blank,
+                    size: 20,
                   ),
                 ),
             ],
@@ -885,24 +1056,23 @@ class ActivityRecommendationsPage extends StatelessWidget {
   }
 
   List<pw.Widget> _pdfImportantPointsSection() {
+    final result = _printableResult;
     final widgets = <pw.Widget>[];
 
-    final globalVigilances =
-        recommendationResult
-            .globalRecommendations
-            .where(
-              (recommendation) =>
-                  recommendation.category ==
-                  RecommendationCategory
-                      .informationVigilance,
-            )
-            .toList();
+    final globalVigilances = result.globalRecommendations
+        .where(
+          (recommendation) =>
+              recommendation.category ==
+              RecommendationCategory.informationVigilance,
+        )
+        .toList();
 
     final childBlocks = <pw.Widget>[];
 
-    for (final childId in activitySession.childIds) {
+    for (final childId in widget.activitySession.childIds) {
       final vigilanceRecommendations =
           _recommendationsForChildAndCategory(
+        result,
         childId,
         RecommendationCategory.informationVigilance,
       );
@@ -911,6 +1081,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
 
       final additionalInformation =
           _recommendationsForChildAndCategory(
+        result,
         childId,
         RecommendationCategory.additionalInformation,
       );
@@ -952,7 +1123,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
   }
 
   List<pw.Widget> _pdfSituationsSection() {
-    final groups = _buildSituationGroups();
+    final groups = _buildSituationGroups(_printableResult);
 
     if (groups.isEmpty) {
       return [];
@@ -1000,7 +1171,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
         ),
       );
 
-      for (final childId in activitySession.childIds) {
+      for (final childId in widget.activitySession.childIds) {
         if (!groups[situation]!.containsKey(childId)) {
           continue;
         }
@@ -1018,10 +1189,12 @@ class ActivityRecommendationsPage extends StatelessWidget {
   }
 
   List<pw.Widget> _pdfEmergencyMedicationsSection() {
+    final result = _printableResult;
     final childBlocks = <pw.Widget>[];
 
-    for (final childId in activitySession.childIds) {
+    for (final childId in widget.activitySession.childIds) {
       final medications = _recommendationsForChildAndCategory(
+        result,
         childId,
         RecommendationCategory.emergencyMedication,
       );
@@ -1048,15 +1221,18 @@ class ActivityRecommendationsPage extends StatelessWidget {
   }
 
   List<pw.Widget> _pdfEquipmentSummarySection() {
+    final result = _printableResult;
     final childBlocks = <pw.Widget>[];
 
-    for (final childId in activitySession.childIds) {
+    for (final childId in widget.activitySession.childIds) {
       final equipment = _recommendationsForChildAndCategory(
+        result,
         childId,
         RecommendationCategory.equipment,
       );
 
       final rememberToTake = _recommendationsForChildAndCategory(
+        result,
         childId,
         RecommendationCategory.rememberToTake,
       );
@@ -1090,9 +1266,10 @@ class ActivityRecommendationsPage extends StatelessWidget {
   Future<Uint8List> _buildPdfBytes() async {
     final document = pw.Document();
 
-    final activityName = activitySession.activityName;
-    final activityDate = activitySession.date;
-    final activityLocation = activitySession.location?.trim();
+    final activityName = widget.activitySession.activityName;
+    final activityDate = widget.activitySession.date;
+    final activityLocation =
+        widget.activitySession.location?.trim();
 
     document.addPage(
       pw.MultiPage(
@@ -1177,11 +1354,11 @@ class ActivityRecommendationsPage extends StatelessWidget {
     BuildContext context,
   ) {
     final activityName =
-        activitySession.activityName;
+        widget.activitySession.activityName;
     final activityDate =
-        activitySession.date;
+        widget.activitySession.date;
     final activityLocation =
-        activitySession.location?.trim();
+        widget.activitySession.location?.trim();
 
     return Scaffold(
       appBar: AppBar(

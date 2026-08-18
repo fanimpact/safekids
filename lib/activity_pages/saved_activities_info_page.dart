@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'saved_activities_page.dart';
 
 class SavedActivitiesInfoPage extends StatelessWidget {
+  final String? etablissementId;
+
   const SavedActivitiesInfoPage({
     super.key,
+    this.etablissementId,
   });
 
   void _continue(
@@ -14,7 +17,9 @@ class SavedActivitiesInfoPage extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (context) =>
-            const SavedActivitiesPage(),
+            SavedActivitiesPage(
+          etablissementId: etablissementId,
+        ),
       ),
     );
   }

@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../activity_pages/activities_home_page.dart';
 import '../models/etablissement_data.dart';
 import 'claim_attachment_page.dart';
+import 'establishment_child_list_page.dart';
 import 'establishment_onboarding_page.dart';
 import 'establishment_service.dart';
-import 'professional_child_detail_page.dart';
 import 'professional_child_repository.dart';
+import 'professional_emergency_mode_child_picker_page.dart';
 
-/// Accueil de l'espace professionnel une fois connecté. Phase 2 :
-/// un seul établissement possible (celui qu'on a créé), rattachement
-/// d'un enfant via un code. Phase 4 : le trombinoscope affiche le
-/// vrai profil de chaque enfant (fiche secours, "Ce qu'il faut
-/// savoir", profil activités, Mode Urgence via
-/// `ProfessionalChildRepository`), avec repli hors-ligne si Supabase
-/// est injoignable. L'invitation d'autres membres du personnel arrive
-/// dans une étape suivante.
+/// Accueil de l'espace professionnel une fois connecté, organisé
+/// selon l'usage réel d'un membre du personnel qui a plusieurs enfants
+/// rattachés : il raisonne d'abord par sortie, pas par enfant.
+/// 1. Préparer une activité (le plus fréquent)
+/// 2. Mode Urgence (sélecteur d'enfant, comme côté particulier)
+/// 3. Fiche secours et données de l'enfant (trombinoscope)
 class EstablishmentHomePage extends StatefulWidget {
   const EstablishmentHomePage({super.key});
 
@@ -124,7 +124,7 @@ class _EstablishmentHomePageState extends State<EstablishmentHomePage> {
           // choix entre plusieurs établissements viendra si besoin.
           final establishment = establishments.first;
 
-          return _EstablishmentRoster(
+          return _EstablishmentMenu(
             establishment: establishment,
             onClaimPressed: () => _openClaimPage(establishment),
           );
@@ -134,21 +134,21 @@ class _EstablishmentHomePageState extends State<EstablishmentHomePage> {
   }
 }
 
-class _EstablishmentRoster extends StatefulWidget {
+class _EstablishmentMenu extends StatefulWidget {
   final EtablissementData establishment;
   final VoidCallback onClaimPressed;
 
-  const _EstablishmentRoster({
+  const _EstablishmentMenu({
     required this.establishment,
     required this.onClaimPressed,
   });
 
   @override
-  State<_EstablishmentRoster> createState() =>
-      _EstablishmentRosterState();
+  State<_EstablishmentMenu> createState() =>
+      _EstablishmentMenuState();
 }
 
-class _EstablishmentRosterState extends State<_EstablishmentRoster> {
+class _EstablishmentMenuState extends State<_EstablishmentMenu> {
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -159,7 +159,7 @@ class _EstablishmentRosterState extends State<_EstablishmentRoster> {
   }
 
   @override
-  void didUpdateWidget(covariant _EstablishmentRoster oldWidget) {
+  void didUpdateWidget(covariant _EstablishmentMenu oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.establishment.id != widget.establishment.id) {
@@ -199,12 +199,30 @@ class _EstablishmentRosterState extends State<_EstablishmentRoster> {
     }
   }
 
-  String _displayName(dynamic child) {
-    final firstName =
-        child.essentialInformation.identity.firstName as String?;
-    final trimmed = firstName?.trim();
-
-    return (trimmed == null || trimmed.isEmpty) ? 'Enfant' : trimmed;
+  Widget _buildMenuTile({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required VoidCallback onPressed,
+    Color? color,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 80,
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        style: color == null
+            ? null
+            : FilledButton.styleFrom(
+                backgroundColor: color,
+              ),
+        icon: Icon(icon),
+        label: Text(
+          label,
+          style: const TextStyle(fontSize: 18),
+        ),
+      ),
+    );
   }
 
   @override
@@ -216,16 +234,27 @@ class _EstablishmentRosterState extends State<_EstablishmentRoster> {
         builder: (context, _) => ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            Text(
-              widget.establishment.nom,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.establishment.nom,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: widget.onClaimPressed,
+                  icon: const Icon(Icons.add_link),
+                  tooltip: 'Rattacher un enfant',
+                ),
+              ],
             ),
 
             if (ProfessionalChildRepository.instance.isOffline) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               const Text(
                 'Hors connexion — dernières données synchronisées.',
                 style: TextStyle(
@@ -235,66 +264,70 @@ class _EstablishmentRosterState extends State<_EstablishmentRoster> {
               ),
             ],
 
-            const SizedBox(height: 20),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 12),
+              Text(_errorMessage!),
+            ],
 
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: widget.onClaimPressed,
-                icon: const Icon(Icons.add_link),
-                label: const Text('Rattacher un enfant'),
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            const Text(
-              'Enfants rattachés',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
 
             if (_isLoading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
                 child: Center(child: CircularProgressIndicator()),
               )
-            else if (_errorMessage != null)
-              Text(_errorMessage!)
-            else if (ProfessionalChildRepository
-                .instance.children.isEmpty)
-              const Text('Aucun enfant rattaché pour le moment.')
-            else
-              Column(
-                children: [
-                  for (final child
-                      in ProfessionalChildRepository
-                          .instance.children)
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.child_care),
-                        title: Text(_displayName(child)),
-                        trailing:
-                            const Icon(Icons.chevron_right),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ProfessionalChildDetailPage(
-                                child: child,
-                              ),
-                            ),
-                          );
-                        },
+            else ...[
+              _buildMenuTile(
+                context: context,
+                label: 'Préparer une activité',
+                icon: Icons.event_available,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ActivitiesHomePage(
+                        etablissementId: widget.establishment.id,
                       ),
                     ),
-                ],
+                  );
+                },
               ),
+
+              const SizedBox(height: 16),
+
+              _buildMenuTile(
+                context: context,
+                label: 'Mode Urgence',
+                icon: Icons.emergency_outlined,
+                color: Colors.red.shade700,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const ProfessionalEmergencyModeChildPickerPage(),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              _buildMenuTile(
+                context: context,
+                label: 'Fiche secours et données de l’enfant',
+                icon: Icons.folder_shared_outlined,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const EstablishmentChildListPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
           ],
         ),
       ),

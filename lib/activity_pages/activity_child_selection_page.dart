@@ -60,8 +60,8 @@ class ActivityChildSelectionPage extends StatefulWidget {
         findChild =
             findChild ?? ChildRepository.instance.findByChildId,
         saveActivity = saveActivity ??
-            ((sessionData, childIds) async =>
-                ActivitySessionRepository.instance.addActivity(
+            ((sessionData, childIds) =>
+                ActivitySessionRepository.instance.saveActivity(
                   sessionData,
                   childIds: childIds,
                 ));

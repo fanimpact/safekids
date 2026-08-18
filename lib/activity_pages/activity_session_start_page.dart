@@ -4,8 +4,11 @@ import '../models/activity_session/activity_session_data.dart';
 import 'activity_water_page.dart';
 
 class ActivitySessionStartPage extends StatefulWidget {
+  final String? etablissementId;
+
   const ActivitySessionStartPage({
     super.key,
+    this.etablissementId,
   });
 
   @override
@@ -88,7 +91,7 @@ class _ActivitySessionStartPageState
       date: _selectedDate,
       location:
           _locationController.text.trim(),
-    );
+    )..etablissementId = widget.etablissementId;
 
     Navigator.push(
       context,

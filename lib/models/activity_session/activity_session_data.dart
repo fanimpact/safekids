@@ -16,6 +16,14 @@ class ActivitySessionData {
   DateTime? date;
   String? location;
 
+  /// Renseigné uniquement pendant le parcours de préparation côté
+  /// établissement, pour que `ActivitySessionCompletePage` sache vers
+  /// quelle sauvegarde router l'activité une fois les enfants
+  /// sélectionnés — jamais persisté tel quel (voir
+  /// `ActivitySessionCodec`, qui ne l'inclut pas dans la description
+  /// enregistrée).
+  String? etablissementId;
+
   final List<String> selectedChildIds;
 
   bool? hasWaterNearby;

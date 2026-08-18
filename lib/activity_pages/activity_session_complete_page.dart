@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../models/activity_session/activity_session_data.dart';
+import '../professional/activity_note_page.dart';
+import '../professional/establishment_activity_service.dart';
+import '../professional/professional_child_repository.dart';
 import 'activity_child_selection_page.dart';
 
 class ActivitySessionCompletePage
@@ -15,13 +18,37 @@ class ActivitySessionCompletePage
   void _continue(
     BuildContext context,
   ) {
+    final etablissementId = sessionData.etablissementId;
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            ActivityChildSelectionPage(
-          sessionData: sessionData,
-        ),
+        builder: (context) => etablissementId == null
+            ? ActivityChildSelectionPage(
+                sessionData: sessionData,
+              )
+            : ActivityChildSelectionPage(
+                sessionData: sessionData,
+                childrenListenable:
+                    ProfessionalChildRepository.instance,
+                childrenProvider: () =>
+                    ProfessionalChildRepository
+                        .instance.children,
+                findChild: ProfessionalChildRepository
+                    .instance.findByChildId,
+                saveActivity: (data, childIds) =>
+                    EstablishmentActivityService.instance
+                        .saveActivity(
+                  data,
+                  childIds: childIds,
+                  etablissementId: etablissementId,
+                ),
+                buildNextPage: (activity, result) =>
+                    ActivityNotePage(
+                  activity: activity,
+                  recommendationResult: result,
+                ),
+              ),
       ),
     );
   }
