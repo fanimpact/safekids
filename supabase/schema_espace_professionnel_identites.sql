@@ -101,6 +101,20 @@ begin
     'email', now(), now(), now()
   )
   on conflict (provider_id, provider) do nothing;
+
+  -- Cause racine confirmee (19/08/2026) : comptes_parents.email n'est
+  -- ecrit qu'une fois, lors de AccountService.createAccount() --
+  -- jamais resynchronise si l'email de auth.users change ensuite (ex.
+  -- correction manuelle en base pendant le debogage du 17-18/08). Les
+  -- notifications par email (note ajoutee, expiration) lisent
+  -- comptes_parents.email, pas auth.users.email : un ecart entre les
+  -- deux fait partir l'email vers une adresse perimee, en silence,
+  -- sans jamais faire echouer l'appel Brevo (l'adresse perimee peut
+  -- tres bien exister). On les garde synchronises ici a chaque appel.
+  update public.comptes_parents
+  set email = v_email
+  where id = v_user_id
+    and email is distinct from v_email;
 end;
 $$;
 
@@ -139,3 +153,14 @@ where nullif(u.email, '') is not null
     select 1 from auth.identities i
     where i.user_id = u.id and i.provider = 'email'
   );
+
+-- Rattrapage ponctuel supplementaire (19/08/2026) : resynchronise
+-- comptes_parents.email sur tout compte deja decale par rapport a
+-- auth.users.email -- c'est ce decalage precis qui a fait partir la
+-- notification "note ajoutee" du 18/08 vers une adresse perimee.
+update public.comptes_parents cp
+set email = u.email
+from auth.users u
+where cp.id = u.id
+  and nullif(u.email, '') is not null
+  and cp.email is distinct from u.email;

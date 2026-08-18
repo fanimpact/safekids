@@ -88,6 +88,27 @@ class _ActivityChildSelectionPageState
     });
   }
 
+  List<String> _allChildIds() {
+    return widget
+        .childrenProvider()
+        .map((child) => child.childId)
+        .whereType<String>()
+        .where((childId) => childId.isNotEmpty)
+        .toList();
+  }
+
+  void _toggleSelectAll(List<String> allChildIds) {
+    setState(() {
+      if (_selectedChildIds.length == allChildIds.length) {
+        _selectedChildIds.clear();
+      } else {
+        _selectedChildIds
+          ..clear()
+          ..addAll(allChildIds);
+      }
+    });
+  }
+
   Future<void> _saveActivity() async {
     final completeActivity = await widget.saveActivity(
       widget.sessionData,
@@ -162,11 +183,29 @@ class _ActivityChildSelectionPageState
 
               const SizedBox(height: 12),
 
-              const Text(
-                'Sélectionnez un ou plusieurs enfants.',
-                style: TextStyle(
-                  fontSize: 16,
-                ),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Sélectionnez un ou plusieurs enfants.',
+                      style: TextStyle(
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  if (children.isNotEmpty)
+                    TextButton(
+                      onPressed: () => _toggleSelectAll(
+                        _allChildIds(),
+                      ),
+                      child: Text(
+                        _selectedChildIds.length ==
+                                _allChildIds().length
+                            ? 'Tout désélectionner'
+                            : 'Sélectionner tout',
+                      ),
+                    ),
+                ],
               ),
 
               const SizedBox(height: 24),

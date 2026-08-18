@@ -34,6 +34,14 @@ class ActivityRecommendationsPage extends StatefulWidget {
   final Future<void> Function(String cle, bool masquer)?
       onToggleMask;
 
+  /// Où va "Terminer" — par défaut l'accueil "Préparer une activité"
+  /// du parent. Corrigé (19/08/2026) : ce bouton renvoyait TOUJOURS
+  /// vers l'accueil parent, y compris depuis le parcours
+  /// professionnel, ce qui a fait atterrir une activité professionnelle
+  /// dans l'espace parent sans que ce soit visible à l'écran. Le
+  /// parcours professionnel fournit désormais son propre `onFinish`.
+  final VoidCallback? onFinish;
+
   ActivityRecommendationsPage({
     super.key,
     required this.activitySession,
@@ -41,6 +49,7 @@ class ActivityRecommendationsPage extends StatefulWidget {
     CompleteChildProfileData? Function(String childId)? findChild,
     this.initialMaskedKeys,
     this.onToggleMask,
+    this.onFinish,
   }) : findChild = findChild ?? ChildRepository.instance.findByChildId;
 
   @override
@@ -51,6 +60,15 @@ class ActivityRecommendationsPage extends StatefulWidget {
 class _ActivityRecommendationsPageState
     extends State<ActivityRecommendationsPage> {
   late Set<String> _maskedKeys;
+
+  /// Groupes (voir `_buildMaskableList`) actuellement "dépliés" pour
+  /// laisser voir temporairement leurs recommandations masquées —
+  /// corrigé (19/08/2026) : les recommandations masquées ne
+  /// s'affichent plus du tout par défaut (Fanny : "je veux qu'elle
+  /// disparaisse complètement de la fiche"), seul un compteur discret
+  /// en bas de section permet de les faire réapparaître à la demande,
+  /// sans jamais rien perdre.
+  final Set<String> _revealedGroups = {};
 
   @override
   void initState() {
@@ -670,6 +688,83 @@ class _ActivityRecommendationsPageState
     );
   }
 
+  bool _isRecommendationMasked(
+    Recommendation recommendation,
+  ) {
+    return _canMask &&
+        !recommendation.isCritical &&
+        _maskedKeys.contains(_maskKeyFor(recommendation));
+  }
+
+  /// Affiche une liste de recommandations en retirant complètement
+  /// celles que l'utilisateur connecté a masquées (corrigé le
+  /// 19/08/2026 : elles ne restent plus affichées en grisé — elles
+  /// disparaissent réellement de la fiche), avec un compteur discret
+  /// en bas du groupe permettant de les faire réapparaître à la
+  /// demande, sans jamais rien perdre. [groupKey] doit être stable et
+  /// unique pour ce groupe précis (ex. enfant + section) afin que le
+  /// dépliage retienne son état pendant toute la session d'affichage.
+  Widget _buildMaskableList(
+    String groupKey,
+    List<Recommendation> recommendations, {
+    Widget? leadingIcon,
+  }) {
+    if (recommendations.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final maskedCount =
+        recommendations.where(_isRecommendationMasked).length;
+
+    final revealed = _revealedGroups.contains(groupKey);
+
+    final displayed = revealed
+        ? recommendations
+        : recommendations
+            .where(
+              (recommendation) =>
+                  !_isRecommendationMasked(recommendation),
+            )
+            .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final recommendation in displayed)
+          _buildRecommendationLine(
+            recommendation,
+            leadingIcon: leadingIcon,
+          ),
+        if (maskedCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: InkWell(
+              onTap: () => setState(() {
+                if (revealed) {
+                  _revealedGroups.remove(groupKey);
+                } else {
+                  _revealedGroups.add(groupKey);
+                }
+              }),
+              child: Text(
+                revealed
+                    ? 'Masquer à nouveau'
+                    : '$maskedCount recommandation'
+                          '${maskedCount > 1 ? 's' : ''} masquée'
+                          '${maskedCount > 1 ? 's' : ''} — Afficher',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic,
+                  decoration: TextDecoration.underline,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildImportantPoints() {
     final result = widget.recommendationResult;
     final childrenWidgets = <Widget>[];
@@ -714,17 +809,13 @@ class _ActivityRecommendationsPageState
               for (final text in allergyTexts)
                 _buildBullet(text),
 
-              for (final recommendation
-                  in vigilanceRecommendations)
-                _buildRecommendationLine(
-                  recommendation,
-                ),
-
-              for (final recommendation
-                  in additionalInformation)
-                _buildRecommendationLine(
-                  recommendation,
-                ),
+              _buildMaskableList(
+                'important_$childId',
+                [
+                  ...vigilanceRecommendations,
+                  ...additionalInformation,
+                ],
+              ),
             ],
           ),
         ),
@@ -771,11 +862,10 @@ class _ActivityRecommendationsPageState
 
               const SizedBox(height: 8),
 
-              for (final recommendation
-                  in globalVigilances)
-                _buildRecommendationLine(
-                  recommendation,
-                ),
+              _buildMaskableList(
+                'important_global',
+                globalVigilances,
+              ),
 
               const Divider(
                 height: 28,
@@ -860,12 +950,10 @@ class _ActivityRecommendationsPageState
                     .containsKey(childId)) ...[
                   _buildChildTitle(childId),
 
-                  for (final recommendation
-                      in groups[situation]![
-                          childId]!)
-                    _buildRecommendationLine(
-                      recommendation,
-                    ),
+                  _buildMaskableList(
+                    'situation_${situation}_$childId',
+                    groups[situation]![childId]!,
+                  ),
 
                   const SizedBox(height: 8),
                 ],
@@ -996,15 +1084,14 @@ class _ActivityRecommendationsPageState
             children: [
               _buildChildTitle(childId),
 
-              for (final item in allItems)
-                _buildRecommendationLine(
-                  item,
-                  leadingIcon: const Icon(
-                    Icons
-                        .check_box_outline_blank,
-                    size: 20,
-                  ),
+              _buildMaskableList(
+                'equipment_$childId',
+                allItems,
+                leadingIcon: const Icon(
+                  Icons.check_box_outline_blank,
+                  size: 20,
                 ),
+              ),
             ],
           ),
         ),
@@ -1339,6 +1426,13 @@ class _ActivityRecommendationsPageState
   void _finish(
     BuildContext context,
   ) {
+    final onFinish = widget.onFinish;
+
+    if (onFinish != null) {
+      onFinish();
+      return;
+    }
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(

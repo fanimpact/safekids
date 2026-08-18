@@ -4,6 +4,7 @@ import '../activity_pages/activity_recommendations_page.dart';
 import '../models/activity_session/complete_activity_session_data.dart';
 import '../recommendation_engine/models/activity_recommendation_result.dart';
 import 'establishment_activity_service.dart';
+import 'establishment_home_page.dart';
 import 'professional_child_repository.dart';
 
 /// Étape intermédiaire du parcours de préparation d'activité côté
@@ -83,6 +84,14 @@ class _ActivityNotePageState extends State<ActivityNotePage> {
                     cle: cle,
                     masquer: masquer,
                   ),
+          onFinish: () => Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  const EstablishmentHomePage(),
+            ),
+            (route) => route.isFirst,
+          ),
         ),
       ),
     );

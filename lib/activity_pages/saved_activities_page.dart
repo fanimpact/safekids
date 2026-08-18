@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/complete_child_profile_data.dart';
 import '../models/activity_session/complete_activity_session_data.dart';
 import '../professional/establishment_activity_service.dart';
+import '../professional/establishment_home_page.dart';
 import '../professional/professional_child_repository.dart';
 import '../recommendation_engine/recommendation_engine.dart';
 import '../repositories/activity_session_repository.dart';
@@ -92,6 +93,16 @@ class _SavedActivitiesPageState
                     activiteId: activiteId,
                     cle: cle,
                     masquer: masquer,
+                  )
+              : null,
+          onFinish: _isProfessional
+              ? () => Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const EstablishmentHomePage(),
+                    ),
+                    (route) => route.isFirst,
                   )
               : null,
         ),
