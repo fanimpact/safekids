@@ -83,6 +83,7 @@ class _SavedActivitiesPageState
           activitySession: activity,
           recommendationResult: recommendationResult,
           findChild: findChild,
+          etablissementId: widget.etablissementId,
           initialMaskedKeys:
               _isProfessional ? maskedKeys : null,
           onToggleMask: (_isProfessional &&

@@ -40,6 +40,11 @@ class ActivityChildSelectionPage extends StatefulWidget {
     ActivityRecommendationResult result,
   )? buildNextPage;
 
+  /// Enfants déjà sélectionnés au départ — utilisé pour "modifier les
+  /// enfants concernés" d'une activité déjà générée (par défaut vide,
+  /// parcours de création habituel).
+  final Set<String> initiallySelectedChildIds;
+
   ActivityChildSelectionPage({
     super.key,
     required this.sessionData,
@@ -53,7 +58,10 @@ class ActivityChildSelectionPage extends StatefulWidget {
       List<String> childIds,
     )? saveActivity,
     this.buildNextPage,
-  })  : childrenListenable =
+    Set<String>? initiallySelectedChildIds,
+  })  : initiallySelectedChildIds =
+            initiallySelectedChildIds ?? const {},
+        childrenListenable =
             childrenListenable ?? ChildRepository.instance,
         childrenProvider = childrenProvider ??
             (() => ChildRepository.instance.children),
@@ -73,7 +81,9 @@ class ActivityChildSelectionPage extends StatefulWidget {
 
 class _ActivityChildSelectionPageState
     extends State<ActivityChildSelectionPage> {
-  final Set<String> _selectedChildIds = {};
+  late final Set<String> _selectedChildIds = {
+    ...widget.initiallySelectedChildIds,
+  };
 
   void _toggleChild({
     required String childId,

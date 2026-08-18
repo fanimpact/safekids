@@ -16,11 +16,13 @@ import 'professional_child_repository.dart';
 class ActivityNotePage extends StatefulWidget {
   final CompleteActivitySessionData activity;
   final ActivityRecommendationResult recommendationResult;
+  final String etablissementId;
 
   const ActivityNotePage({
     super.key,
     required this.activity,
     required this.recommendationResult,
+    required this.etablissementId,
   });
 
   @override
@@ -74,6 +76,7 @@ class _ActivityNotePageState extends State<ActivityNotePage> {
           recommendationResult: widget.recommendationResult,
           findChild: ProfessionalChildRepository.instance
               .findByChildId,
+          etablissementId: widget.etablissementId,
           initialMaskedKeys: const {},
           onToggleMask: activiteId == null
               ? null

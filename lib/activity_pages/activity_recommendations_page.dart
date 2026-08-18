@@ -6,8 +6,11 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../models/activity_session/complete_activity_session_data.dart';
+import '../models/activity_session/note_activite_data.dart';
 import '../models/complete_child_profile_data.dart';
+import '../professional/add_activity_note_page.dart';
 import '../professional/establishment_activity_service.dart';
+import '../professional/professional_child_repository.dart';
 import '../recommendation_engine/models/activity_recommendation_result.dart';
 import '../recommendation_engine/models/child_recommendation_result.dart';
 import '../recommendation_engine/models/recommendation.dart';
@@ -17,6 +20,8 @@ import '../utils/age_utils.dart';
 import '../utils/date_format_utils.dart';
 import '../utils/pdf_text.dart';
 import 'activities_home_page.dart';
+import 'activity_child_selection_page.dart';
+import 'activity_water_page.dart';
 
 class ActivityRecommendationsPage extends StatefulWidget {
   final CompleteActivitySessionData activitySession;
@@ -42,6 +47,13 @@ class ActivityRecommendationsPage extends StatefulWidget {
   /// parcours professionnel fournit désormais son propre `onFinish`.
   final VoidCallback? onFinish;
 
+  /// Renseigné uniquement côté espace professionnel — active les
+  /// actions "Enfants concernés" / "Modifier les caractéristiques" /
+  /// "Notes complémentaires", qui permettent de compléter une
+  /// activité déjà générée sans repasser par tout le parcours de
+  /// préparation (Fanny, 19/08/2026). `null` côté parent.
+  final String? etablissementId;
+
   ActivityRecommendationsPage({
     super.key,
     required this.activitySession,
@@ -50,6 +62,7 @@ class ActivityRecommendationsPage extends StatefulWidget {
     this.initialMaskedKeys,
     this.onToggleMask,
     this.onFinish,
+    this.etablissementId,
   }) : findChild = findChild ?? ChildRepository.instance.findByChildId;
 
   @override
@@ -70,11 +83,134 @@ class _ActivityRecommendationsPageState
   /// sans jamais rien perdre.
   final Set<String> _revealedGroups = {};
 
+  /// Propres notes de l'utilisateur connecté sur cette activité —
+  /// `null` tant qu'elles n'ont pas encore été chargées.
+  List<NoteActiviteData>? _notes;
+
+  bool get _canEdit =>
+      widget.etablissementId != null &&
+      widget.activitySession.id != null;
+
   @override
   void initState() {
     super.initState();
 
     _maskedKeys = {...?widget.initialMaskedKeys};
+
+    if (_canEdit) {
+      _loadNotes();
+    }
+  }
+
+  Future<void> _loadNotes() async {
+    final activiteId = widget.activitySession.id;
+
+    if (activiteId == null) {
+      return;
+    }
+
+    try {
+      final notes = await EstablishmentActivityService.instance
+          .notesForActivite(activiteId);
+
+      if (mounted) {
+        setState(() {
+          _notes = notes;
+        });
+      }
+    } catch (_) {
+      // Les notes sont secondaires par rapport aux recommandations :
+      // un échec de chargement ne doit pas bloquer l'affichage de la
+      // fiche.
+      if (mounted) {
+        setState(() {
+          _notes = [];
+        });
+      }
+    }
+  }
+
+  Future<void> _openAddNote() async {
+    final activiteId = widget.activitySession.id;
+
+    if (activiteId == null) {
+      return;
+    }
+
+    final added = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddActivityNotePage(
+          activiteId: activiteId,
+          childIds: widget.activitySession.childIds,
+        ),
+      ),
+    );
+
+    if (added == true) {
+      _loadNotes();
+    }
+  }
+
+  Future<void> _editChildren() async {
+    final activiteId = widget.activitySession.id;
+
+    if (activiteId == null) {
+      return;
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ActivityChildSelectionPage(
+          sessionData: widget.activitySession.activity,
+          childrenListenable:
+              ProfessionalChildRepository.instance,
+          childrenProvider: () =>
+              ProfessionalChildRepository.instance.children,
+          findChild: ProfessionalChildRepository
+              .instance.findByChildId,
+          initiallySelectedChildIds:
+              widget.activitySession.childIds.toSet(),
+          saveActivity: (data, childIds) =>
+              EstablishmentActivityService.instance
+                  .updateChildren(
+            activiteId: activiteId,
+            childIds: childIds,
+          ),
+          buildNextPage: (activity, result) =>
+              ActivityRecommendationsPage(
+            activitySession: activity,
+            recommendationResult: result,
+            findChild: widget.findChild,
+            etablissementId: widget.etablissementId,
+            onFinish: widget.onFinish,
+            initialMaskedKeys: _maskedKeys,
+            onToggleMask: widget.onToggleMask,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _editCharacteristics() {
+    final activiteId = widget.activitySession.id;
+
+    if (activiteId == null) {
+      return;
+    }
+
+    final activity = widget.activitySession.activity
+      ..activiteId = activiteId
+      ..etablissementId = widget.etablissementId;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            ActivityWaterPage(sessionData: activity),
+      ),
+    );
   }
 
   bool get _canMask => widget.onToggleMask != null;
@@ -1124,6 +1260,113 @@ class _ActivityRecommendationsPageState
     );
   }
 
+  String _formatNoteDate(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+
+    return '$day/$month/${date.year} à $hour:$minute';
+  }
+
+  /// Section "Notes complémentaires" — jamais mêlée aux
+  /// recommandations générées par le moteur (Fanny, 19/08/2026) :
+  /// les notes sont des observations humaines, affichées à part.
+  /// Corrigé le même jour : accessible à tout moment depuis la fiche
+  /// déjà générée, pas seulement une fois pendant la préparation.
+  Widget _buildNotesSection() {
+    final notes = _notes;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 20),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle(
+              'Notes complémentaires',
+              icon: Icons.sticky_note_2_outlined,
+            ),
+
+            if (notes == null)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ),
+              )
+            else if (notes.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Text(
+                  'Aucune note pour le moment.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              )
+            else
+              for (final note in notes)
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 14,
+                  ),
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        note.enfantId == null
+                            ? 'Note générale'
+                            : 'Concernant '
+                                  '${_childDisplayName(note.enfantId!)}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        note.note,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _formatNoteDate(note.creeLe),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _openAddNote,
+                icon: const Icon(Icons.add),
+                label: const Text('Ajouter une note'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   pw.Widget _pdfChildTitle(
     String childId,
   ) {
@@ -1460,6 +1703,24 @@ class _ActivityRecommendationsPageState
           'Recommandations',
         ),
         actions: [
+          if (_canEdit)
+            PopupMenuButton<VoidCallback>(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Modifier l’activité',
+              onSelected: (action) => action(),
+              itemBuilder: (context) => [
+                PopupMenuItem<VoidCallback>(
+                  value: _editChildren,
+                  child: const Text('Enfants concernés'),
+                ),
+                PopupMenuItem<VoidCallback>(
+                  value: _editCharacteristics,
+                  child: const Text(
+                    'Caractéristiques de l’activité',
+                  ),
+                ),
+              ],
+            ),
           IconButton(
             icon: const Icon(Icons.print_outlined),
             tooltip: 'Imprimer / exporter en PDF',
@@ -1590,6 +1851,8 @@ class _ActivityRecommendationsPageState
                   _buildEmergencyMedications(),
 
                   _buildEquipmentSummary(),
+
+                  if (_canEdit) _buildNotesSection(),
                 ],
               ),
             ),

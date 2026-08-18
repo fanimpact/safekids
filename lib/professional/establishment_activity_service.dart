@@ -63,6 +63,63 @@ class EstablishmentActivityService {
     return ActivitySessionCodec.completeFromRow(row);
   }
 
+  /// Change les enfants concernés par une activité déjà générée —
+  /// utile quand un enfant rejoint ou quitte la sortie après coup
+  /// (Fanny, 19/08/2026). Ne touche pas à la description de
+  /// l'activité elle-même.
+  Future<CompleteActivitySessionData> updateChildren({
+    required String activiteId,
+    required List<String> childIds,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+
+    final row = await _client
+        .from('activites_preparees')
+        .update({
+          'enfants_ids': childIds,
+          'modifie_par': userId,
+          'modifie_le':
+              DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('id', activiteId)
+        .select()
+        .single();
+
+    return ActivitySessionCodec.completeFromRow(row);
+  }
+
+  /// Change les caractéristiques d'une activité déjà générée (eau,
+  /// transport, nuitée...) — pour corriger une réponse sans repasser
+  /// par tout le parcours de préparation. Ne touche pas aux enfants
+  /// concernés.
+  Future<CompleteActivitySessionData> updateDescription({
+    required String activiteId,
+    required ActivitySessionData activity,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+
+    final row = await _client
+        .from('activites_preparees')
+        .update({
+          'nom_activite': activity.activityName,
+          'date_activite':
+              activity.date?.toUtc().toIso8601String(),
+          'lieu': activity.location,
+          'description':
+              ActivitySessionCodec.descriptionToJson(
+            activity,
+          ),
+          'modifie_par': userId,
+          'modifie_le':
+              DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('id', activiteId)
+        .select()
+        .single();
+
+    return ActivitySessionCodec.completeFromRow(row);
+  }
+
   Future<List<CompleteActivitySessionData>> listActivities(
     String etablissementId,
   ) async {
