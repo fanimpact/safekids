@@ -592,12 +592,17 @@ void main() {
         ),
       );
 
+      // Corrigé (19/08/2026) : cette vigilance fait partie des
+      // recommandations critiques, elle se déclenche donc dès que
+      // l'appareil dépend de l'électricité, même si l'activité
+      // indique une alimentation garantie ("non") — seule la
+      // suggestion concrète de solution de secours
+      // (overnight_backup_power) reste conditionnée à une coupure
+      // plausible pour cette sortie précise.
       expect(
         ids,
-        isNot(
-          contains(
-            'overnight_power_failure_critical',
-          ),
+        contains(
+          'overnight_power_failure_critical',
         ),
       );
     },
@@ -738,12 +743,14 @@ void main() {
         ),
       );
 
+      // Corrigé (19/08/2026) : voir le commentaire équivalent sur le
+      // test de Théo ci-dessus — cette vigilance se déclenche
+      // désormais dès que l'appareil dépend de l'électricité, même
+      // avec powerFailureIsCritical à false pour Noé.
       expect(
         ids,
-        isNot(
-          contains(
-            'overnight_power_failure_critical',
-          ),
+        contains(
+          'overnight_power_failure_critical',
         ),
       );
     },

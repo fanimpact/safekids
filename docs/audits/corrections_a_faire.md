@@ -48,6 +48,20 @@ corrections viennent après, avec ses priorités.
    (chacun ne voit que ses propres préférences), juste un résidu
    inutile à nettoyer.
 
+## Depuis la passe 2 (moteur de recommandations, 19/08/2026)
+
+6. **Distinction visuelle des recommandations critiques.** Aujourd'hui
+   une recommandation critique (`isCritical: true`) est non masquable
+   partout (vérifié), mais s'affiche exactement comme les autres sur
+   les fiches et le PDF — aucune mise en forme ne la distingue. Décision
+   de Fanny : reportée, à ne pas traiter maintenant.
+
+(Les autres constats de la passe 2 — bug de présélection, doublon
+"effort physique", recommandations manquantes — ont été corrigés
+directement le 19/08/2026 plutôt que reportés ici : Fanny a demandé un
+traitement immédiat pour ceux-là, contrairement aux items 1-5 de la
+passe 1. Voir l'historique git pour le détail des commits.)
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base

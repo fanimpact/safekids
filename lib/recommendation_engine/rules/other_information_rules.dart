@@ -19,7 +19,7 @@ class OtherInformationRules {
       return recommendations;
     }
 
-    if (!otherInformation.hasOtherInformation) {
+    if (otherInformation.hasOtherInformation != true) {
       return recommendations;
     }
 

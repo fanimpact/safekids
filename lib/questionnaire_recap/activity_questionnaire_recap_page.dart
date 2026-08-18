@@ -506,7 +506,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       ),
     ];
 
-    if (!data.hasOtherInformation) {
+    if (data.hasOtherInformation != true) {
       return lines;
     }
 

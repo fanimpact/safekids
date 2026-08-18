@@ -272,6 +272,48 @@ const PAGE_HTML = `<!doctype html>
     );
   }
 
+  // Consignes d'urgence numérotées, rédigées par le parent pour une
+  // pathologie ou une allergie précise. Corrigé (19/08/2026) : jusqu'ici
+  // visibles uniquement dans le Mode Urgence interactif de l'app, jamais
+  // sur ce lien -- exactement ce que consulte quelqu'un sans l'app sous
+  // la main. Affiché uniquement sur la fiche secours.
+  function sectionConsignesUrgence(profilSante) {
+    var entrees = [];
+
+    (profilSante.pathologies || []).forEach(function (p) {
+      var etapes = (p && p.emergencyInstructionSteps || [])
+        .map(function (e) { return String(e || '').trim(); })
+        .filter(Boolean);
+      if (p && p.name && etapes.length) {
+        entrees.push({ label: p.name, etapes: etapes });
+      }
+    });
+
+    (profilSante.allergies || []).forEach(function (a) {
+      var etapes = (a && a.emergencyInstructionSteps || [])
+        .map(function (e) { return String(e || '').trim(); })
+        .filter(Boolean);
+      if (a && a.allergen && etapes.length) {
+        entrees.push({ label: a.allergen, etapes: etapes });
+      }
+    });
+
+    if (!entrees.length) return '';
+
+    var corps = entrees.map(function (entree) {
+      var items = entree.etapes.map(function (etape, index) {
+        return '<li>' + (index + 1) + '. ' + echapper(etape) + '</li>';
+      }).join('');
+      return '<p style="font-weight:700;margin:12px 0 4px">' +
+        echapper(entree.label) + '</p><ul>' + items + '</ul>';
+    }).join('');
+
+    return (
+      '<div class="section highlight"><h2>Consignes d’urgence</h2>' +
+      corps + '</div>'
+    );
+  }
+
   function lignesListe(items, formateur) {
     return (items || []).map(formateur).filter(Boolean);
   }
@@ -286,6 +328,10 @@ const PAGE_HTML = `<!doctype html>
     document.getElementById('details-identite').textContent = texteIdentite(enfant);
 
     var blocs = [];
+
+    if (data.type_fiche === 'secours') {
+      blocs.push(sectionConsignesUrgence(profilSante));
+    }
 
     blocs.push(section('Pathologies', lignesListe(profilSante.pathologies, lignePathologie)));
     blocs.push(section('Allergies', lignesListe(profilSante.allergies, ligneAllergie)));

@@ -22,7 +22,7 @@ class OtherInformationPage extends StatefulWidget {
 
 class _OtherInformationPageState
     extends State<OtherInformationPage> {
-  late bool _hasOtherInformation;
+  bool? _hasOtherInformation;
   late bool _showSecondInformation;
   late bool _showThirdInformation;
   late bool _showFourthInformation;
@@ -254,6 +254,21 @@ class _OtherInformationPageState
   }
 
   Future<void> _finish() async {
+    // Corrigé (19/08/2026) : aucune page voisine du questionnaire ne
+    // laisse "Continuer"/"Terminer" passer sans réponse — celle-ci ne
+    // le faisait pas non plus jusqu'ici.
+    if (_hasOtherInformation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Répondez par oui ou par non avant de continuer.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     final activityProfileController =
         widget.activityProfileController;
 
@@ -333,7 +348,7 @@ class _OtherInformationPageState
                 _updateHasOtherInformation,
           ),
 
-          if (_hasOtherInformation) ...[
+          if (_hasOtherInformation == true) ...[
             const SizedBox(height: 24),
 
             SkTextField(

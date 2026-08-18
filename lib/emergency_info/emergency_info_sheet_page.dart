@@ -103,6 +103,53 @@ class EmergencyInfoSheetPage extends StatelessWidget {
     return details;
   }
 
+  /// Consignes d'urgence numérotées, rédigées par le parent pour une
+  /// pathologie ou une allergie précise — jusqu'ici visibles
+  /// uniquement dans le Mode Urgence interactif de l'app, jamais sur
+  /// cette fiche imprimable/partageable. Corrigé (19/08/2026) :
+  /// c'est justement l'accompagnant sans l'app sous la main (fiche
+  /// papier, lien partagé, pas de réseau) qui en a le plus besoin.
+  List<({String label, List<String> steps})>
+      get _emergencyInstructionEntries {
+    final entries = <({String label, List<String> steps})>[];
+
+    for (final pathology
+        in child.essentialInformation.pathologies) {
+      final name = pathology.name?.trim();
+
+      final steps = pathology.emergencyInstructionSteps
+          .map((step) => step.trim())
+          .where((step) => step.isNotEmpty)
+          .toList();
+
+      if (name == null || name.isEmpty || steps.isEmpty) {
+        continue;
+      }
+
+      entries.add((label: name, steps: steps));
+    }
+
+    for (final allergy
+        in child.essentialInformation.allergies) {
+      final allergen = allergy.allergen?.trim();
+
+      final steps = allergy.emergencyInstructionSteps
+          .map((step) => step.trim())
+          .where((step) => step.isNotEmpty)
+          .toList();
+
+      if (allergen == null ||
+          allergen.isEmpty ||
+          steps.isEmpty) {
+        continue;
+      }
+
+      entries.add((label: allergen, steps: steps));
+    }
+
+    return entries;
+  }
+
   List<String> get _pathologyLines {
     final lines = <String>[];
 
@@ -623,6 +670,8 @@ class EmergencyInfoSheetPage extends StatelessWidget {
               ),
             ),
 
+          ..._pdfEmergencyInstructions(),
+
           pdfSectionTitle(
             'Pathologies et antécédents médicaux',
           ),
@@ -707,6 +756,56 @@ class EmergencyInfoSheetPage extends StatelessWidget {
     return document.save();
   }
 
+  List<pw.Widget> _pdfEmergencyInstructions() {
+    final entries = _emergencyInstructionEntries;
+
+    if (entries.isEmpty) {
+      return [];
+    }
+
+    final widgets = <pw.Widget>[
+      pdfSectionTitle('Consignes d’urgence'),
+    ];
+
+    for (final entry in entries) {
+      widgets.add(
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(
+            top: 4,
+            bottom: 2,
+          ),
+          child: pw.Text(
+            pdfSafeText(entry.label),
+            style: pw.TextStyle(
+              fontSize: 12,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+        ),
+      );
+
+      for (var index = 0;
+          index < entry.steps.length;
+          index++) {
+        widgets.add(
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(
+              bottom: 3,
+            ),
+            child: pw.Text(
+              pdfSafeText(
+                '${index + 1}. ${entry.steps[index]}',
+              ),
+              style: const pw.TextStyle(fontSize: 11),
+            ),
+          ),
+        );
+      }
+    }
+
+    return widgets;
+  }
+
   List<pw.Widget> _pdfLines(
     List<String> lines,
     String emptyMessage,
@@ -716,6 +815,84 @@ class EmergencyInfoSheetPage extends StatelessWidget {
     }
 
     return lines.map(pdfBullet).toList();
+  }
+
+  Widget _emergencyInstructionsCard() {
+    final entries = _emergencyInstructionEntries;
+
+    if (entries.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      color: Colors.red.shade50,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: Colors.red.shade300),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.emergency_outlined,
+                  size: 22,
+                  color: Colors.red.shade800,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Consignes d’urgence',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red.shade800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            for (var entryIndex = 0;
+                entryIndex < entries.length;
+                entryIndex++) ...[
+              Text(
+                entries[entryIndex].label,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              for (var stepIndex = 0;
+                  stepIndex <
+                      entries[entryIndex].steps.length;
+                  stepIndex++)
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 6,
+                    left: 4,
+                  ),
+                  child: Text(
+                    '${stepIndex + 1}. '
+                    '${entries[entryIndex].steps[stepIndex]}',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              if (entryIndex < entries.length - 1)
+                const SizedBox(height: 10),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _sectionCard({
@@ -838,6 +1015,8 @@ class EmergencyInfoSheetPage extends StatelessWidget {
             ],
 
             const SizedBox(height: 24),
+
+            _emergencyInstructionsCard(),
 
             _sectionCard(
               title:

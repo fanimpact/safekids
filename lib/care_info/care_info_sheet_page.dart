@@ -590,7 +590,7 @@ class CareInfoSheetPage extends StatelessWidget {
     final otherInformation =
         activityProfile.otherInformation;
 
-    if (otherInformation.hasOtherInformation) {
+    if (otherInformation.hasOtherInformation == true) {
       for (final details in [
         otherInformation.details,
         otherInformation.secondDetails,

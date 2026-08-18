@@ -98,6 +98,11 @@ class EmergencyMedicationRules {
       final dosage =
           treatment.dosage?.trim();
 
+      final administrationCondition =
+          treatment
+              .administrationCondition
+              ?.trim();
+
       final administrationMethod =
           treatment
               .administrationMethod
@@ -107,6 +112,18 @@ class EmergencyMedicationRules {
           dosage.isNotEmpty) {
         details.add(
           'Dosage : $dosage',
+        );
+      }
+
+      // Corrigé (19/08/2026) : cette condition (dans quelle situation
+      // donner le traitement) était saisie et affichée sur les deux
+      // fiches de référence, mais jamais reprise dans ce rappel — la
+      // seule recommandation censée se déclencher à chaque
+      // préparation d'activité.
+      if (administrationCondition != null &&
+          administrationCondition.isNotEmpty) {
+        details.add(
+          'À donner si : $administrationCondition',
         );
       }
 

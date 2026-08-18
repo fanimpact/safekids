@@ -87,8 +87,14 @@ void main() {
   );
 
   test(
-    'Médicament urgence général - dosage et mode sont affichés mais pas la condition',
+    'Médicament urgence général - dosage, condition et mode sont '
+    'tous les trois affichés',
     () {
+      // Corrigé (19/08/2026) : la condition d'administration (dans
+      // quelle situation donner le traitement) était saisie et
+      // affichée sur les deux fiches de référence, mais jamais
+      // reprise dans ce rappel — la seule recommandation censée se
+      // déclencher à chaque préparation d'activité.
       final child = _createTestChild(
         childId: 'test-emergency-details',
         emergencyTreatments: [
@@ -119,10 +125,8 @@ void main() {
 
       expect(
         text,
-        isNot(
-          contains(
-            'Condition d’administration : En cas de crise',
-          ),
+        contains(
+          'À donner si : En cas de crise',
         ),
       );
 

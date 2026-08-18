@@ -189,12 +189,15 @@ void main() {
         ),
       );
 
+      // Corrigé (19/08/2026) : cette vigilance critique se déclenche
+      // désormais dès que l'appareil dépend de l'électricité
+      // (requiresElectricity == true pour Noé), même avec
+      // powerFailureIsCritical à false — seule la suggestion concrète
+      // de solution de secours reste conditionnée aux deux.
       expect(
         noeIds,
-        isNot(
-          contains(
-            'overnight_power_failure_critical',
-          ),
+        contains(
+          'overnight_power_failure_critical',
         ),
       );
 

@@ -1,5 +1,9 @@
 class OtherInformationData {
-  bool hasOtherInformation;
+  // Corrigé (19/08/2026) : était un bool non nullable, défaut false,
+  // ce qui présélectionnait "Non" — même défaut déjà corrigé ailleurs
+  // dans l'app le 16/08 (voir clothing_page/toilets_page), jamais
+  // appliqué à cette dernière page du questionnaire jusqu'ici.
+  bool? hasOtherInformation;
 
   String? details;
   String? secondDetails;
@@ -7,7 +11,7 @@ class OtherInformationData {
   String? fourthDetails;
 
   OtherInformationData({
-    this.hasOtherInformation = false,
+    this.hasOtherInformation,
     this.details,
     this.secondDetails,
     this.thirdDetails,
@@ -27,8 +31,7 @@ class OtherInformationData {
   ) {
     return OtherInformationData(
       hasOtherInformation:
-          json['hasOtherInformation'] as bool? ??
-              false,
+          json['hasOtherInformation'] as bool?,
       details: json['details'] as String?,
       secondDetails: json['secondDetails'] as String?,
       thirdDetails: json['thirdDetails'] as String?,

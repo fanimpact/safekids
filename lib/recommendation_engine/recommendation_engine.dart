@@ -9,6 +9,8 @@ import 'rules/communication_rules.dart';
 import 'rules/emergency_medication_rules.dart';
 import 'rules/environment_rules.dart';
 import 'rules/global_activity_rules.dart';
+import 'rules/health_conditions_rules.dart';
+import 'rules/medical_device_reminder_rules.dart';
 import 'rules/other_information_rules.dart';
 import 'rules/overnight_stay_rules.dart';
 import 'rules/safety_rules.dart';
@@ -60,6 +62,12 @@ class RecommendationEngine {
 
   final EmergencyMedicationRules _emergencyMedicationRules =
       const EmergencyMedicationRules();
+
+  final HealthConditionsRules _healthConditionsRules =
+      const HealthConditionsRules();
+
+  final MedicalDeviceReminderRules _medicalDeviceReminderRules =
+      const MedicalDeviceReminderRules();
 
   final GlobalActivityRules _globalActivityRules =
       const GlobalActivityRules();
@@ -150,6 +158,14 @@ class RecommendationEngine {
 
       recommendations.addAll(
         _emergencyMedicationRules.evaluate(child),
+      );
+
+      recommendations.addAll(
+        _healthConditionsRules.evaluate(child),
+      );
+
+      recommendations.addAll(
+        _medicalDeviceReminderRules.evaluate(child),
       );
 
       final deduplicatedRecommendations =

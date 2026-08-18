@@ -37,10 +37,23 @@ class WalkingEffortRules {
       );
     }
 
+    // Corrigé (19/08/2026) : le facteur déclenchant "effort physique"
+    // du profil santé (EnvironmentRules.physicalEffortRecommendation,
+    // critique) et cette question du profil activités décrivaient la
+    // même vigilance sous la même condition d'activité, générant
+    // deux recommandations quasi identiques quand les deux étaient
+    // renseignées. Même principe déjà appliqué à l'eau (voir
+    // water_rules.dart) : le facteur déclenchant du profil santé,
+    // marqué critique, prime — cette question ne génère sa propre
+    // recommandation que si le profil santé n'a pas déjà signalé le
+    // même risque.
     if (activity.hasSignificantPhysicalEffort ==
             true &&
         walkingEffort
                 .intensePhysicalEffortRequiresVigilance ==
+            true &&
+        child.essentialInformation.triggerFactors
+                .physicalEffort !=
             true) {
       recommendations.add(
         Recommendation(

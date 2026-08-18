@@ -329,6 +329,24 @@ class _TransportPageState extends State<TransportPage> {
         .transport
         .motionSicknessTransports;
 
+    // Corrigé (19/08/2026) : répondre "oui" au mal des transports sans
+    // cocher aucun moyen de transport concerné laissait passer un
+    // profil incomplet — la règle de recommandation ne lit que la
+    // liste des moyens de transport, jamais la réponse "oui" globale,
+    // donc ce "oui" ne générait jamais aucune recommandation.
+    if (_motionSickness == true &&
+        selectedTransports.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Précisez au moins un moyen de transport concerné par le mal des transports.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     final hasUnansweredQuestion =
         _motionSickness == null ||
             (selectedTransports.isNotEmpty &&
