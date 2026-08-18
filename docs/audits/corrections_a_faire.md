@@ -105,6 +105,24 @@ passe 1. Voir l'historique git pour le détail des commits.)
     Fanny), et corriger le nom d'expéditeur pour qu'il dise "SafeKids".
     À vérifier/corriger dans la configuration du template Brevo.
 
+12. **Limite d'envoi d'emails du service d'authentification par défaut
+    de Supabase — à vérifier avant le lancement public.** Constaté
+    réellement pendant la passe 3 : après une poignée d'emails de
+    confirmation d'inscription envoyés en peu de temps pendant les
+    tests, Supabase a bloqué toute nouvelle inscription avec
+    `AuthApiException(..., code: over_email_send_rate_limit)`. Le
+    service d'email intégré par défaut de Supabase est volontairement
+    très limité (pensé pour le développement, pas pour la production) —
+    la même limite s'appliquera aux vraies inscriptions de parents une
+    fois l'app publiée, avec le risque qu'un pic d'inscriptions (ex. un
+    lancement) bloque les emails de confirmation pour tout le monde. À
+    vérifier avant le lancement : (1) quelle est la limite exacte
+    configurée sur le projet, (2) faire passer les emails
+    d'authentification (confirmation d'inscription, réinitialisation de
+    mot de passe) par un fournisseur SMTP externe — Brevo, déjà utilisé
+    pour les emails "métier" (code de vérification, notifications) — au
+    lieu du service email intégré de Supabase, qui lève cette limite.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base
