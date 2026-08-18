@@ -1,6 +1,4 @@
 class AquaticActivityData {
-  bool requiresAdaptations;
-
   // À proximité d'un point d'eau
   bool? requiresFlotationVestNearWater;
   bool? requiresDedicatedAdultNearWater;
@@ -18,7 +16,6 @@ class AquaticActivityData {
   String? otherAdaptationDetails;
 
   AquaticActivityData({
-    this.requiresAdaptations = false,
     this.requiresFlotationVestNearWater,
     this.requiresDedicatedAdultNearWater,
     this.requiresSpecialEquipment,
@@ -32,7 +29,6 @@ class AquaticActivityData {
   });
 
   Map<String, dynamic> toJson() => {
-        'requiresAdaptations': requiresAdaptations,
         'requiresFlotationVestNearWater':
             requiresFlotationVestNearWater,
         'requiresDedicatedAdultNearWater':
@@ -57,9 +53,6 @@ class AquaticActivityData {
     Map<String, dynamic> json,
   ) {
     return AquaticActivityData(
-      requiresAdaptations:
-          json['requiresAdaptations'] as bool? ??
-              false,
       requiresFlotationVestNearWater:
           json['requiresFlotationVestNearWater']
               as bool?,

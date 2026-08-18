@@ -31,7 +31,6 @@ import 'package:safekids/repositories/child_repository.dart';
 void main() {
   ChildProfileData buildChild({
     required String childId,
-    required bool requiresAdaptations,
   }) {
     return ChildProfileData(
       childId: childId,
@@ -55,13 +54,9 @@ void main() {
     );
   }
 
-  ActivityProfileData buildActivityProfile({
-    required bool requiresAdaptations,
-  }) {
+  ActivityProfileData buildActivityProfile() {
     return ActivityProfileData(
-      aquaticActivity: AquaticActivityData(
-        requiresAdaptations: requiresAdaptations,
-      ),
+      aquaticActivity: AquaticActivityData(),
       transport: TransportData(),
       walkingEffort: WalkingEffortData(),
       overnightStay: OvernightStayData(),
@@ -85,16 +80,11 @@ void main() {
       const childId = 'water-dup-test-1';
 
       ChildRepository.instance.seedForTesting(
-        buildChild(
-          childId: childId,
-          requiresAdaptations: true,
-        ),
+        buildChild(childId: childId),
       );
       ChildRepository.instance.seedActivityProfileForTesting(
         childId: childId,
-        activityProfile: buildActivityProfile(
-          requiresAdaptations: true,
-        ),
+        activityProfile: buildActivityProfile(),
       );
 
       final activity = CompleteActivitySessionData(
@@ -135,16 +125,11 @@ void main() {
       const childId = 'water-dup-test-2';
 
       ChildRepository.instance.seedForTesting(
-        buildChild(
-          childId: childId,
-          requiresAdaptations: false,
-        ),
+        buildChild(childId: childId),
       );
       ChildRepository.instance.seedActivityProfileForTesting(
         childId: childId,
-        activityProfile: buildActivityProfile(
-          requiresAdaptations: false,
-        ),
+        activityProfile: buildActivityProfile(),
       );
 
       final activity = CompleteActivitySessionData(

@@ -8,7 +8,8 @@ import 'package:printing/printing.dart';
 import '../models/complete_child_profile_data.dart';
 import '../models/medical_device_data.dart';
 import '../models/transport_data.dart';
-import '../models/trigger_factor_data.dart';
+import '../recommendation_engine/rules/environment_rules.dart';
+import '../recommendation_engine/rules/universal_trigger_rules.dart';
 import '../utils/age_utils.dart';
 import '../utils/date_format_utils.dart';
 import '../utils/pdf_text.dart';
@@ -347,50 +348,6 @@ class CareInfoSheetPage extends StatelessWidget {
     return names;
   }
 
-  String? _waterLine(TriggerFactorData triggerFactors) {
-    if (triggerFactors.waterContact != true) {
-      return null;
-    }
-
-    return switch (triggerFactors.waterVigilance) {
-      WaterVigilance.mayJumpIntoWater =>
-        'Eau : l’enfant risque de se jeter dans l’eau',
-      WaterVigilance.cannotSwim =>
-        'Eau : l’enfant ne sait pas nager',
-      WaterVigilance.other =>
-        'Eau : ${_detailOrFallback(
-          triggerFactors.otherWaterVigilance,
-        )}',
-      null => 'Eau : vigilance particulière',
-    };
-  }
-
-  String? _heightLine(TriggerFactorData triggerFactors) {
-    if (triggerFactors.height != true) {
-      return null;
-    }
-
-    return switch (triggerFactors.heightVigilance) {
-      HeightVigilance.doesNotPerceiveDanger =>
-        'Hauteur : l’enfant ne perçoit pas le danger lié à la hauteur',
-      HeightVigilance.vertigoOrImportantFear =>
-        'Hauteur : l’enfant a des vertiges ou une peur importante de la hauteur',
-      HeightVigilance.other =>
-        'Hauteur : ${_detailOrFallback(
-          triggerFactors.otherHeightVigilance,
-        )}',
-      null => 'Hauteur : vigilance particulière',
-    };
-  }
-
-  String _detailOrFallback(String? value) {
-    final trimmed = value?.trim();
-
-    return trimmed != null && trimmed.isNotEmpty
-        ? trimmed
-        : 'vigilance particulière';
-  }
-
   List<String> _walkingEffortVigilanceLines() {
     final walkingEffort =
         child.activityProfile?.walkingEffort;
@@ -667,88 +624,76 @@ class CareInfoSheetPage extends StatelessWidget {
       ),
     ];
 
-    // Danger médical direct.
+    // Danger médical direct + vigilances générales — corrigé
+    // (19/08/2026) : ce texte vient désormais exclusivement des
+    // méthodes publiques de EnvironmentRules/UniversalTriggerRules,
+    // les mêmes que celles utilisées par la fiche secours et par la
+    // préparation d'activité — plus jamais réécrit ici.
+    const environmentRules = EnvironmentRules();
+    const universalTriggerRules = UniversalTriggerRules();
+    final childId = child.childId;
 
-    final waterLine = _waterLine(triggerFactors);
+    lines.addAll(
+      environmentRules
+          .waterTriggerRecommendations(childId, triggerFactors)
+          .map((r) => r.text),
+    );
+    lines.addAll(
+      environmentRules
+          .heightRecommendations(childId, triggerFactors)
+          .map((r) => r.text),
+    );
+    lines.addAll(
+      universalTriggerRules
+          .photosensitivityRecommendations(
+        childId,
+        triggerFactors,
+      )
+          .map((r) => r.text),
+    );
+    lines.addAll(
+      environmentRules
+          .animalRecommendations(childId, triggerFactors)
+          .map((r) => r.text),
+    );
 
-    if (waterLine != null) {
-      lines.add(waterLine);
-    }
-
-    final heightLine = _heightLine(triggerFactors);
-
-    if (heightLine != null) {
-      lines.add(heightLine);
-    }
-
-    if (triggerFactors.flashingLights == true) {
-      lines.add(
-        triggerFactors.requiresGlassesOutdoors == true
-            ? 'Photosensibilité (lumières clignotantes) : vigilance particulière, port de lunettes nécessaire en extérieur'
-            : 'Photosensibilité (lumières clignotantes) : vigilance particulière',
-      );
-    }
-
-    if (triggerFactors.animals == true) {
-      lines.add(
-        switch (triggerFactors.animalVigilance) {
-          AnimalVigilance.importantFear =>
-            'Animaux : l’enfant a une peur importante des animaux',
-          AnimalVigilance
-              .approachesWithoutPerceivingDanger =>
-            'Animaux : l’enfant peut s’approcher des animaux sans percevoir le danger',
-          AnimalVigilance.other =>
-            'Animaux : ${_detailOrFallback(
-              triggerFactors.otherAnimalVigilance,
-            )}',
-          null => 'Animaux : vigilance particulière',
-        },
-      );
-    }
-
-    // Vigilances générales.
-
-    if (triggerFactors.heat == true) {
-      lines.add('Chaleur : vigilance particulière');
-    }
-
-    if (triggerFactors.fatigueOrLackOfSleep == true) {
-      lines.add(
-        'Fatigue ou manque de sommeil : vigilance particulière',
-      );
-    }
-
-    if (triggerFactors.stressOrStrongEmotions ==
-        true) {
-      lines.add(
-        'Stress ou émotions fortes : vigilance particulière',
-      );
-    }
-
-    if (triggerFactors.physicalEffort == true) {
-      lines.add(
-        'Effort physique : vigilance particulière',
-      );
-    }
-
-    if (triggerFactors.noise == true) {
-      lines.add('Bruit : vigilance particulière');
-    }
-
-    if (triggerFactors.crowd == true) {
-      lines.add('Foule : vigilance particulière');
-    }
-
-    if (triggerFactors.confinedSpaces == true) {
-      lines.add(
-        'Espaces confinés : vigilance particulière',
-      );
-    }
-
-    final other = triggerFactors.other?.trim();
-
-    if (other != null && other.isNotEmpty) {
-      lines.add('Autre : $other');
+    for (final recommendation in [
+      universalTriggerRules.heatRecommendation(
+        childId,
+        triggerFactors,
+      ),
+      universalTriggerRules.fatigueRecommendation(
+        childId,
+        triggerFactors,
+      ),
+      universalTriggerRules.stressRecommendation(
+        childId,
+        triggerFactors,
+      ),
+      environmentRules.physicalEffortRecommendation(
+        childId,
+        triggerFactors,
+      ),
+      environmentRules.noiseRecommendation(
+        childId,
+        triggerFactors,
+      ),
+      environmentRules.crowdRecommendation(
+        childId,
+        triggerFactors,
+      ),
+      environmentRules.confinedSpaceRecommendation(
+        childId,
+        triggerFactors,
+      ),
+      universalTriggerRules.otherTriggerFactorRecommendation(
+        childId,
+        triggerFactors,
+      ),
+    ]) {
+      if (recommendation != null) {
+        lines.add(recommendation.text);
+      }
     }
 
     // Informations pratiques (tout ce qui vient du profil Activités).

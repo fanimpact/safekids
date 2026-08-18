@@ -109,7 +109,7 @@ void main() {
 
       expect(
         waterRecommendation.text,
-        'Éviter les éclaboussures au visage',
+        'Eau : Éviter les éclaboussures au visage',
       );
 
       final otherRecommendation =
@@ -120,7 +120,7 @@ void main() {
 
       expect(
         otherRecommendation.text,
-        'Sensible aux changements de dernière minute',
+        'Autre : Sensible aux changements de dernière minute',
       );
 
       // Rien qui n'a pas de sens : les facteurs non

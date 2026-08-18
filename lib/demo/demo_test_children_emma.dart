@@ -1,4 +1,4 @@
-import '../models/activity_profile_data.dart';
+﻿import '../models/activity_profile_data.dart';
 import '../models/aquatic_activity_data.dart';
 import '../models/child_profile_data.dart';
 import '../models/clothing_data.dart';
@@ -118,7 +118,6 @@ class DemoTestChildrenEmma {
     return ActivityProfileData(
       aquaticActivity:
           AquaticActivityData(
-        requiresAdaptations: true,
 
         // Proximité d'un point d'eau.
         requiresFlotationVestNearWater:
@@ -144,7 +143,6 @@ class DemoTestChildrenEmma {
 
       transport:
           TransportData(
-        requiresAdaptations: true,
 
         // Emma est malade en bus ET en bateau,
         // mais pas en voiture.
@@ -181,7 +179,6 @@ class DemoTestChildrenEmma {
 
       overnightStay:
           OvernightStayData(
-        requiresAdaptations: true,
 
         usesNightDevice: true,
         nightDeviceIds: {nightDeviceId},
@@ -228,7 +225,6 @@ class DemoTestChildrenEmma {
 
       safety:
           SafetyData(
-        requiresAdaptations: false,
         mayLeaveGroupSuddenly: false,
         requiresSafetyEquipment: false,
         safetyEquipmentDetails: null,

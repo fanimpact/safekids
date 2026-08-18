@@ -1,6 +1,4 @@
 class OvernightStayData {
-  bool requiresAdaptations;
-
   bool? usesNightDevice;
 
   /// Référence les `MedicalDeviceData.deviceId` du profil santé déjà
@@ -16,7 +14,6 @@ class OvernightStayData {
   String? nightSupervisionDetails;
 
   OvernightStayData({
-    this.requiresAdaptations = false,
     this.usesNightDevice,
     Set<String>? nightDeviceIds,
     this.requiresElectricity,
@@ -26,7 +23,6 @@ class OvernightStayData {
   }) : nightDeviceIds = nightDeviceIds ?? <String>{};
 
   Map<String, dynamic> toJson() => {
-        'requiresAdaptations': requiresAdaptations,
         'usesNightDevice': usesNightDevice,
         'nightDeviceIds': nightDeviceIds.toList(),
         'requiresElectricity': requiresElectricity,
@@ -41,9 +37,6 @@ class OvernightStayData {
     Map<String, dynamic> json,
   ) {
     return OvernightStayData(
-      requiresAdaptations:
-          json['requiresAdaptations'] as bool? ??
-              false,
       usesNightDevice:
           json['usesNightDevice'] as bool?,
       nightDeviceIds: (json['nightDeviceIds']

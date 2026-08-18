@@ -1,4 +1,4 @@
-import '../models/activity_profile_data.dart';
+﻿import '../models/activity_profile_data.dart';
 import '../models/allergy_data.dart';
 import '../models/aquatic_activity_data.dart';
 import '../models/child_profile_data.dart';
@@ -204,7 +204,6 @@ class DemoChildren {
     return ActivityProfileData(
       aquaticActivity:
           AquaticActivityData(
-        requiresAdaptations: true,
         requiresFlotationVestNearWater:
             false,
         requiresDedicatedAdultNearWater:
@@ -222,7 +221,6 @@ class DemoChildren {
         otherAdaptationDetails: null,
       ),
       transport: TransportData(
-        requiresAdaptations: true,
         motionSickness: true,
         motionSicknessTransports: {
           TransportMode.car,
@@ -243,7 +241,6 @@ class DemoChildren {
       ),
       overnightStay:
           OvernightStayData(
-        requiresAdaptations: true,
         usesNightDevice: true,
         nightDeviceIds: {apneaMachineId},
         requiresElectricity: true,
@@ -273,7 +270,6 @@ class DemoChildren {
         changesMustBeAnnounced: false,
       ),
       safety: SafetyData(
-        requiresAdaptations: true,
         mayLeaveGroupSuddenly: false,
         requiresSafetyEquipment: false,
         safetyEquipmentDetails: null,
@@ -439,7 +435,6 @@ class DemoChildren {
     return ActivityProfileData(
       aquaticActivity:
           AquaticActivityData(
-        requiresAdaptations: false,
         requiresFlotationVestNearWater:
             false,
         requiresDedicatedAdultNearWater:
@@ -454,7 +449,6 @@ class DemoChildren {
         otherAdaptationDetails: null,
       ),
       transport: TransportData(
-        requiresAdaptations: false,
         motionSickness: false,
         requiresSpecialEquipment: false,
         specialEquipmentDetails: null,
@@ -470,7 +464,6 @@ class DemoChildren {
       ),
       overnightStay:
           OvernightStayData(
-        requiresAdaptations: true,
         usesNightDevice: true,
         nightDeviceIds: {apneaMachineId},
         requiresElectricity: true,
@@ -500,7 +493,6 @@ class DemoChildren {
         changesMustBeAnnounced: false,
       ),
       safety: SafetyData(
-        requiresAdaptations: true,
         mayLeaveGroupSuddenly: false,
         requiresSafetyEquipment: false,
         safetyEquipmentDetails: null,

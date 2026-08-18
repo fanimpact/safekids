@@ -10,8 +10,6 @@ enum TransportMode {
 }
 
 class TransportData {
-  bool requiresAdaptations;
-
   bool? motionSickness;
 
   Set<TransportMode> motionSicknessTransports;
@@ -27,7 +25,6 @@ class TransportData {
   String? specialAttentionDetails;
 
   TransportData({
-    this.requiresAdaptations = false,
     this.motionSickness,
     Set<TransportMode>? motionSicknessTransports,
     this.takesMotionSicknessMedication,
@@ -42,7 +39,6 @@ class TransportData {
             motionSicknessMedicationNames ?? <TransportMode, String>{};
 
   Map<String, dynamic> toJson() => {
-        'requiresAdaptations': requiresAdaptations,
         'motionSickness': motionSickness,
         'motionSicknessTransports': motionSicknessTransports
             .map((mode) => mode.name)
@@ -71,9 +67,6 @@ class TransportData {
             as Map<String, dynamic>?;
 
     return TransportData(
-      requiresAdaptations:
-          json['requiresAdaptations'] as bool? ??
-              false,
       motionSickness:
           json['motionSickness'] as bool?,
       motionSicknessTransports:

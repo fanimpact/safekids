@@ -1,4 +1,4 @@
-import '../models/activity_profile_data.dart';
+﻿import '../models/activity_profile_data.dart';
 import '../models/aquatic_activity_data.dart';
 import '../models/child_profile_data.dart';
 import '../models/clothing_data.dart';
@@ -170,7 +170,6 @@ class DemoTestChildren {
 
       safety:
           SafetyData(
-        requiresAdaptations: false,
         mayLeaveGroupSuddenly: false,
         requiresSafetyEquipment: false,
         safetyEquipmentDetails: null,

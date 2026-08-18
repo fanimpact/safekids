@@ -1,4 +1,4 @@
-import '../models/activity_profile_data.dart';
+﻿import '../models/activity_profile_data.dart';
 import '../models/aquatic_activity_data.dart';
 import '../models/child_profile_data.dart';
 import '../models/clothing_data.dart';
@@ -110,7 +110,6 @@ class DemoTestChildrenLucas {
 
       transport:
           TransportData(
-        requiresAdaptations: true,
         motionSickness: true,
         motionSicknessTransports: {
           TransportMode.car,
@@ -159,7 +158,6 @@ class DemoTestChildrenLucas {
 
       safety:
           SafetyData(
-        requiresAdaptations: true,
         mayLeaveGroupSuddenly: true,
         requiresSafetyEquipment: true,
         safetyEquipmentDetails:

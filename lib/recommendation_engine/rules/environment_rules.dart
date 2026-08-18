@@ -103,10 +103,13 @@ class EnvironmentRules {
 
   /// Recommandations calculables uniquement à partir des facteurs
   /// déclenchants du profil santé, sans qu'une activité soit créée.
-  /// Utilisées par la fiche "Ce qu'il faut savoir sur..." pour afficher,
-  /// à côté de chaque facteur déclaré, la même recommandation que celle
-  /// normalement générée lors de la préparation d'une activité — plutôt
-  /// que de dupliquer ces textes à un second endroit.
+  /// Utilisées par la fiche secours ET par "Ce qu'il faut savoir
+  /// sur..." pour afficher, à côté de chaque facteur déclaré, EXACTEMENT
+  /// le même texte que celui généré lors de la préparation d'une
+  /// activité — source unique de formulation (corrigé le 19/08/2026 :
+  /// avant cette correction, ce commentaire décrivait une intention
+  /// jamais réellement câblée, et les deux fiches avaient chacune
+  /// réécrit leur propre texte, qui avait déjà dérivé de celui-ci).
   List<Recommendation> heightRecommendations(
     String? childId,
     TriggerFactorData triggerFactors,
@@ -124,7 +127,7 @@ class EnvironmentRules {
                 RecommendationCategory.informationVigilance,
             childId: childId,
             text:
-                'L’enfant ne perçoit pas le danger lié à la hauteur.',
+                'Hauteur : l’enfant ne perçoit pas le danger lié à la hauteur.',
             isCritical: true,
           ),
         ];
@@ -137,7 +140,7 @@ class EnvironmentRules {
                 RecommendationCategory.informationVigilance,
             childId: childId,
             text:
-                'L’enfant présente un vertige ou une peur importante de la hauteur.',
+                'Hauteur : l’enfant présente un vertige ou une peur importante de la hauteur.',
           ),
         ];
 
@@ -155,7 +158,7 @@ class EnvironmentRules {
             category:
                 RecommendationCategory.informationVigilance,
             childId: childId,
-            text: details,
+            text: 'Hauteur : $details',
           ),
         ];
 
@@ -181,7 +184,7 @@ class EnvironmentRules {
                 RecommendationCategory.informationVigilance,
             childId: childId,
             text:
-                'L’enfant présente une peur importante des animaux.',
+                'Animaux : l’enfant présente une peur importante des animaux.',
           ),
         ];
 
@@ -194,7 +197,7 @@ class EnvironmentRules {
                 RecommendationCategory.informationVigilance,
             childId: childId,
             text:
-                'L’enfant peut approcher les animaux sans percevoir le danger.',
+                'Animaux : l’enfant peut approcher les animaux sans percevoir le danger.',
             isCritical: true,
           ),
         ];
@@ -213,7 +216,7 @@ class EnvironmentRules {
             category:
                 RecommendationCategory.informationVigilance,
             childId: childId,
-            text: details,
+            text: 'Animaux : $details',
           ),
         ];
 
@@ -239,7 +242,7 @@ class EnvironmentRules {
                 RecommendationCategory.informationVigilance,
             childId: childId,
             text:
-                'Facteur déclenchant signalé par la famille : risque de se jeter dans l’eau.',
+                'Eau : risque de se jeter dans l’eau.',
             isCritical: true,
           ),
         ];
@@ -252,7 +255,7 @@ class EnvironmentRules {
                 RecommendationCategory.informationVigilance,
             childId: childId,
             text:
-                'Facteur déclenchant signalé par la famille : l’enfant ne sait pas nager.',
+                'Eau : l’enfant ne sait pas nager.',
             isCritical: true,
           ),
         ];
@@ -271,7 +274,7 @@ class EnvironmentRules {
             category:
                 RecommendationCategory.informationVigilance,
             childId: childId,
-            text: details,
+            text: 'Eau : $details',
           ),
         ];
 
@@ -293,7 +296,7 @@ class EnvironmentRules {
       category: RecommendationCategory.informationVigilance,
       childId: childId,
       text:
-          'Effort physique signalé comme facteur déclenchant : vigilance particulière.',
+          'Effort physique : vigilance particulière.',
       isCritical: true,
     );
   }
