@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../models/activity_session/activity_session_data.dart';
+import '../models/activity_session/complete_activity_session_data.dart';
+import '../models/complete_child_profile_data.dart';
+import '../recommendation_engine/models/activity_recommendation_result.dart';
 import '../recommendation_engine/recommendation_engine.dart';
 import '../repositories/activity_session_repository.dart';
 import '../repositories/child_repository.dart';
@@ -9,10 +12,59 @@ import 'activity_recommendations_page.dart';
 class ActivityChildSelectionPage extends StatefulWidget {
   final ActivitySessionData sessionData;
 
-  const ActivityChildSelectionPage({
+  /// Source des enfants proposés à la sélection — par défaut le
+  /// répertoire parent (`ChildRepository`), fourni explicitement côté
+  /// professionnel pour pointer vers le trombinoscope de
+  /// l'établissement (`ProfessionalChildRepository`) sans dépendance en
+  /// dur entre les deux.
+  final Listenable childrenListenable;
+  final List<CompleteChildProfileData> Function()
+      childrenProvider;
+  final CompleteChildProfileData? Function(String childId)
+      findChild;
+
+  /// Sauvegarde l'activité (Supabase, parent ou établissement selon
+  /// l'appelant) et retourne l'activité complète prête pour le calcul
+  /// des recommandations.
+  final Future<CompleteActivitySessionData> Function(
+    ActivitySessionData sessionData,
+    List<String> childIds,
+  ) saveActivity;
+
+  /// Écran affiché une fois les recommandations calculées — par défaut
+  /// `ActivityRecommendationsPage` directement (parcours parent
+  /// existant). Le parcours professionnel fournit un écran
+  /// intermédiaire (note d'activité) avant d'y arriver.
+  final Widget Function(
+    CompleteActivitySessionData activity,
+    ActivityRecommendationResult result,
+  )? buildNextPage;
+
+  ActivityChildSelectionPage({
     super.key,
     required this.sessionData,
-  });
+    Listenable? childrenListenable,
+    List<CompleteChildProfileData> Function()?
+        childrenProvider,
+    CompleteChildProfileData? Function(String childId)?
+        findChild,
+    Future<CompleteActivitySessionData> Function(
+      ActivitySessionData sessionData,
+      List<String> childIds,
+    )? saveActivity,
+    this.buildNextPage,
+  })  : childrenListenable =
+            childrenListenable ?? ChildRepository.instance,
+        childrenProvider = childrenProvider ??
+            (() => ChildRepository.instance.children),
+        findChild =
+            findChild ?? ChildRepository.instance.findByChildId,
+        saveActivity = saveActivity ??
+            ((sessionData, childIds) async =>
+                ActivitySessionRepository.instance.addActivity(
+                  sessionData,
+                  childIds: childIds,
+                ));
 
   @override
   State<ActivityChildSelectionPage> createState() =>
@@ -36,28 +88,39 @@ class _ActivityChildSelectionPageState
     });
   }
 
-  void _saveActivity() {
-    final completeActivity =
-        ActivitySessionRepository.instance.addActivity(
+  Future<void> _saveActivity() async {
+    final completeActivity = await widget.saveActivity(
       widget.sessionData,
-      childIds: _selectedChildIds.toList(),
+      _selectedChildIds.toList(),
     );
 
     final recommendationResult =
-        RecommendationEngine().generateRecommendations(
+        RecommendationEngine(findChild: widget.findChild)
+            .generateRecommendations(
       completeActivity,
     );
 
     completeActivity.recommendationsGenerated = true;
 
+    if (!mounted) {
+      return;
+    }
+
+    final buildNextPage = widget.buildNextPage;
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            ActivityRecommendationsPage(
-          activitySession: completeActivity,
-          recommendationResult: recommendationResult,
-        ),
+        builder: (context) => buildNextPage != null
+            ? buildNextPage(
+                completeActivity,
+                recommendationResult,
+              )
+            : ActivityRecommendationsPage(
+                activitySession: completeActivity,
+                recommendationResult: recommendationResult,
+                findChild: widget.findChild,
+              ),
       ),
     );
   }
@@ -68,14 +131,13 @@ class _ActivityChildSelectionPageState
     // supprimé/ajouté ailleurs entre-temps si elle reste en mémoire
     // sous une autre page au lieu d'être rouverte à neuf.
     return ListenableBuilder(
-      listenable: ChildRepository.instance,
+      listenable: widget.childrenListenable,
       builder: (context, _) => _buildScaffold(context),
     );
   }
 
   Widget _buildScaffold(BuildContext context) {
-    final children =
-        ChildRepository.instance.children;
+    final children = widget.childrenProvider();
 
     return Scaffold(
       appBar: AppBar(

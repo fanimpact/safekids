@@ -6,6 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../models/activity_session/complete_activity_session_data.dart';
+import '../models/complete_child_profile_data.dart';
 import '../recommendation_engine/models/activity_recommendation_result.dart';
 import '../recommendation_engine/models/recommendation.dart';
 import '../recommendation_engine/models/recommendation_category.dart';
@@ -18,18 +19,19 @@ import 'activities_home_page.dart';
 class ActivityRecommendationsPage extends StatelessWidget {
   final CompleteActivitySessionData activitySession;
   final ActivityRecommendationResult recommendationResult;
+  final CompleteChildProfileData? Function(String childId) findChild;
 
-  const ActivityRecommendationsPage({
+  ActivityRecommendationsPage({
     super.key,
     required this.activitySession,
     required this.recommendationResult,
-  });
+    CompleteChildProfileData? Function(String childId)? findChild,
+  }) : findChild = findChild ?? ChildRepository.instance.findByChildId;
 
   String _childDisplayName(
     String childId,
   ) {
-    final child =
-        ChildRepository.instance.findByChildId(
+    final child = findChild(
       childId,
     );
 
@@ -76,8 +78,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
   String? _childMeasurementDetails(
     String childId,
   ) {
-    final child =
-        ChildRepository.instance.findByChildId(
+    final child = findChild(
       childId,
     );
 
@@ -253,8 +254,7 @@ class ActivityRecommendationsPage extends StatelessWidget {
   List<String> _allergyTexts(
     String childId,
   ) {
-    final child =
-        ChildRepository.instance.findByChildId(
+    final child = findChild(
       childId,
     );
 

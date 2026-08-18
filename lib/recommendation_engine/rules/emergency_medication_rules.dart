@@ -141,6 +141,7 @@ class EmergencyMedicationRules {
                   .emergencyMedication,
           childId: childId,
           text: text,
+          isCritical: true,
         ),
       );
     }

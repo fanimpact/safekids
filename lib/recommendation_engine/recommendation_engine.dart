@@ -1,4 +1,5 @@
 import '../models/activity_session/complete_activity_session_data.dart';
+import '../models/complete_child_profile_data.dart';
 import '../repositories/child_repository.dart';
 import 'models/activity_recommendation_result.dart';
 import 'models/child_recommendation_result.dart';
@@ -19,7 +20,7 @@ import 'rules/walking_effort_rules.dart';
 import 'rules/water_rules.dart';
 
 class RecommendationEngine {
-  final ChildRepository _childRepository;
+  final CompleteChildProfileData? Function(String childId) _findChild;
 
   final UniversalTriggerRules _universalTriggerRules =
       const UniversalTriggerRules();
@@ -64,9 +65,8 @@ class RecommendationEngine {
       const GlobalActivityRules();
 
   RecommendationEngine({
-    ChildRepository? childRepository,
-  }) : _childRepository =
-            childRepository ?? ChildRepository.instance;
+    CompleteChildProfileData? Function(String childId)? findChild,
+  }) : _findChild = findChild ?? ChildRepository.instance.findByChildId;
 
   ActivityRecommendationResult generateRecommendations(
     CompleteActivitySessionData activitySession,
@@ -74,7 +74,7 @@ class RecommendationEngine {
     final childResults = <ChildRecommendationResult>[];
 
     for (final childId in activitySession.childIds) {
-      final child = _childRepository.findByChildId(childId);
+      final child = _findChild(childId);
 
       if (child == null) {
         continue;

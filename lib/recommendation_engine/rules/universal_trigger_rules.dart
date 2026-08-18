@@ -27,6 +27,7 @@ class UniversalTriggerRules {
           childId: childId,
           text:
               'Photosensibilité : vigilance avec les lumières, reflets et alternances ombre/lumière.',
+          isCritical: true,
         ),
       );
     }
@@ -40,6 +41,7 @@ class UniversalTriggerRules {
           childId: childId,
           text:
               'Lunettes adaptées à la photosensibilité.',
+          isCritical: true,
         ),
       );
     }

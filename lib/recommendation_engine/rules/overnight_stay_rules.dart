@@ -103,6 +103,7 @@ class OvernightStayRules {
           childId: childId,
           text:
               'Prévoir une solution d’alimentation électrique de secours.',
+          isCritical: true,
         ),
       );
 
@@ -115,6 +116,7 @@ class OvernightStayRules {
           childId: childId,
           text:
               'L’appareil utilisé la nuit nécessite une alimentation électrique.',
+          isCritical: true,
         ),
       );
     }

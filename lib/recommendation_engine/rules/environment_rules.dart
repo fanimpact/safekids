@@ -125,6 +125,7 @@ class EnvironmentRules {
             childId: childId,
             text:
                 'L’enfant ne perçoit pas le danger lié à la hauteur.',
+            isCritical: true,
           ),
         ];
 
@@ -194,6 +195,7 @@ class EnvironmentRules {
             childId: childId,
             text:
                 'L’enfant peut approcher les animaux sans percevoir le danger.',
+            isCritical: true,
           ),
         ];
 
@@ -238,6 +240,7 @@ class EnvironmentRules {
             childId: childId,
             text:
                 'Facteur déclenchant signalé par la famille : risque de se jeter dans l’eau.',
+            isCritical: true,
           ),
         ];
 
@@ -250,6 +253,7 @@ class EnvironmentRules {
             childId: childId,
             text:
                 'Facteur déclenchant signalé par la famille : l’enfant ne sait pas nager.',
+            isCritical: true,
           ),
         ];
 
@@ -290,6 +294,7 @@ class EnvironmentRules {
       childId: childId,
       text:
           'Effort physique signalé comme facteur déclenchant : vigilance particulière.',
+      isCritical: true,
     );
   }
 

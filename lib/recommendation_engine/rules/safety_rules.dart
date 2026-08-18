@@ -26,6 +26,7 @@ class SafetyRules {
           childId: childId,
           text:
               'L’enfant peut quitter le groupe soudainement.',
+          isCritical: true,
         ),
       );
     }

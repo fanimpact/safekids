@@ -50,6 +50,7 @@ class WaterRules {
               RecommendationCategory.equipment,
           childId: childId,
           text: 'Gilet de flottaison.',
+          isCritical: true,
         ),
       );
     }
@@ -71,6 +72,7 @@ class WaterRules {
               RecommendationCategory.adaptation,
           childId: childId,
           text: 'Prévoir un adulte dédié.',
+          isCritical: true,
         ),
       );
     }
@@ -139,6 +141,7 @@ class WaterRules {
             childId: childId,
             text:
                 'Prévenir le maître-nageur.',
+            isCritical: true,
           ),
         );
       }
