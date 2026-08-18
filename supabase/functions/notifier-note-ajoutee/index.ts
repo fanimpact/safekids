@@ -8,6 +8,14 @@
 // transmis par le client, pour garantir qu'aucune donnee sensible ne
 // peut etre injectee dans l'email envoye.
 //
+// Point d'entree unique pour toute notification parent (2026-08-19,
+// demande de Fanny en preparation des notifications push, prevues au
+// moment de la publication sur les stores) : chaque appel cree
+// d'abord une ligne dans evenements_notification_parent (statut
+// "en_attente"), envoie l'email, puis met a jour cette meme ligne
+// ("envoye"/"echoue"). Quand le canal push sera branche, il lira/
+// ecrira sur la meme table plutot que de dupliquer cette logique.
+//
 // Necessite un appelant authentifie, membre actif de l'etablissement
 // proprietaire de l'activite : deployee AVEC verification JWT (pas de
 // --no-verify-jwt).
@@ -191,7 +199,41 @@ Deno.serve(async (req) => {
 
   const emailParent = compteParent?.email;
 
+  // La ligne d'evenement est creee avant toute tentative d'envoi,
+  // qu'un email exploitable existe ou non -- c'est elle qui fait foi
+  // de "cette notification a ete declenchee", independamment du canal.
+  const { data: evenement, error: evenementError } =
+    await supabaseService
+      .from('evenements_notification_parent')
+      .insert({
+        parent_id: enfant.parent_id,
+        enfant_id: enfantId,
+        type_evenement: 'note_ajoutee',
+        donnees: {
+          activiteId,
+          etablissementId: activite.etablissement_id,
+        },
+      })
+      .select('id')
+      .single();
+
+  if (evenementError || !evenement) {
+    console.error(
+      'Impossible de creer l’evenement de notification',
+      evenementError,
+    );
+    return jsonResponse(
+      { error: 'Impossible de journaliser la notification.' },
+      500,
+    );
+  }
+
   if (!emailParent) {
+    await supabaseService
+      .from('evenements_notification_parent')
+      .update({ statut_email: 'echoue' })
+      .eq('id', evenement.id);
+
     // Rien a notifier, mais la note reste bien enregistree cote base
     // (deja fait avant cet appel) : ce n'est pas une erreur bloquante.
     return jsonResponse({ ok: true, notifie: false }, 200);
@@ -233,11 +275,25 @@ Deno.serve(async (req) => {
       brevoResponse.status,
       await brevoResponse.text(),
     );
+
+    await supabaseService
+      .from('evenements_notification_parent')
+      .update({ statut_email: 'echoue' })
+      .eq('id', evenement.id);
+
     return jsonResponse(
       { error: 'Impossible d’envoyer la notification.' },
       502,
     );
   }
+
+  await supabaseService
+    .from('evenements_notification_parent')
+    .update({
+      statut_email: 'envoye',
+      email_envoye_le: new Date().toISOString(),
+    })
+    .eq('id', evenement.id);
 
   return jsonResponse({ ok: true, notifie: true }, 200);
 });
