@@ -77,3 +77,41 @@ Rien dans cette passe n'a nécessité de compte ou d'enregistrement fictif en ba
 ## Méthode détaillée
 
 Recherche exhaustive déléguée à deux explorations en parallèle (une par profil : santé, activités), avec consigne de citer précisément fichier et ligne pour chaque constat — pas de résumé générique. Les deux constats les plus sévères (§1 et §2) ont ensuite été revérifiés à la main, par lecture directe des fichiers cités, avant d'entrer dans ce rapport. La vérification de la criticité/masquage (§6) a été faite entièrement à la main, sans délégation, sur du code écrit dans cette même session.
+
+## Corrections apportées — round 2 (18/08/2026)
+
+Suite à validation de la passe 2, deux rounds de corrections ont été faits. Le premier (commit `09ff61c`) traitait les points 1 à 4 de la validation (consignes d'urgence sur la fiche secours, allergies/pathologies sans traitement toujours visibles, alimentation électrique toujours signalée, les 3 recommandations manquantes restantes) plus la préselection et le doublon "effort physique". Ce round-2 (commit `7767454`) traite les points 1, 2 et 3 restants.
+
+### 1. Source unique de formulation (les 7 incohérences du §4)
+
+Pas traité comme 7 correctifs séparés, comme demandé. Le vrai problème : `EnvironmentRules` avait déjà des méthodes publiques (`heightRecommendations`, `animalRecommendations`, `waterTriggerRecommendations`, etc.) conçues pour être réutilisées par les deux fiches, mais aucune des deux ne les appelait — chacune réécrivait son propre texte, qui avait dérivé.
+
+Correction structurelle :
+- `UniversalTriggerRules` (photosensibilité, chaleur, stress, fatigue, "autre") a été réécrite sur le même modèle qu'`EnvironmentRules` : chaque règle expose maintenant une méthode publique qui retourne directement l'objet `Recommendation`.
+- `emergency_info_sheet_page.dart` (fiche secours) et `care_info_sheet_page.dart` ("Ce qu'il faut savoir") appellent maintenant ces méthodes et affichent `.text` — elles ne réécrivent plus aucun texte elles-mêmes pour ces facteurs déclenchants. Le commentaire de `environment_rules.dart` qui prétendait déjà ça (item 4 du §4) décrit maintenant la réalité.
+
+Deux décisions de fond te revenaient, tranchées par toi :
+- **Préfixe de catégorie** ("Hauteur : ...", "Eau : ...", "Animaux : ...", "Effort physique : ...", "Autre : ...") appliqué partout, y compris sur la fiche de recommandations d'activité qui ne l'avait pas avant → texte identique aux 3 endroits.
+- **Photosensibilité** : toujours deux lignes distinctes (vigilance + lunettes si nécessaires), jamais fusionnées, sur les 3 fiches.
+
+Deux simplifications mineures que j'ai tranchées seul, sous ton seuil de validation, à te signaler :
+- J'ai retiré la mention "signalé par la famille" du texte des deux facteurs "eau" (`mayJumpIntoWater`, `cannotSwim`), pour rester cohérent avec le style "Catégorie : fait." utilisé partout ailleurs. Le texte dit maintenant "Eau : risque de se jeter dans l'eau." au lieu de "Facteur déclenchant signalé par la famille : risque de se jeter dans l'eau."
+- Pour la case "autre, détail libre" (hauteur/animaux/eau), j'ai gardé le comportement du moteur (n'affiche rien si le champ texte est vide) plutôt que celui, plus permissif, des deux fiches (qui affichaient une phrase de repli "vigilance particulière" même sans texte) — léger changement de comportement si un parent avait coché "autre" sans rien écrire.
+
+Les 3 autres incohérences du §4 (médecin traitant/antécédents absents de "Ce qu'il faut savoir", spécialité du médecin référent jamais affichée, dispositif "porté en permanence" absent de la fiche secours) ne sont pas des divergences de texte mais des données absentes d'une fiche — hors du périmètre de cette correction structurelle, à traiter séparément si tu le souhaites.
+
+### 2. Champs morts `requiresAdaptations`
+
+Supprimés sur les 4 modèles concernés (`TransportData`, `SafetyData`, `OvernightStayData`, `AquaticActivityData`) : le champ, son paramètre de constructeur, et ses entrées `toJson`/`fromJson`. Vérifié qu'aucune autre référence ne subsistait (fixtures de démo, tests) avant de committer. Les champs `requiresAdaptations` de `CommunicationData` et `TransitionsData` sont conservés — ce sont de vraies questions posées à l'écran, pas des champs morts.
+
+### 3. Test réel du lien de partage public sur Théo
+
+Ligne `partages` temporaire créée sur Théo (`type_fiche = 'secours'`, expiration 1h), avec son autorisation explicite pour ce cas précis. Théo a de vraies consignes d'urgence enregistrées pour son épilepsie (6 étapes, de "Eloigner objets risquant de blesser" à "Au bout de 5 min administrer BUCCOLAM dans la joue").
+
+Résultat du test réel (capture d'écran du rendu effectif de la page publique, pas juste une réponse JSON) : la section "Consignes d'urgence" apparaît bien en tête de la fiche secours publique, encadrée en rouge, avec les 6 étapes numérotées telles qu'écrites. Fonctionne comme prévu.
+
+Nettoyage effectué immédiatement après : ligne `partages` supprimée (`delete from partages where id = 'b55c31c2-42c2-43e7-aa8e-0358eb2fe82e'`). Vérifié ensuite : `select count(*) from partages where enfant_id = '<Théo>'` renvoie 0, et une nouvelle tentative d'accès avec le même token renvoie "Lien expiré ou invalide." (404). Aucune trace résiduelle. Aucune autre donnée de Théo (profil santé, pathologies) n'a été créée ni modifiée pour ce test — seule la ligne de partage a existé, temporairement.
+
+### Vérification
+
+`flutter analyze` : aucun problème. `flutter test` : 130/130 passent (2 assertions de test mises à jour pour refléter le nouveau préfixe "Eau : "/"Autre : ", conforme au comportement voulu — pas des régressions).
