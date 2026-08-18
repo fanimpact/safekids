@@ -118,6 +118,7 @@ class _ProfessionalRegisterPageState
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              autofillHints: const [],
               decoration: const InputDecoration(
                 labelText: 'Adresse e-mail professionnelle',
                 border: OutlineInputBorder(),

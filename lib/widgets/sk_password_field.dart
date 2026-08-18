@@ -31,6 +31,12 @@ class _SkPasswordFieldState extends State<SkPasswordField> {
       obscureText: _obscure,
       autocorrect: false,
       enableSuggestions: false,
+      // Vide, volontairement : empêche le gestionnaire de mots de
+      // passe du téléphone de proposer/substituer silencieusement le
+      // mot de passe d'un AUTRE compte de l'app (parent vs
+      // professionnel) — l'app a deux formulaires de connexion
+      // distincts, ce que l'OS ne sait pas forcément distinguer.
+      autofillHints: const [],
       decoration: InputDecoration(
         labelText: widget.label,
         helperText: widget.helperText,

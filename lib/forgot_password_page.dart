@@ -78,6 +78,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              autofillHints: const [],
               enabled: !_linkSent,
               decoration: const InputDecoration(
                 labelText: 'Adresse e-mail',

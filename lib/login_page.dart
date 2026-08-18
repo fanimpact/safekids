@@ -113,6 +113,11 @@ class _LoginPageState extends State<LoginPage> {
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              // Vide, volontairement : empêche le remplissage
+              // automatique du téléphone de substituer l'email d'un
+              // autre compte (parent/professionnel) enregistré dans
+              // l'app — désactivé sur tous les champs de connexion.
+              autofillHints: const [],
               decoration: const InputDecoration(
                 labelText: 'Adresse e-mail',
                 border: OutlineInputBorder(),
