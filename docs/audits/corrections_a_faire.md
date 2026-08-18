@@ -62,6 +62,49 @@ directement le 19/08/2026 plutôt que reportés ici : Fanny a demandé un
 traitement immédiat pour ceux-là, contrairement aux items 1-5 de la
 passe 1. Voir l'historique git pour le détail des commits.)
 
+7. **Médecin traitant et antécédents médicaux absents de "Ce qu'il faut
+   savoir sur...".** Cette fiche est explicitement pensée (commentaire
+   du code) pour un accompagnant qui garde l'enfant plusieurs jours
+   (ex. grands-parents) — profil qui aurait plausiblement besoin du
+   contact du médecin traitant en cas de problème non urgent. Présents
+   sur la fiche secours, absents ici. Confirmé par Fanny (19/08/2026) :
+   à corriger, pas un simple constat.
+
+8. **Spécialité, lieu d'exercice et téléphone du médecin référent d'une
+   pathologie, saisis mais jamais affichés nulle part** — ni sur la
+   fiche secours, ni sur "Ce qu'il faut savoir" (seul le nom apparaît,
+   sur cette dernière uniquement). Confirmé par Fanny (19/08/2026) : à
+   corriger.
+
+9. **Dispositif médical "porté en permanence" — distingué sur "Ce
+   qu'il faut savoir", pas sur la fiche secours.** Savoir qu'un
+   dispositif est implanté (pompe à insuline, etc.) est au moins aussi
+   utile en urgence qu'au quotidien — la fiche secours liste tous les
+   dispositifs indifféremment, sans cette précision. Confirmé par
+   Fanny (19/08/2026) : à corriger.
+
+## Depuis la passe 3 (parcours bout en bout, 19/08/2026)
+
+10. **Message d'erreur technique brut affiché à l'utilisateur lors de
+    la création de compte.** Testé réellement avec un compte de test :
+    quand Supabase rejette une adresse email invalide, l'app affiche
+    directement l'exception brute
+    (`AuthApiException(message: Email address "" is invalid,
+    statusCode: 400, code: email_address_invalid)`) au lieu d'un
+    message clair en français. À remplacer par un message utilisateur
+    compréhensible, quelle que soit la cause du rejet côté Supabase.
+
+11. **Email de code de vérification "nouvel appareil" — expéditeur et
+    réponse mal configurés côté Brevo.** Testé réellement (vrai email
+    reçu et code utilisé pour se connecter) : le nom d'expéditeur
+    affiché est "KidsRelay" au lieu de "SafeKids", et l'adresse
+    "répondre à" pointe vers l'adresse personnelle de Fanny
+    (fannydicaro@hotmail.fr) — un utilisateur qui répond à cet email
+    automatique atterrit directement dans sa boîte perso. Il faut une
+    adresse de réponse dédiée au projet (pas l'adresse personnelle de
+    Fanny), et corriger le nom d'expéditeur pour qu'il dise "SafeKids".
+    À vérifier/corriger dans la configuration du template Brevo.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base
