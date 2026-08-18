@@ -29,6 +29,8 @@ class _SkPasswordFieldState extends State<SkPasswordField> {
     return TextFormField(
       controller: widget.controller,
       obscureText: _obscure,
+      autocorrect: false,
+      enableSuggestions: false,
       decoration: InputDecoration(
         labelText: widget.label,
         helperText: widget.helperText,

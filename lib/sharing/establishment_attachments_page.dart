@@ -146,7 +146,21 @@ class _EstablishmentAttachmentsPageState
     }
 
     if (_selectedChild == null) {
-      _selectChild(_children.first);
+      // On ne peut pas appeler setState() (via _selectChild) pendant
+      // le build lui-même : ce widget est reconstruit à chaque
+      // notification de ChildRepository (ListenableBuilder), et cette
+      // sélection initiale doit attendre la fin du build en cours.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted &&
+            _selectedChild == null &&
+            _children.isNotEmpty) {
+          _selectChild(_children.first);
+        }
+      });
+
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
