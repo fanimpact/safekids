@@ -40,6 +40,19 @@ class AccountService {
       emailRedirectTo: SupabaseConfig.authRedirectUrl,
     );
 
+    // Sans ça, la connexion par mot de passe peut échouer tant que la
+    // personne n'a pas cliqué le lien de confirmation reçu par email :
+    // Supabase ne crée la ligne d'identité "email" qu'à ce moment-là,
+    // indépendamment du mot de passe lui-même. On la garantit
+    // immédiatement, pour pouvoir se reconnecter sans attendre.
+    try {
+      await _client.rpc('rpc_assurer_identite_email');
+    } catch (_) {
+      // Non bloquant pour la création du compte elle-même ; si la
+      // fonction n'existe pas encore côté serveur, la conversion reste
+      // valable, seule cette garantie supplémentaire est absente.
+    }
+
     final userId = _client.auth.currentUser?.id;
 
     if (userId == null) {

@@ -69,32 +69,4 @@ class EstablishmentService {
 
     return response as String?;
   }
-
-  /// Enfants actuellement rattachés à [etablissementId] (trombinoscope
-  /// simple : prénom uniquement pour cette étape).
-  Future<List<({String enfantId, String prenom})>> roster(
-    String etablissementId,
-  ) async {
-    final rows = await _client
-        .from('enfants_etablissements')
-        .select('enfant_id, enfants(id, prenom)')
-        .eq('etablissement_id', etablissementId)
-        .eq('statut', 'actif');
-
-    return (rows as List<dynamic>)
-        .map((row) {
-          final enfant =
-              row['enfants'] as Map<String, dynamic>?;
-
-          final prenom = enfant?['prenom'] as String?;
-
-          return (
-            enfantId: row['enfant_id'] as String,
-            prenom: (prenom == null || prenom.trim().isEmpty)
-                ? 'Enfant'
-                : prenom.trim(),
-          );
-        })
-        .toList();
-  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../home/home_page.dart';
+import '../repositories/child_repository.dart';
 import 'account_service.dart';
 
 /// Affiché après une connexion réussie par mot de passe, uniquement si
@@ -92,6 +93,15 @@ class _DeviceVerificationPageState
       await AccountService.instance.verifyDeviceCode(
         code,
       );
+
+      // Même précaution qu'à la connexion normale : ne pas laisser
+      // l'écran d'accueil afficher les enfants d'une session
+      // précédente encore en mémoire.
+      try {
+        await ChildRepository.instance.loadFromSupabase();
+      } catch (_) {
+        // Le repli hors-ligne existant (cache local) prend le relais.
+      }
 
       if (!mounted) {
         return;

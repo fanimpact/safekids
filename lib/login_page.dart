@@ -5,6 +5,7 @@ import 'auth/account_service.dart';
 import 'forgot_password_page.dart';
 import 'home/home_page.dart';
 import 'register_page.dart';
+import 'repositories/child_repository.dart';
 import 'widgets/sk_password_field.dart';
 
 class LoginPage extends StatefulWidget {
@@ -57,6 +58,18 @@ class _LoginPageState extends State<LoginPage> {
 
       final isRecognized = await AccountService.instance
           .isCurrentDeviceRecognized();
+
+      // Sans ça, l'écran d'accueil affiche encore les enfants (ou
+      // l'absence d'enfants) de la session précédente si l'app était
+      // déjà ouverte sous une autre identité (ex. après avoir créé un
+      // compte professionnel) : il faut recharger pour le compte qui
+      // vient de se connecter, pas garder l'ancien état en mémoire.
+      try {
+        await ChildRepository.instance.loadFromSupabase();
+      } catch (_) {
+        // Le repli hors-ligne existant (cache local) prend le relais ;
+        // ne bloque pas la connexion pour autant.
+      }
 
       if (!mounted) {
         return;
