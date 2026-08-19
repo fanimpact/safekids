@@ -123,6 +123,21 @@ passe 1. Voir l'historique git pour le détail des commits.)
     pour les emails "métier" (code de vérification, notifications) — au
     lieu du service email intégré de Supabase, qui lève cette limite.
 
+13. **Après révocation, la fiche déjà ouverte reste affichée côté
+    professionnel jusqu'à rechargement.** Testé réellement pendant la
+    passe 3 : dès que le parent révoque, l'accès réel aux données est
+    coupé immédiatement côté serveur (vérifié par impersonation RLS —
+    0 ligne visible pour le professionnel revoqué), donc aucune fuite
+    de donnée nouvelle n'est possible. Mais un onglet déjà ouvert sur
+    la fiche secours au moment de la révocation continue d'afficher les
+    informations déjà chargées tant que l'utilisateur ne recharge pas
+    ou ne resynchronise pas manuellement — l'écran ne réagit pas de
+    lui-même à la révocation. Confirmé par Fanny (19/08/2026) : à
+    corriger, pour que la fiche disparaisse rapidement même sans action
+    du professionnel (ex. vérification périodique de l'accès pendant
+    que l'écran est ouvert, ou écoute en temps réel du changement de
+    statut du rattachement).
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base
