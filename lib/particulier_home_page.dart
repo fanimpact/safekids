@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'activity_profile_pages/activity_profile_entry_page.dart';
-import 'controllers/transmission_controller.dart';
 import 'demo_page.dart';
 import 'login_page.dart';
 import 'register_page.dart';
-import 'transmission_pages/identity_page.dart';
 
 class ParticulierHomePage extends StatelessWidget {
   const ParticulierHomePage({
@@ -112,67 +109,6 @@ class ParticulierHomePage extends StatelessWidget {
                   'Se connecter',
                   style: TextStyle(
                     fontSize: 17,
-                  ),
-                ),
-              ),
-
-              // -------- Développement uniquement --------
-
-              const SizedBox(height: 40),
-
-              const Divider(),
-
-              const SizedBox(height: 16),
-
-              const Text(
-                'Outils de développement',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    final transmissionController =
-                        TransmissionController();
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            IdentityPage(
-                          transmissionController:
-                              transmissionController,
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'Tester le questionnaire Télétransmission',
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const ActivityProfileEntryPage(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'Tester le questionnaire Activités',
                   ),
                 ),
               ),

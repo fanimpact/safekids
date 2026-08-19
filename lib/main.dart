@@ -110,29 +110,3 @@ class _SafeKidsAppState extends State<SafeKidsApp> {
     );
   }
 }
-
-class HomePage extends StatelessWidget {
-  const HomePage({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'SafeKids',
-        ),
-      ),
-      body: const Center(
-        child: Text(
-          'Bienvenue dans SafeKids',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-}

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'register_page.dart';
+
 class DemoPage extends StatefulWidget {
   const DemoPage({super.key});
 
@@ -61,6 +63,15 @@ class _DemoPageState extends State<DemoPage> {
         curve: Curves.easeInOut,
       );
     }
+  }
+
+  void _createAccount() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const RegisterPage(),
+      ),
+    );
   }
 
   @override
@@ -165,7 +176,7 @@ class _DemoPageState extends State<DemoPage> {
                     onPressed:
                         _currentPage ==
                                 _pages.length - 1
-                            ? () {}
+                            ? _createAccount
                             : _nextPage,
                     child: Text(
                       _currentPage ==
