@@ -90,6 +90,13 @@ void main() {
       // 1. Création : IdentityPage.
       final createController = TransmissionController();
 
+      // La date de naissance n'a pas de champ texte (sélecteur de date
+      // uniquement) : on la renseigne directement sur le contrôleur,
+      // avant de construire l'écran, pour que l'état initial de la
+      // page la reprenne comme si elle avait été choisie via le
+      // sélecteur.
+      createController.updateDateOfBirth(DateTime(2016, 6, 1));
+
       await pumpFreshIdentityPage(tester, createController);
 
       await tester.enterText(
@@ -99,6 +106,15 @@ void main() {
               widget.label.contains('Prénom'),
         ),
         'Camille',
+      );
+
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SkTextField &&
+              widget.label.contains('Nom de famille'),
+        ),
+        'Test',
       );
 
       await continueFromIdentityPage(tester);
@@ -267,6 +283,8 @@ void main() {
         childId: 'test-child-2',
         identity: IdentityData(
           firstName: 'Test',
+          lastName: 'Nom',
+          dateOfBirth: DateTime(2016, 6, 1),
           hasDiagnosedPathologies: true,
         ),
         pathologies: [PathologyData(name: 'Épilepsie')],
@@ -307,6 +325,8 @@ void main() {
         childId: 'test-child-3',
         identity: IdentityData(
           firstName: 'Test',
+          lastName: 'Nom',
+          dateOfBirth: DateTime(2016, 6, 1),
           hasDiagnosedPathologies: null,
         ),
         pathologies: const [],
@@ -352,6 +372,8 @@ void main() {
         childId: 'test-child-4',
         identity: IdentityData(
           firstName: 'Test',
+          lastName: 'Nom',
+          dateOfBirth: DateTime(2016, 6, 1),
           hasDiagnosedPathologies: true,
         ),
         hasPathologies: false,

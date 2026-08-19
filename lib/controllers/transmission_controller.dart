@@ -236,14 +236,6 @@ class TransmissionController {
 
   // ÉVÉNEMENTS MÉDICAUX
 
-  void ensureFirstMedicalEvent() {
-    if (_draft.medicalEvents.isEmpty) {
-      _draft.medicalEvents.add(
-        MedicalEventData(),
-      );
-    }
-  }
-
   void addMedicalEvent() {
     _draft.medicalEvents.add(
       MedicalEventData(),
@@ -251,8 +243,7 @@ class TransmissionController {
   }
 
   void removeMedicalEvent(int index) {
-    if (_draft.medicalEvents.length > 1 &&
-        index >= 0 &&
+    if (index >= 0 &&
         index < _draft.medicalEvents.length) {
       _draft.medicalEvents.removeAt(index);
     }
@@ -352,14 +343,6 @@ class TransmissionController {
 
   // OBSERVATIONS MÉDICALES
 
-  void ensureFirstMedicalObservation() {
-    if (_draft.medicalObservations.isEmpty) {
-      _draft.medicalObservations.add(
-        MedicalObservationData(),
-      );
-    }
-  }
-
   void addMedicalObservation() {
     _draft.medicalObservations.add(
       MedicalObservationData(),
@@ -367,10 +350,8 @@ class TransmissionController {
   }
 
   void removeMedicalObservation(int index) {
-    if (_draft.medicalObservations.length > 1 &&
-        index >= 0 &&
-        index <
-            _draft.medicalObservations.length) {
+    if (index >= 0 &&
+        index < _draft.medicalObservations.length) {
       _draft.medicalObservations.removeAt(index);
     }
   }

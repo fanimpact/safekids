@@ -24,14 +24,6 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
   final _controllers = TextControllerCache();
 
   @override
-  void initState() {
-    super.initState();
-    widget.transmissionController.ensureFirstMedicalEvent();
-    widget.transmissionController
-        .ensureFirstMedicalObservation();
-  }
-
-  @override
   void dispose() {
     _controllers.disposeAll();
     super.dispose();
@@ -104,6 +96,54 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
   }
 
   void _continue() {
+    final medicalEvents =
+        widget.transmissionController.formData.medicalEvents;
+
+    final medicalObservations = widget
+        .transmissionController
+        .formData
+        .medicalObservations;
+
+    for (final event in medicalEvents) {
+      if ((event.description ?? '').trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Décrivez chaque événement médical ajouté, ou supprimez-le, avant de continuer.",
+            ),
+          ),
+        );
+        return;
+      }
+
+      if (event.emergencyServicesCalled == null ||
+          event.emergencyTreatmentGiven == null ||
+          event.hospitalized == null ||
+          event.importantExaminationsPerformed == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Répondez par oui ou par non à chaque question de l'événement médical avant de continuer.",
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    for (final observation in medicalObservations) {
+      if ((observation.description ?? '').trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Décrivez chaque observation médicale ajoutée, ou supprimez-la, avant de continuer.",
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -326,19 +366,17 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
               ),
             ],
 
-            if (medicalEvents.length > 1) ...[
-              const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () =>
-                      _removeMedicalEvent(index),
-                  icon: const Icon(Icons.delete_outline),
-                  label: const Text("Supprimer"),
-                ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () =>
+                    _removeMedicalEvent(index),
+                icon: const Icon(Icons.delete_outline),
+                label: const Text("Supprimer"),
               ),
-            ],
+            ),
 
             const SizedBox(height: 32),
           ],
@@ -447,19 +485,17 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
               },
             ),
 
-            if (medicalObservations.length > 1) ...[
-              const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () =>
-                      _removeMedicalObservation(index),
-                  icon: const Icon(Icons.delete_outline),
-                  label: const Text("Supprimer"),
-                ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () =>
+                    _removeMedicalObservation(index),
+                icon: const Icon(Icons.delete_outline),
+                label: const Text("Supprimer"),
               ),
-            ],
+            ),
 
             const SizedBox(height: 30),
           ],

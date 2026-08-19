@@ -118,6 +118,29 @@ class _IdentityPageState extends State<IdentityPage> {
   }
 
   void _continue() {
+    if (_firstNameController.text.trim().isEmpty ||
+        _lastNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Renseignez le prénom et le nom de l’enfant avant de continuer.",
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (_dateOfBirth == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Sélectionnez la date de naissance avant de continuer.",
+          ),
+        ),
+      );
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(

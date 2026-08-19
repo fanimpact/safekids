@@ -12,10 +12,7 @@ import 'transition_to_activities_page.dart';
 class ContactsPage extends StatefulWidget {
   final TransmissionController transmissionController;
 
-  const ContactsPage({
-    super.key,
-    required this.transmissionController,
-  });
+  const ContactsPage({super.key, required this.transmissionController});
 
   @override
   State<ContactsPage> createState() => _ContactsPageState();
@@ -28,8 +25,7 @@ class _ContactsPageState extends State<ContactsPage> {
   void initState() {
     super.initState();
 
-    final contacts =
-        widget.transmissionController.formData.contacts;
+    final contacts = widget.transmissionController.formData.contacts;
 
     while (contacts.length < 2) {
       contacts.add(ContactData());
@@ -44,20 +40,15 @@ class _ContactsPageState extends State<ContactsPage> {
 
   void _addContact() {
     setState(() {
-      widget.transmissionController.formData.contacts.add(
-        ContactData(),
-      );
+      widget.transmissionController.formData.contacts.add(ContactData());
     });
   }
 
   void _removeContact(int index) {
     setState(() {
-      final contacts =
-          widget.transmissionController.formData.contacts;
+      final contacts = widget.transmissionController.formData.contacts;
 
-      if (index < 2 ||
-          index < 0 ||
-          index >= contacts.length) {
+      if (index < 2 || index < 0 || index >= contacts.length) {
         return;
       }
 
@@ -65,28 +56,29 @@ class _ContactsPageState extends State<ContactsPage> {
     });
   }
 
-  void _updateContactName(
-    int index,
-    String value,
-  ) {
-    widget.transmissionController.formData.contacts[index]
-        .fullName = value.trim();
+  void _updateContactName(int index, String value) {
+    widget.transmissionController.formData.contacts[index].fullName = value
+        .trim();
   }
 
-  void _updateContactRelationship(
-    int index,
-    String value,
-  ) {
-    widget.transmissionController.formData.contacts[index]
-        .relationship = value.trim();
+  void _updateContactRelationship(int index, String value) {
+    widget.transmissionController.formData.contacts[index].relationship = value
+        .trim();
   }
 
-  void _updateContactPhone(
-    int index,
-    String value,
-  ) {
-    widget.transmissionController.formData.contacts[index]
-        .phoneNumber = value.trim();
+  void _updateContactPhone(int index, String value) {
+    widget.transmissionController.formData.contacts[index].phoneNumber = value
+        .trim();
+  }
+
+  void _setPrimaryContact(int index) {
+    setState(() {
+      final contacts = widget.transmissionController.formData.contacts;
+
+      for (var i = 0; i < contacts.length; i++) {
+        contacts[i].isPrimaryContact = i == index;
+      }
+    });
   }
 
   String _contactTitle(int index) {
@@ -103,13 +95,10 @@ class _ContactsPageState extends State<ContactsPage> {
 
   Future<void> _validateInformation() async {
     if (widget.transmissionController.isEditing) {
-      final profile = widget.transmissionController
-          .validateAndGetProfile();
+      final profile = widget.transmissionController.validateAndGetProfile();
 
       try {
-        await ChildRepository.instance.replaceChild(
-          profile,
-        );
+        await ChildRepository.instance.replaceChild(profile);
       } catch (error) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -129,17 +118,14 @@ class _ContactsPageState extends State<ContactsPage> {
         return;
       }
 
-      final updatedChild =
-          ChildRepository.instance.findByChildId(
+      final updatedChild = ChildRepository.instance.findByChildId(
         profile.childId ?? '',
       )!;
 
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (context) => ChildProfilePage(
-            child: updatedChild,
-          ),
+          builder: (context) => ChildProfilePage(child: updatedChild),
         ),
         (route) => false,
       );
@@ -153,8 +139,7 @@ class _ContactsPageState extends State<ContactsPage> {
       context,
       MaterialPageRoute(
         builder: (context) => TransitionToActivitiesPage(
-          transmissionController:
-              widget.transmissionController,
+          transmissionController: widget.transmissionController,
         ),
       ),
     );
@@ -162,97 +147,117 @@ class _ContactsPageState extends State<ContactsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final contacts =
-        widget.transmissionController.formData.contacts;
+    final contacts = widget.transmissionController.formData.contacts;
+
+    final primaryIndex = contacts.indexWhere(
+      (contact) => contact.isPrimaryContact,
+    );
 
     return QuestionnairePage(
       title: "",
-      subtitle:
-          "Qui les services de secours doivent-ils pouvoir contacter ?",
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (
-            int index = 0;
-            index < contacts.length;
-            index++
-          ) ...[
-            Text(
-              _contactTitle(index),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+      subtitle: "Qui les services de secours doivent-ils pouvoir contacter ?",
+      child: RadioGroup<int>(
+        groupValue: primaryIndex < 0 ? null : primaryIndex,
+        onChanged: (value) {
+          if (value == null) {
+            return;
+          }
 
-            const SizedBox(height: 16),
-
-            SkTextField(
-              label: "Nom et prénom",
-              controller: _controllers.of(
-                'contact_${index}_fullName',
-                contacts[index].fullName ?? '',
-              ),
-              onChanged: (value) {
-                _updateContactName(index, value);
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            SkTextField(
-              label: "Lien avec l’enfant",
-              controller: _controllers.of(
-                'contact_${index}_relationship',
-                contacts[index].relationship ?? '',
-              ),
-              onChanged: (value) {
-                _updateContactRelationship(index, value);
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            SkTextField(
-              label: "Numéro de téléphone",
-              controller: _controllers.of(
-                'contact_${index}_phoneNumber',
-                contacts[index].phoneNumber ?? '',
-              ),
-              onChanged: (value) {
-                _updateContactPhone(index, value);
-              },
-            ),
-
-            if (index >= 2) ...[
-              const SizedBox(height: 12),
-
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () => _removeContact(index),
-                  icon: const Icon(Icons.delete_outline),
-                  label: const Text("Supprimer"),
+          _setPrimaryContact(value);
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (int index = 0; index < contacts.length; index++) ...[
+              Text(
+                _contactTitle(index),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
+
+              const SizedBox(height: 16),
+
+              SkTextField(
+                label: "Nom et prénom",
+                controller: _controllers.of(
+                  'contact_${index}_fullName',
+                  contacts[index].fullName ?? '',
+                ),
+                onChanged: (value) {
+                  _updateContactName(index, value);
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              SkTextField(
+                label: "Lien avec l’enfant",
+                controller: _controllers.of(
+                  'contact_${index}_relationship',
+                  contacts[index].relationship ?? '',
+                ),
+                onChanged: (value) {
+                  _updateContactRelationship(index, value);
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              SkTextField(
+                label: "Numéro de téléphone",
+                controller: _controllers.of(
+                  'contact_${index}_phoneNumber',
+                  contacts[index].phoneNumber ?? '',
+                ),
+                onChanged: (value) {
+                  _updateContactPhone(index, value);
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              InkWell(
+                onTap: () => _setPrimaryContact(index),
+                child: Row(
+                  children: [
+                    Radio<int>(value: index),
+                    const Text("Contact principal"),
+                  ],
+                ),
+              ),
+
+              if (index >= 2) ...[
+                const SizedBox(height: 12),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => _removeContact(index),
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text("Supprimer"),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 30),
             ],
 
+            OutlinedButton.icon(
+              onPressed: _addContact,
+              icon: const Icon(Icons.add),
+              label: const Text("Ajouter un contact"),
+            ),
+
             const SizedBox(height: 30),
+
+            FilledButton(
+              onPressed: _validateInformation,
+              child: const Text("Valider les informations"),
+            ),
           ],
-
-          OutlinedButton.icon(
-            onPressed: _addContact,
-            icon: const Icon(Icons.add),
-            label: const Text("Ajouter un contact"),
-          ),
-
-          const SizedBox(height: 30),
-
-          FilledButton(
-            onPressed: _validateInformation,
-            child: const Text("Valider les informations"),
-          ),
-        ],
+        ),
       ),
     );
   }
