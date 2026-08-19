@@ -112,34 +112,75 @@ passe 1. Voir l'historique git pour le détail des commits.)
     message clair en français. À remplacer par un message utilisateur
     compréhensible, quelle que soit la cause du rejet côté Supabase.
 
-11. **Email de code de vérification "nouvel appareil" — expéditeur et
-    réponse mal configurés côté Brevo.** Testé réellement (vrai email
-    reçu et code utilisé pour se connecter) : le nom d'expéditeur
-    affiché est "KidsRelay" au lieu de "SafeKids", et l'adresse
-    "répondre à" pointe vers l'adresse personnelle de Fanny
-    (fannydicaro@hotmail.fr) — un utilisateur qui répond à cet email
-    automatique atterrit directement dans sa boîte perso. Il faut une
-    adresse de réponse dédiée au projet (pas l'adresse personnelle de
-    Fanny), et corriger le nom d'expéditeur pour qu'il dise "SafeKids".
-    À vérifier/corriger dans la configuration du template Brevo.
+11. **EN ATTENTE — ne se termine que dans les interfaces Supabase et
+    Brevo, pas dans le code (19/08/2026).** Email de code de
+    vérification "nouvel appareil" — expéditeur et réponse mal
+    configurés côté Brevo. Testé réellement (vrai email reçu et code
+    utilisé pour se connecter) : le nom d'expéditeur affiché est
+    "KidsRelay" au lieu de "SafeKids", et l'adresse "répondre à"
+    pointe vers l'adresse personnelle de Fanny
+    (fannydicaro@hotmail.fr).
 
-12. **Limite d'envoi d'emails du service d'authentification par défaut
-    de Supabase — à vérifier avant le lancement public.** Constaté
-    réellement pendant la passe 3 : après une poignée d'emails de
-    confirmation d'inscription envoyés en peu de temps pendant les
-    tests, Supabase a bloqué toute nouvelle inscription avec
-    `AuthApiException(..., code: over_email_send_rate_limit)`. Le
-    service d'email intégré par défaut de Supabase est volontairement
-    très limité (pensé pour le développement, pas pour la production) —
-    la même limite s'appliquera aux vraies inscriptions de parents une
-    fois l'app publiée, avec le risque qu'un pic d'inscriptions (ex. un
-    lancement) bloque les emails de confirmation pour tout le monde. À
-    vérifier avant le lancement : (1) quelle est la limite exacte
-    configurée sur le projet, (2) faire passer les emails
-    d'authentification (confirmation d'inscription, réinitialisation de
-    mot de passe) par un fournisseur SMTP externe — Brevo, déjà utilisé
-    pour les emails "métier" (code de vérification, notifications) — au
-    lieu du service email intégré de Supabase, qui lève cette limite.
+    **Déjà fait côté code (commit `a3067c0`)** : les deux fonctions qui
+    envoient un email via Brevo (`envoyer-code-verification`,
+    `notifier-note-ajoutee`) précisent maintenant explicitement une
+    adresse de réponse (`BREVO_REPLY_TO_EMAIL`, nouveau secret
+    optionnel — si absent, l'adresse d'expéditeur sert aussi de
+    réponse). Déployées.
+
+    **Reste à faire par Fanny, étape par étape :**
+    1. Dans Brevo, section "Expéditeurs" : vérifier qu'une adresse
+       dédiée au projet existe (pas sa boîte personnelle) — en créer
+       une sinon.
+    2. Dans Supabase, Project Settings → Edge Functions → Secrets :
+       modifier `BREVO_SENDER_EMAIL` avec cette adresse, et
+       `BREVO_SENDER_NAME` avec la valeur `SafeKids`.
+    3. (Optionnel) Si les réponses doivent partir vers une adresse
+       différente de l'expéditeur : ajouter un secret
+       `BREVO_REPLY_TO_EMAIL` avec cette adresse.
+    4. Peut aussi être fait en donnant simplement l'adresse/le nom à
+       utiliser dans une conversation suivante — la mise à jour des
+       secrets peut être faite depuis le code (`supabase secrets set`)
+       sans naviguer dans l'interface.
+
+12. **EN ATTENTE — ne se termine que dans l'interface Supabase, pas
+    dans le code (19/08/2026).** Limite d'envoi d'emails du service
+    d'authentification par défaut de Supabase — à vérifier avant le
+    lancement public. Constaté réellement pendant la passe 3 : après
+    une poignée d'emails de confirmation d'inscription envoyés en peu
+    de temps pendant les tests, Supabase a bloqué toute nouvelle
+    inscription avec `AuthApiException(..., code:
+    over_email_send_rate_limit)`. Le service d'email intégré par
+    défaut de Supabase est volontairement très limité (pensé pour le
+    développement, pas pour la production) — la même limite
+    s'appliquera aux vraies inscriptions de parents une fois l'app
+    publiée, avec le risque qu'un pic d'inscriptions (ex. un
+    lancement) bloque les emails de confirmation pour tout le monde.
+
+    **Pourquoi ça ne peut pas être fait depuis le code** : ce réglage
+    (SMTP personnalisé pour les emails automatiques de connexion —
+    confirmation d'inscription, réinitialisation de mot de passe) vit
+    uniquement dans la configuration Supabase, gérée par tableau de
+    bord. La CLI a bien une commande pour pousser une configuration
+    (`supabase config push`), mais elle demande de partir d'un fichier
+    de config local qui n'existe pas encore dans ce projet, et il n'y
+    a aucun moyen de vérifier d'abord ce qui est déjà réglé côté
+    serveur avant de pousser — un risque réel d'écraser silencieusement
+    d'autres réglages de connexion déjà en place, sur un système de
+    connexion en production. Pas pris.
+
+    **Reste à faire par Fanny, étape par étape :**
+    1. Dans Brevo, section "SMTP & API" → onglet "SMTP" : générer ou
+       copier la clé SMTP (différente de la clé API déjà utilisée par
+       l'app — il en faut une deuxième).
+    2. Dans Supabase, section Authentication → chercher le réglage
+       d'envoi d'email personnalisé (SMTP) → l'activer.
+    3. Renseigner : serveur `smtp-relay.brevo.com`, port `587`,
+       identifiant = adresse de connexion Brevo, mot de passe = la clé
+       SMTP de l'étape 1, adresse et nom d'expéditeur = ceux utilisés
+       pour le point 11.
+    4. Enregistrer, puis retester une inscription pour confirmer que
+       la limite ne se déclenche plus.
 
 13. **Après révocation, la fiche déjà ouverte reste affichée côté
     professionnel jusqu'à rechargement.** Testé réellement pendant la

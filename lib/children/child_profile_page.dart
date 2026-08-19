@@ -17,6 +17,7 @@ import '../models/share_link_data.dart';
 import '../questionnaire_recap/activity_questionnaire_recap_page.dart';
 import '../questionnaire_recap/medical_questionnaire_recap_page.dart';
 import '../repositories/child_repository.dart';
+import '../sharing/consultation_journal_page.dart';
 import '../sharing/create_share_link_page.dart';
 import '../sharing/enfant_confiance_service.dart';
 import '../sharing/establishment_attachment_service.dart';
@@ -1280,6 +1281,39 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
               ),
 
               _buildTrustedPeopleSection(context),
+
+              const SizedBox(height: 36),
+
+              _sectionTitle(
+                'Traçabilité',
+              ),
+
+              _actionButton(
+                icon: Icons.history,
+                color: Colors.blueGrey,
+                title: 'Journal des consultations',
+                subtitle:
+                    'Voir quel établissement a consulté la fiche '
+                    'de cet enfant, et quand.',
+                onPressed: () {
+                  final childId = child.childId;
+
+                  if (childId == null) {
+                    return;
+                  }
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ConsultationJournalPage(
+                        childId: childId,
+                        childDisplayName: _displayName,
+                      ),
+                    ),
+                  );
+                },
+              ),
             ],
 
             if (_canWrite) ...[

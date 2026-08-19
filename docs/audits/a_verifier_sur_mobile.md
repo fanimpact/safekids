@@ -22,6 +22,15 @@ elle-même les avoir vérifiés.
    bouche(joue)". Vérifié par un test automatisé qui reproduit
    exactement ces données, mais jamais regardé à l'écran.
 
+2. **Journal des consultations, nouvel écran (19/08/2026).** Fiche
+   d'un enfant → section "Traçabilité" → "Journal des consultations" :
+   doit lister, pour un enfant rattaché à un établissement, chaque
+   consultation de sa fiche (nom de l'établissement, fiche consultée,
+   date et heure), la plus récente en premier. Vérifié par un test de
+   décodage des données, jamais ouvert à l'écran avec de vraies
+   consultations enregistrées (ex. celles créées pendant les tests de
+   la passe 3 avec Théo, si elles existent encore).
+
 ## Depuis la passe 3 (audit, jamais vérifié sur un vrai téléphone)
 
 Les tests automatisés de la passe 3 tournaient sur la version web de
