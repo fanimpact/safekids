@@ -5,6 +5,20 @@ Rien ici n'est corrigé pendant l'audit lui-même — décision explicite de
 Fanny : l'audit sert d'abord à établir un état des lieux complet, les
 corrections viennent après, avec ses priorités.
 
+**Statut au 19/08/2026 (fin de la phase de corrections) :** les 10
+points prioritaires que Fanny a donnés après `inventaire.md` sont tous
+faits, testés (`flutter analyze` propre, suite de tests complète) et
+appliqués sur le projet Supabase réel (migrations + Edge Functions
+déployées) — carrousel de découverte, outils de développement,
+Paramètres, section Partages réelle, partage des recommandations
+d'activité débloqué, récapitulatif santé complet, validation complète
+du questionnaire santé, 6 éléments de code mort supprimés, partage de
+la fiche avec un co-parent/tuteur, gestion d'équipe côté
+établissement. Ça correspond aux items 14-19 ci-dessous (marqués
+résolus) — les items 1, 3-13 restent le backlog ouvert, non liés à
+cette liste de 10 points (ils viennent des 4 passes d'audit, pas de
+l'inventaire).
+
 ## Depuis la passe 1 (sécurité et RGPD, 19/08/2026)
 
 1. **Journal des consultations lisible par le parent concerné.**
@@ -148,8 +162,10 @@ Recherche exhaustive déléguée puis vérification personnelle des
 constats les plus sérieux en conditions réelles (navigateur piloté,
 pas seulement lecture du code).
 
-14. **Le bouton final du carrousel de découverte ne fait rien —
-    testé réellement.** `lib/demo_page.dart:164-178`. Sur la dernière
+14. **RÉSOLU (19/08/2026, commit `10ba610`) — le bouton mène
+    maintenant à la création de compte.** Le bouton final du
+    carrousel de découverte ne fait rien —
+    testé réellement. `lib/demo_page.dart:164-178`. Sur la dernière
     diapositive (6/6) du parcours "Découvrir ce que SafeKids peut
     faire" (accessible dès l'écran d'accueil, avant toute création de
     compte), le bouton "Créer gratuitement la fiche de mon enfant" a
@@ -159,8 +175,9 @@ pas seulement lecture du code).
     vu par tout nouveau parent curieux avant même de créer un compte —
     sévérité la plus haute de cette passe.
 
-15. **Section "Outils de développement" visible et sans garde dans un
-    build release — confirmé réellement, à deux reprises.**
+15. **RÉSOLU (19/08/2026, commit `10ba610`) — section supprimée.**
+    Section "Outils de développement" visible et sans garde dans un
+    build release — confirmé réellement, à deux reprises.
     `lib/particulier_home_page.dart:119-178` (commentaire "Développement
     uniquement" à la ligne 119, mais aucun `kDebugMode` ni équivalent
     ne protège son affichage). Déjà repéré en passe 3, revérifié
@@ -173,14 +190,17 @@ pas seulement lecture du code).
     contexte d'enfant — un visiteur qui y saisit des réponses peut
     croire qu'il vient de créer un profil.
 
-16. **"Paramètres" dans le menu principal — n'ouvre aucun écran.**
+16. **RÉSOLU (19/08/2026, commit `4992a38`) — écran réel construit
+    (email, changement de mot de passe, déconnexion).**
+    "Paramètres" dans le menu principal — n'ouvre aucun écran.
     `lib/home/home_page.dart:84-95, 291-306`. Le bouton (icône
     engrenage) affiche uniquement un SnackBar : *"Les paramètres sera
     créé à l'étape suivante."* Aucun écran de paramètres n'existe dans
     le code (`lib/settings` n'existe pas). Se présente comme une
     entrée de menu normale, ne mène nulle part.
 
-17. **Écran "Créer une fiche enfant" mort et lui-même cassé.**
+17. **RÉSOLU (19/08/2026, commit `10ba610`) — supprimé.**
+    Écran "Créer une fiche enfant" mort et lui-même cassé.
     `lib/create_child_profile_page.dart`. Confirmé par recherche
     indépendante : ce fichier n'est référencé nulle part ailleurs dans
     l'app (aucune navigation ne pointe vers lui), remplacé depuis par
@@ -191,8 +211,9 @@ pas seulement lecture du code).
     pour ne pas laisser un piège si quelqu'un le rebranche par erreur
     plus tard.
 
-18. **Chaîne d'écrans "story_*" entièrement morte (5 fichiers), avec
-    un bouton tout aussi trompeur à l'intérieur.**
+18. **RÉSOLU (19/08/2026, commit `10ba610`) — supprimée.**
+    Chaîne d'écrans "story_*" entièrement morte (5 fichiers), avec
+    un bouton tout aussi trompeur à l'intérieur.
     `lib/story_child_intro_page.dart` et les 4 fichiers `story_*.dart`
     qui le suivent. Confirmé par recherche indépendante : aucune
     navigation vers `StoryChildIntroPage` (le point d'entrée de la
@@ -207,8 +228,9 @@ pas seulement lecture du code).
     toute façon jamais chargées. Sans impact aujourd'hui puisqu'
     inaccessible ; à supprimer avec le reste du code mort ci-dessus.
 
-19. **Classe `HomePage` en double dans `lib/main.dart` — jamais
-    utilisée.** `lib/main.dart:114-138` définit sa propre classe
+19. **RÉSOLU (19/08/2026, commit `10ba610`) — supprimée.**
+    Classe `HomePage` en double dans `lib/main.dart` — jamais
+    utilisée. `lib/main.dart:114-138` définit sa propre classe
     `HomePage` (texte "Bienvenue dans SafeKids"), distincte de la
     vraie page d'accueil (`lib/home/home_page.dart`). Confirmé par
     recherche indépendante : les 4 endroits qui naviguent vers
@@ -216,6 +238,54 @@ pas seulement lecture du code).
     `main.dart` n'est jamais instanciée. Purement cosmétique
     aujourd'hui, mais source de confusion future si un import venait à
     changer par erreur.
+
+## Tests manuels restants côté Fanny (19/08/2026)
+
+Deux fonctionnalités construites pendant la phase de corrections
+(points 9 et 10 de sa liste, hors périmètre des 4 passes d'audit
+ci-dessus) sont codées, testées automatiquement (`flutter analyze`
+propre, suite de tests complète) et appliquées sur le projet Supabase
+réel — mais jamais exercées avec de vrais comptes, conformément à la
+consigne permanente ci-dessous. Reste à vérifier en conditions
+réelles :
+
+**Point 9 — partage de la fiche avec un co-parent ou tuteur**
+(`lib/children/child_profile_page.dart`, section "Personnes de
+confiance") :
+- Inviter une personne de confiance par email depuis la fiche d'un
+  enfant, avec le niveau "Consultation seule" (par défaut) — vérifier
+  qu'elle reçoit un accès une fois connectée avec cet email (compte
+  existant ou nouveau compte SafeKids).
+- Vérifier qu'avec ce niveau, elle voit la fiche (pathologies,
+  allergies, profil activités, Mode Urgence) mais qu'aucun bouton de
+  modification, de suppression, ni la section Partages/Personnes de
+  confiance ne lui apparaissent.
+- Changer son niveau vers "Consultation et modification" depuis
+  l'écran du parent, et vérifier qu'elle peut alors modifier la fiche
+  (ex. ajouter une allergie) — la modification doit apparaître côté
+  parent aussi.
+- Vérifier la limite de 2 personnes maximum par enfant (la 3e
+  invitation doit être refusée avec un message clair).
+- Révoquer un accès et vérifier qu'il est coupé immédiatement (la
+  personne révoquée ne doit plus voir la fiche après une
+  actualisation).
+- Vérifier qu'inviter la même personne sur deux enfants différents
+  fonctionne indépendamment (révoquer sur l'un ne touche pas l'autre).
+
+**Point 10 — gestion d'équipe côté établissement**
+(`lib/professional/team_management_page.dart`, accessible depuis
+"Gérer l'équipe" sur l'accueil professionnel) :
+- Inviter un collègue par email avec le rôle "Membre", vérifier qu'il
+  apparaît dans l'équipe une fois connecté avec cet email.
+- Vérifier qu'un "Membre" simple voit l'équipe mais n'a accès à aucune
+  action de gestion (pas de bouton inviter/changer de rôle/révoquer).
+- Nommer ce membre "Adjoint(e)" depuis un compte directeur/adjoint,
+  vérifier qu'il peut alors lui-même inviter et révoquer quelqu'un.
+- Vérifier le garde-fou : impossible de révoquer ou de rétrograder le
+  dernier directeur/adjoint actif de l'établissement (message d'erreur
+  clair attendu, pas un plantage).
+- Révoquer un membre et vérifier que son accès au trombinoscope de
+  l'établissement est coupé immédiatement.
 
 ## Consigne permanente pour la suite de l'audit
 
