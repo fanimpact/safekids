@@ -5,25 +5,17 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../config/supabase_config.dart';
 import '../models/complete_child_profile_data.dart';
+import '../models/share_link_data.dart';
 import '../repositories/child_repository.dart';
 
-/// Les 3 valeurs autorisées par la contrainte SQL sur
-/// `partages.type_fiche`. "recommandations_activite" existe côté base
-/// de données pour plus tard, mais n'est volontairement pas proposé
-/// ici : aucune session d'activité n'est sauvegardée nulle part
-/// aujourd'hui, il n'y aurait rien à partager.
-enum _ShareFicheType {
-  secours('secours', 'Informations pour les secours'),
-  ceQuIlFautSavoir(
-    'ce_qu_il_faut_savoir',
-    'Ce qu’il faut savoir sur l’enfant',
-  );
-
-  const _ShareFicheType(this.value, this.label);
-
-  final String value;
-  final String label;
-}
+/// Fiches proposées à la création d'un lien : `recommandationsActivite`
+/// existe dans `ShareFicheType` (les liens déjà générés peuvent porter
+/// ce type) mais n'est volontairement pas encore proposé ici — voir
+/// corrections_a_faire.md point 5.
+const _selectableFicheTypes = [
+  ShareFicheType.secours,
+  ShareFicheType.ceQuIlFautSavoir,
+];
 
 enum _ShareDuration {
   jour1('24 heures', Duration(hours: 24)),
@@ -37,7 +29,9 @@ enum _ShareDuration {
 }
 
 class CreateShareLinkPage extends StatefulWidget {
-  const CreateShareLinkPage({super.key});
+  final CompleteChildProfileData? initialChild;
+
+  const CreateShareLinkPage({super.key, this.initialChild});
 
   @override
   State<CreateShareLinkPage> createState() =>
@@ -47,8 +41,8 @@ class CreateShareLinkPage extends StatefulWidget {
 class _CreateShareLinkPageState
     extends State<CreateShareLinkPage> {
   CompleteChildProfileData? _selectedChild;
-  _ShareFicheType _selectedFicheType =
-      _ShareFicheType.secours;
+  ShareFicheType _selectedFicheType =
+      ShareFicheType.secours;
   _ShareDuration _selectedDuration = _ShareDuration.jour1;
 
   bool _isGenerating = false;
@@ -230,7 +224,7 @@ class _CreateShareLinkPageState
       );
     }
 
-    _selectedChild ??= _children.first;
+    _selectedChild ??= widget.initialChild ?? _children.first;
 
     return Scaffold(
       appBar: AppBar(
@@ -286,7 +280,7 @@ class _CreateShareLinkPageState
 
             const SizedBox(height: 8),
 
-            RadioGroup<_ShareFicheType>(
+            RadioGroup<ShareFicheType>(
               groupValue: _selectedFicheType,
               onChanged: (value) {
                 if (value == null) {
@@ -300,8 +294,8 @@ class _CreateShareLinkPageState
               },
               child: Column(
                 children: [
-                  for (final type in _ShareFicheType.values)
-                    RadioListTile<_ShareFicheType>(
+                  for (final type in _selectableFicheTypes)
+                    RadioListTile<ShareFicheType>(
                       contentPadding: EdgeInsets.zero,
                       title: Text(type.label),
                       value: type,

@@ -10,20 +10,68 @@ import '../emergency_mode/emergency_mode_button_list_page.dart';
 import '../models/activity_profile_draft.dart';
 import '../models/child_profile_draft.dart';
 import '../models/complete_child_profile_data.dart';
+import '../models/enfant_etablissement_data.dart';
+import '../models/share_link_data.dart';
 import '../questionnaire_recap/activity_questionnaire_recap_page.dart';
 import '../questionnaire_recap/medical_questionnaire_recap_page.dart';
 import '../repositories/child_repository.dart';
+import '../sharing/create_share_link_page.dart';
+import '../sharing/establishment_attachment_service.dart';
+import '../sharing/share_link_service.dart';
 import '../transmission_pages/identity_page.dart';
 import '../utils/age_utils.dart';
 import '../utils/child_name_utils.dart';
+import '../utils/date_format_utils.dart';
 
-class ChildProfilePage extends StatelessWidget {
+class ChildProfilePage extends StatefulWidget {
   final CompleteChildProfileData child;
 
   const ChildProfilePage({
     super.key,
     required this.child,
   });
+
+  @override
+  State<ChildProfilePage> createState() => _ChildProfilePageState();
+}
+
+class _ChildProfilePageState extends State<ChildProfilePage> {
+  CompleteChildProfileData get child => widget.child;
+
+  Future<List<ShareLinkData>>? _shareLinksFuture;
+  Future<List<EnfantEtablissementData>>? _attachmentsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPartages();
+  }
+
+  void _loadPartages() {
+    final childId = child.childId;
+
+    if (childId == null) {
+      return;
+    }
+
+    final shareLinksFuture =
+        ShareLinkService.instance.linksForChild(childId);
+    final attachmentsFuture = EstablishmentAttachmentService.instance
+        .attachmentsForChild(childId);
+
+    // `.ignore()` marque immédiatement ces futures comme "gérées" pour
+    // Dart, en plus du traitement normal fait juste après par les
+    // FutureBuilder de _buildPartagesSection : sans ça, un rejet (ex.
+    // pas de connexion Supabase) remonte comme erreur non interceptée
+    // au niveau de la zone du test au lieu de rester local à l'écran.
+    shareLinksFuture.ignore();
+    attachmentsFuture.ignore();
+
+    setState(() {
+      _shareLinksFuture = shareLinksFuture;
+      _attachmentsFuture = attachmentsFuture;
+    });
+  }
 
   String get _displayName {
     return childFullName(
@@ -238,6 +286,267 @@ class ChildProfilePage extends StatelessWidget {
           message,
         ),
       ),
+    );
+  }
+
+  Future<void> _openCreateShareLink(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreateShareLinkPage(
+          initialChild: child,
+        ),
+      ),
+    );
+
+    _loadPartages();
+  }
+
+  Future<void> _revokeShareLink(
+    BuildContext context,
+    ShareLinkData link,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Révoquer ce lien de partage ?'),
+        content: Text(
+          'Le lien « ${link.ficheType.label} » cessera de '
+          'fonctionner immédiatement pour toute personne qui '
+          'l’aurait reçu.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Révoquer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+      await ShareLinkService.instance.revokeLink(link.id);
+      _loadPartages();
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+
+      _showTemporaryMessage(
+        context: context,
+        message: 'Impossible de révoquer ce lien pour le moment.',
+      );
+    }
+  }
+
+  Future<void> _revokeAttachment(
+    BuildContext context,
+    EnfantEtablissementData attachment,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Révoquer ce rattachement ?'),
+        content: Text(
+          attachment.etablissementNom != null
+              ? 'L’établissement « ${attachment.etablissementNom} » '
+                  'n’aura plus accès aux informations de cet enfant.'
+              : 'Ce code ne pourra plus être utilisé pour rattacher '
+                  'l’enfant.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Révoquer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+      await EstablishmentAttachmentService.instance.revokeAttachment(
+        attachment.id,
+      );
+      _loadPartages();
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+
+      _showTemporaryMessage(
+        context: context,
+        message:
+            'Impossible de révoquer ce rattachement pour le moment.',
+      );
+    }
+  }
+
+  String _shareLinkStatusLabel(ShareLinkData link) {
+    final expiration =
+        'Expire le ${formatShortDate(link.dateExpiration)}';
+
+    if (link.dateDerniereConsultation == null) {
+      return '$expiration — jamais consulté';
+    }
+
+    return '$expiration — consulté le '
+        '${formatShortDate(link.dateDerniereConsultation!)}';
+  }
+
+  String _attachmentStatusLabel(EnfantEtablissementData attachment) {
+    if (attachment.statut == RattachementStatut.enAttente) {
+      return 'En attente (code non encore utilisé)';
+    }
+
+    return 'Rattaché — expire le '
+        '${formatShortDate(attachment.dateExpiration)}';
+  }
+
+  Widget _partageCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onRevoke,
+  }) {
+    return Card(
+      child: ListTile(
+        leading: CircleAvatar(
+          child: Icon(icon),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(subtitle),
+        trailing: TextButton(
+          onPressed: onRevoke,
+          child: const Text('Révoquer'),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPartagesSection(BuildContext context) {
+    if (child.childId == null) {
+      return const SizedBox.shrink();
+    }
+
+    return FutureBuilder<List<ShareLinkData>>(
+      future: _shareLinksFuture,
+      builder: (context, shareLinksSnapshot) {
+        return FutureBuilder<List<EnfantEtablissementData>>(
+          future: _attachmentsFuture,
+          builder: (context, attachmentsSnapshot) {
+            final stillLoading = shareLinksSnapshot.connectionState !=
+                    ConnectionState.done ||
+                attachmentsSnapshot.connectionState !=
+                    ConnectionState.done;
+
+            if (stillLoading) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+
+            if (shareLinksSnapshot.hasError ||
+                attachmentsSnapshot.hasError) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  'Impossible de charger les partages en cours.',
+                ),
+              );
+            }
+
+            final activeLinks = (shareLinksSnapshot.data ?? [])
+                .where((link) => !link.estExpire)
+                .toList();
+
+            final activeAttachments = (attachmentsSnapshot.data ?? [])
+                .where(
+                  (attachment) =>
+                      attachment.statut != RattachementStatut.revoque &&
+                      !attachment.estExpire,
+                )
+                .toList();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (activeLinks.isEmpty && activeAttachments.isEmpty)
+                  const Card(
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        child: Icon(Icons.people),
+                      ),
+                      title: Text(
+                        'Aucun accès en cours',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Personne d’autre que vous n’a accès aux '
+                        'informations de cet enfant pour le moment.',
+                      ),
+                    ),
+                  ),
+
+                for (final link in activeLinks) ...[
+                  _partageCard(
+                    icon: Icons.link,
+                    title: link.ficheType.label,
+                    subtitle: _shareLinkStatusLabel(link),
+                    onRevoke: () => _revokeShareLink(context, link),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                for (final attachment in activeAttachments) ...[
+                  _partageCard(
+                    icon: Icons.school,
+                    title: attachment.etablissementNom ??
+                        'Établissement non encore rattaché',
+                    subtitle: _attachmentStatusLabel(attachment),
+                    onRevoke: () =>
+                        _revokeAttachment(context, attachment),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                const SizedBox(height: 8),
+
+                OutlinedButton.icon(
+                  onPressed: () => _openCreateShareLink(context),
+                  icon: const Icon(Icons.add_link),
+                  label: const Text('Créer un lien de partage'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -552,34 +861,7 @@ class ChildProfilePage extends StatelessWidget {
               'Partages',
             ),
 
-            Card(
-              child: ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(
-                    Icons.people,
-                  ),
-                ),
-                title: const Text(
-                  'Aucun partage actif',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: const Text(
-                  'Vous pourrez partager le profil de votre enfant avec les personnes de votre choix.',
-                ),
-                trailing: const Icon(
-                  Icons.chevron_right,
-                ),
-                onTap: () {
-                  _showTemporaryMessage(
-                    context: context,
-                    message:
-                        'La gestion des partages sera ajoutée prochainement.',
-                  );
-                },
-              ),
-            ),
+            _buildPartagesSection(context),
 
             const SizedBox(height: 36),
 
