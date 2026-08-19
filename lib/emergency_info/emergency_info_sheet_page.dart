@@ -6,10 +6,12 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../models/complete_child_profile_data.dart';
+import '../models/medical_device_data.dart';
 import '../recommendation_engine/rules/environment_rules.dart';
 import '../recommendation_engine/rules/universal_trigger_rules.dart';
 import '../utils/age_utils.dart';
 import '../utils/date_format_utils.dart';
+import '../utils/medical_professional_line.dart';
 import '../utils/pdf_text.dart';
 import '../utils/treatment_audience.dart';
 
@@ -173,11 +175,25 @@ class EmergencyInfoSheetPage extends StatelessWidget {
       final date =
           pathology.approximateDiagnosisDate?.trim();
 
-      lines.add(
-        date != null && date.isNotEmpty
-            ? '$name (diagnostiquée : $date)'
-            : name,
-      );
+      var line = date != null && date.isNotEmpty
+          ? '$name (diagnostiquée : $date)'
+          : name;
+
+      // Corrigé (audit passe 2) : spécialité, lieu d'exercice et
+      // téléphone saisis mais jamais affichés sur cette fiche.
+      final professionalLine = pathology
+              .hasReferringProfessional ==
+              true
+          ? medicalProfessionalLine(
+              pathology.referringProfessional,
+            )
+          : null;
+
+      if (professionalLine != null) {
+        line = '$line — suivi par $professionalLine';
+      }
+
+      lines.add(line);
     }
 
     return lines;
@@ -553,11 +569,17 @@ class EmergencyInfoSheetPage extends StatelessWidget {
     return lines;
   }
 
-  List<String> get _medicalDeviceLines {
+  List<String> _medicalDeviceLines(
+    bool Function(MedicalDeviceData device) matches,
+  ) {
     final lines = <String>[];
 
     for (final device
         in child.essentialInformation.medicalDevices) {
+      if (!matches(device)) {
+        continue;
+      }
+
       final name = device.deviceName?.trim();
 
       if (name == null || name.isEmpty) {
@@ -574,6 +596,22 @@ class EmergencyInfoSheetPage extends StatelessWidget {
     }
 
     return lines;
+  }
+
+  /// Corrigé (audit passe 2) : cette distinction existait déjà sur
+  /// "Ce qu'il faut savoir sur...", pas ici — pourtant au moins aussi
+  /// utile en urgence (un dispositif implanté change ce qu'il faut
+  /// faire).
+  List<String> get _nonPermanentMedicalDeviceLines {
+    return _medicalDeviceLines(
+      (device) => device.isWornOrImplantedPermanently != true,
+    );
+  }
+
+  List<String> get _permanentMedicalDeviceLines {
+    return _medicalDeviceLines(
+      (device) => device.isWornOrImplantedPermanently == true,
+    );
   }
 
   List<String> get _primaryCareDoctorLines {
@@ -749,9 +787,16 @@ class EmergencyInfoSheetPage extends StatelessWidget {
             'Dispositifs médicaux utilisés',
           ),
           ..._pdfLines(
-            _medicalDeviceLines,
+            _nonPermanentMedicalDeviceLines,
             'Aucun dispositif médical.',
           ),
+
+          if (_permanentMedicalDeviceLines.isNotEmpty) ...[
+            pdfSectionTitle(
+              'Dispositifs portés ou implantés en permanence',
+            ),
+            ..._permanentMedicalDeviceLines.map(pdfBullet),
+          ],
 
           pdfSectionTitle(
             'Médecin traitant / référent',
@@ -1101,9 +1146,19 @@ class EmergencyInfoSheetPage extends StatelessWidget {
             _sectionCard(
               title: 'Dispositifs médicaux utilisés',
               icon: Icons.settings_accessibility,
-              lines: _medicalDeviceLines,
+              lines: _nonPermanentMedicalDeviceLines,
               emptyMessage: 'Aucun dispositif médical.',
             ),
+
+            if (_permanentMedicalDeviceLines.isNotEmpty)
+              _sectionCard(
+                title:
+                    'Dispositifs portés ou implantés en '
+                    'permanence',
+                icon: Icons.favorite_border,
+                lines: _permanentMedicalDeviceLines,
+                emptyMessage: '',
+              ),
 
             _sectionCard(
               title: 'Médecin traitant / référent',

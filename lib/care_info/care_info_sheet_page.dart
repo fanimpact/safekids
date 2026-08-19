@@ -12,6 +12,7 @@ import '../recommendation_engine/rules/environment_rules.dart';
 import '../recommendation_engine/rules/universal_trigger_rules.dart';
 import '../utils/age_utils.dart';
 import '../utils/date_format_utils.dart';
+import '../utils/medical_professional_line.dart';
 import '../utils/pdf_text.dart';
 import '../utils/treatment_audience.dart';
 
@@ -163,18 +164,122 @@ class CareInfoSheetPage extends StatelessWidget {
           ? '$name (diagnostiquée : $date)'
           : name;
 
-      final professionalName = pathology
-          .hasReferringProfessional ==
+      final professionalLine = pathology
+              .hasReferringProfessional ==
               true
-          ? pathology.referringProfessional?.name?.trim()
+          ? medicalProfessionalLine(
+              pathology.referringProfessional,
+            )
           : null;
 
-      if (professionalName != null &&
-          professionalName.isNotEmpty) {
-        line = '$line — suivi par $professionalName';
+      if (professionalLine != null) {
+        line = '$line — suivi par $professionalLine';
       }
 
       lines.add(line);
+    }
+
+    return lines;
+  }
+
+  /// Antécédents médicaux marquants (événements médicaux passés) —
+  /// distincts des pathologies diagnostiquées ci-dessus. Corrigé
+  /// (audit passe 2) : absents de cette fiche jusqu'ici, alors que
+  /// déjà affichés sur la fiche secours.
+  List<String> get _medicalHistoryLines {
+    final lines = <String>[];
+
+    for (final event
+        in child.essentialInformation.medicalEvents) {
+      final description = event.description?.trim();
+
+      if (description == null || description.isEmpty) {
+        continue;
+      }
+
+      final details = <String>[];
+
+      final date = event.approximateDate?.trim();
+
+      if (date != null && date.isNotEmpty) {
+        details.add(date);
+      }
+
+      if (event.emergencyServicesCalled == true) {
+        details.add('secours intervenus');
+      }
+
+      if (event.emergencyTreatmentGiven == true) {
+        details.add('traitement d’urgence donné');
+      } else if (event.emergencyTreatmentGiven == false) {
+        details.add('traitement d’urgence non donné');
+      }
+
+      if (event.hospitalized == true) {
+        final hospitalName = event.hospitalName?.trim();
+        final duration =
+            event.hospitalizationDuration?.trim();
+
+        final hasHospitalName =
+            hospitalName != null && hospitalName.isNotEmpty;
+        final hasDuration =
+            duration != null && duration.isNotEmpty;
+
+        if (hasHospitalName && hasDuration) {
+          details.add(
+            'hospitalisation à $hospitalName : $duration',
+          );
+        } else if (hasHospitalName) {
+          details.add('hospitalisation à $hospitalName');
+        } else if (hasDuration) {
+          details.add('hospitalisation : $duration');
+        } else {
+          details.add('hospitalisation');
+        }
+      }
+
+      if (event.importantExaminationsPerformed == true) {
+        final exams = event.importantExaminations?.trim();
+
+        if (exams != null && exams.isNotEmpty) {
+          details.add('examens : $exams');
+        }
+      }
+
+      lines.add(
+        details.isEmpty
+            ? description
+            : '$description — ${details.join(' — ')}',
+      );
+    }
+
+    return lines;
+  }
+
+  /// Nom, spécialité, lieu d'exercice et téléphone du médecin
+  /// traitant — corrigé (audit passe 2) : absent de cette fiche
+  /// jusqu'ici, alors que déjà affiché sur la fiche secours.
+  List<String> get _primaryCareDoctorLines {
+    final doctor = child.essentialInformation.primaryCareDoctor;
+
+    final lines = <String>[];
+
+    final name = doctor.name?.trim();
+
+    if (name != null && name.isNotEmpty) {
+      lines.add(name);
+    }
+
+    final workplace = doctor.workplace?.trim();
+
+    if (workplace != null && workplace.isNotEmpty) {
+      lines.add(workplace);
+    }
+
+    final phone = doctor.phoneNumber?.trim();
+
+    if (phone != null && phone.isNotEmpty) {
+      lines.add('Tél. : $phone');
     }
 
     return lines;
@@ -634,6 +739,9 @@ class CareInfoSheetPage extends StatelessWidget {
       ..._pathologyLines.map(
         (line) => 'Pathologie : $line',
       ),
+      ..._medicalHistoryLines.map(
+        (line) => 'Antécédent : $line',
+      ),
       ..._permanentlyWornDeviceLines.map(
         (line) => 'Dispositif porté en permanence : $line',
       ),
@@ -953,6 +1061,11 @@ class CareInfoSheetPage extends StatelessWidget {
             ..._equipmentLines.map(pdfBullet),
           ],
 
+          if (_primaryCareDoctorLines.isNotEmpty) ...[
+            pdfSectionTitle('Médecin traitant'),
+            ..._primaryCareDoctorLines.map(pdfBullet),
+          ],
+
           pdfSectionTitle('Contacts à prévenir'),
           ..._pdfLines(
             _contactLines,
@@ -1165,6 +1278,14 @@ class CareInfoSheetPage extends StatelessWidget {
                 title: 'Matériel à prévoir',
                 icon: Icons.backpack_outlined,
                 lines: _equipmentLines,
+                emptyMessage: '',
+              ),
+
+            if (_primaryCareDoctorLines.isNotEmpty)
+              _sectionCard(
+                title: 'Médecin traitant',
+                icon: Icons.local_hospital_outlined,
+                lines: _primaryCareDoctorLines,
                 emptyMessage: '',
               ),
 

@@ -42,6 +42,23 @@ elle-même les avoir vérifiés.
    Vérifié par un test qui simule plusieurs codes d'erreur Supabase,
    jamais déclenché pour de vrai à l'écran.
 
+4. **"Ce qu'il faut savoir sur..." — nouvelles sections Médecin
+   traitant et Antécédents médicaux (19/08/2026).** Ouvrir la fiche
+   d'un enfant avec un médecin traitant renseigné et au moins un
+   événement médical (antécédent) : les sections "Médecin traitant"
+   et les lignes "Antécédent : ..." doivent apparaître, à l'écran et
+   dans le PDF exporté. Vérifié par un test, jamais regardé à l'écran
+   ni dans un vrai PDF généré.
+
+5. **Fiche secours — médecin référent complet et dispositifs
+   permanents distingués (19/08/2026).** Pour Théo (pathologie
+   Epilepsie suivie par Dr Cabasson, neurologue au CHU Pau) : la ligne
+   du médecin référent doit maintenant afficher la spécialité, le lieu
+   d'exercice et le téléphone, pas seulement le nom. S'il a un
+   dispositif médical porté en permanence, une section dédiée doit
+   apparaître, séparée des dispositifs à emporter. Vérifié par un
+   test, jamais regardé à l'écran avec ses vraies données.
+
 ## Depuis la passe 3 (audit, jamais vérifié sur un vrai téléphone)
 
 Les tests automatisés de la passe 3 tournaient sur la version web de
