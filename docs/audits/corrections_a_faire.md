@@ -19,15 +19,25 @@ résolus) — les items 1, 3-13 restent le backlog ouvert, non liés à
 cette liste de 10 points (ils viennent des 4 passes d'audit, pas de
 l'inventaire).
 
+**Statut au 19/08/2026 (reprise du backlog, par ordre de gravité) :**
+résolus : items 1, 3, 7, 8, 9 ci-dessous, et item 10 (passe 3, voir
+plus bas). En attente d'actions côté Fanny dans Supabase/Brevo,
+détaillées sur chacun : items 11 et 12. Pas encore traités,
+volontairement (pas demandés dans cette reprise) : items 4, 5, 6
+(reporté par Fanny elle-même), 13.
+
 ## Depuis la passe 1 (sécurité et RGPD, 19/08/2026)
 
-1. **Journal des consultations lisible par le parent concerné.**
-   Aujourd'hui `journal_consultations_fiche` n'a aucune politique de
-   lecture pour personne, y compris le parent. Décision de Fanny : le
-   parent doit pouvoir voir qui a consulté la fiche de son enfant et
-   quand. Nécessite une nouvelle politique RLS (lecture par
-   `enfant_du_parent(enfant_id)`) + un écran côté parent pour
-   l'afficher (n'existe pas aujourd'hui).
+1. **RÉSOLU (19/08/2026, commit `46ec829`).** Journal des
+   consultations lisible par le parent concerné. Aujourd'hui
+   `journal_consultations_fiche` n'a aucune politique de lecture pour
+   personne, y compris le parent. Décision de Fanny : le parent doit
+   pouvoir voir qui a consulté la fiche de son enfant et quand.
+   Nouvelle politique RLS (lecture par `enfant_du_parent(enfant_id)`,
+   appliquée sur le projet réel) + nouvel écran
+   `ConsultationJournalPage` (fiche enfant → section "Traçabilité").
+   Présentation choisie : identifie l'établissement responsable,
+   pas la personne précise du personnel qui a consulté.
 
 2. **Bouton "Supprimer le profil" — pas fonctionnel.** Signalé par
    Fanny pendant la passe 1. **Précision de Fanny (19/08/2026) :** le
@@ -38,14 +48,15 @@ l'inventaire).
    **Statut réel : déjà fonctionnel depuis le commit `4ccbe62`**
    (antérieur à la passe 1) — point clos, rien à corriger ici.
 
-3. **Test automatisé Dart pour la limite de 7 jours du cache
-   hors-ligne côté professionnel.** `ProfessionalChildRepository`
-   (`lib/professional/professional_child_repository.dart`) a la bonne
+3. **RÉSOLU (19/08/2026, commit à suivre) — 4 tests ajoutés
+   (`test/professional_offline_cache_test.dart`).** Test automatisé
+   Dart pour la limite de 7 jours du cache hors-ligne côté
+   professionnel. `ProfessionalChildRepository` avait la bonne
    logique (`_maxOfflineAge`), mais contrairement au côté parent
-   (`test/offline_cache_test.dart`), aucun test ne la vérifie. À
-   construire sur le même modèle : écrire une date de synchronisation
-   artificiellement ancienne dans le cache mocké, vérifier que
-   `loadFromLocalCacheIfAvailable()` refuse bien de la charger.
+   (`test/offline_cache_test.dart`), aucun test ne la vérifiait.
+   Couvre : cache récent rechargé normalement, cache de plus de 7
+   jours refusé, cas limite à la frontière des 7 jours, aucune
+   synchronisation antérieure.
 
 4. **`partages` : aligner la politique RLS sur le pattern
    SECURITY DEFINER.** La policy `partages_geres_par_le_parent`
@@ -80,37 +91,39 @@ directement le 19/08/2026 plutôt que reportés ici : Fanny a demandé un
 traitement immédiat pour ceux-là, contrairement aux items 1-5 de la
 passe 1. Voir l'historique git pour le détail des commits.)
 
-7. **Médecin traitant et antécédents médicaux absents de "Ce qu'il faut
-   savoir sur...".** Cette fiche est explicitement pensée (commentaire
-   du code) pour un accompagnant qui garde l'enfant plusieurs jours
-   (ex. grands-parents) — profil qui aurait plausiblement besoin du
-   contact du médecin traitant en cas de problème non urgent. Présents
-   sur la fiche secours, absents ici. Confirmé par Fanny (19/08/2026) :
-   à corriger, pas un simple constat.
+7. **RÉSOLU (19/08/2026, commit `25a60d5`).** Médecin traitant et
+   antécédents médicaux absents de "Ce qu'il faut savoir sur...".
+   Cette fiche est explicitement pensée (commentaire du code) pour un
+   accompagnant qui garde l'enfant plusieurs jours (ex.
+   grands-parents) — profil qui aurait plausiblement besoin du
+   contact du médecin traitant en cas de problème non urgent.
+   Présents sur la fiche secours, absents ici. Nouvelle section
+   "Médecin traitant" + antécédents médicaux repliés dans la section
+   de vigilance, écran et PDF.
 
-8. **Spécialité, lieu d'exercice et téléphone du médecin référent d'une
-   pathologie, saisis mais jamais affichés nulle part** — ni sur la
-   fiche secours, ni sur "Ce qu'il faut savoir" (seul le nom apparaît,
-   sur cette dernière uniquement). Confirmé par Fanny (19/08/2026) : à
-   corriger.
+8. **RÉSOLU (19/08/2026, commit `25a60d5`).** Spécialité, lieu
+   d'exercice et téléphone du médecin référent d'une pathologie,
+   saisis mais jamais affichés nulle part — ni sur la fiche secours,
+   ni sur "Ce qu'il faut savoir" (seul le nom apparaissait, sur cette
+   dernière uniquement). S'affichent désormais sur les deux fiches.
 
-9. **Dispositif médical "porté en permanence" — distingué sur "Ce
-   qu'il faut savoir", pas sur la fiche secours.** Savoir qu'un
-   dispositif est implanté (pompe à insuline, etc.) est au moins aussi
-   utile en urgence qu'au quotidien — la fiche secours liste tous les
-   dispositifs indifféremment, sans cette précision. Confirmé par
-   Fanny (19/08/2026) : à corriger.
+9. **RÉSOLU (19/08/2026, commit `25a60d5`).** Dispositif médical
+   "porté en permanence" — distingué sur "Ce qu'il faut savoir", pas
+   sur la fiche secours. Savoir qu'un dispositif est implanté (pompe à
+   insuline, etc.) est au moins aussi utile en urgence qu'au
+   quotidien. Nouvelle section dédiée sur la fiche secours, écran et
+   PDF, séparée des dispositifs à emporter.
 
 ## Depuis la passe 3 (parcours bout en bout, 19/08/2026)
 
-10. **Message d'erreur technique brut affiché à l'utilisateur lors de
-    la création de compte.** Testé réellement avec un compte de test :
-    quand Supabase rejette une adresse email invalide, l'app affiche
-    directement l'exception brute
-    (`AuthApiException(message: Email address "" is invalid,
-    statusCode: 400, code: email_address_invalid)`) au lieu d'un
-    message clair en français. À remplacer par un message utilisateur
-    compréhensible, quelle que soit la cause du rejet côté Supabase.
+10. **RÉSOLU (19/08/2026, commit `f4ea72f`).** Message d'erreur
+    technique brut affiché à l'utilisateur lors de la création de
+    compte. Testé réellement avec un compte de test : quand Supabase
+    rejette une adresse email invalide, l'app affichait directement
+    l'exception brute (`AuthApiException(message: Email address "" is
+    invalid, statusCode: 400, code: email_address_invalid)`) au lieu
+    d'un message clair en français. Nouveau `friendlyAuthErrorMessage`,
+    appliqué aux 6 écrans qui touchent à l'authentification.
 
 11. **EN ATTENTE — ne se termine que dans les interfaces Supabase et
     Brevo, pas dans le code (19/08/2026).** Email de code de
