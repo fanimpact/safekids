@@ -20,11 +20,11 @@ cette liste de 10 points (ils viennent des 4 passes d'audit, pas de
 l'inventaire).
 
 **Statut au 19/08/2026 (reprise du backlog, par ordre de gravité) :**
-résolus : items 1, 3, 7, 8, 9 ci-dessous, et item 10 (passe 3, voir
-plus bas). En attente d'actions côté Fanny dans Supabase/Brevo,
+résolus : items 1, 3, 4, 5, 7, 8, 9 ci-dessous, et item 10 (passe 3,
+voir plus bas). En attente d'actions côté Fanny dans Supabase/Brevo,
 détaillées sur chacun : items 11 et 12. Pas encore traités,
-volontairement (pas demandés dans cette reprise) : items 4, 5, 6
-(reporté par Fanny elle-même), 13.
+volontairement (pas demandés dans cette reprise) : item 6 (reporté
+par Fanny elle-même) et item 13.
 
 ## Depuis la passe 1 (sécurité et RGPD, 19/08/2026)
 
@@ -58,24 +58,26 @@ volontairement (pas demandés dans cette reprise) : items 4, 5, 6
    jours refusé, cas limite à la frontière des 7 jours, aucune
    synchronisation antérieure.
 
-4. **`partages` : aligner la politique RLS sur le pattern
-   SECURITY DEFINER.** La policy `partages_geres_par_le_parent`
-   utilise encore une sous-requête directe sur `enfants`
-   (`enfant_id in (select id from enfants where parent_id =
-   auth.uid())`), héritée de `schema.sql` d'origine, au lieu d'une
-   fonction `SECURITY DEFINER` comme partout ailleurs dans le code
-   plus récent (`enfant_du_parent()` existe déjà et fait exactement
-   ça). Pas un bug actif aujourd'hui, juste une incohérence à
-   corriger pour la cohérence du code.
+4. **RÉSOLU (19/08/2026).** `partages` : aligner la politique RLS sur
+   le pattern SECURITY DEFINER. La policy
+   `partages_geres_par_le_parent` utilisait encore une sous-requête
+   directe sur `enfants`, héritée de `schema.sql` d'origine, au lieu
+   d'une fonction `SECURITY DEFINER` comme partout ailleurs
+   (`enfant_du_parent()`). Pas un bug actif, une incohérence de code
+   — remplacée et vérifiée sur le projet réel.
 
-5. **Résidus de préférences de masquage sur
-   `activites_recommandations_masquees`.** La lecture ne revérifie
+5. **RÉSOLU (19/08/2026).** Résidus de préférences de masquage sur
+   `activites_recommandations_masquees`. La lecture ne revérifiait
    pas que l'activité est toujours accessible à l'utilisateur au
-   moment de la lecture (seule l'écriture le fait) — quelqu'un qui
-   perd l'accès à un établissement garde ses propres préférences de
-   masquage sur d'anciennes activités. Jamais une fuite de donnée
-   (chacun ne voit que ses propres préférences), juste un résidu
-   inutile à nettoyer.
+   moment de la lecture (seule l'écriture le faisait) — quelqu'un qui
+   perd l'accès à un établissement gardait ses propres préférences de
+   masquage lisibles sur d'anciennes activités. Jamais une fuite de
+   donnée (chacun ne voyait que ses propres préférences), juste un
+   résidu inutile à nettoyer. Policy de lecture séparée de celle
+   d'écriture, revérifiant désormais la visibilité de l'activité à
+   chaque lecture ; suppression restée basée sur la seule propriété,
+   pour qu'une personne puisse toujours nettoyer sa propre préférence
+   même après avoir perdu l'accès.
 
 ## Depuis la passe 2 (moteur de recommandations, 19/08/2026)
 
