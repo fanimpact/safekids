@@ -4,17 +4,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/supabase_config.dart';
+import '../models/activity_session/complete_activity_session_data.dart';
 import '../models/complete_child_profile_data.dart';
 import '../models/share_link_data.dart';
+import '../recommendation_engine/recommendation_engine.dart';
+import '../repositories/activity_session_repository.dart';
 import '../repositories/child_repository.dart';
+import '../utils/date_format_utils.dart';
+import 'activity_recommendation_snapshot.dart';
 
-/// Fiches proposées à la création d'un lien : `recommandationsActivite`
-/// existe dans `ShareFicheType` (les liens déjà générés peuvent porter
-/// ce type) mais n'est volontairement pas encore proposé ici — voir
-/// corrections_a_faire.md point 5.
 const _selectableFicheTypes = [
   ShareFicheType.secours,
   ShareFicheType.ceQuIlFautSavoir,
+  ShareFicheType.recommandationsActivite,
 ];
 
 enum _ShareDuration {
@@ -48,8 +50,73 @@ class _CreateShareLinkPageState
   bool _isGenerating = false;
   String? _generatedLink;
 
+  // Activités enregistrées pour le partage "recommandations d'activité"
+  // (voir corrections_a_faire.md point 5) : chargées pour l'enfant
+  // sélectionné, filtrées à celles où il figure.
+  String? _activitiesLoadedForChildId;
+  bool _loadingActivities = false;
+  List<CompleteActivitySessionData> _activities = [];
+  CompleteActivitySessionData? _selectedActivity;
+
   List<CompleteChildProfileData> get _children =>
       ChildRepository.instance.children;
+
+  void _ensureActivitiesLoaded(
+    CompleteChildProfileData child,
+  ) {
+    if (_loadingActivities ||
+        _activitiesLoadedForChildId == child.childId) {
+      return;
+    }
+
+    _loadingActivities = true;
+    _activitiesLoadedForChildId = child.childId;
+
+    ActivitySessionRepository.instance.listActivities().then((
+      activities,
+    ) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _activities = activities
+            .where(
+              (activity) =>
+                  activity.childIds.contains(child.childId),
+            )
+            .toList();
+        _selectedActivity = null;
+        _loadingActivities = false;
+      });
+    }).catchError((error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _activities = [];
+        _loadingActivities = false;
+      });
+    });
+  }
+
+  String _activityLabel(
+    CompleteActivitySessionData activity,
+  ) {
+    final name = activity.activityName?.trim();
+    final date = activity.date;
+
+    if (name != null && name.isNotEmpty) {
+      return date == null
+          ? name
+          : '$name — ${formatShortDate(date)}';
+    }
+
+    return date == null
+        ? 'Activité sans nom'
+        : 'Activité du ${formatShortDate(date)}';
+  }
 
   String _childDisplayName(
     CompleteChildProfileData child,
@@ -87,6 +154,34 @@ class _CreateShareLinkPageState
       return;
     }
 
+    Map<String, dynamic>? contenuFige;
+
+    if (_selectedFicheType ==
+        ShareFicheType.recommandationsActivite) {
+      final activity = _selectedActivity;
+
+      if (activity == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Sélectionnez une activité avant de générer le lien.',
+            ),
+          ),
+        );
+
+        return;
+      }
+
+      final recommendationResult = RecommendationEngine()
+          .generateRecommendations(activity);
+
+      contenuFige = ActivityRecommendationSnapshot.build(
+        activitySession: activity,
+        recommendationResult: recommendationResult,
+        child: child,
+      );
+    }
+
     setState(() {
       _isGenerating = true;
       _generatedLink = null;
@@ -104,6 +199,8 @@ class _CreateShareLinkPageState
             'type_fiche': _selectedFicheType.value,
             'date_expiration':
                 dateExpiration.toIso8601String(),
+            'contenu_fige': contenuFige,
+            'activite_id': _selectedActivity?.id,
           })
           .select('token')
           .single();
@@ -206,6 +303,50 @@ class _CreateShareLinkPageState
     );
   }
 
+  Widget _buildActivityPicker() {
+    if (_loadingActivities) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_activities.isEmpty) {
+      return const Text(
+        'Aucune activité enregistrée pour cet enfant. '
+        'Préparez d’abord une activité pour pouvoir partager '
+        'ses recommandations.',
+        style: TextStyle(
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+
+    return DropdownButtonFormField<CompleteActivitySessionData>(
+      initialValue: _selectedActivity,
+      decoration: const InputDecoration(
+        labelText: 'Activité à partager',
+        border: OutlineInputBorder(),
+      ),
+      items: _activities
+          .map(
+            (activity) => DropdownMenuItem(
+              value: activity,
+              child: Text(_activityLabel(activity)),
+            ),
+          )
+          .toList(),
+      onChanged: (activity) {
+        setState(() {
+          _selectedActivity = activity;
+          _generatedLink = null;
+        });
+      },
+    );
+  }
+
   Widget _buildScaffold(BuildContext context) {
     if (_children.isEmpty) {
       return Scaffold(
@@ -225,6 +366,7 @@ class _CreateShareLinkPageState
     }
 
     _selectedChild ??= widget.initialChild ?? _children.first;
+    _ensureActivitiesLoaded(_selectedChild!);
 
     return Scaffold(
       appBar: AppBar(
@@ -303,6 +445,12 @@ class _CreateShareLinkPageState
                 ],
               ),
             ),
+
+            if (_selectedFicheType ==
+                ShareFicheType.recommandationsActivite) ...[
+              const SizedBox(height: 12),
+              _buildActivityPicker(),
+            ],
 
             const SizedBox(height: 20),
 

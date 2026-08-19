@@ -78,7 +78,9 @@ Deno.serve(async (req) => {
   const { data: partage, error: partageError } =
     await supabase
       .from('partages')
-      .select('id, enfant_id, type_fiche, date_expiration')
+      .select(
+        'id, enfant_id, type_fiche, date_expiration, contenu_fige',
+      )
       .eq('token', token)
       .maybeSingle();
 
@@ -118,17 +120,29 @@ Deno.serve(async (req) => {
     return erreur(404);
   }
 
-  const { data: profilSante } = await supabase
-    .from('profils_sante')
-    .select('*')
-    .eq('enfant_id', partage.enfant_id)
-    .maybeSingle();
+  // "recommandations_activite" est une photo figée au moment du
+  // partage (contenu_fige) : jamais recalculée ici, le moteur de
+  // recommandations n'existe qu'en Dart/Flutter. Les profils santé et
+  // activités ne sont donc pas nécessaires pour ce type de fiche.
+  let profilSante = null;
+  let profilActivites = null;
 
-  const { data: profilActivites } = await supabase
-    .from('profils_activites')
-    .select('*')
-    .eq('enfant_id', partage.enfant_id)
-    .maybeSingle();
+  if (partage.type_fiche !== 'recommandations_activite') {
+    const { data: profilSanteRow } = await supabase
+      .from('profils_sante')
+      .select('*')
+      .eq('enfant_id', partage.enfant_id)
+      .maybeSingle();
+
+    const { data: profilActivitesRow } = await supabase
+      .from('profils_activites')
+      .select('*')
+      .eq('enfant_id', partage.enfant_id)
+      .maybeSingle();
+
+    profilSante = profilSanteRow ?? null;
+    profilActivites = profilActivitesRow ?? null;
+  }
 
   // Mise à jour de la date de dernière consultation. Une erreur ici
   // ne doit pas empêcher de renvoyer la fiche à l'accompagnant.
@@ -148,8 +162,9 @@ Deno.serve(async (req) => {
     {
       type_fiche: partage.type_fiche,
       enfant,
-      profil_sante: profilSante ?? null,
-      profil_activites: profilActivites ?? null,
+      profil_sante: profilSante,
+      profil_activites: profilActivites,
+      contenu_fige: partage.contenu_fige ?? null,
     },
     200,
   );

@@ -318,14 +318,45 @@ const PAGE_HTML = `<!doctype html>
     return (items || []).map(formateur).filter(Boolean);
   }
 
+  // "recommandations_activite" : photo figée au moment du partage
+  // (voir contenu_fige), rendue telle quelle -- jamais recalculée ici.
+  function afficherRecommandationsActivite(data) {
+    var contenu = data.contenu_fige || {};
+    var blocs = [];
+
+    var infosActivite = [contenu.activite_nom, formaterDate(contenu.activite_date), contenu.activite_lieu]
+      .filter(Boolean)
+      .map(echapper)
+      .join(' · ');
+
+    if (infosActivite) {
+      blocs.push('<div class="section"><h2>Activité</h2><p>' + infosActivite + '</p></div>');
+    }
+
+    (contenu.sections || []).forEach(function (bloc) {
+      var lignes = (bloc.lignes || []).map(echapper);
+      blocs.push(section(bloc.titre, lignes));
+    });
+
+    document.getElementById('sections').innerHTML = blocs.join('');
+    document.getElementById('estado-chargement').style.display = 'none';
+    document.getElementById('contenu').style.display = 'block';
+  }
+
   function afficherFiche(data) {
     var enfant = data.enfant || {};
-    var profilSante = data.profil_sante || {};
-    var profilActivites = data.profil_activites || {};
 
     document.getElementById('nom-enfant').textContent =
       [enfant.prenom, enfant.nom].filter(Boolean).join(' ') || 'Enfant';
     document.getElementById('details-identite').textContent = texteIdentite(enfant);
+
+    if (data.type_fiche === 'recommandations_activite') {
+      afficherRecommandationsActivite(data);
+      return;
+    }
+
+    var profilSante = data.profil_sante || {};
+    var profilActivites = data.profil_activites || {};
 
     var blocs = [];
 
