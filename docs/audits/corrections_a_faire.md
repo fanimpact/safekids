@@ -20,11 +20,10 @@ cette liste de 10 points (ils viennent des 4 passes d'audit, pas de
 l'inventaire).
 
 **Statut au 19/08/2026 (reprise du backlog, par ordre de gravité) :**
-résolus : items 1, 3, 4, 5, 7, 8, 9 ci-dessous, et item 10 (passe 3,
-voir plus bas). En attente d'actions côté Fanny dans Supabase/Brevo,
-détaillées sur chacun : items 11 et 12. Pas encore traités,
-volontairement (pas demandés dans cette reprise) : item 6 (reporté
-par Fanny elle-même) et item 13.
+résolus : items 1, 3, 4, 5, 7, 8, 9 ci-dessous, et items 10 et 13
+(passe 3, voir plus bas). En attente d'actions côté Fanny dans
+Supabase/Brevo, détaillées sur chacun : items 11 et 12. Seul item
+restant, reporté par Fanny elle-même (pas un oubli) : item 6.
 
 ## Depuis la passe 1 (sécurité et RGPD, 19/08/2026)
 
@@ -197,20 +196,25 @@ passe 1. Voir l'historique git pour le détail des commits.)
     4. Enregistrer, puis retester une inscription pour confirmer que
        la limite ne se déclenche plus.
 
-13. **Après révocation, la fiche déjà ouverte reste affichée côté
-    professionnel jusqu'à rechargement.** Testé réellement pendant la
-    passe 3 : dès que le parent révoque, l'accès réel aux données est
-    coupé immédiatement côté serveur (vérifié par impersonation RLS —
-    0 ligne visible pour le professionnel revoqué), donc aucune fuite
-    de donnée nouvelle n'est possible. Mais un onglet déjà ouvert sur
-    la fiche secours au moment de la révocation continue d'afficher les
-    informations déjà chargées tant que l'utilisateur ne recharge pas
-    ou ne resynchronise pas manuellement — l'écran ne réagit pas de
-    lui-même à la révocation. Confirmé par Fanny (19/08/2026) : à
-    corriger, pour que la fiche disparaisse rapidement même sans action
-    du professionnel (ex. vérification périodique de l'accès pendant
-    que l'écran est ouvert, ou écoute en temps réel du changement de
-    statut du rattachement).
+13. **RÉSOLU (19/08/2026).** Après révocation, la fiche déjà ouverte
+    reste affichée côté professionnel jusqu'à rechargement. Testé
+    réellement pendant la passe 3 : dès que le parent révoque, l'accès
+    réel aux données est coupé immédiatement côté serveur (vérifié par
+    impersonation RLS — 0 ligne visible pour le professionnel révoqué),
+    donc aucune fuite de donnée nouvelle n'était possible. Mais un
+    onglet déjà ouvert continuait d'afficher les informations déjà
+    chargées jusqu'à rechargement manuel.
+
+    Nouveau `RevocationGuard` (`lib/professional/revocation_guard.dart`),
+    posé sur les 3 fiches accessibles depuis `ProfessionalChildDetailPage`
+    et sur le Mode Urgence professionnel : vérification périodique
+    (toutes les 20 secondes) de l'accès, via la même règle RLS que le
+    reste de l'app. Si l'accès a été perdu (révocation ou expiration),
+    une fenêtre "Accès révoqué" s'affiche puis referme la fiche
+    jusqu'à l'accueil professionnel — sans action de la part de la
+    personne concernée. Une vérification qui échoue simplement (pas
+    de réseau) ne ferme jamais la fiche par erreur — seule une
+    absence confirmée (RLS) le fait.
 
 ## Depuis la passe 4 (écrans et boutons inactifs ou trompeurs, 19/08/2026)
 

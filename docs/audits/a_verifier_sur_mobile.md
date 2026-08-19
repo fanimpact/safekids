@@ -59,6 +59,16 @@ elle-même les avoir vérifiés.
    apparaître, séparée des dispositifs à emporter. Vérifié par un
    test, jamais regardé à l'écran avec ses vraies données.
 
+6. **Fermeture automatique de la fiche professionnelle après révocation
+   (19/08/2026).** À vérifier avec un vrai deuxième appareil/compte
+   professionnel : ouvrir la fiche secours (ou une consigne du Mode
+   Urgence) d'un enfant, laisser l'écran ouvert, puis révoquer l'accès
+   depuis le compte parent. Une fenêtre "Accès révoqué" doit apparaître
+   sur l'écran professionnel dans les ~20 secondes, sans action de sa
+   part, et ramener à l'accueil une fois validée. Vérifié par un test
+   qui simule l'échec réseau (ne doit jamais fermer par erreur), jamais
+   testé avec une vraie révocation en conditions réelles.
+
 ## Depuis la passe 3 (audit, jamais vérifié sur un vrai téléphone)
 
 Les tests automatisés de la passe 3 tournaient sur la version web de

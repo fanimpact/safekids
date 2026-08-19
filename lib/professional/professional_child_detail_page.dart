@@ -6,6 +6,7 @@ import '../models/complete_child_profile_data.dart';
 import '../questionnaire_recap/activity_questionnaire_recap_page.dart';
 import '../utils/treatment_audience.dart';
 import 'professional_child_repository.dart';
+import 'revocation_guard.dart';
 
 /// Les 3 fiches accessibles au personnel pour un enfant rattaché à son
 /// établissement — chaque ouverture est journalisée (traçabilité RGPD,
@@ -49,7 +50,14 @@ class ProfessionalChildDetailPage extends StatelessWidget {
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: builder),
+      MaterialPageRoute(
+        builder: (context) => childId == null
+            ? builder(context)
+            : RevocationGuard(
+                childId: childId,
+                child: builder(context),
+              ),
+      ),
     );
   }
 

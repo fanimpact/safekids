@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../emergency_mode/emergency_mode_button_list_page.dart';
 import '../models/complete_child_profile_data.dart';
 import 'professional_child_repository.dart';
+import 'revocation_guard.dart';
 
 /// Équivalent professionnel de `EmergencyModeChildPickerPage` : point
 /// d'entrée du Mode Urgence depuis l'accueil de l'espace
@@ -40,11 +41,22 @@ class ProfessionalEmergencyModeChildPickerPage
     BuildContext context,
     CompleteChildProfileData child,
   ) {
+    final childId = child.childId;
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            EmergencyModeButtonListPage(child: child),
+        builder: (context) {
+          final buttonList =
+              EmergencyModeButtonListPage(child: child);
+
+          return childId == null
+              ? buttonList
+              : RevocationGuard(
+                  childId: childId,
+                  child: buttonList,
+                );
+        },
       ),
     );
   }
