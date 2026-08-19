@@ -7,6 +7,7 @@ import '../emergency_info/emergency_info_sheet_page.dart';
 import '../emergency_mode/emergency_mode_button_list_page.dart';
 import '../emergency_mode/emergency_mode_child_picker_page.dart';
 import '../repositories/child_repository.dart';
+import '../settings/settings_page.dart';
 import '../sharing/create_establishment_link_page.dart';
 import '../sharing/create_share_link_page.dart';
 import '../sharing/establishment_attachments_page.dart';
@@ -78,19 +79,6 @@ class HomePage extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  void _showComingSoon(
-    BuildContext context,
-    String featureName,
-  ) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '$featureName sera créé à l’étape suivante.',
-        ),
-      ),
     );
   }
 
@@ -298,9 +286,12 @@ class HomePage extends StatelessWidget {
                   onTap: () {
                     Navigator.pop(context);
 
-                    _showComingSoon(
+                    Navigator.push(
                       context,
-                      'Les paramètres',
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const SettingsPage(),
+                      ),
                     );
                   },
                 ),

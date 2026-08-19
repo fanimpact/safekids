@@ -194,6 +194,37 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
           ),
         );
       }
+
+      lines.addAll(
+        _emergencyInstructionLines(
+          pathology.emergencyInstructionSteps,
+        ),
+      );
+    }
+
+    return lines;
+  }
+
+  List<String> _emergencyInstructionLines(
+    List<String> steps,
+  ) {
+    final cleanedSteps = steps
+        .map((step) => step.trim())
+        .where((step) => step.isNotEmpty)
+        .toList();
+
+    if (cleanedSteps.isEmpty) {
+      return [
+        'Consignes d’urgence — Aucune consigne renseignée.',
+      ];
+    }
+
+    final lines = <String>['Consignes d’urgence'];
+
+    for (var index = 0;
+        index < cleanedSteps.length;
+        index++) {
+      lines.add('${index + 1}. ${cleanedSteps[index]}');
     }
 
     return lines;
@@ -229,6 +260,12 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
         _qaText(
           'Réaction déjà observée',
           allergy.observedReaction,
+        ),
+      );
+
+      lines.addAll(
+        _emergencyInstructionLines(
+          allergy.emergencyInstructionSteps,
         ),
       );
     }
@@ -515,6 +552,47 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
     return lines;
   }
 
+  String _treatmentLinkLine(
+    List<String> relatedPathologyIds,
+    List<String> relatedAllergyIds,
+  ) {
+    final pathologies =
+        child.essentialInformation.pathologies;
+    final allergies =
+        child.essentialInformation.allergies;
+
+    final linkedNames = <String>[];
+
+    for (final id in relatedPathologyIds) {
+      for (final pathology in pathologies) {
+        if (pathology.pathologyId == id) {
+          final name = pathology.name?.trim();
+
+          if (name != null && name.isNotEmpty) {
+            linkedNames.add(name);
+          }
+        }
+      }
+    }
+
+    for (final id in relatedAllergyIds) {
+      for (final allergy in allergies) {
+        if (allergy.allergyId == id) {
+          final name = allergy.allergen?.trim();
+
+          if (name != null && name.isNotEmpty) {
+            linkedNames.add(name);
+          }
+        }
+      }
+    }
+
+    return _qaText(
+      'Lié à une pathologie ou une allergie déjà déclarée',
+      linkedNames.isEmpty ? null : linkedNames.join(', '),
+    );
+  }
+
   List<String> get _dailyTreatmentLines {
     final treatments =
         child.essentialInformation.dailyTreatments;
@@ -543,6 +621,12 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
         _qaText(
           'À quelle(s) heure(s) est-il habituellement administré ?',
           treatment.administrationTimes,
+        ),
+      );
+      lines.add(
+        _treatmentLinkLine(
+          treatment.relatedPathologyIds,
+          treatment.relatedAllergyIds,
         ),
       );
     }
@@ -621,6 +705,12 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
         _qaText(
           'Mode d’administration',
           treatment.administrationMethod,
+        ),
+      );
+      lines.add(
+        _treatmentLinkLine(
+          treatment.relatedPathologyIds,
+          treatment.relatedAllergyIds,
         ),
       );
     }
