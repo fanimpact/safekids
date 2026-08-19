@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../controllers/transmission_controller.dart';
+import '../models/emergency_treatment_data.dart';
+import '../utils/emergency_treatment_step.dart';
 import '../utils/text_controller_cache.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_text_field.dart';
@@ -238,6 +240,35 @@ class _TreatmentsPageState
       return;
     }
 
+    // Corrigé (19/08/2026, Mode Urgence) : sans cette situation
+    // d'administration, un accompagnant ne sait pas quand donner le
+    // traitement — indispensable pour le rappel affiché en Mode
+    // Urgence.
+    final hasEmergencyTreatmentWithoutCondition = widget
+        .transmissionController.formData.emergencyTreatments
+        .any(
+      (treatment) =>
+          (treatment.medicationName?.trim().isNotEmpty ??
+              false) &&
+          (treatment.administrationCondition
+                  ?.trim()
+                  .isEmpty ??
+              true),
+    );
+
+    if (hasEmergencyTreatmentWithoutCondition) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Indiquez dans quelle situation chaque traitement "
+            "d'urgence doit être administré.",
+          ),
+        ),
+      );
+
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -320,6 +351,89 @@ class _TreatmentsPageState
     );
   }
 
+  /// Étape du protocole d'urgence de [id] (pathologie ou allergie,
+  /// selon [isPathology]) à laquelle administrer ce traitement — visible
+  /// uniquement si cette pathologie/allergie a au moins une étape déjà
+  /// rédigée (`DiagnosedPathologiesPage`, rempli avant cette page).
+  /// Choix explicite du parent, jamais deviné (voir
+  /// `resolveAdministrationStepIndex`, dont le repli automatique
+  /// pré-sélectionne seulement ce champ pour un profil déjà existant).
+  Widget _buildAdministrationStepPicker({
+    required int treatmentIndex,
+    required EmergencyTreatmentData treatment,
+    required String id,
+    required bool isPathology,
+    required List<String> steps,
+  }) {
+    final nonEmptySteps = <int>[
+      for (var index = 0; index < steps.length; index++)
+        if (steps[index].trim().isNotEmpty) index,
+    ];
+
+    if (nonEmptySteps.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final resolved = resolveAdministrationStepIndex(
+      treatment: treatment,
+      pathologyOrAllergyId: id,
+      isPathology: isPathology,
+      steps: steps,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: 32,
+        right: 8,
+        bottom: 12,
+      ),
+      child: DropdownButtonFormField<int?>(
+        initialValue: nonEmptySteps.contains(resolved)
+            ? resolved
+            : null,
+        decoration: const InputDecoration(
+          labelText:
+              "À quelle étape du protocole ce traitement "
+              "est-il administré ?",
+          border: OutlineInputBorder(),
+        ),
+        items: [
+          const DropdownMenuItem<int?>(
+            value: null,
+            child: Text("Non précisé"),
+          ),
+          for (final index in nonEmptySteps)
+            DropdownMenuItem<int?>(
+              value: index,
+              child: Text(
+                "Étape ${index + 1} — ${steps[index].trim()}",
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+        ],
+        onChanged: (value) {
+          setState(() {
+            if (isPathology) {
+              widget.transmissionController
+                  .updateEmergencyTreatmentPathologyStep(
+                treatmentIndex,
+                id,
+                value,
+              );
+            } else {
+              widget.transmissionController
+                  .updateEmergencyTreatmentAllergyStep(
+                treatmentIndex,
+                id,
+                value,
+              );
+            }
+          });
+        },
+      ),
+    );
+  }
+
   Widget _buildEmergencyTreatmentPathologies(
     int treatmentIndex,
   ) {
@@ -361,7 +475,7 @@ class _TreatmentsPageState
 
         const SizedBox(height: 10),
 
-        for (final pathology in pathologies)
+        for (final pathology in pathologies) ...[
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             controlAffinity:
@@ -386,6 +500,17 @@ class _TreatmentsPageState
               });
             },
           ),
+          if (treatment.relatedPathologyIds.contains(
+            pathology.pathologyId,
+          ))
+            _buildAdministrationStepPicker(
+              treatmentIndex: treatmentIndex,
+              treatment: treatment,
+              id: pathology.pathologyId,
+              isPathology: true,
+              steps: pathology.emergencyInstructionSteps,
+            ),
+        ],
       ],
     );
   }
@@ -501,7 +626,7 @@ class _TreatmentsPageState
 
         const SizedBox(height: 10),
 
-        for (final allergy in allergies)
+        for (final allergy in allergies) ...[
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             controlAffinity:
@@ -526,6 +651,17 @@ class _TreatmentsPageState
               });
             },
           ),
+          if (treatment.relatedAllergyIds.contains(
+            allergy.allergyId,
+          ))
+            _buildAdministrationStepPicker(
+              treatmentIndex: treatmentIndex,
+              treatment: treatment,
+              id: allergy.allergyId,
+              isPathology: false,
+              steps: allergy.emergencyInstructionSteps,
+            ),
+        ],
       ],
     );
   }

@@ -346,6 +346,14 @@ class ChildProfileData {
                 List<String>.from(
               treatment.relatedAllergyIds,
             ),
+            administrationStepByPathologyId:
+                Map<String, int>.from(
+              treatment.administrationStepByPathologyId,
+            ),
+            administrationStepByAllergyId:
+                Map<String, int>.from(
+              treatment.administrationStepByAllergyId,
+            ),
           );
         },
       ).toList(),

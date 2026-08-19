@@ -104,6 +104,8 @@ class TransmissionController {
         treatment.relatedPathologyIds.remove(
           pathologyId,
         );
+        treatment.administrationStepByPathologyId
+            .remove(pathologyId);
       }
     }
   }
@@ -214,12 +216,47 @@ class TransmissionController {
     int pathologyIndex,
     int stepIndex,
   ) {
-    final steps = _draft
-        .pathologies[pathologyIndex]
-        .emergencyInstructionSteps;
+    final pathology =
+        _draft.pathologies[pathologyIndex];
+
+    final steps = pathology.emergencyInstructionSteps;
 
     if (stepIndex >= 0 && stepIndex < steps.length) {
       steps.removeAt(stepIndex);
+
+      // Sans ce réindexage, un traitement lié à l'étape 6 pointerait
+      // vers l'étape 5 (un tout autre texte) après suppression d'une
+      // étape antérieure — silencieusement faux, sur une fonctionnalité
+      // de sécurité.
+      _reindexAdministrationSteps(
+        pathologyId: pathology.pathologyId,
+        removedStepIndex: stepIndex,
+      );
+    }
+  }
+
+  void _reindexAdministrationSteps({
+    String? pathologyId,
+    String? allergyId,
+    required int removedStepIndex,
+  }) {
+    for (final treatment in _draft.emergencyTreatments) {
+      final map = pathologyId != null
+          ? treatment.administrationStepByPathologyId
+          : treatment.administrationStepByAllergyId;
+
+      final id = pathologyId ?? allergyId!;
+      final current = map[id];
+
+      if (current == null) {
+        continue;
+      }
+
+      if (current == removedStepIndex) {
+        map.remove(id);
+      } else if (current > removedStepIndex) {
+        map[id] = current - 1;
+      }
     }
   }
 
@@ -909,6 +946,33 @@ class TransmissionController {
       treatment.relatedPathologyIds.remove(
         pathologyId,
       );
+      // Un lien vers une étape n'a plus de sens si le traitement n'est
+      // plus rattaché à cette pathologie.
+      treatment.administrationStepByPathologyId
+          .remove(pathologyId);
+    }
+  }
+
+  /// Étape (index) du protocole d'urgence de [pathologyId] à laquelle
+  /// ce traitement est administré — choix explicite du parent. `null`
+  /// efface le choix (retour au repli automatique, voir
+  /// `resolveAdministrationStepIndex`).
+  void updateEmergencyTreatmentPathologyStep(
+    int treatmentIndex,
+    String pathologyId,
+    int? stepIndex,
+  ) {
+    final treatment =
+        _draft.emergencyTreatments[
+          treatmentIndex
+        ];
+
+    if (stepIndex == null) {
+      treatment.administrationStepByPathologyId
+          .remove(pathologyId);
+    } else {
+      treatment.administrationStepByPathologyId[
+          pathologyId] = stepIndex;
     }
   }
 
@@ -934,6 +998,29 @@ class TransmissionController {
       treatment.relatedAllergyIds.remove(
         allergyId,
       );
+      treatment.administrationStepByAllergyId
+          .remove(allergyId);
+    }
+  }
+
+  /// Équivalent de [updateEmergencyTreatmentPathologyStep] pour une
+  /// allergie.
+  void updateEmergencyTreatmentAllergyStep(
+    int treatmentIndex,
+    String allergyId,
+    int? stepIndex,
+  ) {
+    final treatment =
+        _draft.emergencyTreatments[
+          treatmentIndex
+        ];
+
+    if (stepIndex == null) {
+      treatment.administrationStepByAllergyId
+          .remove(allergyId);
+    } else {
+      treatment.administrationStepByAllergyId[
+          allergyId] = stepIndex;
     }
   }
 
@@ -978,6 +1065,8 @@ class TransmissionController {
         treatment.relatedAllergyIds.remove(
           allergyId,
         );
+        treatment.administrationStepByAllergyId
+            .remove(allergyId);
       }
     }
   }
@@ -1028,12 +1117,17 @@ class TransmissionController {
     int allergyIndex,
     int stepIndex,
   ) {
-    final steps = _draft
-        .allergies[allergyIndex]
-        .emergencyInstructionSteps;
+    final allergy = _draft.allergies[allergyIndex];
+
+    final steps = allergy.emergencyInstructionSteps;
 
     if (stepIndex >= 0 && stepIndex < steps.length) {
       steps.removeAt(stepIndex);
+
+      _reindexAdministrationSteps(
+        allergyId: allergy.allergyId,
+        removedStepIndex: stepIndex,
+      );
     }
   }
 

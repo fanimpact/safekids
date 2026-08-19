@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/complete_child_profile_data.dart';
+import '../models/emergency_treatment_data.dart';
+import '../utils/emergency_treatment_step.dart';
 import 'emergency_mode_instructions_page.dart';
 
 const String _noStepsMessage =
@@ -40,11 +42,66 @@ class EmergencyModeButtonListPage extends StatelessWidget {
     return name.isEmpty ? 'Enfant' : name;
   }
 
+  List<EmergencyTreatmentData> get _allTreatments {
+    return child.essentialInformation.emergencyTreatments
+        .where(
+          (treatment) =>
+              treatment.medicationName?.trim().isNotEmpty ??
+              false,
+        )
+        .toList();
+  }
+
+  /// Sépare les traitements liés à [id] (pathologie ou allergie) entre
+  /// ceux rattachés à une étape précise (`treatmentsByStepIndex`) et
+  /// ceux qui ne le sont pas encore (`unattached`, filet de sécurité —
+  /// voir `EmergencyModeInstructionsPage`).
+  ({
+    Map<int, List<EmergencyTreatmentData>> byStepIndex,
+    List<EmergencyTreatmentData> unattached,
+  }) _groupTreatments({
+    required String id,
+    required bool isPathology,
+    required List<String> steps,
+  }) {
+    final related = _allTreatments.where(
+      (treatment) => isPathology
+          ? treatment.relatedPathologyIds.contains(id)
+          : treatment.relatedAllergyIds.contains(id),
+    );
+
+    final byStepIndex = <int, List<EmergencyTreatmentData>>{};
+    final unattached = <EmergencyTreatmentData>[];
+
+    for (final treatment in related) {
+      final stepIndex = resolveAdministrationStepIndex(
+        treatment: treatment,
+        pathologyOrAllergyId: id,
+        isPathology: isPathology,
+        steps: steps,
+      );
+
+      if (stepIndex == null) {
+        unattached.add(treatment);
+      } else {
+        byStepIndex
+            .putIfAbsent(stepIndex, () => [])
+            .add(treatment);
+      }
+    }
+
+    return (byStepIndex: byStepIndex, unattached: unattached);
+  }
+
   void _openInstructions(
     BuildContext context, {
     required String title,
     required List<String> steps,
     required String emptyMessage,
+    Map<int, List<EmergencyTreatmentData>>
+        treatmentsByStepIndex = const {},
+    List<EmergencyTreatmentData> unattachedTreatments = const [],
+    bool isGenericFallback = false,
   }) {
     Navigator.push(
       context,
@@ -54,6 +111,9 @@ class EmergencyModeButtonListPage extends StatelessWidget {
           title: title,
           steps: steps,
           emptyMessage: emptyMessage,
+          treatmentsByStepIndex: treatmentsByStepIndex,
+          unattachedTreatments: unattachedTreatments,
+          isGenericFallback: isGenericFallback,
         ),
       ),
     );
@@ -134,14 +194,25 @@ class EmergencyModeButtonListPage extends StatelessWidget {
                 icon: Icons.medical_information_outlined,
                 label:
                     'Urgence liée à : ${pathology.name!.trim()}',
-                onPressed: () => _openInstructions(
-                  context,
-                  title:
-                      'Urgence liée à : ${pathology.name!.trim()}',
-                  steps:
-                      pathology.emergencyInstructionSteps,
-                  emptyMessage: _noStepsMessage,
-                ),
+                onPressed: () {
+                  final groups = _groupTreatments(
+                    id: pathology.pathologyId,
+                    isPathology: true,
+                    steps:
+                        pathology.emergencyInstructionSteps,
+                  );
+
+                  _openInstructions(
+                    context,
+                    title:
+                        'Urgence liée à : ${pathology.name!.trim()}',
+                    steps:
+                        pathology.emergencyInstructionSteps,
+                    emptyMessage: _noStepsMessage,
+                    treatmentsByStepIndex: groups.byStepIndex,
+                    unattachedTreatments: groups.unattached,
+                  );
+                },
               ),
 
             for (final allergy in allergies)
@@ -150,14 +221,23 @@ class EmergencyModeButtonListPage extends StatelessWidget {
                 icon: Icons.warning_amber_rounded,
                 label:
                     'Urgence liée à : Allergie (${allergy.allergen!.trim()})',
-                onPressed: () => _openInstructions(
-                  context,
-                  title:
-                      'Urgence liée à : Allergie (${allergy.allergen!.trim()})',
-                  steps:
-                      allergy.emergencyInstructionSteps,
-                  emptyMessage: _noStepsMessage,
-                ),
+                onPressed: () {
+                  final groups = _groupTreatments(
+                    id: allergy.allergyId,
+                    isPathology: false,
+                    steps: allergy.emergencyInstructionSteps,
+                  );
+
+                  _openInstructions(
+                    context,
+                    title:
+                        'Urgence liée à : Allergie (${allergy.allergen!.trim()})',
+                    steps: allergy.emergencyInstructionSteps,
+                    emptyMessage: _noStepsMessage,
+                    treatmentsByStepIndex: groups.byStepIndex,
+                    unattachedTreatments: groups.unattached,
+                  );
+                },
               ),
 
             _buildButton(
@@ -169,6 +249,8 @@ class EmergencyModeButtonListPage extends StatelessWidget {
                 title: 'Autre urgence',
                 steps: const [],
                 emptyMessage: _otherEmergencyMessage,
+                unattachedTreatments: _allTreatments,
+                isGenericFallback: true,
               ),
             ),
           ],
