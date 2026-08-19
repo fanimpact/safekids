@@ -19,6 +19,20 @@ corrections viennent après, avec ses priorités.
    fonctionnel.** Signalé par Fanny pendant la passe 1, à traiter
    juste après l'audit complet (pas un sujet RGPD/RLS à proprement
    parler, mais une action utilisateur cassée).
+   **Point à clarifier (trouvé pendant la passe 4, 19/08/2026) :**
+   recherche exhaustive dans `lib/professional/` (les 14 fichiers) —
+   aucun bouton "supprimer", "quitter", "se retirer" ou équivalent
+   n'existe nulle part côté professionnel. Le seul bouton "Supprimer le
+   profil" qui existe dans le code se trouve côté **parent**
+   (`lib/children/child_profile_page.dart:634-656`), et il est
+   **fonctionnel** depuis le commit `4ccbe62` (avant même la passe 1).
+   Deux hypothèses, à trancher avec Fanny plutôt que deviner : (a) le
+   constat de la passe 1 visait en réalité ce bouton côté parent, mal
+   étiqueté "professionnel" sur le moment ; (b) un bouton différent,
+   propre à la gestion d'équipe de l'établissement (retirer un
+   collègue), a été vu cassé puis a depuis disparu du code — mais
+   aucune UI de gestion de membres n'existe aujourd'hui côté
+   professionnel pour confirmer cette piste.
 
 3. **Test automatisé Dart pour la limite de 7 jours du cache
    hors-ligne côté professionnel.** `ProfessionalChildRepository`
@@ -137,6 +151,81 @@ passe 1. Voir l'historique git pour le détail des commits.)
     du professionnel (ex. vérification périodique de l'accès pendant
     que l'écran est ouvert, ou écoute en temps réel du changement de
     statut du rattachement).
+
+## Depuis la passe 4 (écrans et boutons inactifs ou trompeurs, 19/08/2026)
+
+Recherche exhaustive déléguée puis vérification personnelle des
+constats les plus sérieux en conditions réelles (navigateur piloté,
+pas seulement lecture du code).
+
+14. **Le bouton final du carrousel de découverte ne fait rien —
+    testé réellement.** `lib/demo_page.dart:164-178`. Sur la dernière
+    diapositive (6/6) du parcours "Découvrir ce que SafeKids peut
+    faire" (accessible dès l'écran d'accueil, avant toute création de
+    compte), le bouton "Créer gratuitement la fiche de mon enfant" a
+    pour gestionnaire `() {}` — une fonction vide. Cliqué réellement
+    pendant l'audit : l'écran reste identique, aucune réaction. C'est
+    le bouton d'appel à l'action principal du parcours de découverte,
+    vu par tout nouveau parent curieux avant même de créer un compte —
+    sévérité la plus haute de cette passe.
+
+15. **Section "Outils de développement" visible et sans garde dans un
+    build release — confirmé réellement, à deux reprises.**
+    `lib/particulier_home_page.dart:119-178` (commentaire "Développement
+    uniquement" à la ligne 119, mais aucun `kDebugMode` ni équivalent
+    ne protège son affichage). Déjà repéré en passe 3, revérifié
+    spécifiquement pour la passe 4 : la section apparaît bel et bien
+    dans le build web release, pour n'importe quel visiteur de l'écran
+    "Espace particulier" — c'est-à-dire dans le parcours normal, pas
+    caché derrière un accès spécial. Les deux boutons ("Tester le
+    questionnaire Télétransmission" / "Tester le questionnaire
+    Activités") ouvrent les vrais formulaires de production, sans
+    contexte d'enfant — un visiteur qui y saisit des réponses peut
+    croire qu'il vient de créer un profil.
+
+16. **"Paramètres" dans le menu principal — n'ouvre aucun écran.**
+    `lib/home/home_page.dart:84-95, 291-306`. Le bouton (icône
+    engrenage) affiche uniquement un SnackBar : *"Les paramètres sera
+    créé à l'étape suivante."* Aucun écran de paramètres n'existe dans
+    le code (`lib/settings` n'existe pas). Se présente comme une
+    entrée de menu normale, ne mène nulle part.
+
+17. **Écran "Créer une fiche enfant" mort et lui-même cassé.**
+    `lib/create_child_profile_page.dart`. Confirmé par recherche
+    indépendante : ce fichier n'est référencé nulle part ailleurs dans
+    l'app (aucune navigation ne pointe vers lui), remplacé depuis par
+    le vrai parcours (`CreateChildProfileIntroPage` → `IdentityPage`).
+    Sans impact aujourd'hui puisqu'inaccessible, mais contient lui-même
+    deux contrôles non fonctionnels (`onChanged: (value) {}` ligne 82,
+    `onPressed: () {}` ligne 89) — à supprimer plutôt qu'à corriger,
+    pour ne pas laisser un piège si quelqu'un le rebranche par erreur
+    plus tard.
+
+18. **Chaîne d'écrans "story_*" entièrement morte (5 fichiers), avec
+    un bouton tout aussi trompeur à l'intérieur.**
+    `lib/story_child_intro_page.dart` et les 4 fichiers `story_*.dart`
+    qui le suivent. Confirmé par recherche indépendante : aucune
+    navigation vers `StoryChildIntroPage` (le point d'entrée de la
+    chaîne) n'existe dans l'app — probablement une version antérieure
+    du carrousel de `demo_page.dart`, jamais supprimée. À l'intérieur
+    de ce code mort : `lib/story_end_page.dart:45-50` a un bouton
+    portant le même texte trompeur ("Créer gratuitement la fiche de
+    mon enfant") qui ne fait que fermer les écrans
+    (`Navigator.popUntil`), sans rien créer — et les images
+    référencées (`assets/story_1.png.png`, etc.) ont un chemin
+    incorrect par rapport à `pubspec.yaml`, donc ne se seraient de
+    toute façon jamais chargées. Sans impact aujourd'hui puisqu'
+    inaccessible ; à supprimer avec le reste du code mort ci-dessus.
+
+19. **Classe `HomePage` en double dans `lib/main.dart` — jamais
+    utilisée.** `lib/main.dart:114-138` définit sa propre classe
+    `HomePage` (texte "Bienvenue dans SafeKids"), distincte de la
+    vraie page d'accueil (`lib/home/home_page.dart`). Confirmé par
+    recherche indépendante : les 4 endroits qui naviguent vers
+    `HomePage()` importent tous la bonne classe — celle de
+    `main.dart` n'est jamais instanciée. Purement cosmétique
+    aujourd'hui, mais source de confusion future si un import venait à
+    changer par erreur.
 
 ## Consigne permanente pour la suite de l'audit
 
