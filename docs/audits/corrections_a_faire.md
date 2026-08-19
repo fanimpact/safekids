@@ -48,7 +48,7 @@ volontairement (pas demandés dans cette reprise) : items 4, 5, 6
    **Statut réel : déjà fonctionnel depuis le commit `4ccbe62`**
    (antérieur à la passe 1) — point clos, rien à corriger ici.
 
-3. **RÉSOLU (19/08/2026, commit à suivre) — 4 tests ajoutés
+3. **RÉSOLU (19/08/2026, commit `9e456f3`) — 4 tests ajoutés
    (`test/professional_offline_cache_test.dart`).** Test automatisé
    Dart pour la limite de 7 jours du cache hors-ligne côté
    professionnel. `ProfessionalChildRepository` avait la bonne
