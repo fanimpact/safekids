@@ -23,9 +23,12 @@
 //
 // Variables d'environnement requises (Supabase -> Project Settings ->
 // Edge Functions -> Secrets) :
-//   BREVO_API_KEY      cle API Brevo (jamais dans le code)
-//   BREVO_SENDER_EMAIL adresse expediteur verifiee dans Brevo
-//   BREVO_SENDER_NAME  nom affiche comme expediteur (ex. "SafeKids")
+//   BREVO_API_KEY        cle API Brevo (jamais dans le code)
+//   BREVO_SENDER_EMAIL   adresse expediteur verifiee dans Brevo
+//   BREVO_SENDER_NAME    nom affiche comme expediteur (ex. "SafeKids")
+//   BREVO_REPLY_TO_EMAIL optionnelle : adresse de reponse si differente
+//                        de l'expediteur (sinon, BREVO_SENDER_EMAIL
+//                        sert aussi de reply-to)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -61,6 +64,8 @@ Deno.serve(async (req) => {
   );
   const brevoSenderName =
     Deno.env.get('BREVO_SENDER_NAME') ?? 'SafeKids';
+  const brevoReplyToEmail =
+    Deno.env.get('BREVO_REPLY_TO_EMAIL') ?? brevoSenderEmail;
 
   if (
     !supabaseUrl ||
@@ -259,6 +264,7 @@ Deno.serve(async (req) => {
           email: brevoSenderEmail,
           name: brevoSenderName,
         },
+        replyTo: { email: brevoReplyToEmail },
         to: [{ email: emailParent }],
         subject: 'Une note a été ajoutée sur SafeKids',
         htmlContent:
