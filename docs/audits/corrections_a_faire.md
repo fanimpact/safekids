@@ -15,24 +15,14 @@ corrections viennent après, avec ses priorités.
    `enfant_du_parent(enfant_id)`) + un écran côté parent pour
    l'afficher (n'existe pas aujourd'hui).
 
-2. **Bouton "Supprimer le profil" côté professionnel — pas
-   fonctionnel.** Signalé par Fanny pendant la passe 1, à traiter
-   juste après l'audit complet (pas un sujet RGPD/RLS à proprement
-   parler, mais une action utilisateur cassée).
-   **Point à clarifier (trouvé pendant la passe 4, 19/08/2026) :**
-   recherche exhaustive dans `lib/professional/` (les 14 fichiers) —
-   aucun bouton "supprimer", "quitter", "se retirer" ou équivalent
-   n'existe nulle part côté professionnel. Le seul bouton "Supprimer le
-   profil" qui existe dans le code se trouve côté **parent**
-   (`lib/children/child_profile_page.dart:634-656`), et il est
-   **fonctionnel** depuis le commit `4ccbe62` (avant même la passe 1).
-   Deux hypothèses, à trancher avec Fanny plutôt que deviner : (a) le
-   constat de la passe 1 visait en réalité ce bouton côté parent, mal
-   étiqueté "professionnel" sur le moment ; (b) un bouton différent,
-   propre à la gestion d'équipe de l'établissement (retirer un
-   collègue), a été vu cassé puis a depuis disparu du code — mais
-   aucune UI de gestion de membres n'existe aujourd'hui côté
-   professionnel pour confirmer cette piste.
+2. **Bouton "Supprimer le profil" — pas fonctionnel.** Signalé par
+   Fanny pendant la passe 1. **Précision de Fanny (19/08/2026) :** le
+   constat visait bien le bouton côté **parent**
+   (`lib/children/child_profile_page.dart:634-656`), mal étiqueté
+   "professionnel" sur le moment — aucune fonctionnalité de gestion
+   d'équipe n'a disparu, ce n'est pas une seconde piste à explorer.
+   **Statut réel : déjà fonctionnel depuis le commit `4ccbe62`**
+   (antérieur à la passe 1) — point clos, rien à corriger ici.
 
 3. **Test automatisé Dart pour la limite de 7 jours du cache
    hors-ligne côté professionnel.** `ProfessionalChildRepository`
