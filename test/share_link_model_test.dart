@@ -23,6 +23,19 @@ void main() {
     });
   });
 
+  group('ShareDestinataire', () {
+    test('reconnaît les 2 valeurs autorisées par la contrainte SQL', () {
+      expect(
+        ShareDestinataire.fromValue('particulier'),
+        equals(ShareDestinataire.particulier),
+      );
+      expect(
+        ShareDestinataire.fromValue('structure_accueil'),
+        equals(ShareDestinataire.structureAccueil),
+      );
+    });
+  });
+
   group('ShareLinkData', () {
     test('se construit depuis une ligne Supabase', () {
       final link = ShareLinkData.fromRow({
@@ -30,12 +43,17 @@ void main() {
         'token': 'abc123',
         'enfant_id': 'theo',
         'type_fiche': 'secours',
+        'destinataire': 'particulier',
         'date_creation': '2026-08-17T10:00:00.000Z',
         'date_expiration': '2099-08-18T10:00:00.000Z',
         'date_derniere_consultation': null,
       });
 
       expect(link.ficheType, equals(ShareFicheType.secours));
+      expect(
+        link.destinataire,
+        equals(ShareDestinataire.particulier),
+      );
       expect(link.dateDerniereConsultation, isNull);
       expect(link.estExpire, isFalse);
     });
@@ -46,12 +64,17 @@ void main() {
         'token': 'def456',
         'enfant_id': 'noe',
         'type_fiche': 'ce_qu_il_faut_savoir',
+        'destinataire': 'structure_accueil',
         'date_creation': '2025-01-01T10:00:00.000Z',
         'date_expiration': '2025-01-02T10:00:00.000Z',
         'date_derniere_consultation': '2025-01-01T12:00:00.000Z',
       });
 
       expect(link.estExpire, isTrue);
+      expect(
+        link.destinataire,
+        equals(ShareDestinataire.structureAccueil),
+      );
       expect(
         link.dateDerniereConsultation,
         equals(DateTime.parse('2025-01-01T12:00:00.000Z')),

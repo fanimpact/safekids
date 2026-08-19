@@ -4,6 +4,7 @@ import '../care_info/care_info_sheet_page.dart';
 import '../emergency_info/emergency_info_sheet_page.dart';
 import '../models/complete_child_profile_data.dart';
 import '../questionnaire_recap/activity_questionnaire_recap_page.dart';
+import '../utils/treatment_audience.dart';
 import 'professional_child_repository.dart';
 
 /// Les 3 fiches accessibles au personnel pour un enfant rattaché à son
@@ -72,8 +73,10 @@ class ProfessionalChildDetailPage extends StatelessWidget {
                 onTap: () => _openFiche(
                   context,
                   typeFiche: 'secours',
-                  builder: (context) =>
-                      EmergencyInfoSheetPage(child: child),
+                  builder: (context) => EmergencyInfoSheetPage(
+                    child: child,
+                    audience: TreatmentAudience.professionnel,
+                  ),
                 ),
               ),
             ),
@@ -90,8 +93,10 @@ class ProfessionalChildDetailPage extends StatelessWidget {
                 onTap: () => _openFiche(
                   context,
                   typeFiche: 'ce_qu_il_faut_savoir',
-                  builder: (context) =>
-                      CareInfoSheetPage(child: child),
+                  builder: (context) => CareInfoSheetPage(
+                    child: child,
+                    audience: TreatmentAudience.professionnel,
+                  ),
                 ),
               ),
             ),

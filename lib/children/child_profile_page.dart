@@ -25,6 +25,7 @@ import '../transmission_pages/identity_page.dart';
 import '../utils/age_utils.dart';
 import '../utils/child_name_utils.dart';
 import '../utils/date_format_utils.dart';
+import '../utils/treatment_audience.dart';
 
 class ChildProfilePage extends StatefulWidget {
   final CompleteChildProfileData child;
@@ -1166,6 +1167,9 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                     builder: (context) =>
                         EmergencyInfoSheetPage(
                       child: child,
+                      audience: _isOwner
+                          ? TreatmentAudience.owner
+                          : TreatmentAudience.particulier,
                     ),
                   ),
                 );
@@ -1225,6 +1229,9 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                     builder: (context) =>
                         CareInfoSheetPage(
                       child: child,
+                      audience: _isOwner
+                          ? TreatmentAudience.owner
+                          : TreatmentAudience.particulier,
                     ),
                   ),
                 );

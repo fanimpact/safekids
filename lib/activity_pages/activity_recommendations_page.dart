@@ -19,6 +19,7 @@ import '../repositories/child_repository.dart';
 import '../utils/age_utils.dart';
 import '../utils/date_format_utils.dart';
 import '../utils/pdf_text.dart';
+import '../utils/treatment_audience.dart';
 import 'activities_home_page.dart';
 import 'activity_child_selection_page.dart';
 import 'activity_water_page.dart';
@@ -1106,6 +1107,33 @@ class _ActivityRecommendationsPageState
     );
   }
 
+  /// Le personnel prépare des activités pour des enfants d'autres
+  /// familles : rappel du PAI. Un parent qui prépare sa propre activité
+  /// n'a besoin d'aucun rappel — il est la source de l'information.
+  Recommendation _medicationWithMention(
+    Recommendation medication,
+  ) {
+    if (widget.etablissementId == null) {
+      return medication;
+    }
+
+    final mention = treatmentMentionSuffix(
+      TreatmentAudience.professionnel,
+    );
+
+    if (mention == null) {
+      return medication;
+    }
+
+    return Recommendation(
+      id: medication.id,
+      category: medication.category,
+      childId: medication.childId,
+      text: '${medication.text} — $mention',
+      isCritical: medication.isCritical,
+    );
+  }
+
   Widget _buildEmergencyMedications() {
     final result = widget.recommendationResult;
     final childWidgets = <Widget>[];
@@ -1117,7 +1145,7 @@ class _ActivityRecommendationsPageState
         childId,
         RecommendationCategory
             .emergencyMedication,
-      );
+      ).map(_medicationWithMention).toList();
 
       if (medications.isEmpty) {
         continue;
@@ -1527,7 +1555,7 @@ class _ActivityRecommendationsPageState
         result,
         childId,
         RecommendationCategory.emergencyMedication,
-      );
+      ).map(_medicationWithMention).toList();
 
       if (medications.isEmpty) {
         continue;

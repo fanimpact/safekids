@@ -27,6 +27,31 @@ enum ShareFicheType {
   }
 }
 
+/// À qui un lien est destiné — choisi obligatoirement par le parent à
+/// la création (corrections de l'inventaire du 19/08/2026) : la
+/// mention accolée à chaque traitement sur la page publique du lien
+/// n'est pas la même selon qui le reçoit (rappel du PAI pour une
+/// structure d'accueil, des indications du parent pour un particulier).
+enum ShareDestinataire {
+  particulier('particulier', 'Un particulier (grand-parent, nounou, ami...)'),
+  structureAccueil(
+    'structure_accueil',
+    'Une structure d’accueil (école, centre de loisirs, colonie...)',
+  );
+
+  const ShareDestinataire(this.value, this.label);
+
+  final String value;
+  final String label;
+
+  static ShareDestinataire fromValue(String value) {
+    return ShareDestinataire.values.firstWhere(
+      (destinataire) => destinataire.value == value,
+      orElse: () => ShareDestinataire.particulier,
+    );
+  }
+}
+
 /// Un lien de partage ponctuel (fiche secours ou "ce qu'il faut savoir"),
 /// vu côté parent : pas de statut de révocation en base — supprimer la
 /// ligne EST la révocation, elle coupe l'accès immédiatement.
@@ -35,6 +60,7 @@ class ShareLinkData {
   final String token;
   final String enfantId;
   final ShareFicheType ficheType;
+  final ShareDestinataire destinataire;
   final DateTime dateCreation;
   final DateTime dateExpiration;
   final DateTime? dateDerniereConsultation;
@@ -44,6 +70,7 @@ class ShareLinkData {
     required this.token,
     required this.enfantId,
     required this.ficheType,
+    required this.destinataire,
     required this.dateCreation,
     required this.dateExpiration,
     required this.dateDerniereConsultation,
@@ -61,6 +88,9 @@ class ShareLinkData {
       enfantId: row['enfant_id'] as String,
       ficheType: ShareFicheType.fromValue(
         row['type_fiche'] as String,
+      ),
+      destinataire: ShareDestinataire.fromValue(
+        row['destinataire'] as String,
       ),
       dateCreation: DateTime.parse(
         row['date_creation'] as String,

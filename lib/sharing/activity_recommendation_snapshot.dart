@@ -1,7 +1,9 @@
 import '../models/activity_session/complete_activity_session_data.dart';
 import '../models/complete_child_profile_data.dart';
+import '../models/share_link_data.dart';
 import '../recommendation_engine/models/activity_recommendation_result.dart';
 import '../recommendation_engine/models/recommendation_category.dart';
+import '../utils/treatment_audience.dart';
 
 /// Construit la "photo" figée des recommandations d'un enfant pour une
 /// activité donnée, au moment où le parent crée le lien de partage —
@@ -14,6 +16,7 @@ class ActivityRecommendationSnapshot {
     required CompleteActivitySessionData activitySession,
     required ActivityRecommendationResult recommendationResult,
     required CompleteChildProfileData child,
+    required ShareDestinataire destinataire,
   }) {
     final childId = child.childId;
 
@@ -78,9 +81,22 @@ class ActivityRecommendationSnapshot {
 
     addSection('Points importants', pointsImportants);
 
+    final medicationAudience = destinataire ==
+            ShareDestinataire.structureAccueil
+        ? TreatmentAudience.professionnel
+        : TreatmentAudience.particulier;
+    final medicationMention =
+        treatmentMentionSuffix(medicationAudience);
+
     addSection(
       'Médicaments d’urgence',
-      textsFor([RecommendationCategory.emergencyMedication]),
+      textsFor([RecommendationCategory.emergencyMedication])
+          .map(
+            (texte) => medicationMention == null
+                ? texte
+                : '$texte — $medicationMention',
+          )
+          .toList(),
     );
 
     addSection(

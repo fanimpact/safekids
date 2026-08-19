@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     await supabase
       .from('partages')
       .select(
-        'id, enfant_id, type_fiche, date_expiration, contenu_fige',
+        'id, enfant_id, type_fiche, date_expiration, contenu_fige, destinataire',
       )
       .eq('token', token)
       .maybeSingle();
@@ -161,6 +161,7 @@ Deno.serve(async (req) => {
   return jsonResponse(
     {
       type_fiche: partage.type_fiche,
+      destinataire: partage.destinataire ?? 'particulier',
       enfant,
       profil_sante: profilSante,
       profil_activites: profilActivites,

@@ -202,9 +202,15 @@ const PAGE_HTML = `<!doctype html>
   // Flutter (ex. medicationName, deviceName...). A ajuster si la
   // structure des jsonb change lors de la migration des données.
 
-  function ligneTraitement(t) {
+  // "mention" rappelle le cadre d'administration à côté du traitement
+  // (jamais un avertissement) : selon le PAI pour une structure
+  // d'accueil, selon les indications du parent pour un particulier —
+  // choisi par le parent à la création du lien (champ destinataire).
+  function ligneTraitement(t, mention) {
     if (!t || !t.medicationName) return null;
-    var d = [t.dosage, t.administrationTimes].filter(Boolean).join(' — ');
+    var d = [t.dosage, t.administrationTimes].filter(Boolean);
+    if (mention) d.push(mention);
+    d = d.join(' — ');
     return echapper(d ? t.medicationName + ' — ' + d : t.medicationName);
   }
 
@@ -358,6 +364,15 @@ const PAGE_HTML = `<!doctype html>
     var profilSante = data.profil_sante || {};
     var profilActivites = data.profil_activites || {};
 
+    var mentionTraitement =
+      data.destinataire === 'structure_accueil'
+        ? 'posologie et administration selon le PAI'
+        : 'posologie et administration selon les indications du parent';
+
+    function ligneTraitementAvecMention(t) {
+      return ligneTraitement(t, mentionTraitement);
+    }
+
     var blocs = [];
 
     if (data.type_fiche === 'secours') {
@@ -379,11 +394,11 @@ const PAGE_HTML = `<!doctype html>
     blocs.push(
       section(
         'Traitements d’urgence',
-        lignesListe(profilSante.traitements_urgence, ligneTraitement),
+        lignesListe(profilSante.traitements_urgence, ligneTraitementAvecMention),
         { highlight: true }
       )
     );
-    blocs.push(section('Traitements réguliers', lignesListe(profilSante.traitements_reguliers, ligneTraitement)));
+    blocs.push(section('Traitements réguliers', lignesListe(profilSante.traitements_reguliers, ligneTraitementAvecMention)));
     blocs.push(section('Dispositifs médicaux', lignesListe(profilSante.dispositifs_medicaux, ligneDispositif)));
 
     if (data.type_fiche === 'secours') {

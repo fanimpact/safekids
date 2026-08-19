@@ -19,6 +19,7 @@ import 'package:safekids/models/transitions_data.dart';
 import 'package:safekids/models/transport_data.dart';
 import 'package:safekids/models/trigger_factor_data.dart';
 import 'package:safekids/models/walking_effort_data.dart';
+import 'package:safekids/models/share_link_data.dart';
 import 'package:safekids/recommendation_engine/recommendation_engine.dart';
 import 'package:safekids/repositories/child_repository.dart';
 import 'package:safekids/sharing/activity_recommendation_snapshot.dart';
@@ -122,6 +123,7 @@ void main() {
         activitySession: activitySession,
         recommendationResult: result,
         child: sharedChild,
+        destinataire: ShareDestinataire.structureAccueil,
       );
 
       expect(snapshot['activite_nom'], equals('Sortie piscine'));
@@ -153,6 +155,16 @@ void main() {
           (ligne) => (ligne as String).contains('Adrénaline'),
         ),
         isTrue,
+      );
+
+      expect(
+        (medicaments['lignes'] as List).every(
+          (ligne) => (ligne as String).contains('selon le PAI'),
+        ),
+        isTrue,
+        reason:
+            'Un lien destiné à une structure d’accueil doit rappeler '
+            'le PAI à côté de chaque traitement.',
       );
 
       final toutLeTexte = sections

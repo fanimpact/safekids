@@ -13,6 +13,7 @@ import '../recommendation_engine/rules/universal_trigger_rules.dart';
 import '../utils/age_utils.dart';
 import '../utils/date_format_utils.dart';
 import '../utils/pdf_text.dart';
+import '../utils/treatment_audience.dart';
 
 /// Un groupe de lignes avec son propre sous-titre, affiché à l'intérieur
 /// d'une même section (ex. "Traitements d'urgence" / "Traitements
@@ -34,9 +35,14 @@ typedef _LineGroup = ({String heading, List<String> lines});
 class CareInfoSheetPage extends StatelessWidget {
   final CompleteChildProfileData child;
 
+  /// Détermine la mention accolée à chaque traitement (PAI, indications
+  /// du parent, ou aucune) — voir `TreatmentAudience`.
+  final TreatmentAudience audience;
+
   const CareInfoSheetPage({
     super.key,
     required this.child,
+    this.audience = TreatmentAudience.owner,
   });
 
   String get _firstName {
@@ -224,6 +230,12 @@ class CareInfoSheetPage extends StatelessWidget {
         details.add(times);
       }
 
+      final mention = treatmentMentionSuffix(audience);
+
+      if (mention != null) {
+        details.add(mention);
+      }
+
       lines.add(
         details.isEmpty
             ? name
@@ -268,6 +280,12 @@ class CareInfoSheetPage extends StatelessWidget {
 
       if (method != null && method.isNotEmpty) {
         details.add(method);
+      }
+
+      final mention = treatmentMentionSuffix(audience);
+
+      if (mention != null) {
+        details.add(mention);
       }
 
       if (details.isEmpty) {

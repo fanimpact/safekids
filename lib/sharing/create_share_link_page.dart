@@ -45,6 +45,8 @@ class _CreateShareLinkPageState
   CompleteChildProfileData? _selectedChild;
   ShareFicheType _selectedFicheType =
       ShareFicheType.secours;
+  ShareDestinataire _selectedDestinataire =
+      ShareDestinataire.particulier;
   _ShareDuration _selectedDuration = _ShareDuration.jour1;
 
   bool _isGenerating = false;
@@ -179,6 +181,7 @@ class _CreateShareLinkPageState
         activitySession: activity,
         recommendationResult: recommendationResult,
         child: child,
+        destinataire: _selectedDestinataire,
       );
     }
 
@@ -199,6 +202,7 @@ class _CreateShareLinkPageState
             'type_fiche': _selectedFicheType.value,
             'date_expiration':
                 dateExpiration.toIso8601String(),
+            'destinataire': _selectedDestinataire.value,
             'contenu_fige': contenuFige,
             'activite_id': _selectedActivity?.id,
           })
@@ -451,6 +455,43 @@ class _CreateShareLinkPageState
               const SizedBox(height: 12),
               _buildActivityPicker(),
             ],
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'À qui destinez-vous ce lien ?',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            RadioGroup<ShareDestinataire>(
+              groupValue: _selectedDestinataire,
+              onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+
+                setState(() {
+                  _selectedDestinataire = value;
+                  _generatedLink = null;
+                });
+              },
+              child: Column(
+                children: [
+                  for (final destinataire
+                      in ShareDestinataire.values)
+                    RadioListTile<ShareDestinataire>(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(destinataire.label),
+                      value: destinataire,
+                    ),
+                ],
+              ),
+            ),
 
             const SizedBox(height: 20),
 

@@ -11,6 +11,7 @@ import '../recommendation_engine/rules/universal_trigger_rules.dart';
 import '../utils/age_utils.dart';
 import '../utils/date_format_utils.dart';
 import '../utils/pdf_text.dart';
+import '../utils/treatment_audience.dart';
 
 /// Fiche de lecture seule, générée uniquement à partir du profil déjà
 /// rempli de l'enfant. Ce qui est affiché à l'écran et ce qui est
@@ -19,9 +20,16 @@ import '../utils/pdf_text.dart';
 class EmergencyInfoSheetPage extends StatelessWidget {
   final CompleteChildProfileData child;
 
+  /// Détermine la mention accolée à chaque traitement (PAI, indications
+  /// du parent, ou aucune) — voir `TreatmentAudience`. Par défaut
+  /// [TreatmentAudience.owner] (aucune mention), pour ne rien changer
+  /// aux appels existants qui ne la précisent pas encore.
+  final TreatmentAudience audience;
+
   const EmergencyInfoSheetPage({
     super.key,
     required this.child,
+    this.audience = TreatmentAudience.owner,
   });
 
   String get _displayName {
@@ -342,6 +350,12 @@ class EmergencyInfoSheetPage extends StatelessWidget {
         details.add(method);
       }
 
+      final mention = treatmentMentionSuffix(audience);
+
+      if (mention != null) {
+        details.add(mention);
+      }
+
       lines.add(
         details.isEmpty
             ? name
@@ -497,6 +511,12 @@ class EmergencyInfoSheetPage extends StatelessWidget {
 
       if (times != null && times.isNotEmpty) {
         details.add(times);
+      }
+
+      final mention = treatmentMentionSuffix(audience);
+
+      if (mention != null) {
+        details.add(mention);
       }
 
       lines.add(
