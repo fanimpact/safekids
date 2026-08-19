@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/etablissement_data.dart';
+import '../models/membre_etablissement_data.dart';
 
 /// Regroupe les opérations côté espace professionnel : créer un
 /// établissement, réclamer un rattachement envoyé par un parent, et
@@ -68,5 +69,68 @@ class EstablishmentService {
     );
 
     return response as String?;
+  }
+
+  /// Active toute invitation en attente pour l'utilisateur connecté —
+  /// à appeler juste après chaque connexion professionnelle, avant de
+  /// charger [myEstablishments]. Ne fait rien s'il n'y a aucune
+  /// invitation à activer.
+  Future<void> activatePendingInvitations() async {
+    await _client.rpc('rpc_activer_invitations_en_attente');
+  }
+
+  /// Toute l'équipe d'un établissement (invités, actifs, révoqués),
+  /// pour l'écran "Gérer l'équipe" — visible par tout membre actif.
+  Future<List<MembreEtablissementData>> teamMembers(
+    String etablissementId,
+  ) async {
+    final rows = await _client
+        .from('membres_etablissement')
+        .select()
+        .eq('etablissement_id', etablissementId)
+        .order('invite_le', ascending: true);
+
+    return (rows as List<dynamic>)
+        .map(
+          (row) => MembreEtablissementData.fromRow(
+            row as Map<String, dynamic>,
+          ),
+        )
+        .toList();
+  }
+
+  Future<void> inviteMember({
+    required String etablissementId,
+    required String email,
+    required RoleEtablissement role,
+  }) async {
+    await _client.rpc(
+      'rpc_inviter_membre',
+      params: {
+        'p_etablissement_id': etablissementId,
+        'p_email': email,
+        'p_role': role.name,
+      },
+    );
+  }
+
+  Future<void> changeRole({
+    required String membreId,
+    required RoleEtablissement nouveauRole,
+  }) async {
+    await _client.rpc(
+      'rpc_changer_role_membre',
+      params: {
+        'p_membre_id': membreId,
+        'p_nouveau_role': nouveauRole.name,
+      },
+    );
+  }
+
+  Future<void> revokeMember(String membreId) async {
+    await _client.rpc(
+      'rpc_revoquer_membre',
+      params: {'p_membre_id': membreId},
+    );
   }
 }

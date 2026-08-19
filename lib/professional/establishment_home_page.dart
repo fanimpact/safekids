@@ -8,6 +8,7 @@ import 'establishment_onboarding_page.dart';
 import 'establishment_service.dart';
 import 'professional_child_repository.dart';
 import 'professional_emergency_mode_child_picker_page.dart';
+import 'team_management_page.dart';
 
 /// Accueil de l'espace professionnel une fois connecté, organisé
 /// selon l'usage réel d'un membre du personnel qui a plusieurs enfants
@@ -32,7 +33,23 @@ class _EstablishmentHomePageState extends State<EstablishmentHomePage> {
     _reload();
   }
 
-  void _reload() {
+  Future<void> _reload() async {
+    // Active toute invitation d'équipe en attente pour ce compte
+    // avant de charger la liste, pour qu'une invitation tout juste
+    // acceptée apparaisse immédiatement (voir
+    // rpc_activer_invitations_en_attente).
+    try {
+      await EstablishmentService.instance
+          .activatePendingInvitations();
+    } catch (_) {
+      // Non bloquant : au pire, l'invitation s'activera à la
+      // prochaine connexion.
+    }
+
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       _establishmentsFuture =
           EstablishmentService.instance.myEstablishments();
@@ -323,6 +340,25 @@ class _EstablishmentMenuState extends State<_EstablishmentMenu> {
                     MaterialPageRoute(
                       builder: (context) =>
                           const EstablishmentChildListPage(),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              _buildMenuTile(
+                context: context,
+                label: 'Gérer l’équipe',
+                icon: Icons.groups_outlined,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TeamManagementPage(
+                        etablissementId: widget.establishment.id,
+                        etablissementNom: widget.establishment.nom,
+                      ),
                     ),
                   );
                 },
