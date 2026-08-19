@@ -31,6 +31,17 @@ elle-même les avoir vérifiés.
    consultations enregistrées (ex. celles créées pendant les tests de
    la passe 3 avec Théo, si elles existent encore).
 
+3. **Messages d'erreur de connexion/création de compte, reformulés en
+   français clair (19/08/2026).** Écrans concernés : création de
+   compte (particulier et professionnel), connexion (particulier et
+   professionnel), changement de mot de passe (réglages et lien "mot
+   de passe oublié"). À vérifier avec un scénario d'échec réel (ex.
+   mauvais mot de passe, email déjà utilisé) : le message affiché doit
+   être une phrase compréhensible, plus jamais un texte du type
+   `AuthApiException(message: ..., statusCode: ..., code: ...)`.
+   Vérifié par un test qui simule plusieurs codes d'erreur Supabase,
+   jamais déclenché pour de vrai à l'écran.
+
 ## Depuis la passe 3 (audit, jamais vérifié sur un vrai téléphone)
 
 Les tests automatisés de la passe 3 tournaient sur la version web de

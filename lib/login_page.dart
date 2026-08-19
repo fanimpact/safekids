@@ -6,6 +6,7 @@ import 'forgot_password_page.dart';
 import 'home/home_page.dart';
 import 'register_page.dart';
 import 'repositories/child_repository.dart';
+import 'utils/auth_error_message.dart';
 import 'widgets/sk_password_field.dart';
 
 class LoginPage extends StatefulWidget {
@@ -85,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
       );
     } catch (error) {
       if (mounted) {
-        _showError('Connexion refusée : $error');
+        _showError(friendlyAuthErrorMessage(error));
       }
     } finally {
       if (mounted) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'auth/account_service.dart';
 import 'home/home_page.dart';
+import 'utils/auth_error_message.dart';
 import 'widgets/sk_password_field.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -85,7 +86,7 @@ class _RegisterPageState extends State<RegisterPage> {
       }
 
       _showError(
-        'Impossible de créer le compte : $error',
+        friendlyAuthErrorMessage(error),
       );
     } finally {
       if (mounted) {

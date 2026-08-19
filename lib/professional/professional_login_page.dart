@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../auth/account_service.dart';
 import '../auth/device_verification_page.dart';
+import '../utils/auth_error_message.dart';
 import '../widgets/sk_password_field.dart';
 import 'establishment_home_page.dart';
 import 'professional_register_page.dart';
@@ -78,7 +79,7 @@ class _ProfessionalLoginPageState
       );
     } catch (error) {
       if (mounted) {
-        _showError('Connexion refusée : $error');
+        _showError(friendlyAuthErrorMessage(error));
       }
     } finally {
       if (mounted) {

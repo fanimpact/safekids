@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../auth/account_service.dart';
+import '../utils/auth_error_message.dart';
 import '../widgets/sk_password_field.dart';
 import 'establishment_home_page.dart';
 
@@ -91,7 +92,7 @@ class _ProfessionalRegisterPageState
       }
 
       _showError(
-        'Impossible de créer le compte : $error',
+        friendlyAuthErrorMessage(error),
       );
     } finally {
       if (mounted) {

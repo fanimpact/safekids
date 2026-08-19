@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/account_service.dart';
 import '../auth/app_auth.dart';
 import '../repositories/child_repository.dart';
+import '../utils/auth_error_message.dart';
 import '../welcome_page.dart';
 import '../widgets/sk_password_field.dart';
 
@@ -78,7 +79,7 @@ class _SettingsPageState extends State<SettingsPage> {
       }
 
       _showMessage(
-        'Impossible de mettre à jour le mot de passe : $error',
+        friendlyAuthErrorMessage(error),
       );
     } finally {
       if (mounted) {

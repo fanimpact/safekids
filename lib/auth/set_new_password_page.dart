@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../home/home_page.dart';
+import '../utils/auth_error_message.dart';
 import '../widgets/sk_password_field.dart';
 
 /// Affiché quand l'app est ouverte via le lien "mot de passe oublié"
@@ -80,7 +81,7 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
       }
 
       _showError(
-        'Impossible de mettre à jour le mot de passe : $error',
+        friendlyAuthErrorMessage(error),
       );
     } finally {
       if (mounted) {
