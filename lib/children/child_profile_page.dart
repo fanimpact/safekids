@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../activity_pages/activities_home_page.dart';
 import '../activity_profile_pages/activity_profile_entry_page.dart';
@@ -10,12 +11,14 @@ import '../emergency_mode/emergency_mode_button_list_page.dart';
 import '../models/activity_profile_draft.dart';
 import '../models/child_profile_draft.dart';
 import '../models/complete_child_profile_data.dart';
+import '../models/enfant_confiance_data.dart';
 import '../models/enfant_etablissement_data.dart';
 import '../models/share_link_data.dart';
 import '../questionnaire_recap/activity_questionnaire_recap_page.dart';
 import '../questionnaire_recap/medical_questionnaire_recap_page.dart';
 import '../repositories/child_repository.dart';
 import '../sharing/create_share_link_page.dart';
+import '../sharing/enfant_confiance_service.dart';
 import '../sharing/establishment_attachment_service.dart';
 import '../sharing/share_link_service.dart';
 import '../transmission_pages/identity_page.dart';
@@ -40,11 +43,74 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
   Future<List<ShareLinkData>>? _shareLinksFuture;
   Future<List<EnfantEtablissementData>>? _attachmentsFuture;
+  Future<List<EnfantConfianceData>>? _trustedPeopleFuture;
+
+  // Copie résolue de _trustedPeopleFuture, utilisée pour savoir tout
+  // de suite (sans reconstruire tout un FutureBuilder) si la personne
+  // connectée peut modifier cette fiche — voir _canWrite. `null` tant
+  // que le chargement n'est pas terminé : dans ce cas, _canWrite se
+  // comporte comme avant (accès complet), le temps que ça se résolve.
+  List<EnfantConfianceData>? _trustedPeople;
 
   @override
   void initState() {
     super.initState();
     _loadPartages();
+  }
+
+  /// `Supabase.instance` lève une AssertionError synchrone quand
+  /// Supabase n'a pas été initialisé (cas des tests de widgets) — voir
+  /// le même garde-fou dans _loadPartages.
+  String? get _currentUserId {
+    try {
+      return Supabase.instance.client.auth.currentUser?.id;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Vrai si la personne connectée est le parent propriétaire de cet
+  /// enfant (par opposition à une personne de confiance invitée —
+  /// corrections de l'inventaire du 19/08/2026, point 9). `userId` est
+  /// `null` pour les profils construits sans Supabase (tests, données
+  /// historiques) : dans ce cas, on se comporte comme avant (accès
+  /// complet), pour ne rien changer au comportement déjà couvert par
+  /// les tests existants.
+  bool get _isOwner {
+    final currentUserId = _currentUserId;
+
+    if (currentUserId == null) {
+      // Session inconnue (ex. tests de widgets sans Supabase
+      // initialisé) : comportement par défaut, comme avant cette
+      // fonctionnalité.
+      return true;
+    }
+
+    final ownerId = child.userId;
+    return ownerId == null || ownerId == currentUserId;
+  }
+
+  bool get _canWrite {
+    if (_isOwner) {
+      return true;
+    }
+
+    final people = _trustedPeople;
+
+    if (people == null) {
+      return true;
+    }
+
+    final mine = people.where(
+      (person) => person.userId == _currentUserId,
+    );
+
+    if (mine.isEmpty) {
+      return true;
+    }
+
+    return mine.first.niveauAcces ==
+        NiveauAccesConfiance.lectureEcriture;
   }
 
   void _loadPartages() {
@@ -58,6 +124,8 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
         ShareLinkService.instance.linksForChild(childId);
     final attachmentsFuture = EstablishmentAttachmentService.instance
         .attachmentsForChild(childId);
+    final trustedPeopleFuture = EnfantConfianceService.instance
+        .trustedPeopleForChild(childId);
 
     // `.ignore()` marque immédiatement ces futures comme "gérées" pour
     // Dart, en plus du traitement normal fait juste après par les
@@ -66,10 +134,26 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
     // au niveau de la zone du test au lieu de rester local à l'écran.
     shareLinksFuture.ignore();
     attachmentsFuture.ignore();
+    trustedPeopleFuture.ignore();
+
+    trustedPeopleFuture.then((people) {
+      if (mounted) {
+        setState(() {
+          _trustedPeople = people;
+        });
+      }
+    }).catchError((error) {
+      if (mounted) {
+        setState(() {
+          _trustedPeople = [];
+        });
+      }
+    });
 
     setState(() {
       _shareLinksFuture = shareLinksFuture;
       _attachmentsFuture = attachmentsFuture;
+      _trustedPeopleFuture = trustedPeopleFuture;
     });
   }
 
@@ -423,6 +507,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
     required String title,
     required String subtitle,
     required VoidCallback onRevoke,
+    VoidCallback? onSecondaryAction,
   }) {
     return Card(
       child: ListTile(
@@ -436,9 +521,20 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
           ),
         ),
         subtitle: Text(subtitle),
-        trailing: TextButton(
-          onPressed: onRevoke,
-          child: const Text('Révoquer'),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (onSecondaryAction != null)
+              IconButton(
+                icon: const Icon(Icons.tune),
+                tooltip: 'Changer le niveau d’accès',
+                onPressed: onSecondaryAction,
+              ),
+            TextButton(
+              onPressed: onRevoke,
+              child: const Text('Révoquer'),
+            ),
+          ],
         ),
       ),
     );
@@ -545,6 +641,312 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
               ],
             );
           },
+        );
+      },
+    );
+  }
+
+  String _accessLevelLabel(NiveauAccesConfiance niveau) {
+    switch (niveau) {
+      case NiveauAccesConfiance.lecture:
+        return 'Consultation seule';
+      case NiveauAccesConfiance.lectureEcriture:
+        return 'Consultation et modification';
+    }
+  }
+
+  String _confianceStatusLabel(EnfantConfianceData confiance) {
+    switch (confiance.statut) {
+      case StatutConfiance.invite:
+        return '${_accessLevelLabel(confiance.niveauAcces)} — '
+            'invitation en attente';
+      case StatutConfiance.revoque:
+        return 'Accès révoqué';
+      case StatutConfiance.actif:
+        return _accessLevelLabel(confiance.niveauAcces);
+    }
+  }
+
+  Future<void> _openInviteTrustedPersonDialog(
+    BuildContext context,
+  ) async {
+    final childId = child.childId;
+
+    if (childId == null) {
+      return;
+    }
+
+    final emailController = TextEditingController();
+    var selectedLevel = NiveauAccesConfiance.lecture;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Inviter une personne de confiance'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Adresse email',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<NiveauAccesConfiance>(
+                initialValue: selectedLevel,
+                decoration: const InputDecoration(
+                  labelText: 'Niveau d’accès',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: NiveauAccesConfiance.lecture,
+                    child: Text(
+                      _accessLevelLabel(
+                        NiveauAccesConfiance.lecture,
+                      ),
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: NiveauAccesConfiance.lectureEcriture,
+                    child: Text(
+                      _accessLevelLabel(
+                        NiveauAccesConfiance.lectureEcriture,
+                      ),
+                    ),
+                  ),
+                ],
+                onChanged: (level) {
+                  if (level != null) {
+                    setDialogState(() {
+                      selectedLevel = level;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Inviter'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    final email = emailController.text.trim();
+
+    if (email.isEmpty) {
+      _showTemporaryMessage(
+        context: context,
+        message: 'Saisissez une adresse email.',
+      );
+      return;
+    }
+
+    try {
+      await EnfantConfianceService.instance.invite(
+        childId: childId,
+        email: email,
+        niveauAcces: selectedLevel,
+      );
+
+      _loadPartages();
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+
+      _showTemporaryMessage(
+        context: context,
+        message: 'Impossible d’envoyer l’invitation pour le moment.',
+      );
+    }
+  }
+
+  Future<void> _changeTrustedPersonAccessLevel(
+    BuildContext context,
+    EnfantConfianceData confiance,
+  ) async {
+    final nouveauNiveau = await showDialog<NiveauAccesConfiance>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text('Niveau d’accès de ${confiance.email}'),
+        children: [
+          for (final niveau in NiveauAccesConfiance.values)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, niveau),
+              child: Text(_accessLevelLabel(niveau)),
+            ),
+        ],
+      ),
+    );
+
+    if (nouveauNiveau == null ||
+        nouveauNiveau == confiance.niveauAcces) {
+      return;
+    }
+
+    try {
+      await EnfantConfianceService.instance.changeAccessLevel(
+        confianceId: confiance.id,
+        niveauAcces: nouveauNiveau,
+      );
+
+      _loadPartages();
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+
+      _showTemporaryMessage(
+        context: context,
+        message: 'Impossible de modifier ce niveau pour le moment.',
+      );
+    }
+  }
+
+  Future<void> _revokeTrustedPerson(
+    BuildContext context,
+    EnfantConfianceData confiance,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Révoquer cet accès ?'),
+        content: Text(
+          '${confiance.email} n’aura plus accès à la fiche de '
+          '$_displayName.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Révoquer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+      await EnfantConfianceService.instance.revoke(confiance.id);
+      _loadPartages();
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+
+      _showTemporaryMessage(
+        context: context,
+        message: 'Impossible de révoquer cet accès pour le moment.',
+      );
+    }
+  }
+
+  Widget _buildTrustedPeopleSection(BuildContext context) {
+    if (!_isOwner || child.childId == null) {
+      return const SizedBox.shrink();
+    }
+
+    return FutureBuilder<List<EnfantConfianceData>>(
+      future: _trustedPeopleFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              'Impossible de charger les personnes de confiance.',
+            ),
+          );
+        }
+
+        final people = (snapshot.data ?? [])
+            .where(
+              (person) => person.statut != StatutConfiance.revoque,
+            )
+            .toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (people.isEmpty)
+              const Card(
+                child: ListTile(
+                  leading: CircleAvatar(
+                    child: Icon(Icons.diversity_3_outlined),
+                  ),
+                  title: Text(
+                    'Aucune personne de confiance',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Vous pouvez partager cette fiche avec un '
+                    'co-parent ou un tuteur (jusqu’à 2 personnes).',
+                  ),
+                ),
+              ),
+
+            for (final confiance in people) ...[
+              _partageCard(
+                icon: Icons.diversity_3_outlined,
+                title: confiance.email,
+                subtitle: _confianceStatusLabel(confiance),
+                onRevoke: () =>
+                    _revokeTrustedPerson(context, confiance),
+                onSecondaryAction: () =>
+                    _changeTrustedPersonAccessLevel(
+                  context,
+                  confiance,
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+
+            if (people.length < 2) ...[
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    _openInviteTrustedPersonDialog(context),
+                icon: const Icon(Icons.person_add_alt_outlined),
+                label: const Text(
+                  'Inviter une personne de confiance',
+                ),
+              ),
+            ],
+          ],
         );
       },
     );
@@ -855,87 +1257,112 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                   'Profil Activités : à compléter',
             ),
 
-            const SizedBox(height: 36),
+            if (_isOwner) ...[
+              const SizedBox(height: 36),
 
-            _sectionTitle(
-              'Partages',
-            ),
+              _sectionTitle(
+                'Partages',
+              ),
 
-            _buildPartagesSection(context),
+              _buildPartagesSection(context),
 
-            const SizedBox(height: 36),
+              const SizedBox(height: 36),
 
-            _sectionTitle(
-              'Modifier le profil',
-            ),
+              _sectionTitle(
+                'Personnes de confiance',
+              ),
 
-            _actionButton(
-              icon: Icons.edit_document,
-              color: Colors.orange,
-              title:
-                  'Informations essentielles',
-              subtitle:
-                  'Modifier les informations destinées aux secours.',
-              onPressed: () {
-                final transmissionController =
-                    TransmissionController(
-                  initialDraft:
-                      ChildProfileDraft.fromChildProfileData(
-                    child.essentialInformation,
-                  ),
-                  isEditing: true,
-                );
+              _buildTrustedPeopleSection(context),
+            ],
 
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => IdentityPage(
-                      transmissionController:
-                          transmissionController,
+            if (_canWrite) ...[
+              const SizedBox(height: 36),
+
+              _sectionTitle(
+                'Modifier le profil',
+              ),
+
+              _actionButton(
+                icon: Icons.edit_document,
+                color: Colors.orange,
+                title:
+                    'Informations essentielles',
+                subtitle:
+                    'Modifier les informations destinées aux secours.',
+                onPressed: () {
+                  final transmissionController =
+                      TransmissionController(
+                    initialDraft:
+                        ChildProfileDraft.fromChildProfileData(
+                      child.essentialInformation,
+                    ),
+                    isEditing: true,
+                  );
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => IdentityPage(
+                        transmissionController:
+                            transmissionController,
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              _actionButton(
+                icon: Icons.edit,
+                color: Colors.deepPurple,
+                title: 'Profil Activités',
+                subtitle:
+                    'Modifier les informations utilisées pour préparer les activités.',
+                onPressed: () => _openActivityProfile(context),
+              ),
+            ],
+
+            if (_isOwner) ...[
+              const SizedBox(height: 36),
+
+              _sectionTitle(
+                'Gestion',
+              ),
+
+              Card(
+                child: ListTile(
+                  leading: const CircleAvatar(
+                    child: Icon(
+                      Icons.delete,
                     ),
                   ),
-                );
-              },
-            ),
-
-            _actionButton(
-              icon: Icons.edit,
-              color: Colors.deepPurple,
-              title: 'Profil Activités',
-              subtitle:
-                  'Modifier les informations utilisées pour préparer les activités.',
-              onPressed: () => _openActivityProfile(context),
-            ),
-
-            const SizedBox(height: 36),
-
-            _sectionTitle(
-              'Gestion',
-            ),
-
-            Card(
-              child: ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(
-                    Icons.delete,
+                  title: const Text(
+                    'Supprimer le profil',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                title: const Text(
-                  'Supprimer le profil',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                  subtitle: const Text(
+                    'Cette action supprimera définitivement le profil de cet enfant.',
                   ),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                  ),
+                  onTap: () =>
+                      _confirmAndDeleteProfile(context),
                 ),
-                subtitle: const Text(
-                  'Cette action supprimera définitivement le profil de cet enfant.',
-                ),
-                trailing: const Icon(
-                  Icons.chevron_right,
-                ),
-                onTap: () =>
-                    _confirmAndDeleteProfile(context),
               ),
-            ),
+            ] else if (!_canWrite) ...[
+              const SizedBox(height: 36),
+
+              const Text(
+                'Vous avez un accès en consultation seule à cette '
+                'fiche : seul le parent peut la modifier ou la '
+                'supprimer.',
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
 
             const SizedBox(height: 40),
           ],

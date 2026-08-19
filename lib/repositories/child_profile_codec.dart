@@ -124,6 +124,7 @@ class ChildProfileCodec {
   }) {
     return ChildProfileData(
       childId: childId,
+      userId: enfant['parent_id'] as String?,
       identity: identityFromRow(enfant),
       hasPathologies: sante?['a_pathologies'] as bool?,
       hasAllergies: sante?['a_allergies'] as bool?,

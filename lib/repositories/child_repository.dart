@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/activity_profile_data.dart';
 import '../models/child_profile_data.dart';
 import '../models/complete_child_profile_data.dart';
+import '../sharing/enfant_confiance_service.dart';
 import 'child_profile_codec.dart';
 
 /// Source de vérité : Supabase (tables `enfants`, `profils_sante`,
@@ -88,6 +89,16 @@ class ChildRepository extends ChangeNotifier {
         'Supabase connecté.',
       );
     }
+
+    // Active toute invitation "personne de confiance" en attente pour
+    // ce compte avant de charger la liste des enfants, pour qu'un
+    // enfant tout juste partagé apparaisse immédiatement. Non
+    // bloquant : au pire, l'invitation s'activera à la prochaine
+    // synchronisation.
+    try {
+      await EnfantConfianceService.instance
+          .activatePendingInvitations();
+    } catch (_) {}
 
     final enfantsRows = await _client
         .from('enfants')
