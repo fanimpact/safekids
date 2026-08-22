@@ -3,6 +3,7 @@ import 'clothing_data.dart';
 import 'communication_data.dart';
 import 'other_information_data.dart';
 import 'overnight_stay_data.dart';
+import 'meals_data.dart';
 import 'safety_data.dart';
 import 'toilets_data.dart';
 import 'transitions_data.dart';
@@ -30,6 +31,13 @@ class ActivityProfileData {
 
   final OtherInformationData otherInformation;
 
+  /// Section Repas (22/08/2026). Paramètre optionnel avec valeur par
+  /// défaut, contrairement aux autres sections : les profils de démo
+  /// et les tests écrits avant cette section continuent de compiler
+  /// sans être touchés, et se comportent comme un parent qui n'a pas
+  /// encore répondu.
+  final MealsData meals;
+
   ActivityProfileData({
     required this.aquaticActivity,
     required this.transport,
@@ -41,5 +49,6 @@ class ActivityProfileData {
     required this.transitions,
     required this.safety,
     required this.otherInformation,
-  });
+    MealsData? meals,
+  }) : meals = meals ?? MealsData();
 }

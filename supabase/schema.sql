@@ -80,6 +80,7 @@ create table if not exists public.profils_activites (
   transport jsonb not null default '{}'::jsonb,
   securite jsonb not null default '{}'::jsonb,
   nuitee jsonb not null default '{}'::jsonb,
+  repas jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
 

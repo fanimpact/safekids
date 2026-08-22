@@ -60,6 +60,11 @@ class ActivitySessionData {
 
   bool? hasClothingChange;
 
+  /// Déclenche les recommandations liées aux repas, comme
+  /// `hasWaterNearby` déclenche celles de la baignade : sans repas
+  /// prévu, la section Repas du profil ne remonte pas sur la fiche.
+  bool? hasMeal;
+
   ActivitySessionData({
     this.activityName,
     this.date,
@@ -83,6 +88,7 @@ class ActivitySessionData {
     this.hasLargeCrowd,
     this.hasConfinedSpace,
     this.hasClothingChange,
+    this.hasMeal,
   })  : selectedChildIds = selectedChildIds ?? [],
         transportTypes = transportTypes ?? {};
 }

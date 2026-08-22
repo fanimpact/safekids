@@ -26,7 +26,8 @@ alter table public.profils_activites
   add column if not exists activite_aquatique jsonb not null default '{}'::jsonb,
   add column if not exists effort_marche jsonb not null default '{}'::jsonb,
   add column if not exists transitions jsonb not null default '{}'::jsonb,
-  add column if not exists autres_informations jsonb not null default '{}'::jsonb;
+  add column if not exists autres_informations jsonb not null default '{}'::jsonb,
+  add column if not exists repas jsonb not null default '{}'::jsonb;
 
 -- Un seul profil santé / profil activités par enfant : nécessaire pour
 -- que les upserts cote app (ON CONFLICT enfant_id) fonctionnent.

@@ -7,6 +7,7 @@ import 'package:printing/printing.dart';
 
 import '../models/activity_profile_data.dart';
 import '../models/complete_child_profile_data.dart';
+import '../models/meals_data.dart';
 import '../models/transport_data.dart';
 import '../models/trigger_factor_data.dart';
 import '../utils/pdf_text.dart';
@@ -494,6 +495,243 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
     return lines;
   }
 
+  /// Section Repas. Les neuf questions sont posées à tous les parents
+  /// (aucune question filtre), donc toutes figurent ici, y compris
+  /// celles répondues "Non".
+  List<String> _mealsLines(
+    ActivityProfileData profile,
+  ) {
+    final data = profile.meals;
+
+    final lines = <String>[
+      _qaBool(
+        'Votre enfant présente-t-il un risque de fausse route ou d’étouffement ?',
+        data.hasChokingRisk,
+      ),
+    ];
+
+    if (data.hasChokingRisk == true) {
+      final preparations = <String>[];
+
+      for (final preparation in MealPreparation.values) {
+        if (!data.preparations.contains(preparation)) {
+          continue;
+        }
+
+        preparations.add(_mealPreparationLabels[preparation]!);
+      }
+
+      lines.add(
+        _qa(
+          'Comment faut-il préparer ses repas et ses boissons ?',
+          preparations.isEmpty
+              ? 'Non renseigné'
+              : preparations.join(', '),
+        ),
+      );
+
+      if (data.preparations.contains(MealPreparation.other)) {
+        lines.add(
+          _qaText(
+            'Précisez cette préparation',
+            data.otherPreparationDetails,
+          ),
+        );
+      }
+    }
+
+    lines.add(
+      _qaBool(
+        'Votre enfant doit-il être installé d’une façon particulière pour manger ?',
+        data.requiresSpecificSeating,
+      ),
+    );
+
+    if (data.requiresSpecificSeating == true) {
+      lines.add(
+        _qaText(
+          'Précisez cette installation',
+          data.seatingDetails,
+        ),
+      );
+    }
+
+    lines.add(
+      _qaBool(
+        'Y a-t-il des signes qui doivent alerter l’accompagnant pendant ou après le repas ?',
+        data.hasWarningSigns,
+      ),
+    );
+
+    if (data.hasWarningSigns == true) {
+      lines.add(
+        _qaText(
+          'Lesquels, et que faire dans ce cas',
+          data.warningSignsDetails,
+        ),
+      );
+    }
+
+    lines.add(
+      _qaBool(
+        'Votre enfant a-t-il besoin d’aide pendant la prise du repas ?',
+        data.requiresAssistance,
+      ),
+    );
+
+    if (data.requiresAssistance == true) {
+      final level = data.assistanceLevel;
+
+      lines.add(
+        _qa(
+          'De quelle aide s’agit-il ?',
+          level == null
+              ? 'Non renseigné'
+              : _mealAssistanceLabels[level]!,
+        ),
+      );
+    }
+
+    lines.add(
+      _qaBool(
+        'Votre enfant a-t-il besoin de matériel particulier pour manger dans de bonnes conditions ?',
+        data.requiresSpecialEquipment,
+      ),
+    );
+
+    if (data.requiresSpecialEquipment == true) {
+      lines.add(
+        _qaText(
+          'Matériel nécessaire',
+          data.specialEquipmentDetails,
+        ),
+      );
+    }
+
+    lines.add(
+      _qaBool(
+        'Votre enfant a-t-il besoin d’une hydratation renforcée pour raison médicale ?',
+        data.requiresIncreasedHydration,
+      ),
+    );
+
+    lines.add(
+      _qaBool(
+        'Y a-t-il des aliments que votre enfant ne doit pas manger ?',
+        data.hasDietaryRestrictions,
+      ),
+    );
+
+    if (data.hasDietaryRestrictions == true) {
+      final restrictions = <String>[];
+
+      for (final restriction in MealDietaryRestriction.values) {
+        if (!data.dietaryRestrictions.contains(restriction)) {
+          continue;
+        }
+
+        restrictions.add(_mealRestrictionLabels[restriction]!);
+      }
+
+      lines.add(
+        _qa(
+          'Lesquels',
+          restrictions.isEmpty
+              ? 'Non renseigné'
+              : restrictions.join(', '),
+        ),
+      );
+
+      if (data.dietaryRestrictions.contains(
+        MealDietaryRestriction.other,
+      )) {
+        lines.add(
+          _qaText(
+            'Précisez ce régime',
+            data.otherDietaryRestrictionDetails,
+          ),
+        );
+      }
+    }
+
+    lines.add(
+      _qaBool(
+        'Y a-t-il des aliments que votre enfant refuse ou ne tolère pas ?',
+        data.hasFoodRefusals,
+      ),
+    );
+
+    if (data.hasFoodRefusals == true) {
+      lines.add(
+        _qaText('Lesquels', data.foodRefusalDetails),
+      );
+
+      final stance = data.refusalStance;
+
+      lines.add(
+        _qa(
+          'L’accompagnant doit-il insister ?',
+          stance == null
+              ? 'Non renseigné'
+              : _mealRefusalStanceLabels[stance]!,
+        ),
+      );
+    }
+
+    lines.add(
+      _qaBool(
+        'Y a-t-il autre chose d’important à savoir sur les repas de votre enfant ?',
+        data.hasOtherInformation,
+      ),
+    );
+
+    if (data.hasOtherInformation == true) {
+      lines.add(
+        _qaText(
+          'Précisez cette information',
+          data.otherInformationDetails,
+        ),
+      );
+    }
+
+    return lines;
+  }
+
+  static const Map<MealPreparation, String> _mealPreparationLabels = {
+    MealPreparation.smallPieces: 'Couper en petits morceaux',
+    MealPreparation.minced: 'Alimentation hachée',
+    MealPreparation.blended: 'Alimentation mixée',
+    MealPreparation.thickenedDrinks: 'Boissons épaissies',
+    MealPreparation.other: 'Autre',
+  };
+
+  static const Map<MealAssistanceLevel, String>
+      _mealAssistanceLabels = {
+    MealAssistanceLevel.adultNearby:
+        'Il mange seul mais quelqu’un doit rester à côté de lui',
+    MealAssistanceLevel.helpWithSomeGestures:
+        'Il a besoin d’aide sur certains gestes (couper, ouvrir, '
+            'porter à la bouche)',
+    MealAssistanceLevel.fullyFedByAdult:
+        'Il doit être nourri entièrement par un adulte',
+  };
+
+  static const Map<MealDietaryRestriction, String>
+      _mealRestrictionLabels = {
+    MealDietaryRestriction.glutenFree: 'Sans gluten',
+    MealDietaryRestriction.lactoseFree: 'Sans lactose',
+    MealDietaryRestriction.porkFree: 'Sans porc',
+    MealDietaryRestriction.vegetarian: 'Végétarien',
+    MealDietaryRestriction.other: 'Autre',
+  };
+
+  static const Map<MealRefusalStance, String>
+      _mealRefusalStanceLabels = {
+    MealRefusalStance.insist: 'Oui',
+    MealRefusalStance.doNotInsist: 'Non',
+    MealRefusalStance.offerWithoutInsisting: 'Proposer sans insister',
+  };
+
   List<String> _otherInformationLines(
     ActivityProfileData profile,
   ) {
@@ -574,6 +812,11 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
         title: 'Sécurité',
         icon: Icons.health_and_safety,
         lines: _safetyLines(profile),
+      ),
+      _RecapSection(
+        title: 'Repas',
+        icon: Icons.restaurant,
+        lines: _mealsLines(profile),
       ),
       _RecapSection(
         title: 'Autres informations',

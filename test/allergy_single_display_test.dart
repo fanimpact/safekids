@@ -106,7 +106,10 @@ void main() {
           );
 
           final recommendations =
-              const HealthConditionsRules().evaluate(child);
+              const HealthConditionsRules().evaluate(
+                child,
+                ActivitySessionData(),
+              );
 
           final allergyRecommendation = recommendations.firstWhere(
             (recommendation) =>

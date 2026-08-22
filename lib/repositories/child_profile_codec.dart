@@ -12,6 +12,7 @@ import '../models/identity_data.dart';
 import '../models/medical_device_data.dart';
 import '../models/medical_event_data.dart';
 import '../models/medical_observation_data.dart';
+import '../models/meals_data.dart';
 import '../models/other_information_data.dart';
 import '../models/overnight_stay_data.dart';
 import '../models/pathology_data.dart';
@@ -207,6 +208,7 @@ class ChildProfileCodec {
       'transitions': profile.transitions.toJson(),
       'autres_informations':
           profile.otherInformation.toJson(),
+      'repas': profile.meals.toJson(),
     };
   }
 
@@ -267,6 +269,11 @@ class ChildProfileCodec {
         row['autres_informations'],
         OtherInformationData.fromJson,
         OtherInformationData(),
+      ),
+      meals: fromJsonObject(
+        row['repas'],
+        MealsData.fromJson,
+        MealsData(),
       ),
     );
   }

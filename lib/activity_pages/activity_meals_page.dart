@@ -1,35 +1,38 @@
 import 'package:flutter/material.dart';
 
 import '../models/activity_session/activity_session_data.dart';
-import 'activity_meals_page.dart';
+import 'activity_session_complete_page.dart';
 
-class ActivityClothingChangePage extends StatefulWidget {
+/// Dernière question du questionnaire de préparation d'activité. C'est
+/// elle qui déclenche l'affichage des recommandations liées aux repas
+/// sur la fiche, comme la présence d'eau déclenche celles de la
+/// baignade : sans repas prévu, la section Repas du profil de l'enfant
+/// ne remonte pas.
+class ActivityMealsPage extends StatefulWidget {
   final ActivitySessionData sessionData;
 
-  const ActivityClothingChangePage({
+  const ActivityMealsPage({
     super.key,
     required this.sessionData,
   });
 
   @override
-  State<ActivityClothingChangePage> createState() =>
-      _ActivityClothingChangePageState();
+  State<ActivityMealsPage> createState() =>
+      _ActivityMealsPageState();
 }
 
-class _ActivityClothingChangePageState
-    extends State<ActivityClothingChangePage> {
-  bool? _hasClothingChange;
+class _ActivityMealsPageState extends State<ActivityMealsPage> {
+  bool? _hasMeal;
 
   @override
   void initState() {
     super.initState();
 
-    _hasClothingChange =
-        widget.sessionData.hasClothingChange;
+    _hasMeal = widget.sessionData.hasMeal;
   }
 
   void _continue() {
-    if (_hasClothingChange == null) {
+    if (_hasMeal == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -40,14 +43,12 @@ class _ActivityClothingChangePageState
       return;
     }
 
-    widget.sessionData.hasClothingChange =
-        _hasClothingChange;
+    widget.sessionData.hasMeal = _hasMeal;
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            ActivityMealsPage(
+        builder: (context) => ActivitySessionCompletePage(
           sessionData: widget.sessionData,
         ),
       ),
@@ -59,7 +60,7 @@ class _ActivityClothingChangePageState
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Changement de tenue',
+          'Repas',
         ),
       ),
       body: SafeArea(
@@ -67,7 +68,7 @@ class _ActivityClothingChangePageState
           padding: const EdgeInsets.all(24),
           children: [
             const Text(
-              'Cette activité nécessite-t-elle un changement de tenue ?',
+              'Cette activité comprend-elle un repas, un goûter ou une collation ?',
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
@@ -77,10 +78,10 @@ class _ActivityClothingChangePageState
             const SizedBox(height: 8),
 
             RadioGroup<bool>(
-              groupValue: _hasClothingChange,
+              groupValue: _hasMeal,
               onChanged: (value) {
                 setState(() {
-                  _hasClothingChange = value;
+                  _hasMeal = value;
                 });
               },
               child: const Column(

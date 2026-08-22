@@ -4,6 +4,7 @@ import 'clothing_data.dart';
 import 'communication_data.dart';
 import 'other_information_data.dart';
 import 'overnight_stay_data.dart';
+import 'meals_data.dart';
 import 'safety_data.dart';
 import 'toilets_data.dart';
 import 'transitions_data.dart';
@@ -24,6 +25,7 @@ class ActivityProfileDraft {
   TransitionsData transitions;
   SafetyData safety;
   OtherInformationData otherInformation;
+  MealsData meals;
 
   ActivityProfileDraft({
     this.userId,
@@ -38,6 +40,7 @@ class ActivityProfileDraft {
     TransitionsData? transitions,
     SafetyData? safety,
     OtherInformationData? otherInformation,
+    MealsData? meals,
   })  : aquaticActivity =
             aquaticActivity ?? AquaticActivityData(),
         transport = transport ?? TransportData(),
@@ -52,7 +55,8 @@ class ActivityProfileDraft {
         transitions = transitions ?? TransitionsData(),
         safety = safety ?? SafetyData(),
         otherInformation =
-            otherInformation ?? OtherInformationData();
+            otherInformation ?? OtherInformationData(),
+        meals = meals ?? MealsData();
 
   /// Pré-remplit un brouillon à partir d'un profil Activités déjà
   /// enregistré (modification), avec des copies indépendantes de
@@ -96,6 +100,9 @@ class ActivityProfileDraft {
       otherInformation: OtherInformationData.fromJson(
         data.otherInformation.toJson(),
       ),
+      meals: MealsData.fromJson(
+        data.meals.toJson(),
+      ),
     );
   }
 
@@ -111,6 +118,7 @@ class ActivityProfileDraft {
       transitions: transitions,
       safety: safety,
       otherInformation: otherInformation,
+      meals: meals,
     );
   }
 }

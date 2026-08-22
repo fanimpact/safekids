@@ -6,6 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../models/complete_child_profile_data.dart';
+import '../models/meals_data.dart';
 import '../models/medical_device_data.dart';
 import '../recommendation_engine/rules/environment_rules.dart';
 import '../recommendation_engine/rules/universal_trigger_rules.dart';
@@ -389,6 +390,57 @@ class EmergencyInfoSheetPage extends StatelessWidget {
   /// méthodes publiques de `EnvironmentRules`/`UniversalTriggerRules`
   /// — plus jamais réécrit ici, pour ne plus jamais diverger du texte
   /// utilisé lors de la préparation d'une activité.
+  /// Repas (22/08/2026) : uniquement le risque de fausse route et la
+  /// façon de préparer les repas. Rien d'autre de la section Repas ne
+  /// figure ici — cette fiche est faite pour des secours, pas pour un
+  /// accompagnant qui fait manger l'enfant. Les allergies restent
+  /// affichées dans leur propre section, toutes ensemble et sans
+  /// condition : ce que voit cette fiche est inchangé de ce côté.
+  ///
+  /// Première information du profil Activités à apparaître sur cette
+  /// fiche, jusqu'ici construite uniquement à partir du profil santé.
+  List<String> get _chokingRiskLines {
+    final meals = child.activityProfile?.meals;
+
+    if (meals == null || meals.hasChokingRisk != true) {
+      return [];
+    }
+
+    final preparations = <String>[];
+
+    for (final preparation in MealPreparation.values) {
+      if (!meals.preparations.contains(preparation)) {
+        continue;
+      }
+
+      if (preparation == MealPreparation.other) {
+        final details = meals.otherPreparationDetails?.trim();
+
+        if (details != null && details.isNotEmpty) {
+          preparations.add(details);
+        }
+
+        continue;
+      }
+
+      preparations.add(_mealPreparationLabels[preparation]!);
+    }
+
+    return [
+      preparations.isEmpty
+          ? 'Risque de fausse route ou d’étouffement pendant le repas.'
+          : 'Risque de fausse route ou d’étouffement pendant le '
+              'repas — préparation : ${preparations.join(', ')}.',
+    ];
+  }
+
+  static const Map<MealPreparation, String> _mealPreparationLabels = {
+    MealPreparation.smallPieces: 'couper en petits morceaux',
+    MealPreparation.minced: 'alimentation hachée',
+    MealPreparation.blended: 'alimentation mixée',
+    MealPreparation.thickenedDrinks: 'boissons épaissies',
+  };
+
   List<String> get _triggerFactorLines {
     final triggerFactors =
         child.essentialInformation.triggerFactors;
@@ -752,6 +804,11 @@ class EmergencyInfoSheetPage extends StatelessWidget {
             'Aucune allergie connue.',
           ),
 
+          if (_chokingRiskLines.isNotEmpty) ...[
+            pdfSectionTitle('Repas'),
+            ..._chokingRiskLines.map(pdfBullet),
+          ],
+
           if (_triggerFactorLines.isNotEmpty) ...[
             pdfSectionTitle(
               'Facteurs déclenchants et sensibilités',
@@ -1109,6 +1166,14 @@ class EmergencyInfoSheetPage extends StatelessWidget {
               lines: _allergyLines,
               emptyMessage: 'Aucune allergie connue.',
             ),
+
+            if (_chokingRiskLines.isNotEmpty)
+              _sectionCard(
+                title: 'Repas',
+                icon: Icons.restaurant_outlined,
+                lines: _chokingRiskLines,
+                emptyMessage: '',
+              ),
 
             if (_triggerFactorLines.isNotEmpty)
               _sectionCard(

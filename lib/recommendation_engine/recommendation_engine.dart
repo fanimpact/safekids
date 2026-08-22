@@ -14,6 +14,7 @@ import 'rules/medical_device_reminder_rules.dart';
 import 'rules/other_information_rules.dart';
 import 'rules/overnight_stay_rules.dart';
 import 'rules/safety_rules.dart';
+import 'rules/meals_rules.dart';
 import 'rules/toilets_rules.dart';
 import 'rules/transitions_rules.dart';
 import 'rules/transport_rules.dart';
@@ -65,6 +66,9 @@ class RecommendationEngine {
 
   final HealthConditionsRules _healthConditionsRules =
       const HealthConditionsRules();
+
+  final MealsRules _mealsRules =
+      const MealsRules();
 
   final MedicalDeviceReminderRules _medicalDeviceReminderRules =
       const MedicalDeviceReminderRules();
@@ -161,7 +165,17 @@ class RecommendationEngine {
       );
 
       recommendations.addAll(
-        _healthConditionsRules.evaluate(child),
+        _healthConditionsRules.evaluate(
+          child,
+          activitySession.activity,
+        ),
+      );
+
+      recommendations.addAll(
+        _mealsRules.evaluate(
+          child,
+          activitySession.activity,
+        ),
       );
 
       recommendations.addAll(

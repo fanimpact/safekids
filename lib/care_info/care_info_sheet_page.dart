@@ -6,6 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../models/complete_child_profile_data.dart';
+import '../models/meals_data.dart';
 import '../models/medical_device_data.dart';
 import '../models/transport_data.dart';
 import '../recommendation_engine/rules/environment_rules.dart';
@@ -285,11 +286,20 @@ class CareInfoSheetPage extends StatelessWidget {
     return lines;
   }
 
+  /// Allergies hors repas. Les allergies alimentaires sont affichées
+  /// avec la section Repas plus bas (22/08/2026) — au moment où elles
+  /// servent, plutôt qu'en vrac avec les pathologies. Une allergie
+  /// enregistrée sans type part aussi côté repas, par prudence : voir
+  /// `AllergyData.concernsMeals`.
   List<String> get _allergyLines {
     final lines = <String>[];
 
     for (final allergy
         in child.essentialInformation.allergies) {
+      if (allergy.concernsMeals) {
+        continue;
+      }
+
       final allergen = allergy.label?.trim();
 
       if (allergen == null || allergen.isEmpty) {
@@ -688,6 +698,203 @@ class CareInfoSheetPage extends StatelessWidget {
     return lines;
   }
 
+  /// Section Repas (profil Activités), affichée en entier sur cette
+  /// fiche : contrairement à la fiche de recommandations d'activité,
+  /// elle ne dépend d'aucune activité précise et montre tout ce qui
+  /// est renseigné.
+  ///
+  /// Les allergies alimentaires y sont reprises depuis le profil
+  /// santé, jamais ressaisies dans le questionnaire Repas.
+  List<String> get _mealsLines {
+    final lines = <String>[];
+
+    for (final allergy
+        in child.essentialInformation.allergies) {
+      if (!allergy.concernsMeals) {
+        continue;
+      }
+
+      final allergen = allergy.label?.trim();
+
+      if (allergen == null || allergen.isEmpty) {
+        continue;
+      }
+
+      final reaction = allergy.observedReaction?.trim();
+
+      lines.add(
+        reaction != null && reaction.isNotEmpty
+            ? 'Repas — allergie alimentaire : $allergen — '
+                'réaction : $reaction'
+            : 'Repas — allergie alimentaire : $allergen',
+      );
+    }
+
+    final meals = child.activityProfile?.meals;
+
+    if (meals == null) {
+      return lines;
+    }
+
+    if (meals.hasChokingRisk == true) {
+      final preparations = <String>[];
+
+      for (final preparation in MealPreparation.values) {
+        if (!meals.preparations.contains(preparation)) {
+          continue;
+        }
+
+        if (preparation == MealPreparation.other) {
+          final details = meals.otherPreparationDetails?.trim();
+
+          if (details != null && details.isNotEmpty) {
+            preparations.add(details);
+          }
+
+          continue;
+        }
+
+        preparations.add(_mealPreparationLabels[preparation]!);
+      }
+
+      lines.add(
+        preparations.isEmpty
+            ? 'Repas : risque de fausse route ou d’étouffement'
+            : 'Repas : risque de fausse route ou d’étouffement — '
+                'préparation : ${preparations.join(', ')}',
+      );
+    }
+
+    if (meals.requiresSpecificSeating == true) {
+      final details = meals.seatingDetails?.trim();
+
+      if (details != null && details.isNotEmpty) {
+        lines.add('Repas : installation particulière — $details');
+      }
+    }
+
+    if (meals.hasWarningSigns == true) {
+      final details = meals.warningSignsDetails?.trim();
+
+      if (details != null && details.isNotEmpty) {
+        lines.add('Repas : signes à surveiller — $details');
+      }
+    }
+
+    if (meals.requiresAssistance == true) {
+      final level = meals.assistanceLevel;
+
+      if (level != null) {
+        lines.add(
+          'Repas : ${_mealAssistanceLabels[level]!}',
+        );
+      }
+    }
+
+    if (meals.requiresSpecialEquipment == true) {
+      final details = meals.specialEquipmentDetails?.trim();
+
+      if (details != null && details.isNotEmpty) {
+        lines.add('Repas : matériel nécessaire — $details');
+      }
+    }
+
+    if (meals.requiresIncreasedHydration == true) {
+      lines.add(
+        'Repas : hydratation renforcée nécessaire pour raison '
+        'médicale',
+      );
+    }
+
+    if (meals.hasDietaryRestrictions == true) {
+      final restrictions = <String>[];
+
+      for (final restriction in MealDietaryRestriction.values) {
+        if (!meals.dietaryRestrictions.contains(restriction)) {
+          continue;
+        }
+
+        if (restriction == MealDietaryRestriction.other) {
+          final details =
+              meals.otherDietaryRestrictionDetails?.trim();
+
+          if (details != null && details.isNotEmpty) {
+            restrictions.add(details);
+          }
+
+          continue;
+        }
+
+        restrictions.add(_mealRestrictionLabels[restriction]!);
+      }
+
+      if (restrictions.isNotEmpty) {
+        lines.add(
+          'Repas : aliments à ne pas donner — '
+          '${restrictions.join(', ')}',
+        );
+      }
+    }
+
+    if (meals.hasFoodRefusals == true) {
+      final details = meals.foodRefusalDetails?.trim();
+
+      if (details != null && details.isNotEmpty) {
+        final stance = meals.refusalStance;
+
+        lines.add(
+          stance == null
+              ? 'Repas : aliments refusés ou mal tolérés — $details'
+              : 'Repas : aliments refusés ou mal tolérés — $details '
+                  '(${_mealRefusalStanceLabels[stance]!})',
+        );
+      }
+    }
+
+    if (meals.hasOtherInformation == true) {
+      final details = meals.otherInformationDetails?.trim();
+
+      if (details != null && details.isNotEmpty) {
+        lines.add('Repas : $details');
+      }
+    }
+
+    return lines;
+  }
+
+  static const Map<MealPreparation, String> _mealPreparationLabels = {
+    MealPreparation.smallPieces: 'couper en petits morceaux',
+    MealPreparation.minced: 'alimentation hachée',
+    MealPreparation.blended: 'alimentation mixée',
+    MealPreparation.thickenedDrinks: 'boissons épaissies',
+  };
+
+  static const Map<MealAssistanceLevel, String>
+      _mealAssistanceLabels = {
+    MealAssistanceLevel.adultNearby:
+        'mange seul, mais un adulte doit rester à côté de lui',
+    MealAssistanceLevel.helpWithSomeGestures:
+        'aide nécessaire sur certains gestes (couper, ouvrir, '
+            'porter à la bouche)',
+    MealAssistanceLevel.fullyFedByAdult:
+        'doit être nourri entièrement par un adulte',
+  };
+
+  static const Map<MealDietaryRestriction, String>
+      _mealRestrictionLabels = {
+    MealDietaryRestriction.glutenFree: 'sans gluten',
+    MealDietaryRestriction.lactoseFree: 'sans lactose',
+    MealDietaryRestriction.porkFree: 'sans porc',
+    MealDietaryRestriction.vegetarian: 'végétarien',
+  };
+
+  static const Map<MealRefusalStance, String>
+      _mealRefusalStanceLabels = {
+    MealRefusalStance.insist: 'insister',
+    MealRefusalStance.doNotInsist: 'ne pas insister',
+    MealRefusalStance.offerWithoutInsisting: 'proposer sans insister',
+  };
+
   String _transportModeLabel(TransportMode mode) {
     return switch (mode) {
       TransportMode.car => 'voiture',
@@ -848,6 +1055,8 @@ class CareInfoSheetPage extends StatelessWidget {
     lines.addAll(_overnightStayLines);
 
     lines.addAll(_dailyLifeLines);
+
+    lines.addAll(_mealsLines);
 
     return lines;
   }

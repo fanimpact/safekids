@@ -4,7 +4,7 @@ import '../controllers/activity_profile_controller.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_text_field.dart';
 import '../widgets/sk_yes_no_field.dart';
-import 'other_information_page.dart';
+import 'meals_page.dart';
 
 class SafetyPage extends StatefulWidget {
   final ActivityProfileController activityProfileController;
@@ -126,7 +126,7 @@ class _SafetyPageState extends State<SafetyPage> {
       context,
       MaterialPageRoute(
         builder: (context) =>
-            OtherInformationPage(
+            MealsPage(
           activityProfileController:
               widget
                   .activityProfileController,

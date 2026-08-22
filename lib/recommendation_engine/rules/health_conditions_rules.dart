@@ -1,3 +1,4 @@
+import '../../models/activity_session/activity_session_data.dart';
 import '../../models/complete_child_profile_data.dart';
 import '../models/recommendation.dart';
 import '../models/recommendation_category.dart';
@@ -19,11 +20,19 @@ import '../models/recommendation_category.dart';
 /// réécrite à la main dans la page (`_allergyTexts`) et dans le
 /// snapshot de partage. Ces copies locales ont été supprimées ; ne pas
 /// les réintroduire, sous peine de recréer le doublon.
+///
+/// Quand l'activité comprend un repas, les allergies concernées par le
+/// repas sont laissées à `MealsRules`, qui les rattache au moment du
+/// repas plutôt que de les isoler en haut de fiche (22/08/2026) — d'où
+/// le paramètre [activity]. Sans repas prévu, elles restent affichées
+/// ici, exactement comme avant : le repas déplace l'information, il ne
+/// la fait jamais disparaître.
 class HealthConditionsRules {
   const HealthConditionsRules();
 
   List<Recommendation> evaluate(
     CompleteChildProfileData child,
+    ActivitySessionData activity,
   ) {
     final recommendations = <Recommendation>[];
 
@@ -53,6 +62,11 @@ class HealthConditionsRules {
     }
 
     for (final allergy in essentialInformation.allergies) {
+      // Laissée à MealsRules, qui la rattache au moment du repas.
+      if (activity.hasMeal == true && allergy.concernsMeals) {
+        continue;
+      }
+
       final allergen = allergy.label?.trim();
 
       if (allergen == null || allergen.isEmpty) {

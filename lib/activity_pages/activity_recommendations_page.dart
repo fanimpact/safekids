@@ -551,6 +551,10 @@ class _ActivityRecommendationsPageState
       return 'Nuit';
     }
 
+    if (id.startsWith('meals_')) {
+      return 'Repas';
+    }
+
     if (id.startsWith('transport_')) {
       return 'Transport';
     }
@@ -954,6 +958,7 @@ class _ActivityRecommendationsPageState
     const preferredOrder = [
       'Baignade / Eau',
       'Nuit',
+      'Repas',
       'Transport',
       'Marche / Effort',
       'Extérieur',
@@ -1410,6 +1415,7 @@ class _ActivityRecommendationsPageState
     const preferredOrder = [
       'Baignade / Eau',
       'Nuit',
+      'Repas',
       'Transport',
       'Marche / Effort',
       'Extérieur',

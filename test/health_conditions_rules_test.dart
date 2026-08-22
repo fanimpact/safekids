@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kidsrelay/models/activity_session/activity_session_data.dart';
 import 'package:kidsrelay/models/allergy_data.dart';
 import 'package:kidsrelay/models/child_profile_data.dart';
 import 'package:kidsrelay/models/complete_child_profile_data.dart';
@@ -57,7 +58,7 @@ void main() {
         ],
       );
 
-      final recommendations = rules.evaluate(child);
+      final recommendations = rules.evaluate(child, ActivitySessionData());
 
       expect(
         recommendations
@@ -86,7 +87,7 @@ void main() {
         ],
       );
 
-      final recommendations = rules.evaluate(child);
+      final recommendations = rules.evaluate(child, ActivitySessionData());
 
       expect(
         recommendations
@@ -116,7 +117,7 @@ void main() {
         ],
       );
 
-      final recommendations = rules.evaluate(child);
+      final recommendations = rules.evaluate(child, ActivitySessionData());
 
       expect(
         recommendations
@@ -140,7 +141,7 @@ void main() {
         ],
       );
 
-      final recommendations = rules.evaluate(child);
+      final recommendations = rules.evaluate(child, ActivitySessionData());
 
       expect(recommendations, isEmpty);
     },

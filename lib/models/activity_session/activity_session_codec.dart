@@ -41,6 +41,7 @@ class ActivitySessionCodec {
       'hasLargeCrowd': activity.hasLargeCrowd,
       'hasConfinedSpace': activity.hasConfinedSpace,
       'hasClothingChange': activity.hasClothingChange,
+      'hasMeal': activity.hasMeal,
     };
   }
 
@@ -119,6 +120,7 @@ class ActivitySessionCodec {
           description['hasConfinedSpace'] as bool?,
       hasClothingChange:
           description['hasClothingChange'] as bool?,
+      hasMeal: description['hasMeal'] as bool?,
     );
   }
 
