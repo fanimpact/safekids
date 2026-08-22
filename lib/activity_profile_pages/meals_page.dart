@@ -74,11 +74,6 @@ class _MealsPageState extends State<MealsPage> {
     MealDietaryRestriction.other: 'Autre',
   };
 
-  static const Map<MealRefusalStance, String> _refusalStanceLabels = {
-    MealRefusalStance.insist: 'Oui',
-    MealRefusalStance.doNotInsist: 'Non',
-  };
-
   MealsData get _data =>
       widget.activityProfileController.draft.meals;
 
@@ -704,11 +699,16 @@ class _MealsPageState extends State<MealsPage> {
 
             const SizedBox(height: 16),
 
-            _buildSingleChoice<MealRefusalStance>(
+            SkYesNoField(
               label: 'L’accompagnant doit-il insister ?',
-              labels: _refusalStanceLabels,
-              value: _refusalStance,
-              onChanged: _updateRefusalStance,
+              value: _refusalStance == null
+                  ? null
+                  : _refusalStance == MealRefusalStance.insist,
+              onChanged: (value) => _updateRefusalStance(
+                value
+                    ? MealRefusalStance.insist
+                    : MealRefusalStance.doNotInsist,
+              ),
             ),
           ],
 

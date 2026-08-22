@@ -236,6 +236,51 @@ void main() {
 
   group('Sous-questions', () {
     testWidgets(
+      '"L’accompagnant doit-il insister ?" est un Oui/Non comme le '
+      'reste des questionnaires',
+      (tester) async {
+        final controller = ActivityProfileController();
+        await pumpPage(tester, controller);
+
+        await answer(
+          tester,
+          'aliments que votre enfant refuse',
+          true,
+        );
+
+        // Uniformisé le 22/08/2026 : la question était rendue en
+        // boutons radio, héritage de l'époque où elle avait une
+        // troisième option.
+        final field = yesNoField('doit-il insister');
+
+        expect(field, findsOneWidget);
+        expect(
+          tester.widget<SkYesNoField>(field).value,
+          isNull,
+          reason: 'Aucune réponse présélectionnée, comme ailleurs.',
+        );
+
+        tester.widget<SkYesNoField>(field).onChanged(true);
+        await tester.pumpAndSettle();
+
+        expect(
+          controller.draft.meals.refusalStance,
+          equals(MealRefusalStance.insist),
+        );
+
+        tester.widget<SkYesNoField>(
+          yesNoField('doit-il insister'),
+        ).onChanged(false);
+        await tester.pumpAndSettle();
+
+        expect(
+          controller.draft.meals.refusalStance,
+          equals(MealRefusalStance.doNotInsist),
+        );
+      },
+    );
+
+    testWidgets(
       'Les précisions n’apparaissent qu’après un "Oui"',
       (tester) async {
         await pumpPage(tester, ActivityProfileController());

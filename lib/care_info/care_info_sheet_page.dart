@@ -855,11 +855,41 @@ class CareInfoSheetPage extends StatelessWidget {
       final details = meals.otherInformationDetails?.trim();
 
       if (details != null && details.isNotEmpty) {
-        lines.add('Repas : $details');
+        // Intitulé explicite : sans lui, la ligne se lisait
+        // "Repas : <texte>", sans dire de quelle question elle
+        // répondait — la seule du bloc dans ce cas.
+        lines.add('Repas — autre information : $details');
       }
     }
 
     return lines;
+  }
+
+  /// Matériel de repas, repris dans le récapitulatif "Matériel à
+  /// prévoir" en bas de fiche : c'est là que l'accompagnant lit sa
+  /// liste de préparation d'un coup d'œil, et un verre à bec ou des
+  /// couverts adaptés s'y emportent au même titre qu'un dispositif
+  /// médical.
+  ///
+  /// Volontairement redondant avec la ligne "Repas : matériel
+  /// nécessaire" de la section du dessus, comme l'équipement l'est
+  /// déjà sur la fiche de recommandations d'activité (bloc de
+  /// situation + récapitulatif) : les deux endroits répondent à deux
+  /// moments de lecture différents.
+  List<String> get _mealEquipmentLines {
+    final meals = child.activityProfile?.meals;
+
+    if (meals == null || meals.requiresSpecialEquipment != true) {
+      return [];
+    }
+
+    final details = meals.specialEquipmentDetails?.trim();
+
+    if (details == null || details.isEmpty) {
+      return [];
+    }
+
+    return ['Repas : $details'];
   }
 
   static const Map<MealPreparation, String> _mealPreparationLabels = {
@@ -1144,13 +1174,18 @@ class CareInfoSheetPage extends StatelessWidget {
 
   // ---------------------------------------------------------------------
   // Section 3 — "Matériel à prévoir".
-  // Uniquement les dispositifs à emporter/préparer pour chaque sortie.
+  // Tout ce qui est à emporter/préparer pour chaque sortie : les
+  // dispositifs médicaux, et le matériel de repas (corrigé le
+  // 22/08/2026 — cette section ne listait que les dispositifs, alors
+  // qu'un verre à bec ou des couverts adaptés s'oublient tout autant).
   // Les dispositifs portés/implantés en permanence sont mentionnés dans
   // la section 1 à la place, une seule fois au total.
   // ---------------------------------------------------------------------
 
-  List<String> get _equipmentLines =>
-      _equipmentToBringLines;
+  List<String> get _equipmentLines => [
+        ..._equipmentToBringLines,
+        ..._mealEquipmentLines,
+      ];
 
   List<String> get _contactLines {
     final contacts = [

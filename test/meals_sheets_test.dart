@@ -107,6 +107,87 @@ void main() {
 
   group('Fiche "Ce qu’il faut savoir sur..."', () {
     testWidgets(
+      'La réponse "autre chose à savoir" porte un intitulé explicite',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: CareInfoSheetPage(
+              child: buildChild(meals: fullMeals()),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Repas — autre information : Mange lentement'),
+          findsOneWidget,
+          reason:
+              'Corrigé le 22/08/2026 : la ligne se lisait "Repas : '
+              'Mange lentement", sans dire de quelle question elle '
+              'répondait.',
+        );
+      },
+    );
+
+    testWidgets(
+      'Le matériel de repas figure aussi dans "Matériel à prévoir"',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: CareInfoSheetPage(
+              child: buildChild(meals: fullMeals()),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // La fiche est une ListView : le récapitulatif du bas n'est
+        // construit qu'une fois atteint.
+        final list = find.byType(Scrollable).first;
+
+        await tester.scrollUntilVisible(
+          find.text('Matériel à prévoir'),
+          300,
+          scrollable: list,
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Matériel à prévoir'), findsOneWidget);
+
+        expect(
+          find.text('Repas : Verre à bec'),
+          findsOneWidget,
+          reason:
+              'Corrigé le 22/08/2026 : ce récapitulatif ne listait que '
+              'les dispositifs médicaux, alors qu’un verre à bec '
+              's’oublie tout autant. C’est la liste de préparation de '
+              'l’accompagnant.',
+        );
+      },
+    );
+
+    testWidgets(
+      'Sans matériel de repas, le récapitulatif ne l’invente pas',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: CareInfoSheetPage(
+              child: buildChild(
+                meals: MealsData(
+                  requiresSpecialEquipment: false,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Repas : '), findsNothing);
+        expect(find.text('Matériel à prévoir'), findsNothing);
+      },
+    );
+
+    testWidgets(
       'Affiche toute la section Repas',
       (tester) async {
         await tester.pumpWidget(
