@@ -151,7 +151,11 @@ class MealsRules {
             category:
                 RecommendationCategory.additionalInformation,
             childId: childId,
-            text: 'Repas : $details',
+            // Même intitulé que sur "Ce qu'il faut savoir sur..."
+            // (22/08/2026) : sans lui, la ligne se lisait "Repas :
+            // <texte>" au milieu des points importants, sans dire de
+            // quelle question elle répondait.
+            text: 'Repas — autre information : $details',
           ),
         );
       }

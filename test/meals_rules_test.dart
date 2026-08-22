@@ -486,6 +486,74 @@ void main() {
         );
       },
     );
+
+    test(
+      'La réponse "autre chose à savoir" porte son intitulé, comme '
+      'sur "Ce qu’il faut savoir sur..."',
+      () {
+        final child = buildChild(
+          meals: MealsData(
+            hasOtherInformation: true,
+            otherInformationDetails: 'Mange lentement',
+          ),
+        );
+
+        final recommendation = findById(
+          rules.evaluate(child, session(hasMeal: true)),
+          'meals_other_information',
+        );
+
+        expect(
+          recommendation!.text,
+          equals('Repas — autre information : Mange lentement'),
+          reason:
+              'Corrigé le 22/08/2026 : la fiche d’activité affichait '
+              'encore "Repas : <texte>" alors que la fiche de garde '
+              'portait déjà l’intitulé.',
+        );
+      },
+    );
+
+    test(
+      'Toutes les lignes repas disent de quoi elles parlent',
+      () {
+        final child = buildChild(
+          meals: MealsData(
+            hasChokingRisk: true,
+            requiresSpecificSeating: true,
+            seatingDetails: 'Chaise à accoudoirs',
+            hasWarningSigns: true,
+            warningSignsDetails: 'Toux répétée',
+            requiresAssistance: true,
+            assistanceLevel: MealAssistanceLevel.adultNearby,
+            requiresSpecialEquipment: true,
+            specialEquipmentDetails: 'Verre à bec',
+            requiresIncreasedHydration: true,
+            hasDietaryRestrictions: true,
+            dietaryRestrictions: {MealDietaryRestriction.glutenFree},
+            hasFoodRefusals: true,
+            foodRefusalDetails: 'Légumes verts',
+            refusalStance: MealRefusalStance.doNotInsist,
+            hasOtherInformation: true,
+            otherInformationDetails: 'Mange lentement',
+          ),
+        );
+
+        // Aucune ligne ne doit se réduire à "Repas : <texte>" : sortie
+        // de son contexte, elle ne dirait pas à quelle question elle
+        // répond.
+        for (final recommendation
+            in rules.evaluate(child, session(hasMeal: true))) {
+          expect(
+            recommendation.text.startsWith('Repas : '),
+            isFalse,
+            reason:
+                'Ligne sans intitulé : "${recommendation.text}" '
+                '(${recommendation.id}).',
+          );
+        }
+      },
+    );
   });
 
   group('Masquabilité', () {
