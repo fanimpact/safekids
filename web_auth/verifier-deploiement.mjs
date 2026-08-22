@@ -99,15 +99,20 @@ for (const nom of FICHIERS) {
 
 console.log('');
 
+// `process.exitCode` plutôt que `process.exit()` : couper le processus
+// pendant que les connexions de `fetch` se referment fait planter Node
+// sur Windows (assertion libuv), avec un code de sortie parasite — le
+// script affichait le bon résultat mais ressortait en échec, ce qui
+// aurait fait passer un contrôle automatisé pour une alerte.
 if (toutConforme) {
   console.log(
     'La page en ligne correspond exactement au dépôt.',
   );
-  process.exit(0);
-}
+} else {
+  console.log(
+    'Écart détecté : redéposez les fichiers de '
+    + 'web_auth/public/ouvrir-lien-email/ sur l’hébergement.',
+  );
 
-console.log(
-  'Écart détecté : redéposez les fichiers de '
-  + 'web_auth/public/ouvrir-lien-email/ sur l’hébergement.',
-);
-process.exit(1);
+  process.exitCode = 1;
+}
