@@ -11,6 +11,14 @@ import '../utils/treatment_audience.dart';
 /// tel quel, sans jamais le recalculer : le moteur de recommandations
 /// n'existe qu'en Dart/Flutter, pas dans les Edge Functions Deno qui
 /// servent le lien.
+///
+/// Corrigé (22/08/2026) : les allergies étaient ajoutées ici une
+/// seconde fois, par une liste de textes reconstruite à la main à
+/// partir du profil santé, alors que `HealthConditionsRules` les
+/// produit déjà comme recommandations `informationVigilance`, reprises
+/// par `textsFor`. Chaque allergie apparaissait donc en double dans
+/// "Points importants" du lien partagé. Cette copie locale a été
+/// supprimée : le moteur est la seule source.
 class ActivityRecommendationSnapshot {
   static Map<String, dynamic> build({
     required CompleteActivitySessionData activitySession,
@@ -37,23 +45,6 @@ class ActivityRecommendationSnapshot {
           .toList();
     }
 
-    final allergyTexts = child.essentialInformation.allergies
-        .map((allergy) {
-          final allergen = allergy.allergen?.trim();
-
-          if (allergen == null || allergen.isEmpty) {
-            return null;
-          }
-
-          final reaction = allergy.observedReaction?.trim();
-
-          return (reaction != null && reaction.isNotEmpty)
-              ? 'Allergie : $allergen — Réaction connue : $reaction'
-              : 'Allergie : $allergen';
-        })
-        .whereType<String>()
-        .toList();
-
     final pointsImportants = [
       ...recommendationResult.globalRecommendations
           .where(
@@ -62,7 +53,6 @@ class ActivityRecommendationSnapshot {
                 RecommendationCategory.informationVigilance,
           )
           .map((recommendation) => recommendation.text),
-      ...allergyTexts,
       ...textsFor([
         RecommendationCategory.informationVigilance,
         RecommendationCategory.additionalInformation,

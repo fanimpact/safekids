@@ -24,6 +24,16 @@ import 'activities_home_page.dart';
 import 'activity_child_selection_page.dart';
 import 'activity_water_page.dart';
 
+/// Corrigé (22/08/2026) : cette page reconstruisait la liste des
+/// allergies à la main (`_allergyTexts`) et l'affichait en puces non
+/// masquables, alors que `HealthConditionsRules` produit déjà une
+/// recommandation par allergie. Chaque allergie apparaissait donc deux
+/// fois dans "Points importants", à l'écran comme au PDF, avec deux
+/// formulations légèrement différentes — et masquer l'une laissait
+/// l'autre affichée, rendant le geste sans effet. La copie locale a été
+/// supprimée : le moteur est la seule source des allergies ici. Ces
+/// recommandations sont critiques, donc jamais masquables (voir
+/// `HealthConditionsRules`).
 class ActivityRecommendationsPage extends StatefulWidget {
   final CompleteActivitySessionData activitySession;
   final ActivityRecommendationResult recommendationResult;
@@ -517,47 +527,6 @@ class _ActivityRecommendationsPageState
         .toList();
   }
 
-  List<String> _allergyTexts(
-    String childId,
-  ) {
-    final child = widget.findChild(
-      childId,
-    );
-
-    if (child == null) {
-      return [];
-    }
-
-    final texts = <String>[];
-
-    for (final allergy
-        in child.essentialInformation.allergies) {
-      final allergen =
-          allergy.allergen?.trim();
-
-      if (allergen == null ||
-          allergen.isEmpty) {
-        continue;
-      }
-
-      final reaction =
-          allergy.observedReaction?.trim();
-
-      if (reaction != null &&
-          reaction.isNotEmpty) {
-        texts.add(
-          'Allergie : $allergen — Réaction connue : $reaction',
-        );
-      } else {
-        texts.add(
-          'Allergie : $allergen',
-        );
-      }
-    }
-
-    return texts;
-  }
-
   bool _isSituationRecommendation(
     Recommendation recommendation,
   ) {
@@ -711,41 +680,6 @@ class _ActivityRecommendationsPageState
           fontSize: 17,
           fontWeight: FontWeight.w700,
         ),
-      ),
-    );
-  }
-
-  Widget _buildBullet(
-    String text,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(
-        bottom: 8,
-      ),
-      child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(
-              top: 7,
-            ),
-            child: Icon(
-              Icons.circle,
-              size: 6,
-            ),
-          ),
-          const SizedBox(width: 9),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 15,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -915,9 +849,6 @@ class _ActivityRecommendationsPageState
             .informationVigilance,
       );
 
-      final allergyTexts =
-          _allergyTexts(childId);
-
       final additionalInformation =
           _recommendationsForChildAndCategory(
         result,
@@ -927,7 +858,6 @@ class _ActivityRecommendationsPageState
       );
 
       if (vigilanceRecommendations.isEmpty &&
-          allergyTexts.isEmpty &&
           additionalInformation.isEmpty) {
         continue;
       }
@@ -942,9 +872,6 @@ class _ActivityRecommendationsPageState
                 CrossAxisAlignment.start,
             children: [
               _buildChildTitle(childId),
-
-              for (final text in allergyTexts)
-                _buildBullet(text),
 
               _buildMaskableList(
                 'important_$childId',
@@ -1435,8 +1362,6 @@ class _ActivityRecommendationsPageState
         RecommendationCategory.informationVigilance,
       );
 
-      final allergyTexts = _allergyTexts(childId);
-
       final additionalInformation =
           _recommendationsForChildAndCategory(
         result,
@@ -1445,16 +1370,11 @@ class _ActivityRecommendationsPageState
       );
 
       if (vigilanceRecommendations.isEmpty &&
-          allergyTexts.isEmpty &&
           additionalInformation.isEmpty) {
         continue;
       }
 
       childBlocks.add(_pdfChildTitle(childId));
-
-      for (final text in allergyTexts) {
-        childBlocks.add(pdfBullet(text));
-      }
 
       for (final recommendation in vigilanceRecommendations) {
         childBlocks.add(pdfBullet(recommendation.text));

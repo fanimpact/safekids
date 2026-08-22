@@ -11,6 +11,14 @@ import '../models/recommendation_category.dart';
 /// d'urgence — alors qu'elle est toujours affichée sur la fiche
 /// secours et "Ce qu'il faut savoir sur...". Le risque doit être
 /// signalé même sans traitement enregistré.
+///
+/// Corrigé (22/08/2026) : cette règle est désormais la SEULE source
+/// des allergies sur la fiche de recommandations d'activité et sur le
+/// lien de partage. Les deux affichaient auparavant chaque allergie en
+/// double — une fois par cette règle, une fois par une liste de textes
+/// réécrite à la main dans la page (`_allergyTexts`) et dans le
+/// snapshot de partage. Ces copies locales ont été supprimées ; ne pas
+/// les réintroduire, sous peine de recréer le doublon.
 class HealthConditionsRules {
   const HealthConditionsRules();
 
@@ -61,6 +69,13 @@ class HealthConditionsRules {
           text: reaction != null && reaction.isNotEmpty
               ? 'Allergie : $allergen — réaction : $reaction.'
               : 'Allergie : $allergen.',
+          // Toujours critique, donc jamais masquable, qu'un traitement
+          // d'urgence soit lié ou non à cette allergie (arbitrage
+          // Fanny du 22/08/2026) : une allergie ne doit jamais pouvoir
+          // disparaître d'une fiche. C'est ce qui préserve le
+          // comportement d'avant la suppression de `_allergyTexts`,
+          // dont les puces n'étaient pas masquables.
+          isCritical: true,
         ),
       );
     }
