@@ -358,6 +358,28 @@ class _DiagnosedPathologiesPageState
           (pathology) => pathology.hasReferringProfessional == null,
         );
 
+    // Le nom est ce qui fait exister la pathologie sur les fiches :
+    // sans lui, elle est sautée par le moteur comme par les deux
+    // fiches de référence (voir HealthConditionsRules). Elle serait
+    // donc enregistrée et affichée nulle part — un silence bien plus
+    // dangereux qu'un blocage de saisie (arbitrage Fanny du
+    // 22/08/2026).
+    final hasUnnamedPathology = _hasPathologies == true &&
+        draft.pathologies.any(
+          (pathology) => (pathology.name ?? '').trim().isEmpty,
+        );
+
+    if (hasUnnamedPathology) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Nommez chaque pathologie avant de continuer.",
+          ),
+        ),
+      );
+      return;
+    }
+
     // Le type conditionne l'endroit où l'allergie ressort sur les
     // fiches (une allergie alimentaire remonte au moment du repas) :
     // une allergie sans type cochée n'est donc pas exploitable, d'où
@@ -373,6 +395,30 @@ class _DiagnosedPathologiesPageState
         const SnackBar(
           content: Text(
             "Indiquez le type de chaque allergie avant de continuer.",
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Même raison que le nom de la pathologie : c'est la précision du
+    // type coché qui compose le libellé affiché (`AllergyData.label`).
+    // Un type coché sans précision donne un libellé vide, et
+    // l'allergie disparaît de toutes les fiches sans que rien ne le
+    // signale.
+    final hasCategoryWithoutDetail = _hasAllergies == true &&
+        draft.allergies.any(
+          (allergy) => allergy.categories.any(
+            (category) =>
+                (allergy.details[category] ?? '').trim().isEmpty,
+          ),
+        );
+
+    if (hasCategoryWithoutDetail) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Précisez chaque type d'allergie coché avant de continuer.",
           ),
         ),
       );

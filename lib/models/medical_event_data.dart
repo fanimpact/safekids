@@ -26,6 +26,30 @@ class MedicalEventData {
     this.importantExaminations,
   });
 
+  /// Bloc ajouté puis laissé entièrement vide : aucun texte saisi, et
+  /// aucune des quatre questions Oui/Non répondue. Retiré sans rien
+  /// dire au moment de continuer, plutôt que de bloquer le parent sur
+  /// un bloc qu'il n'a jamais commencé à remplir.
+  ///
+  /// Dès qu'un seul champ est renseigné, l'événement n'est plus vide
+  /// et redevient soumis à sa validation : un antécédent médical à
+  /// moitié saisi serait inexploitable par un accompagnant.
+  ///
+  /// Sert aussi à débloquer les profils enregistrés avant le
+  /// 19/08/2026, quand la page insérait une entrée vide d'office et la
+  /// sauvegardait en silence.
+  bool get isEmpty {
+    return (description ?? '').trim().isEmpty &&
+        (approximateDate ?? '').trim().isEmpty &&
+        (hospitalName ?? '').trim().isEmpty &&
+        (hospitalizationDuration ?? '').trim().isEmpty &&
+        (importantExaminations ?? '').trim().isEmpty &&
+        emergencyServicesCalled == null &&
+        emergencyTreatmentGiven == null &&
+        hospitalized == null &&
+        importantExaminationsPerformed == null;
+  }
+
   Map<String, dynamic> toJson() => {
         'description': description,
         'approximateDate': approximateDate,

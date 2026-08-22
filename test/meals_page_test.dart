@@ -92,9 +92,30 @@ void main() {
 
   group('Encart en tête de section', () {
     testWidgets(
-      'Nomme l’enfant et annonce que les allergies sont reprises '
-      'automatiquement',
+      'Annonce la reprise automatique sans affirmer que l’enfant a '
+      'des allergies',
       (tester) async {
+        await pumpPage(tester, ActivityProfileController());
+
+        expect(
+          find.textContaining(
+            'Si votre enfant a des allergies alimentaires, inutile '
+            'de les ressaisir ici : elles seront reprises '
+            'automatiquement depuis son profil santé.',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'Le texte est le même quel que soit le profil ouvert',
+      (tester) async {
+        // Reformulé le 22/08/2026 : l'encart nommait l'enfant et
+        // affirmait que ses allergies alimentaires étaient reprises,
+        // ce qui est faux pour un enfant qui n'en a aucune. Le texte
+        // est désormais conditionnel et ne dépend plus du profil —
+        // donc identique avec ou sans enfant résolu.
         ChildRepository.instance.seedForTesting(
           ChildProfileData(
             childId: 'enfant-repas',
@@ -125,23 +146,17 @@ void main() {
 
         expect(
           find.textContaining(
-            'repris automatiquement depuis le profil santé de Camille',
+            'Si votre enfant a des allergies alimentaires',
           ),
           findsOneWidget,
         );
-      },
-    );
-
-    testWidgets(
-      'Reste lisible quand le prénom n’est pas encore connu',
-      (tester) async {
-        await pumpPage(tester, ActivityProfileController());
 
         expect(
-          find.textContaining(
-            'depuis le profil santé de votre enfant',
-          ),
-          findsOneWidget,
+          find.textContaining('Camille'),
+          findsNothing,
+          reason:
+              'L’encart ne doit plus personnaliser : il parle d’un cas '
+              'hypothétique, pas de cet enfant-là.',
         );
       },
     );

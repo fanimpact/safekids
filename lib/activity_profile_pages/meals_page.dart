@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../controllers/activity_profile_controller.dart';
 import '../models/meals_data.dart';
-import '../repositories/child_repository.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_text_field.dart';
 import '../widgets/sk_yes_no_field.dart';
@@ -136,29 +135,6 @@ class _MealsPageState extends State<MealsPage> {
     _otherInformationController.dispose();
 
     super.dispose();
-  }
-
-  /// Prénom de l'enfant pour l'encart en tête de section, résolu comme
-  /// la page Eau résout la vigilance aquatique : depuis le profil déjà
-  /// enregistré. Repli neutre tant qu'il n'est pas disponible (création
-  /// d'un profil, par exemple).
-  String get _firstName {
-    final childId = widget.activityProfileController.draft.childId;
-
-    if (childId == null) {
-      return 'votre enfant';
-    }
-
-    final firstName = ChildRepository.instance
-        .findByChildId(childId)
-        ?.essentialInformation
-        .identity
-        .firstName
-        ?.trim();
-
-    return firstName == null || firstName.isEmpty
-        ? 'votre enfant'
-        : firstName;
   }
 
   String? _trimmedOrNull(String value) {
@@ -478,11 +454,11 @@ class _MealsPageState extends State<MealsPage> {
               color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(
-              'Les allergies alimentaires et leurs traitements sont '
-              'repris automatiquement depuis le profil santé de '
-              '$_firstName. Pas besoin de les ressaisir ici.',
-              style: const TextStyle(
+            child: const Text(
+              'Si votre enfant a des allergies alimentaires, inutile '
+              'de les ressaisir ici : elles seront reprises '
+              'automatiquement depuis son profil santé.',
+              style: TextStyle(
                 fontSize: 14,
               ),
             ),

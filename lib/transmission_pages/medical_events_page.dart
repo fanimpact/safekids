@@ -96,13 +96,18 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
   }
 
   void _continue() {
+    // Un bloc ajouté puis laissé entièrement vide est abandonné sans
+    // rien demander : le parent n'a pas à décrire ou supprimer à la
+    // main quelque chose qu'il n'a jamais commencé à remplir. C'est
+    // aussi ce qui débloque les profils enregistrés avant le
+    // 19/08/2026, qui portent parfois une entrée vide insérée d'office
+    // par la version précédente de cette page.
+    setState(() {
+      widget.transmissionController.dropEmptyMedicalEntries();
+    });
+
     final medicalEvents =
         widget.transmissionController.formData.medicalEvents;
-
-    final medicalObservations = widget
-        .transmissionController
-        .formData
-        .medicalObservations;
 
     for (final event in medicalEvents) {
       if ((event.description ?? '').trim().isEmpty) {
@@ -131,18 +136,12 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
       }
     }
 
-    for (final observation in medicalObservations) {
-      if ((observation.description ?? '').trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Décrivez chaque observation médicale ajoutée, ou supprimez-la, avant de continuer.",
-            ),
-          ),
-        );
-        return;
-      }
-    }
+    // Aucune validation sur les observations médicales : c'est une
+    // information purement descriptive, jamais indispensable à la
+    // sécurité de l'enfant. Une observation dont un seul champ est
+    // renseigné (une conclusion sans description, par exemple) est
+    // conservée telle quelle ; les blocs restés vides ont déjà été
+    // retirés ci-dessus.
 
     Navigator.push(
       context,

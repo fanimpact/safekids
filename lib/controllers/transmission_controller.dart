@@ -393,6 +393,24 @@ class TransmissionController {
     }
   }
 
+  /// Retire les événements et observations ajoutés puis laissés
+  /// entièrement vides. Appelé au moment de continuer : un bloc qu'on
+  /// n'a jamais commencé à remplir est abandonné sans rien demander,
+  /// au lieu de bloquer la page.
+  ///
+  /// Débloque aussi les profils enregistrés avant le 19/08/2026, qui
+  /// peuvent porter en base une entrée vide insérée d'office par la
+  /// version précédente de la page.
+  void dropEmptyMedicalEntries() {
+    _draft.medicalEvents.removeWhere(
+      (event) => event.isEmpty,
+    );
+
+    _draft.medicalObservations.removeWhere(
+      (observation) => observation.isEmpty,
+    );
+  }
+
   void updateMedicalObservationDescription(
     int index,
     String value,

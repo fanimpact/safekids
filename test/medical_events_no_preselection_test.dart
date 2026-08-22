@@ -58,7 +58,8 @@ void main() {
   );
 
   testWidgets(
-    'Un événement ajouté mais laissé vide bloque Continuer',
+    'Un événement ajouté puis laissé entièrement vide est abandonné '
+    'sans bloquer',
     (tester) async {
       final controller = TransmissionController();
 
@@ -84,10 +85,65 @@ void main() {
 
       expect(
         find.textContaining('Décrivez chaque événement'),
-        findsOneWidget,
+        findsNothing,
         reason:
-            'Un événement ajouté sans description doit bloquer, pas '
-            'être enregistré vide en silence.',
+            'Corrigé le 22/08/2026 : un bloc qu’on n’a jamais commencé '
+            'à remplir ne doit pas obliger à le décrire ou à le '
+            'supprimer à la main.',
+      );
+
+      expect(
+        controller.formData.medicalEvents,
+        isEmpty,
+        reason:
+            'Il est retiré, pas enregistré vide en silence — c’est '
+            'précisément ce que faisait la version d’avant le '
+            '19/08/2026.',
+      );
+
+      expect(find.byType(TriggerFactorsPage), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Un événement commencé mais incomplet bloque encore',
+    (tester) async {
+      final controller = TransmissionController();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MedicalEventsPage(
+            transmissionController: controller,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.text('Ajouter un événement médical'),
+      );
+      await tester.pumpAndSettle();
+
+      // Une date seule, sans description : le bloc n'est plus vide,
+      // donc il redevient soumis à validation — un antécédent à
+      // moitié saisi serait inexploitable par un accompagnant.
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SkTextField &&
+              widget.label.contains('Date ou année'),
+        ),
+        'Mars 2025',
+      );
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Continuer'));
+      await tester.tap(find.text('Continuer'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('Décrivez chaque événement'),
+        findsOneWidget,
       );
       expect(find.byType(MedicalEventsPage), findsOneWidget);
 
