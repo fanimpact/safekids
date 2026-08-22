@@ -200,7 +200,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
         .essentialInformation
         .allergies
         .map(
-          (allergy) => allergy.allergen?.trim(),
+          (allergy) => allergy.label?.trim(),
         )
         .where(
           (allergen) =>

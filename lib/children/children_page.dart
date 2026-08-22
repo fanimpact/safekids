@@ -90,7 +90,7 @@ class ChildrenPage extends StatelessWidget {
 
     final allergyNames = essentialInformation.allergies
         .map(
-          (allergy) => allergy.allergen?.trim(),
+          (allergy) => allergy.label?.trim(),
         )
         .where(
           (allergen) =>

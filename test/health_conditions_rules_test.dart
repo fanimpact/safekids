@@ -77,7 +77,10 @@ void main() {
         allergies: [
           AllergyData(
             allergyId: 'a1',
-            allergen: 'Arachides',
+            categories: {AllergyCategory.food},
+            details: {
+              AllergyCategory.food: 'Arachides',
+            },
             observedReaction: 'Urticaire',
           ),
         ],
@@ -105,7 +108,10 @@ void main() {
         allergies: [
           AllergyData(
             allergyId: 'a2',
-            allergen: 'Fruits à coque',
+            categories: {AllergyCategory.food},
+            details: {
+              AllergyCategory.food: 'Fruits à coque',
+            },
           ),
         ],
       );

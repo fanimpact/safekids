@@ -524,8 +524,8 @@ class _TreatmentsPageState
     final allergies = draft.allergies
         .where(
           (allergy) =>
-              allergy.allergen != null &&
-              allergy.allergen!
+              allergy.label != null &&
+              allergy.label!
                   .trim()
                   .isNotEmpty,
         )
@@ -562,7 +562,7 @@ class _TreatmentsPageState
             controlAffinity:
                 ListTileControlAffinity.leading,
             title: Text(
-              allergy.allergen!.trim(),
+              allergy.label!.trim(),
             ),
             value: treatment
                 .relatedAllergyIds
@@ -594,8 +594,8 @@ class _TreatmentsPageState
     final allergies = draft.allergies
         .where(
           (allergy) =>
-              allergy.allergen != null &&
-              allergy.allergen!
+              allergy.label != null &&
+              allergy.label!
                   .trim()
                   .isNotEmpty,
         )
@@ -632,7 +632,7 @@ class _TreatmentsPageState
             controlAffinity:
                 ListTileControlAffinity.leading,
             title: Text(
-              allergy.allergen!.trim(),
+              allergy.label!.trim(),
             ),
             value: treatment
                 .relatedAllergyIds
@@ -1281,14 +1281,14 @@ class _TreatmentsPageState
             ) ...[
               Text(
                 allergies[index]
-                            .allergen !=
+                            .label !=
                         null &&
                         allergies[index]
-                            .allergen!
+                            .label!
                             .trim()
                             .isNotEmpty
                     ? allergies[index]
-                        .allergen!
+                        .label!
                         .trim()
                     : "Allergie n°${index + 1}",
                 style:

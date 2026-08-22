@@ -228,7 +228,10 @@ void main() {
         allergies: [
           AllergyData(
             allergyId: allergyId,
-            allergen: 'Guêpe',
+            categories: {AllergyCategory.insectSting},
+            details: {
+              AllergyCategory.insectSting: 'Guêpe',
+            },
           ),
         ],
         emergencyTreatments: [
@@ -313,7 +316,10 @@ void main() {
         allergies: [
           AllergyData(
             allergyId: allergyId,
-            allergen: 'Piqûres de guêpe',
+            categories: {AllergyCategory.insectSting},
+            details: {
+              AllergyCategory.insectSting: 'Piqûres de guêpe',
+            },
           ),
         ],
         emergencyTreatments: [
@@ -356,7 +362,10 @@ void main() {
         allergies: [
           AllergyData(
             allergyId: allergyId,
-            allergen: 'Piqûres de guêpe',
+            categories: {AllergyCategory.insectSting},
+            details: {
+              AllergyCategory.insectSting: 'Piqûres de guêpe',
+            },
           ),
         ],
         emergencyTreatments: [

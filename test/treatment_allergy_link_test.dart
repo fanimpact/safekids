@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kidsrelay/controllers/transmission_controller.dart';
+import 'package:kidsrelay/models/allergy_data.dart';
 
 void main() {
   test(
@@ -8,14 +9,26 @@ void main() {
       final controller = TransmissionController();
 
       controller.ensureFirstAllergy();
-      controller.updateAllergen(
+      controller.updateAllergyCategory(
         0,
+        AllergyCategory.insectSting,
+        true,
+      );
+      controller.updateAllergyDetail(
+        0,
+        AllergyCategory.insectSting,
         'Piqûres de guêpe',
       );
 
       controller.addAllergy();
-      controller.updateAllergen(
+      controller.updateAllergyCategory(
         1,
+        AllergyCategory.food,
+        true,
+      );
+      controller.updateAllergyDetail(
+        1,
+        AllergyCategory.food,
         'Arachide',
       );
 
@@ -72,14 +85,26 @@ void main() {
       final controller = TransmissionController();
 
       controller.ensureFirstAllergy();
-      controller.updateAllergen(
+      controller.updateAllergyCategory(
         0,
+        AllergyCategory.insectSting,
+        true,
+      );
+      controller.updateAllergyDetail(
+        0,
+        AllergyCategory.insectSting,
         'Piqûres de guêpe',
       );
 
       controller.addAllergy();
-      controller.updateAllergen(
+      controller.updateAllergyCategory(
         1,
+        AllergyCategory.food,
+        true,
+      );
+      controller.updateAllergyDetail(
+        1,
+        AllergyCategory.food,
         'Arachide',
       );
 
@@ -127,8 +152,14 @@ void main() {
       final controller = TransmissionController();
 
       controller.ensureFirstAllergy();
-      controller.updateAllergen(
+      controller.updateAllergyCategory(
         0,
+        AllergyCategory.insectSting,
+        true,
+      );
+      controller.updateAllergyDetail(
+        0,
+        AllergyCategory.insectSting,
         'Piqûres de guêpe',
       );
 
@@ -186,14 +217,26 @@ void main() {
       final controller = TransmissionController();
 
       controller.ensureFirstAllergy();
-      controller.updateAllergen(
+      controller.updateAllergyCategory(
         0,
+        AllergyCategory.insectSting,
+        true,
+      );
+      controller.updateAllergyDetail(
+        0,
+        AllergyCategory.insectSting,
         'Piqûres de guêpe',
       );
 
       controller.addAllergy();
-      controller.updateAllergen(
+      controller.updateAllergyCategory(
         1,
+        AllergyCategory.food,
+        true,
+      );
+      controller.updateAllergyDetail(
+        1,
+        AllergyCategory.food,
         'Arachide',
       );
 

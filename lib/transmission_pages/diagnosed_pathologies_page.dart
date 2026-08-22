@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../controllers/transmission_controller.dart';
+import '../models/allergy_data.dart';
+import '../utils/allergy_category_labels.dart';
 import '../utils/text_controller_cache.dart';
 import '../widgets/questionnaire_page.dart';
 import '../widgets/sk_text_field.dart';
@@ -255,6 +257,88 @@ class _DiagnosedPathologiesPageState
     );
   }
 
+  /// Remplace l'ancien champ unique "À quoi votre enfant est-il
+  /// allergique ?" : le type est coché, et c'est sa sous-question qui
+  /// porte la précision. Un seul endroit de saisie par information,
+  /// donc — le parent ne redit pas dans un champ libre ce que la case
+  /// dit déjà.
+  ///
+  /// Le type conditionne l'endroit où l'allergie ressort : une
+  /// allergie alimentaire remonte au moment du repas (voir
+  /// `AllergyData.concernsMeals`).
+  Widget _buildAllergyCategories(
+    int index,
+    AllergyData allergy,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          "De quel type est cette allergie ?",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+
+        const SizedBox(height: 4),
+
+        for (final category in AllergyCategory.values) ...[
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: Text(
+              allergyCategoryLabels[category]!,
+              style: const TextStyle(
+                fontSize: 16,
+              ),
+            ),
+            value: allergy.categories.contains(category),
+            onChanged: (value) {
+              setState(() {
+                widget.transmissionController
+                    .updateAllergyCategory(
+                  index,
+                  category,
+                  value ?? false,
+                );
+              });
+            },
+          ),
+
+          if (allergy.categories.contains(category)) ...[
+            const SizedBox(height: 8),
+
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 16,
+                bottom: 8,
+              ),
+              child: SkTextField(
+                label: allergyDetailLabels[category]!,
+                controller: _controllers.of(
+                  '${allergy.allergyId}_detail_${category.name}',
+                  allergy.details[category] ?? '',
+                ),
+                onChanged: (value) {
+                  widget.transmissionController
+                      .updateAllergyDetail(
+                    index,
+                    category,
+                    value,
+                  );
+                },
+                maxLength: 100,
+                helperText:
+                    "Réponse courte recommandée (quelques mots ou une phrase courte).",
+              ),
+            ),
+          ],
+        ],
+      ],
+    );
+  }
+
   void _continue() {
     if (_hasPathologies == null || _hasAllergies == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -273,6 +357,27 @@ class _DiagnosedPathologiesPageState
         draft.pathologies.any(
           (pathology) => pathology.hasReferringProfessional == null,
         );
+
+    // Le type conditionne l'endroit où l'allergie ressort sur les
+    // fiches (une allergie alimentaire remonte au moment du repas) :
+    // une allergie sans type cochée n'est donc pas exploitable, d'où
+    // l'obligation — même exigence que les Oui/Non ailleurs dans les
+    // questionnaires.
+    final hasUntypedAllergy = _hasAllergies == true &&
+        draft.allergies.any(
+          (allergy) => allergy.categories.isEmpty,
+        );
+
+    if (hasUntypedAllergy) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Indiquez le type de chaque allergie avant de continuer.",
+          ),
+        ),
+      );
+      return;
+    }
 
     if (hasUnansweredPathology) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -558,20 +663,9 @@ class _DiagnosedPathologiesPageState
 
               const SizedBox(height: 16),
 
-              SkTextField(
-                label:
-                    "À quoi votre enfant est-il allergique ?",
-                controller: _controllers.of(
-                  '${allergies[index].allergyId}_allergen',
-                  allergies[index]
-                          .allergen ??
-                      '',
-                ),
-                onChanged: (value) {
-                  widget.transmissionController
-                      .updateAllergen(
-                          index, value);
-                },
+              _buildAllergyCategories(
+                index,
+                allergies[index],
               ),
 
               const SizedBox(height: 20),

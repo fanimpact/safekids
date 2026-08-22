@@ -7,6 +7,8 @@ import 'package:printing/printing.dart';
 
 import '../models/complete_child_profile_data.dart';
 import '../models/trigger_factor_data.dart';
+import '../models/allergy_data.dart';
+import '../utils/allergy_category_labels.dart';
 import '../utils/date_format_utils.dart';
 import '../utils/pdf_text.dart';
 
@@ -250,12 +252,39 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
       final allergy = allergies[index];
 
       lines.add('Allergie n°${index + 1}');
-      lines.add(
-        _qaText(
-          'À quoi votre enfant est-il allergique ?',
-          allergy.allergen,
-        ),
-      );
+
+      if (allergy.categories.isEmpty) {
+        // Allergie enregistrée avant la catégorisation du 22/08/2026 :
+        // elle n'a que l'ancien champ libre, restitué tel quel plutôt
+        // qu'affiché comme "Non renseigné".
+        lines.add(
+          _qaText(
+            'À quoi votre enfant est-il allergique ?',
+            allergy.label,
+          ),
+        );
+      } else {
+        lines.add(
+          _qa(
+            'De quel type est cette allergie ?',
+            allergyCategoriesLabel(allergy),
+          ),
+        );
+
+        for (final category in AllergyCategory.values) {
+          if (!allergy.categories.contains(category)) {
+            continue;
+          }
+
+          lines.add(
+            _qaText(
+              allergyDetailLabels[category]!,
+              allergy.details[category],
+            ),
+          );
+        }
+      }
+
       lines.add(
         _qaText(
           'Réaction déjà observée',
@@ -578,7 +607,7 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
     for (final id in relatedAllergyIds) {
       for (final allergy in allergies) {
         if (allergy.allergyId == id) {
-          final name = allergy.allergen?.trim();
+          final name = allergy.label?.trim();
 
           if (name != null && name.isNotEmpty) {
             linkedNames.add(name);

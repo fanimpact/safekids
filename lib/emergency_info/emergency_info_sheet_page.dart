@@ -142,7 +142,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
 
     for (final allergy
         in child.essentialInformation.allergies) {
-      final allergen = allergy.allergen?.trim();
+      final allergen = allergy.label?.trim();
 
       final steps = allergy.emergencyInstructionSteps
           .map((step) => step.trim())
@@ -315,7 +315,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
 
     for (final allergy
         in child.essentialInformation.allergies) {
-      final allergen = allergy.allergen?.trim();
+      final allergen = allergy.label?.trim();
 
       if (allergen == null || allergen.isEmpty) {
         continue;

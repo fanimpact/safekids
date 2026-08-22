@@ -33,7 +33,10 @@ void main() {
       dailyTreatments: const [],
       discontinuedTreatments: const [],
       emergencyTreatments: const [],
-      allergies: [AllergyData(allergen: 'Arachides')],
+      allergies: [AllergyData(
+            categories: {AllergyCategory.food},
+            details: {AllergyCategory.food: 'Arachides'},
+          )],
       medicalDevices: const [],
       contacts: const [],
       primaryCareDoctor: PrimaryCareDoctorData(),

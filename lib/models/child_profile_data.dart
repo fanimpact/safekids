@@ -363,8 +363,13 @@ class ChildProfileData {
         (allergy) {
           return AllergyData(
             allergyId: allergy.allergyId,
-            allergen:
-                allergy.allergen,
+            categories: Set<AllergyCategory>.from(
+              allergy.categories,
+            ),
+            details: Map<AllergyCategory, String>.from(
+              allergy.details,
+            ),
+            legacyAllergen: allergy.legacyAllergen,
             observedReaction:
                 allergy
                     .observedReaction,

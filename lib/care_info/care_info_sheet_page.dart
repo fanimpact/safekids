@@ -290,7 +290,7 @@ class CareInfoSheetPage extends StatelessWidget {
 
     for (final allergy
         in child.essentialInformation.allergies) {
-      final allergen = allergy.allergen?.trim();
+      final allergen = allergy.label?.trim();
 
       if (allergen == null || allergen.isEmpty) {
         continue;

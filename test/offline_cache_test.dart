@@ -69,7 +69,10 @@ void main() {
           ),
         ],
         allergies: [
-          AllergyData(allergen: 'Arachides'),
+          AllergyData(
+            categories: {AllergyCategory.food},
+            details: {AllergyCategory.food: 'Arachides'},
+          ),
         ],
         medicalDevices: const [],
         contacts: const [],
@@ -143,7 +146,7 @@ void main() {
       expect(
         restored.essentialInformation.allergies
             .single
-            .allergen,
+            .label,
         'Arachides',
       );
       expect(

@@ -47,7 +47,10 @@ void main() {
           allergies: [
             AllergyData(
               allergyId: 'a1',
-              allergen: 'Arachides',
+              categories: {AllergyCategory.food},
+              details: {
+                AllergyCategory.food: 'Arachides',
+              },
               emergencyInstructionSteps: const [
                 'Administrer l’auto-injecteur',
               ],

@@ -163,8 +163,8 @@ class EmergencyModeButtonListPage extends StatelessWidget {
         .allergies
         .where(
           (allergy) =>
-              allergy.allergen != null &&
-              allergy.allergen!.trim().isNotEmpty,
+              allergy.label != null &&
+              allergy.label!.trim().isNotEmpty,
         )
         .toList();
 
@@ -220,7 +220,7 @@ class EmergencyModeButtonListPage extends StatelessWidget {
                 context: context,
                 icon: Icons.warning_amber_rounded,
                 label:
-                    'Urgence liée à : Allergie (${allergy.allergen!.trim()})',
+                    'Urgence liée à : Allergie (${allergy.label!.trim()})',
                 onPressed: () {
                   final groups = _groupTreatments(
                     id: allergy.allergyId,
@@ -231,7 +231,7 @@ class EmergencyModeButtonListPage extends StatelessWidget {
                   _openInstructions(
                     context,
                     title:
-                        'Urgence liée à : Allergie (${allergy.allergen!.trim()})',
+                        'Urgence liée à : Allergie (${allergy.label!.trim()})',
                     steps: allergy.emergencyInstructionSteps,
                     emptyMessage: _noStepsMessage,
                     treatmentsByStepIndex: groups.byStepIndex,

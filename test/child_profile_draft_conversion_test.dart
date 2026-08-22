@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kidsrelay/controllers/transmission_controller.dart';
+import 'package:kidsrelay/models/allergy_data.dart';
 import 'package:kidsrelay/models/child_profile_draft.dart';
 
 void main() {
@@ -26,7 +27,12 @@ void main() {
       );
 
       controller.ensureFirstAllergy();
-      controller.updateAllergen(0, 'Arachide');
+      controller.updateAllergyCategory(
+        0,
+        AllergyCategory.food,
+        true,
+      );
+      controller.updateAllergyDetail(0, AllergyCategory.food, 'Arachide');
       controller.addAllergyEmergencyStep(0);
       controller.updateAllergyEmergencyStep(
         0,

@@ -51,7 +51,10 @@ void main() {
       ],
       allergies: [
         AllergyData(
-          allergen: 'Arachide',
+          categories: {AllergyCategory.food},
+          details: {
+            AllergyCategory.food: 'Arachide',
+          },
           observedReaction: 'Œdème',
         ),
       ],

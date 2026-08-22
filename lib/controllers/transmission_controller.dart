@@ -1087,12 +1087,40 @@ class TransmissionController {
     _draft.allergies.clear();
   }
 
-  void updateAllergen(
+  /// Coche ou décoche un type pour cette allergie. Décocher vide la
+  /// précision associée : la sous-question disparaît de l'écran, sa
+  /// réponse ne doit pas survivre en arrière-plan.
+  void updateAllergyCategory(
     int index,
+    AllergyCategory category,
+    bool selected,
+  ) {
+    final allergy = _draft.allergies[index];
+
+    if (selected) {
+      allergy.categories.add(category);
+    } else {
+      allergy.categories.remove(category);
+      allergy.details.remove(category);
+    }
+  }
+
+  /// Précision saisie sous un type coché ("À quoi ?", "À quel
+  /// médicament ?"…). Une précision vide est retirée plutôt que
+  /// stockée comme chaîne vide, pour que `label` n'ait pas à filtrer.
+  void updateAllergyDetail(
+    int index,
+    AllergyCategory category,
     String value,
   ) {
-    _draft.allergies[index].allergen =
-        value.trim();
+    final allergy = _draft.allergies[index];
+    final trimmedValue = value.trim();
+
+    if (trimmedValue.isEmpty) {
+      allergy.details.remove(category);
+    } else {
+      allergy.details[category] = trimmedValue;
+    }
   }
 
   void updateAllergyObservedReaction(

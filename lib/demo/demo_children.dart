@@ -386,8 +386,10 @@ class DemoChildren {
       allergies: [
         AllergyData(
           allergyId: waspAllergyId,
-          allergen:
-              'Piqûres de guêpe',
+          categories: {AllergyCategory.insectSting},
+          details: {
+            AllergyCategory.insectSting: 'Guêpe',
+          },
           observedReaction:
               'Gonflement important',
         ),

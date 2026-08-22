@@ -53,7 +53,7 @@ class HealthConditionsRules {
     }
 
     for (final allergy in essentialInformation.allergies) {
-      final allergen = allergy.allergen?.trim();
+      final allergen = allergy.label?.trim();
 
       if (allergen == null || allergen.isEmpty) {
         continue;

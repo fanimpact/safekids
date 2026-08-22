@@ -82,7 +82,7 @@ class EmergencyMedicationRules {
         final allergen =
             matchingAllergies
                 .first
-                .allergen
+                .label
                 ?.trim();
 
         if (allergen != null &&

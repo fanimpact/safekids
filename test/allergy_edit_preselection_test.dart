@@ -134,14 +134,36 @@ void main() {
         true,
       );
 
-      await tester.enterText(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is SkTextField &&
-              widget.label.contains('allergique'),
-        ),
-        'Arachides',
+      // Depuis le 22/08/2026, l'allergène n'est plus saisi dans un
+      // champ unique : on coche son type, puis on renseigne la
+      // sous-question qui s'ouvre dessous. Comme pour les Oui/Non
+      // ci-dessus, on invoque le callback plutôt que de taper, pour ne
+      // pas dépendre du hit-testing bas niveau.
+      final foodCheckbox = find.byWidgetPredicate(
+        (widget) =>
+            widget is CheckboxListTile &&
+            widget.title is Text &&
+            (widget.title as Text).data == 'Alimentaire',
       );
+
+      await tester.ensureVisible(foodCheckbox);
+      await tester.pumpAndSettle();
+
+      tester
+          .widget<CheckboxListTile>(foodCheckbox)
+          .onChanged!(true);
+      await tester.pumpAndSettle();
+
+      final foodDetailField = find.byWidgetPredicate(
+        (widget) =>
+            widget is SkTextField &&
+            widget.label.contains('À quoi ?'),
+      );
+
+      await tester.ensureVisible(foodDetailField);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(foodDetailField, 'Arachides');
       await tester.pumpAndSettle();
 
       expect(
@@ -294,7 +316,10 @@ void main() {
         dailyTreatments: const [],
         discontinuedTreatments: const [],
         emergencyTreatments: const [],
-        allergies: [AllergyData(allergen: 'Arachides')],
+        allergies: [AllergyData(
+            categories: {AllergyCategory.food},
+            details: {AllergyCategory.food: 'Arachides'},
+          )],
         medicalDevices: const [],
         contacts: const [],
         primaryCareDoctor: PrimaryCareDoctorData(),
@@ -336,7 +361,10 @@ void main() {
         dailyTreatments: const [],
         discontinuedTreatments: const [],
         emergencyTreatments: const [],
-        allergies: [AllergyData(allergen: 'Arachides')],
+        allergies: [AllergyData(
+            categories: {AllergyCategory.food},
+            details: {AllergyCategory.food: 'Arachides'},
+          )],
         medicalDevices: const [],
         contacts: const [],
         primaryCareDoctor: PrimaryCareDoctorData(),
