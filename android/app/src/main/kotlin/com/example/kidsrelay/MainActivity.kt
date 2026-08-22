@@ -1,4 +1,4 @@
-package com.example.safekids
+package com.example.kidsrelay
 
 import io.flutter.embedding.android.FlutterActivity
 

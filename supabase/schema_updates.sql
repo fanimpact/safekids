@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - colonnes manquantes sur profils_sante / profils_activites
+-- KidsRelay - colonnes manquantes sur profils_sante / profils_activites
 --
 -- Ajoutees pour la migration de ChildRepository (memoire -> Supabase) :
 -- ces champs existent dans le modele Flutter mais n'avaient pas encore

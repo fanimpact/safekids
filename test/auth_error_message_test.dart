@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/utils/auth_error_message.dart';
+import 'package:kidsrelay/utils/auth_error_message.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Corrigé (audit passe 3) : l'app affichait l'exception Supabase

@@ -186,7 +186,7 @@ class _CreateEstablishmentLinkPageState
       queryParameters: {
         'body':
             'Voici le code à saisir dans l’espace professionnel '
-            'SafeKids pour accéder au profil de votre élève : $token',
+            'KidsRelay pour accéder au profil de votre élève : $token',
       },
     );
 
@@ -203,10 +203,10 @@ class _CreateEstablishmentLinkPageState
     final uri = Uri(
       scheme: 'mailto',
       queryParameters: {
-        'subject': 'Accès SafeKids',
+        'subject': 'Accès KidsRelay',
         'body':
             'Bonjour,\n\nVoici le code à saisir dans l’espace '
-            'professionnel SafeKids (« Rattacher un enfant ») : '
+            'professionnel KidsRelay (« Rattacher un enfant ») : '
             '$token\n\nCe code expire automatiquement.',
       },
     );
@@ -371,7 +371,7 @@ class _CreateEstablishmentLinkPageState
 
               const Text(
                 'Transmettez ce code à l’établissement : il le '
-                'saisira dans son espace professionnel SafeKids, '
+                'saisira dans son espace professionnel KidsRelay, '
                 'section « Rattacher un enfant ».',
                 style: TextStyle(fontSize: 14),
               ),

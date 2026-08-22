@@ -29,9 +29,9 @@ class ChildRepository extends ChangeNotifier {
 
   static final ChildRepository instance = ChildRepository._();
 
-  static const _cacheKey = 'safekids_cached_children';
+  static const _cacheKey = 'kidsrelay_cached_children';
   static const _cacheSyncedAtKey =
-      'safekids_cache_synced_at';
+      'kidsrelay_cache_synced_at';
 
   // Sur une connexion lente ou instable, une requête Supabase peut
   // rester en attente indéfiniment sans jamais réussir ni échouer —

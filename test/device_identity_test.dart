@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:safekids/auth/device_identity.dart';
+import 'package:kidsrelay/auth/device_identity.dart';
 
 /// Vérifie le comportement attendu du jeton d'appareil utilisé pour la
 /// vérification par email sur nouvel appareil (voir espace

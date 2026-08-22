@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/models/allergy_data.dart';
-import 'package:safekids/models/child_profile_data.dart';
-import 'package:safekids/models/complete_child_profile_data.dart';
-import 'package:safekids/models/identity_data.dart';
-import 'package:safekids/models/pathology_data.dart';
-import 'package:safekids/models/primary_care_doctor_data.dart';
-import 'package:safekids/models/trigger_factor_data.dart';
-import 'package:safekids/recommendation_engine/rules/health_conditions_rules.dart';
+import 'package:kidsrelay/models/allergy_data.dart';
+import 'package:kidsrelay/models/child_profile_data.dart';
+import 'package:kidsrelay/models/complete_child_profile_data.dart';
+import 'package:kidsrelay/models/identity_data.dart';
+import 'package:kidsrelay/models/pathology_data.dart';
+import 'package:kidsrelay/models/primary_care_doctor_data.dart';
+import 'package:kidsrelay/models/trigger_factor_data.dart';
+import 'package:kidsrelay/recommendation_engine/rules/health_conditions_rules.dart';
 
 CompleteChildProfileData _createTestChild({
   required String childId,

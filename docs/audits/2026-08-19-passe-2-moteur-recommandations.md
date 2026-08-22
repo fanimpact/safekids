@@ -1,4 +1,4 @@
-# Audit SafeKids — Passe 2/4 : Moteur de recommandations
+# Audit KidsRelay — Passe 2/4 : Moteur de recommandations
 
 **Date** : 19/08/2026
 **Méthode** : lecture exhaustive et croisée de chaque champ des profils santé et activités contre (a) les 14 fichiers de règles, (b) la fiche secours, (c) "Ce qu'il faut savoir sur...", (d) le récapitulatif du profil activités — déléguée à deux recherches en parallèle (une par profil), puis les deux constats les plus sévères revérifiés personnellement par lecture directe du code. Complétée par une vérification indépendante du mécanisme de criticité/masquage (construit cette session, donc déjà bien connu).

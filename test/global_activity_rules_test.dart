@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/models/activity_session/activity_answer.dart';
-import 'package:safekids/models/activity_session/activity_session_data.dart';
-import 'package:safekids/recommendation_engine/models/recommendation_category.dart';
-import 'package:safekids/recommendation_engine/rules/global_activity_rules.dart';
+import 'package:kidsrelay/models/activity_session/activity_answer.dart';
+import 'package:kidsrelay/models/activity_session/activity_session_data.dart';
+import 'package:kidsrelay/recommendation_engine/models/recommendation_category.dart';
+import 'package:kidsrelay/recommendation_engine/rules/global_activity_rules.dart';
 
 void main() {
   const rules = GlobalActivityRules();

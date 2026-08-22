@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/models/journal_consultation_data.dart';
+import 'package:kidsrelay/models/journal_consultation_data.dart';
 
 /// Corrections de l'audit passe 1 (RGPD) : le parent doit pouvoir voir
 /// qui a consulté la fiche de son enfant et quand.

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/models/enfant_confiance_data.dart';
+import 'package:kidsrelay/models/enfant_confiance_data.dart';
 
 /// Vérifie le décodage des lignes Supabase pour le partage de la
 /// fiche d'un enfant avec un co-parent ou un tuteur — corrections de

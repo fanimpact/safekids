@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/activity_profile_pages/clothing_page.dart';
-import 'package:safekids/activity_profile_pages/toilets_page.dart';
-import 'package:safekids/controllers/activity_profile_controller.dart';
-import 'package:safekids/widgets/sk_yes_no_field.dart';
+import 'package:kidsrelay/activity_profile_pages/clothing_page.dart';
+import 'package:kidsrelay/activity_profile_pages/toilets_page.dart';
+import 'package:kidsrelay/controllers/activity_profile_controller.dart';
+import 'package:kidsrelay/widgets/sk_yes_no_field.dart';
 
 /// Aligne les sections "Habillage" et "Toilettes" du profil activités
 /// sur le même principe que les autres sections (voir

@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - Espace professionnel, phase 3 : gestion d'equipe
+-- KidsRelay - Espace professionnel, phase 3 : gestion d'equipe
 -- (inviter un collegue, changer un role, revoquer) -- corrections de
 -- l'inventaire du 19/08/2026, point 10. Design valide par Fanny dans
 -- le plan de l'espace professionnel (§2) : directeur et adjoint ont

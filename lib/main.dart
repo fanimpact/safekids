@@ -11,7 +11,7 @@ import 'welcome_page.dart';
 
 /// Permet de naviguer depuis en dehors de l'arbre de widgets, pour le
 /// cas où l'app est ouverte "à froid" via le lien "mot de passe
-/// oublié" reçu par email (safekids://auth-callback) : l'évènement
+/// oublié" reçu par email (kidsrelay://auth-callback) : l'évènement
 /// Supabase peut arriver avant qu'un contexte d'écran ne soit prêt.
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -50,27 +50,27 @@ void main() async {
   ChildRepository.instance.startAutoResync();
 
   runApp(
-    const SafeKidsApp(),
+    const KidsRelayApp(),
   );
 }
 
-class SafeKidsApp extends StatefulWidget {
-  const SafeKidsApp({
+class KidsRelayApp extends StatefulWidget {
+  const KidsRelayApp({
     super.key,
   });
 
   @override
-  State<SafeKidsApp> createState() => _SafeKidsAppState();
+  State<KidsRelayApp> createState() => _KidsRelayAppState();
 }
 
-class _SafeKidsAppState extends State<SafeKidsApp> {
+class _KidsRelayAppState extends State<KidsRelayApp> {
   late final StreamSubscription<AuthState> _authSubscription;
 
   @override
   void initState() {
     super.initState();
 
-    // Ouvrir l'app via le lien "mot de passe oublié" (safekids://
+    // Ouvrir l'app via le lien "mot de passe oublié" (kidsrelay://
     // auth-callback) déclenche cet évènement une fois la session
     // temporaire établie par Supabase : on bascule alors directement
     // sur l'écran de saisie du nouveau mot de passe, y compris si
@@ -100,7 +100,7 @@ class _SafeKidsAppState extends State<SafeKidsApp> {
     return MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      title: 'SafeKids',
+      title: 'KidsRelay',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,

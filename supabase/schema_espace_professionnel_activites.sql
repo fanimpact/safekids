@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - Espace professionnel, phase 5 : activites preparees
+-- KidsRelay - Espace professionnel, phase 5 : activites preparees
 -- (parent ET etablissement), masquage individuel des recommandations,
 -- notes rattachees a une activite
 --

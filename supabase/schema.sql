@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - structure des tables Supabase
+-- KidsRelay - structure des tables Supabase
 --
 -- Cree uniquement la structure (tables + RLS). Aucune donnee existante
 -- de ChildRepository (en memoire, cote app Flutter) n'est migree ici.

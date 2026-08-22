@@ -6,7 +6,7 @@ import '../utils/auth_error_message.dart';
 import '../widgets/sk_password_field.dart';
 
 /// Affiché quand l'app est ouverte via le lien "mot de passe oublié"
-/// reçu par email (`safekids://auth-callback`) : Supabase a déjà
+/// reçu par email (`kidsrelay://auth-callback`) : Supabase a déjà
 /// établi une session temporaire à ce stade, il ne reste qu'à définir
 /// le nouveau mot de passe.
 class SetNewPasswordPage extends StatefulWidget {

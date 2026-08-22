@@ -2,14 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:safekids/models/allergy_data.dart';
-import 'package:safekids/models/child_profile_data.dart';
-import 'package:safekids/models/identity_data.dart';
-import 'package:safekids/models/pathology_data.dart';
-import 'package:safekids/models/primary_care_doctor_data.dart';
-import 'package:safekids/models/trigger_factor_data.dart';
-import 'package:safekids/professional/professional_child_repository.dart';
-import 'package:safekids/repositories/child_profile_codec.dart';
+import 'package:kidsrelay/models/allergy_data.dart';
+import 'package:kidsrelay/models/child_profile_data.dart';
+import 'package:kidsrelay/models/identity_data.dart';
+import 'package:kidsrelay/models/pathology_data.dart';
+import 'package:kidsrelay/models/primary_care_doctor_data.dart';
+import 'package:kidsrelay/models/trigger_factor_data.dart';
+import 'package:kidsrelay/professional/professional_child_repository.dart';
+import 'package:kidsrelay/repositories/child_profile_codec.dart';
 
 /// Corrections de l'audit passe 1 : la limite de 7 jours sans
 /// synchronisation réussie du cache hors-ligne professionnel
@@ -19,8 +19,8 @@ import 'package:safekids/repositories/child_profile_codec.dart';
 /// dont l'accès a été révoqué garderait indéfiniment des données de
 /// santé d'enfants sur son téléphone.
 void main() {
-  const cacheKey = 'safekids_pro_cached_children';
-  const cacheSyncedAtKey = 'safekids_pro_cache_synced_at';
+  const cacheKey = 'kidsrelay_pro_cached_children';
+  const cacheSyncedAtKey = 'kidsrelay_pro_cache_synced_at';
 
   ChildProfileData buildChild() {
     return ChildProfileData(

@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - liens de partage : token genere automatiquement +
+-- KidsRelay - liens de partage : token genere automatiquement +
 -- purge planifiee des partages expires depuis plus de 24h.
 --
 -- A executer APRES schema.sql (ou en complement si schema.sql a deja

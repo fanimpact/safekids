@@ -122,8 +122,8 @@ les seuls réels de cette passe — déjà dans `corrections_a_faire.md`
 
 ## Nettoyage
 
-Compte parent de test (`safekids-audit-pass3d-...`), compte
-professionnel de test (`safekids-audit-pass3-pro-...`), l'enfant
+Compte parent de test (`kidsrelay-audit-pass3d-...`), compte
+professionnel de test (`kidsrelay-audit-pass3-pro-...`), l'enfant
 fictif "AuditTest Fictif", l'établissement "Ecole Audit Test", et
 toutes les données liées (profil santé, rattachement, 2 activités
 préparées, note, événement de notification, ligne de journal de

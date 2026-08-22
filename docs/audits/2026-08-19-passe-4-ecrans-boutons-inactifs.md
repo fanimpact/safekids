@@ -10,7 +10,7 @@ pour les deux constats les plus graves.
 ## 1. Bouton final du carrousel de découverte — testé réellement, ne fait rien
 
 `lib/demo_page.dart:164-178`. Sur la dernière diapositive (6/6) du
-parcours "Découvrir ce que SafeKids peut faire", le bouton
+parcours "Découvrir ce que KidsRelay peut faire", le bouton
 **"Créer gratuitement la fiche de mon enfant"** a pour code :
 ```dart
 onPressed: _currentPage == _pages.length - 1 ? () {} : _nextPage,
@@ -63,7 +63,7 @@ puisqu'ils ne sont accessibles depuis nulle part.
 ## 5. Classe `HomePage` dupliquée, jamais utilisée
 
 `lib/main.dart:114-138` définit sa propre classe `HomePage` (texte
-"Bienvenue dans SafeKids"), distincte de la vraie
+"Bienvenue dans KidsRelay"), distincte de la vraie
 (`lib/home/home_page.dart`). Vérifié indépendamment : les 4 endroits
 qui naviguent vers `HomePage()` importent tous la bonne classe.
 Purement cosmétique — à nettoyer par hygiène, aucun impact utilisateur.

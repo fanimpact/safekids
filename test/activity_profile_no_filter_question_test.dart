@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/activity_profile_pages/aquatic_activity_page.dart';
-import 'package:safekids/activity_profile_pages/overnight_stay_page.dart';
-import 'package:safekids/activity_profile_pages/safety_page.dart';
-import 'package:safekids/activity_profile_pages/transport_page.dart';
-import 'package:safekids/activity_profile_pages/walking_effort_page.dart';
-import 'package:safekids/controllers/activity_profile_controller.dart';
-import 'package:safekids/widgets/sk_yes_no_field.dart';
+import 'package:kidsrelay/activity_profile_pages/aquatic_activity_page.dart';
+import 'package:kidsrelay/activity_profile_pages/overnight_stay_page.dart';
+import 'package:kidsrelay/activity_profile_pages/safety_page.dart';
+import 'package:kidsrelay/activity_profile_pages/transport_page.dart';
+import 'package:kidsrelay/activity_profile_pages/walking_effort_page.dart';
+import 'package:kidsrelay/controllers/activity_profile_controller.dart';
+import 'package:kidsrelay/widgets/sk_yes_no_field.dart';
 
 /// Vérifie que les questions filtres "Votre enfant a-t-il besoin
 /// d'adaptations particulières pour X ?" ont bien disparu des sections

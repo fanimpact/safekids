@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/controllers/transmission_controller.dart';
-import 'package:safekids/models/child_profile_draft.dart';
+import 'package:kidsrelay/controllers/transmission_controller.dart';
+import 'package:kidsrelay/models/child_profile_draft.dart';
 
 void main() {
   test(

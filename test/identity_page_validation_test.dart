@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/controllers/transmission_controller.dart';
-import 'package:safekids/transmission_pages/diagnosed_pathologies_page.dart';
-import 'package:safekids/transmission_pages/identity_page.dart';
-import 'package:safekids/widgets/sk_text_field.dart';
+import 'package:kidsrelay/controllers/transmission_controller.dart';
+import 'package:kidsrelay/transmission_pages/diagnosed_pathologies_page.dart';
+import 'package:kidsrelay/transmission_pages/identity_page.dart';
+import 'package:kidsrelay/widgets/sk_text_field.dart';
 
 /// Corrigé (19/08/2026, corrections de l'inventaire du 19/08/2026) :
 /// contrairement à toutes les autres pages du questionnaire santé,

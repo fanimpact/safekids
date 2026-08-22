@@ -24,9 +24,9 @@ class ProfessionalChildRepository extends ChangeNotifier {
   static final ProfessionalChildRepository instance =
       ProfessionalChildRepository._();
 
-  static const _cacheKey = 'safekids_pro_cached_children';
+  static const _cacheKey = 'kidsrelay_pro_cached_children';
   static const _cacheSyncedAtKey =
-      'safekids_pro_cache_synced_at';
+      'kidsrelay_pro_cache_synced_at';
 
   static const _maxOfflineAge = Duration(days: 7);
 

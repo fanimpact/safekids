@@ -1,7 +1,7 @@
 // Edge Function "voir-partage"
 //
 // Sert une page HTML lisible pour un lien de partage, destinée à un
-// accompagnant qui n'a pas l'app SafeKids installée. Le token est lu
+// accompagnant qui n'a pas l'app KidsRelay installée. Le token est lu
 // dans l'URL côté navigateur (JavaScript embarqué), qui appelle
 // ensuite "consulter-partage" pour récupérer les données et affiche
 // une fiche mise en forme. Page en lecture seule : aucun formulaire,
@@ -150,7 +150,7 @@ const PAGE_HTML = `<!doctype html>
     <h1 class="nom-enfant" id="nom-enfant"></h1>
     <div class="details-identite" id="details-identite"></div>
     <div id="sections"></div>
-    <footer>Fiche en lecture seule — générée par SafeKids.</footer>
+    <footer>Fiche en lecture seule — générée par KidsRelay.</footer>
   </div>
 </main>
 

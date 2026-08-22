@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - Espace professionnel : rendre un compte connectable
+-- KidsRelay - Espace professionnel : rendre un compte connectable
 -- immediatement apres conversion anonyme -> reel, sans dependre du
 -- clic sur le lien de confirmation par email.
 --

@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/demo/demo_children.dart';
-import 'package:safekids/models/activity_session/activity_answer.dart';
-import 'package:safekids/models/activity_session/activity_session_data.dart';
-import 'package:safekids/models/activity_session/complete_activity_session_data.dart';
-import 'package:safekids/recommendation_engine/recommendation_engine.dart';
+import 'package:kidsrelay/demo/demo_children.dart';
+import 'package:kidsrelay/models/activity_session/activity_answer.dart';
+import 'package:kidsrelay/models/activity_session/activity_session_data.dart';
+import 'package:kidsrelay/models/activity_session/complete_activity_session_data.dart';
+import 'package:kidsrelay/recommendation_engine/recommendation_engine.dart';
 
 void main() {
   DemoChildren.load();

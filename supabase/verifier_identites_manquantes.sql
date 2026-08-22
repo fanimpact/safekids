@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - Verification : comptes avec un email mais sans identite
+-- KidsRelay - Verification : comptes avec un email mais sans identite
 --
 -- A executer manuellement de temps en temps (ou avant un test de
 -- connexion) : liste tout compte qui a un email (confirme ou en

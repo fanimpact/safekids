@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/care_info/care_info_sheet_page.dart';
-import 'package:safekids/models/child_profile_data.dart';
-import 'package:safekids/models/complete_child_profile_data.dart';
-import 'package:safekids/models/identity_data.dart';
-import 'package:safekids/models/medical_event_data.dart';
-import 'package:safekids/models/medical_professional_data.dart';
-import 'package:safekids/models/pathology_data.dart';
-import 'package:safekids/models/primary_care_doctor_data.dart';
-import 'package:safekids/models/trigger_factor_data.dart';
+import 'package:kidsrelay/care_info/care_info_sheet_page.dart';
+import 'package:kidsrelay/models/child_profile_data.dart';
+import 'package:kidsrelay/models/complete_child_profile_data.dart';
+import 'package:kidsrelay/models/identity_data.dart';
+import 'package:kidsrelay/models/medical_event_data.dart';
+import 'package:kidsrelay/models/medical_professional_data.dart';
+import 'package:kidsrelay/models/pathology_data.dart';
+import 'package:kidsrelay/models/primary_care_doctor_data.dart';
+import 'package:kidsrelay/models/trigger_factor_data.dart';
 
 /// Corrections de l'audit passe 2 : "Ce qu'il faut savoir sur..."
 /// n'affichait ni le médecin traitant, ni les antécédents médicaux,

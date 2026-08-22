@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - Espace professionnel, phase 2 : etablissements et
+-- KidsRelay - Espace professionnel, phase 2 : etablissements et
 -- rattachement d'un enfant, a une duree choisie par le parent
 --
 -- Cette phase ne construit PAS encore les invitations/revocations de

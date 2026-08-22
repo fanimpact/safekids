@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - la LECTURE des preferences de masquage individuel
+-- KidsRelay - la LECTURE des preferences de masquage individuel
 -- (activites_recommandations_masquees) revalide desormais que
 -- l'activite concernee est toujours accessible a l'utilisateur au
 -- moment de la lecture, pas seulement a l'ecriture -- corrections de

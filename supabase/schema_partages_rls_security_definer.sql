@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - aligne la policy RLS de `partages` sur le pattern
+-- KidsRelay - aligne la policy RLS de `partages` sur le pattern
 -- SECURITY DEFINER utilise partout ailleurs (enfant_du_parent()),
 -- au lieu de la sous-requete brute sur `enfants` heritee de la
 -- version d'origine de schema.sql -- corrections de l'audit passe 1,

@@ -1,4 +1,4 @@
-# Inventaire complet de l'application SafeKids
+# Inventaire complet de l'application KidsRelay
 
 Date : 19/08/2026. Ce document n'est pas un audit : c'est un état des
 lieux, écran par écran, de ce qui existe aujourd'hui dans l'application
@@ -47,7 +47,7 @@ l'application.
   `pubspec.yaml` (`description: "A new Flutter project."`) et
   `web/manifest.json` (même description par défaut) portent encore le
   texte générique de création d'un projet Flutter. Le titre de l'onglet
-  web est juste "safekids" en minuscules, sans description.
+  web est juste "kidsrelay" en minuscules, sans description.
 
 ### Design et présentation des pages
 
@@ -55,14 +55,14 @@ l'application.
   Vérifié directement : `web/icons/Icon-512.png` et
   `android/app/src/main/res/mipmap-hdpi/ic_launcher.png` sont tous les
   deux le logo Flutter par défaut (le triangle bleu à trois teintes).
-  Ni le web ni Android n'ont d'icône SafeKids — c'est ce qu'un
+  Ni le web ni Android n'ont d'icône KidsRelay — c'est ce qu'un
   utilisateur verrait sur son écran d'accueil ou dans son navigateur.
   Non vérifié côté iOS (dossier `ios/Runner/Assets.xcassets/AppIcon.appiconset/`
   présent mais son contenu réel n'a pas été inspecté).
 - **Style visuel cohérent mais sans identité de marque forte.** Palette
   Material bleu/rouge (rouge réservé aux actions d'urgence), cartes
   arrondies, mise en page fonctionnelle et propre sur tous les écrans
-  testés — mais rien qui distingue visuellement SafeKids d'une
+  testés — mais rien qui distingue visuellement KidsRelay d'une
   application Material générique, en dehors des 6 illustrations du
   carrousel de découverte.
 - **États vides et de chargement inégaux d'un écran à l'autre.**
@@ -118,7 +118,7 @@ l'application.
 ### 2.1 Découverte et entrée dans l'application
 
 **`welcome_page.dart`** — écran de démarrage, 2 secondes, texte
-"Bienvenue dans SafeKids" fixe, redirige automatiquement vers
+"Bienvenue dans KidsRelay" fixe, redirige automatiquement vers
 `ConceptPage`. Aucune interaction possible, aucun manque identifié.
 
 **`concept_page.dart`** — page de présentation du concept : icône,
@@ -129,7 +129,7 @@ titre, un paragraphe explicatif, bouton "Continuer" vers
 Écran de routage simple, complet.
 
 **`particulier_home_page.dart`** — menu d'entrée côté parent :
-"Découvrir ce que SafeKids peut faire" (→ carrousel), "Créer un
+"Découvrir ce que KidsRelay peut faire" (→ carrousel), "Créer un
 compte", "Se connecter". **Sous ces trois boutons, une section "Outils
 de développement" non protégée s'affiche dans le build de production**
 (déjà signalé passe 4, `corrections_a_faire.md` item 15) — deux

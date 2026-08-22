@@ -17,5 +17,5 @@ class SupabaseConfig {
   /// mène nulle part sur un téléphone. Doit être ajouté tel quel dans
   /// Supabase -> Authentication -> URL Configuration -> Redirect URLs.
   static const String authRedirectUrl =
-      'safekids://auth-callback';
+      'kidsrelay://auth-callback';
 }

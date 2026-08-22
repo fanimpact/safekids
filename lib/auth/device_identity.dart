@@ -12,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class DeviceIdentity {
   DeviceIdentity._();
 
-  static const _tokenKey = 'safekids_device_token';
+  static const _tokenKey = 'kidsrelay_device_token';
 
   static String? _cachedToken;
 

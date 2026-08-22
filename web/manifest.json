@@ -1,6 +1,6 @@
 {
-    "name": "safekids",
-    "short_name": "safekids",
+    "name": "kidsrelay",
+    "short_name": "kidsrelay",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

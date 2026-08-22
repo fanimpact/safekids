@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/professional/revocation_guard.dart';
+import 'package:kidsrelay/professional/revocation_guard.dart';
 
 /// Corrections de l'audit passe 3, item 13 : une fiche professionnelle
 /// déjà ouverte doit se refermer d'elle-même si l'accès à l'enfant a

@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Safekids</string>
+	<string>KidsRelay</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>safekids</string>
+	<string>kidsrelay</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -51,16 +51,16 @@
 	<true/>
 	<!-- Recoit les liens envoyes par email (confirmation de compte,
 	     mot de passe oublie) : Supabase redirige vers
-	     safekids://auth-callback. Doit correspondre a ce qui est
+	     kidsrelay://auth-callback. Doit correspondre a ce qui est
 	     autorise dans Supabase -> Authentication -> URL Configuration. -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.safekids.auth</string>
+			<string>com.kidsrelay.auth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>safekids</string>
+				<string>kidsrelay</string>
 			</array>
 		</dict>
 	</array>

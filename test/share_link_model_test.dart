@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/models/share_link_data.dart';
+import 'package:kidsrelay/models/share_link_data.dart';
 
 /// Vérifie le décodage des lignes Supabase pour les liens de partage
 /// ponctuels (`partages`) et la logique d'expiration côté parent —

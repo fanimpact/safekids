@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/controllers/transmission_controller.dart';
-import 'package:safekids/models/allergy_data.dart';
-import 'package:safekids/models/child_profile_data.dart';
-import 'package:safekids/models/child_profile_draft.dart';
-import 'package:safekids/models/identity_data.dart';
-import 'package:safekids/models/pathology_data.dart';
-import 'package:safekids/models/primary_care_doctor_data.dart';
-import 'package:safekids/models/trigger_factor_data.dart';
-import 'package:safekids/transmission_pages/diagnosed_pathologies_page.dart';
-import 'package:safekids/transmission_pages/identity_page.dart';
-import 'package:safekids/transmission_pages/medical_events_page.dart';
-import 'package:safekids/transmission_pages/treatments_page.dart';
-import 'package:safekids/transmission_pages/trigger_factors_page.dart';
-import 'package:safekids/widgets/sk_text_field.dart';
-import 'package:safekids/widgets/sk_yes_no_field.dart';
+import 'package:kidsrelay/controllers/transmission_controller.dart';
+import 'package:kidsrelay/models/allergy_data.dart';
+import 'package:kidsrelay/models/child_profile_data.dart';
+import 'package:kidsrelay/models/child_profile_draft.dart';
+import 'package:kidsrelay/models/identity_data.dart';
+import 'package:kidsrelay/models/pathology_data.dart';
+import 'package:kidsrelay/models/primary_care_doctor_data.dart';
+import 'package:kidsrelay/models/trigger_factor_data.dart';
+import 'package:kidsrelay/transmission_pages/diagnosed_pathologies_page.dart';
+import 'package:kidsrelay/transmission_pages/identity_page.dart';
+import 'package:kidsrelay/transmission_pages/medical_events_page.dart';
+import 'package:kidsrelay/transmission_pages/treatments_page.dart';
+import 'package:kidsrelay/transmission_pages/trigger_factors_page.dart';
+import 'package:kidsrelay/widgets/sk_text_field.dart';
+import 'package:kidsrelay/widgets/sk_yes_no_field.dart';
 
 /// Reproduit le scénario signalé par l'utilisatrice, en rejouant la vraie
 /// navigation et les vrais taps à l'écran (pas seulement la logique en

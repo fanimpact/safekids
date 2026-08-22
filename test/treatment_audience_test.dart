@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/utils/treatment_audience.dart';
+import 'package:kidsrelay/utils/treatment_audience.dart';
 
 /// Corrigé (19/08/2026) : chaque traitement affiché doit s'accompagner
 /// d'une mention rappelant le cadre d'administration — selon le PAI

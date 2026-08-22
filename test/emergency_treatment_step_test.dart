@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/models/emergency_treatment_data.dart';
-import 'package:safekids/utils/emergency_treatment_step.dart';
+import 'package:kidsrelay/models/emergency_treatment_data.dart';
+import 'package:kidsrelay/utils/emergency_treatment_step.dart';
 
 /// Corrigé (19/08/2026) : le Mode Urgence n'affichait jamais le
 /// traitement d'urgence (nom, dose, condition, mode) alors que les

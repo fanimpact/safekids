@@ -54,7 +54,7 @@ class ParticulierHomePage extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    'Découvrir ce que SafeKids peut faire',
+                    'Découvrir ce que KidsRelay peut faire',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 17,

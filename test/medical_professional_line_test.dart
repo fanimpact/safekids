@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/models/medical_professional_data.dart';
-import 'package:safekids/utils/medical_professional_line.dart';
+import 'package:kidsrelay/models/medical_professional_data.dart';
+import 'package:kidsrelay/utils/medical_professional_line.dart';
 
 /// Corrections de l'audit passe 2 : spécialité, lieu d'exercice et
 /// téléphone d'un médecin référent étaient saisis mais jamais

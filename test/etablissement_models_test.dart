@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/models/enfant_etablissement_data.dart';
-import 'package:safekids/models/etablissement_data.dart';
-import 'package:safekids/models/membre_etablissement_data.dart';
+import 'package:kidsrelay/models/enfant_etablissement_data.dart';
+import 'package:kidsrelay/models/etablissement_data.dart';
+import 'package:kidsrelay/models/membre_etablissement_data.dart';
 
 /// Vérifie le décodage des lignes Supabase pour l'espace professionnel
 /// (établissements et rattachements enfant/établissement), et la

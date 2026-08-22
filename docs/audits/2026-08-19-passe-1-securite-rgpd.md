@@ -1,4 +1,4 @@
-# Audit SafeKids — Passe 1/4 : Sécurité et RGPD
+# Audit KidsRelay — Passe 1/4 : Sécurité et RGPD
 
 **Date** : 19/08/2026
 **Méthode** : tests réels contre la base Supabase de production, par usurpation d'identité au niveau base (`set_config('request.jwt.claims', ...)` + `SET ROLE authenticated`), pas par simple relecture des politiques RLS. Le rôle habituel des requêtes de diagnostic (`postgres`) contourne le RLS et ne prouve rien sur la sécurité réelle — chaque test marqué « conforme » ci-dessous a donc été exécuté sous une identité précise, exactement comme Postgres le ferait pour l'app en direct.

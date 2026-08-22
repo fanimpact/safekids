@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - Point d'entree unique pour toute notification destinee a
+-- KidsRelay - Point d'entree unique pour toute notification destinee a
 -- un parent (2026-08-19)
 --
 -- Demande de Fanny : preparer le terrain pour les notifications push

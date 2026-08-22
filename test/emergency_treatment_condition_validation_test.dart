@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/controllers/transmission_controller.dart';
-import 'package:safekids/transmission_pages/contacts_page.dart';
-import 'package:safekids/transmission_pages/treatments_page.dart';
-import 'package:safekids/widgets/sk_text_field.dart';
-import 'package:safekids/widgets/sk_yes_no_field.dart';
+import 'package:kidsrelay/controllers/transmission_controller.dart';
+import 'package:kidsrelay/transmission_pages/contacts_page.dart';
+import 'package:kidsrelay/transmission_pages/treatments_page.dart';
+import 'package:kidsrelay/widgets/sk_text_field.dart';
+import 'package:kidsrelay/widgets/sk_yes_no_field.dart';
 
 /// Corrigé (19/08/2026) : "Dans quelle situation doit-il être
 /// administré ?" (le champ dont dépend le rappel affiché en Mode

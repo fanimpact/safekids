@@ -15,7 +15,7 @@
 // Edge Functions -> Secrets) :
 //   BREVO_API_KEY        cle API Brevo (jamais dans le code)
 //   BREVO_SENDER_EMAIL   adresse expediteur verifiee dans Brevo
-//   BREVO_SENDER_NAME    nom affiche comme expediteur (ex. "SafeKids")
+//   BREVO_SENDER_NAME    nom affiche comme expediteur (ex. "KidsRelay")
 //   BREVO_REPLY_TO_EMAIL optionnelle : adresse de reponse si differente
 //                        de l'expediteur (sinon, BREVO_SENDER_EMAIL
 //                        sert aussi de reply-to)
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     'BREVO_SENDER_EMAIL',
   );
   const brevoSenderName =
-    Deno.env.get('BREVO_SENDER_NAME') ?? 'SafeKids';
+    Deno.env.get('BREVO_SENDER_NAME') ?? 'KidsRelay';
   const brevoReplyToEmail =
     Deno.env.get('BREVO_REPLY_TO_EMAIL') ?? brevoSenderEmail;
 
@@ -194,9 +194,9 @@ Deno.serve(async (req) => {
         },
         replyTo: { email: brevoReplyToEmail },
         to: [{ email }],
-        subject: 'Votre code de vérification SafeKids',
+        subject: 'Votre code de vérification KidsRelay',
         htmlContent:
-          `<p>Nouvel appareil détecté sur votre compte SafeKids.</p>` +
+          `<p>Nouvel appareil détecté sur votre compte KidsRelay.</p>` +
           `<p>Votre code de vérification : ` +
           `<strong style="font-size:20px">${code}</strong></p>` +
           `<p>Ce code est valable ${CODE_VALIDE_MINUTES} minutes. ` +

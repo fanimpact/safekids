@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/controllers/transmission_controller.dart';
+import 'package:kidsrelay/controllers/transmission_controller.dart';
 
 /// Corrigé (19/08/2026) : un traitement d'urgence rattaché à une étape
 /// précise (ex. "étape 6") doit rester rattaché à la BONNE étape après

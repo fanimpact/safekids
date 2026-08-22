@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - Espace professionnel, phase 4 : fiche secours, "Ce qu'il
+-- KidsRelay - Espace professionnel, phase 4 : fiche secours, "Ce qu'il
 -- faut savoir sur...", profil activites et Mode Urgence cote
 -- professionnel, avec journal de consultation.
 --

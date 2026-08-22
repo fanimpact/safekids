@@ -32,7 +32,7 @@ class _WelcomePageState extends State<WelcomePage> {
       backgroundColor: Colors.white,
       body: const Center(
         child: Text(
-          "Bienvenue dans\nSafeKids",
+          "Bienvenue dans\nKidsRelay",
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 34,

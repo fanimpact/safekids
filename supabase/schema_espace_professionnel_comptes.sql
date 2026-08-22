@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - Espace professionnel, phase 1 : comptes parents reels
+-- KidsRelay - Espace professionnel, phase 1 : comptes parents reels
 --
 -- Cree les tables necessaires pour remplacer l'identite anonyme des
 -- parents par un vrai compte email + mot de passe, avec verification

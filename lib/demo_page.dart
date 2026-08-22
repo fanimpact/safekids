@@ -85,7 +85,7 @@ class _DemoPageState extends State<DemoPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Découvrir SafeKids',
+          'Découvrir KidsRelay',
         ),
       ),
       body: Column(

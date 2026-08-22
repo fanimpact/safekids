@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/emergency_mode/emergency_mode_button_list_page.dart';
-import 'package:safekids/models/allergy_data.dart';
-import 'package:safekids/models/child_profile_data.dart';
-import 'package:safekids/models/complete_child_profile_data.dart';
-import 'package:safekids/models/emergency_treatment_data.dart';
-import 'package:safekids/models/identity_data.dart';
-import 'package:safekids/models/pathology_data.dart';
-import 'package:safekids/models/primary_care_doctor_data.dart';
-import 'package:safekids/models/trigger_factor_data.dart';
+import 'package:kidsrelay/emergency_mode/emergency_mode_button_list_page.dart';
+import 'package:kidsrelay/models/allergy_data.dart';
+import 'package:kidsrelay/models/child_profile_data.dart';
+import 'package:kidsrelay/models/complete_child_profile_data.dart';
+import 'package:kidsrelay/models/emergency_treatment_data.dart';
+import 'package:kidsrelay/models/identity_data.dart';
+import 'package:kidsrelay/models/pathology_data.dart';
+import 'package:kidsrelay/models/primary_care_doctor_data.dart';
+import 'package:kidsrelay/models/trigger_factor_data.dart';
 
 /// Corrigé (19/08/2026) : le Mode Urgence affichait les 6 étapes
 /// numérotées d'un protocole d'urgence (ex. épilepsie), mais jamais le

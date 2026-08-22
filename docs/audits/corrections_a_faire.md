@@ -131,7 +131,7 @@ passe 1. Voir l'historique git pour le détail des commits.)
     vérification "nouvel appareil" — expéditeur et réponse mal
     configurés côté Brevo. Testé réellement (vrai email reçu et code
     utilisé pour se connecter) : le nom d'expéditeur affiché est
-    "KidsRelay" au lieu de "SafeKids", et l'adresse "répondre à"
+    "KidsRelay" au lieu de "KidsRelay", et l'adresse "répondre à"
     pointe vers l'adresse personnelle de Fanny
     (fannydicaro@hotmail.fr).
 
@@ -148,7 +148,7 @@ passe 1. Voir l'historique git pour le détail des commits.)
        une sinon.
     2. Dans Supabase, Project Settings → Edge Functions → Secrets :
        modifier `BREVO_SENDER_EMAIL` avec cette adresse, et
-       `BREVO_SENDER_NAME` avec la valeur `SafeKids`.
+       `BREVO_SENDER_NAME` avec la valeur `KidsRelay`.
     3. (Optionnel) Si les réponses doivent partir vers une adresse
        différente de l'expéditeur : ajouter un secret
        `BREVO_REPLY_TO_EMAIL` avec cette adresse.
@@ -226,7 +226,7 @@ pas seulement lecture du code).
     maintenant à la création de compte.** Le bouton final du
     carrousel de découverte ne fait rien —
     testé réellement. `lib/demo_page.dart:164-178`. Sur la dernière
-    diapositive (6/6) du parcours "Découvrir ce que SafeKids peut
+    diapositive (6/6) du parcours "Découvrir ce que KidsRelay peut
     faire" (accessible dès l'écran d'accueil, avant toute création de
     compte), le bouton "Créer gratuitement la fiche de mon enfant" a
     pour gestionnaire `() {}` — une fonction vide. Cliqué réellement
@@ -291,7 +291,7 @@ pas seulement lecture du code).
 19. **RÉSOLU (19/08/2026, commit `10ba610`) — supprimée.**
     Classe `HomePage` en double dans `lib/main.dart` — jamais
     utilisée. `lib/main.dart:114-138` définit sa propre classe
-    `HomePage` (texte "Bienvenue dans SafeKids"), distincte de la
+    `HomePage` (texte "Bienvenue dans KidsRelay"), distincte de la
     vraie page d'accueil (`lib/home/home_page.dart`). Confirmé par
     recherche indépendante : les 4 endroits qui naviguent vers
     `HomePage()` importent tous la bonne classe — celle de
@@ -315,7 +315,7 @@ confiance") :
 - Inviter une personne de confiance par email depuis la fiche d'un
   enfant, avec le niveau "Consultation seule" (par défaut) — vérifier
   qu'elle reçoit un accès une fois connectée avec cet email (compte
-  existant ou nouveau compte SafeKids).
+  existant ou nouveau compte KidsRelay).
 - Vérifier qu'avec ce niveau, elle voit la fiche (pathologies,
   allergies, profil activités, Mode Urgence) mais qu'aucun bouton de
   modification, de suppression, ni la section Partages/Personnes de

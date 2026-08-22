@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - debloque le partage "recommandations_activite" :
+-- KidsRelay - debloque le partage "recommandations_activite" :
 -- "photo" figee au moment du partage, jamais recalculee cote serveur
 -- (le moteur de recommandations n'existe qu'en Dart/Flutter, pas dans
 -- les Edge Functions Deno). Voir corrections_a_faire.md point 5.

@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - le parent peut lire le journal des consultations de son
+-- KidsRelay - le parent peut lire le journal des consultations de son
 -- enfant (qui a consulte quelle fiche, quand) -- corrections de
 -- l'audit passe 1 (RGPD), point "journal des consultations illisible
 -- par le parent". Jusqu'ici, aucune policy SELECT n'existait sur

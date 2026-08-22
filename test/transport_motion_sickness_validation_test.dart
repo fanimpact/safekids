@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/activity_profile_pages/transport_page.dart';
-import 'package:safekids/activity_profile_pages/walking_effort_page.dart';
-import 'package:safekids/controllers/activity_profile_controller.dart';
+import 'package:kidsrelay/activity_profile_pages/transport_page.dart';
+import 'package:kidsrelay/activity_profile_pages/walking_effort_page.dart';
+import 'package:kidsrelay/controllers/activity_profile_controller.dart';
 
 /// Corrigé (19/08/2026) : répondre "oui" au mal des transports sans
 /// cocher aucun moyen de transport concerné laissait passer un profil

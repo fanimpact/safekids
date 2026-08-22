@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/controllers/transmission_controller.dart';
+import 'package:kidsrelay/controllers/transmission_controller.dart';
 
 void main() {
   test(

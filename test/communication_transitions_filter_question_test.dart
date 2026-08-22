@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:safekids/activity_profile_pages/communication_page.dart';
-import 'package:safekids/activity_profile_pages/transitions_page.dart';
-import 'package:safekids/controllers/activity_profile_controller.dart';
-import 'package:safekids/widgets/sk_yes_no_field.dart';
+import 'package:kidsrelay/activity_profile_pages/communication_page.dart';
+import 'package:kidsrelay/activity_profile_pages/transitions_page.dart';
+import 'package:kidsrelay/controllers/activity_profile_controller.dart';
+import 'package:kidsrelay/widgets/sk_yes_no_field.dart';
 
 /// Contrairement aux autres sections du profil activités (voir
 /// activity_profile_no_filter_question_test.dart), les sections

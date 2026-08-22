@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - partage de la fiche d'un enfant avec un co-parent ou un
+-- KidsRelay - partage de la fiche d'un enfant avec un co-parent ou un
 -- tuteur, jusqu'a 2 personnes de confiance par enfant. Corrections de
 -- l'inventaire du 19/08/2026, point 9. Design valide par Fanny :
 --

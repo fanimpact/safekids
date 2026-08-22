@@ -1,5 +1,5 @@
 -- =====================================================================
--- SafeKids - a qui un lien de partage est destine (particulier ou
+-- KidsRelay - a qui un lien de partage est destine (particulier ou
 -- structure d'accueil), choisi obligatoirement par le parent a la
 -- creation du lien. Sert a afficher la bonne mention a cote de chaque
 -- traitement sur la page publique du lien (voir-partage) : rappel du
