@@ -415,23 +415,74 @@ void main() {
     test(
       'Le refus alimentaire précise la conduite à tenir',
       () {
-        final child = buildChild(
-          meals: MealsData(
-            hasFoodRefusals: true,
-            foodRefusalDetails: 'Légumes verts',
-            refusalStance: MealRefusalStance.offerWithoutInsisting,
-          ),
+        // La question "L'accompagnant doit-il insister ?" suppose déjà
+        // que l'aliment a été proposé : seules deux réponses existent
+        // depuis le 22/08/2026.
+        const expected = {
+          MealRefusalStance.insist: 'insister',
+          MealRefusalStance.doNotInsist: 'ne pas insister',
+        };
+
+        expect(
+          MealRefusalStance.values.toSet(),
+          equals(expected.keys.toSet()),
+          reason:
+              'Une troisième conduite à tenir serait redondante avec '
+              'la formulation de la question.',
+        );
+
+        for (final entry in expected.entries) {
+          final child = buildChild(
+            meals: MealsData(
+              hasFoodRefusals: true,
+              foodRefusalDetails: 'Légumes verts',
+              refusalStance: entry.key,
+            ),
+          );
+
+          final recommendation = findById(
+            rules.evaluate(child, session(hasMeal: true)),
+            'meals_food_refusal',
+          );
+
+          expect(recommendation!.text, contains('Légumes verts'));
+          expect(recommendation.text, contains(entry.value));
+        }
+      },
+    );
+
+    test(
+      'Un profil enregistré avec l’ancienne troisième option reste '
+      'lisible : le refus s’affiche, sans conduite à tenir',
+      () {
+        final meals = MealsData.fromJson({
+          'hasFoodRefusals': true,
+          'foodRefusalDetails': 'Légumes verts',
+          'refusalStance': 'offerWithoutInsisting',
+        });
+
+        expect(
+          meals.refusalStance,
+          isNull,
+          reason:
+              'La valeur retirée n’est plus reconnue ; elle est '
+              'ignorée plutôt que de faire échouer la lecture.',
         );
 
         final recommendation = findById(
-          rules.evaluate(child, session(hasMeal: true)),
+          rules.evaluate(
+            buildChild(meals: meals),
+            session(hasMeal: true),
+          ),
           'meals_food_refusal',
         );
 
-        expect(recommendation!.text, contains('Légumes verts'));
         expect(
-          recommendation.text,
-          contains('proposer sans insister'),
+          recommendation!.text,
+          contains('Légumes verts'),
+          reason:
+              'L’aliment refusé reste signalé même si la conduite à '
+              'tenir a disparu avec l’option.',
         );
       },
     );

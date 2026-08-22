@@ -77,7 +77,6 @@ class _MealsPageState extends State<MealsPage> {
   static const Map<MealRefusalStance, String> _refusalStanceLabels = {
     MealRefusalStance.insist: 'Oui',
     MealRefusalStance.doNotInsist: 'Non',
-    MealRefusalStance.offerWithoutInsisting: 'Proposer sans insister',
   };
 
   MealsData get _data =>

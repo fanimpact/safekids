@@ -43,8 +43,6 @@ class MealsRules {
   static const Map<MealRefusalStance, String> _refusalStanceLabels = {
     MealRefusalStance.insist: 'insister',
     MealRefusalStance.doNotInsist: 'ne pas insister',
-    MealRefusalStance.offerWithoutInsisting:
-        'proposer sans insister',
   };
 
   List<Recommendation> evaluate(

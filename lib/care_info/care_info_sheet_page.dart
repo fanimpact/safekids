@@ -892,7 +892,6 @@ class CareInfoSheetPage extends StatelessWidget {
       _mealRefusalStanceLabels = {
     MealRefusalStance.insist: 'insister',
     MealRefusalStance.doNotInsist: 'ne pas insister',
-    MealRefusalStance.offerWithoutInsisting: 'proposer sans insister',
   };
 
   String _transportModeLabel(TransportMode mode) {

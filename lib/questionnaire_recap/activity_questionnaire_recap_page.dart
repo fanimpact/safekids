@@ -729,7 +729,6 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
       _mealRefusalStanceLabels = {
     MealRefusalStance.insist: 'Oui',
     MealRefusalStance.doNotInsist: 'Non',
-    MealRefusalStance.offerWithoutInsisting: 'Proposer sans insister',
   };
 
   List<String> _otherInformationLines(

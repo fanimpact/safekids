@@ -29,11 +29,14 @@ enum MealDietaryRestriction {
   other,
 }
 
-/// Conduite à tenir face à un aliment refusé.
+/// Conduite à tenir face à un aliment refusé. La question posée au
+/// parent ("L'accompagnant doit-il insister ?") suppose déjà que
+/// l'aliment a été proposé : seules deux réponses ont du sens
+/// (arbitrage Fanny du 22/08/2026, qui a fait retirer une troisième
+/// option "proposer sans insister" devenue redondante).
 enum MealRefusalStance {
   insist,
   doNotInsist,
-  offerWithoutInsisting,
 }
 
 /// Section "Repas" du profil Activités. Aucune question filtre : les
