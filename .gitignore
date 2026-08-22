@@ -56,3 +56,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Dependances Node de web_auth (aucune aujourd hui, mais au cas ou)
+node_modules/

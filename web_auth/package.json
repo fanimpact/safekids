@@ -1,0 +1,10 @@
+{
+  "name": "kidsrelay-web-auth",
+  "private": true,
+  "type": "module",
+  "description": "Page d'acces au compte servie sur auth.kidsrelay.fr. Aucune dependance : les tests utilisent le lanceur integre de Node (node --test).",
+  "scripts": {
+    "test": "node --test",
+    "verifier-deploiement": "node verifier-deploiement.mjs"
+  }
+}
