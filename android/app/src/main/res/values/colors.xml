@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Couleurs de l'identite KidsRelay cote Android natif, pour ce que
+     Flutter ne peint pas encore : l'ecran de lancement, affiche entre
+     le moment ou l'on touche l'icone et la premiere image dessinee par
+     Flutter. Doit rester aligne sur lib/theme/kidsrelay_theme.dart. -->
+<resources>
+    <color name="kidsrelay_lin">#F5F3EF</color>
+    <color name="kidsrelay_vert_pin">#1F4A3F</color>
+</resources>

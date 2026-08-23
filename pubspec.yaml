@@ -45,6 +45,21 @@ dependencies:
   connectivity_plus: ^7.3.1
   crypto: ^3.0.6
 
+# Generation des icones a partir de assets/icone/ : voir le
+# LISEZ-MOI de ce dossier pour le format attendu. Outil de
+# developpement uniquement, rien n'est embarque dans l'application.
+flutter_launcher_icons:
+  image_path: "assets/icone/kidsrelay_1024.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    background_color: "#F5F3EF"
+    theme_color: "#1F4A3F"
+  adaptive_icon_background: "#1F4A3F"
+  adaptive_icon_foreground: "assets/icone/kidsrelay_premier_plan.png"
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -55,6 +70,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
