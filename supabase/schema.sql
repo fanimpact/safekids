@@ -133,16 +133,23 @@ create table if not exists public.partages (
 
 alter table public.partages enable row level security;
 
-create policy "partages_geres_par_le_parent"
-  on public.partages
-  for all
-  using (
-    enfant_id in (
-      select id from public.enfants where parent_id = auth.uid()
-    )
-  )
-  with check (
-    enfant_id in (
-      select id from public.enfants where parent_id = auth.uid()
-    )
-  );
+-- La policy "partages_geres_par_le_parent" N'EST PLUS DEFINIE ICI.
+--
+-- Elle l'est dans schema_partages_rls_security_definer.sql, qui la
+-- supprime puis la recree en passant par public.enfant_du_parent()
+-- plutot que par une sous-requete brute sur `enfants` -- corrections
+-- de l'audit passe 1, item 4 : coherence avec toutes les autres tables
+-- protegees par "cet enfant m'appartient-il ?".
+--
+-- La declaration obsolete qui figurait ici a ete retiree le 23/08/2026
+-- (audit docs/audits/ecart_schema.md, §3). Elle etait la seule du
+-- depot a exister en double, avec deux definitions divergentes : la
+-- base porte bien celle du fichier security_definer -- verifie sur
+-- l'instantane supabase/_snapshot/schema_reel_2026-08-23.sql, ou
+-- `using` et `with check` valent tous deux enfant_du_parent(enfant_id).
+-- Quiconque lisait ce fichier seul en tirait pourtant la conclusion
+-- inverse.
+--
+-- Ce retrait ne change rien en base : le fichier security_definer,
+-- deja applique, reste la source de verite. Rejouer schema.sql ne
+-- recreera plus l'ancienne version par-dessus la nouvelle.
