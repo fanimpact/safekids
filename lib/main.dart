@@ -7,6 +7,7 @@ import 'auth/auth_provider.dart';
 import 'auth/set_new_password_page.dart';
 import 'auth/supabase_auth_provider.dart';
 import 'repositories/child_repository.dart';
+import 'theme/kidsrelay_theme.dart';
 import 'welcome_page.dart';
 
 /// Permet de naviguer depuis en dehors de l'arbre de widgets, pour le
@@ -110,11 +111,7 @@ class _KidsRelayAppState extends State<KidsRelayApp> {
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'KidsRelay',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-        ),
-      ),
+      theme: kidsRelayTheme(),
       home: const WelcomePage(),
     );
   }
