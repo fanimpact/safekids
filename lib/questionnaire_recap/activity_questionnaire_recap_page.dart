@@ -10,6 +10,7 @@ import '../models/complete_child_profile_data.dart';
 import '../models/meals_data.dart';
 import '../models/transport_data.dart';
 import '../models/trigger_factor_data.dart';
+import '../utils/pdf_theme.dart';
 import '../utils/pdf_text.dart';
 
 /// Récapitulatif intégral du questionnaire "Profil Activités" pour un
@@ -848,18 +849,19 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
   ) async {
     final document = pw.Document();
 
+    final theme = await pdfKidsRelayTheme();
+    final policeTitres = await pdfTitleFont();
+
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
+        theme: theme,
         build: (context) => [
           pw.Text(
             pdfSafeText(
               'Profil Activités — $_displayName',
             ),
-            style: pw.TextStyle(
-              fontSize: 20,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: pdfDocumentTitleStyle(policeTitres),
           ),
           for (final section in _sections(profile)) ...[
             pdfSectionTitle(section.title),

@@ -1,9 +1,17 @@
 import 'package:pdf/widgets.dart' as pw;
 
-/// The base PDF font only supports plain ASCII punctuation, unlike the
-/// on-screen text which renders fine with typographic characters.
-/// Curly quotes/dashes show up as tofu boxes in the exported PDF unless
-/// swapped for their plain equivalents right before rendering.
+import 'pdf_theme.dart';
+
+/// Remplace la ponctuation typographique par son équivalent ASCII
+/// avant le rendu.
+///
+/// Écrit à l'époque où les fiches sortaient dans la police PDF de
+/// base, qui ne connaît que l'ASCII : une apostrophe courbe y
+/// devenait un carré vide. Depuis que Mulish est embarquée dans les
+/// fiches (voir `pdf_theme.dart`), la contrainte technique n'existe
+/// plus — la conversion est conservée telle quelle pour ne pas
+/// changer le texte des fiches déjà imprimées ou partagées. Elle
+/// pourra être retirée en connaissance de cause.
 String pdfSafeText(
   String text,
 ) {
@@ -35,6 +43,7 @@ pw.Widget pdfSectionTitle(
       style: pw.TextStyle(
         fontSize: 15,
         fontWeight: pw.FontWeight.bold,
+        color: KidsRelayPdfColors.vertPin,
       ),
     ),
   );
@@ -50,8 +59,42 @@ pw.Widget pdfBullet(
     ),
     child: pw.Bullet(
       text: pdfSafeText(text),
-      style: const pw.TextStyle(
+      style: pw.TextStyle(
         fontSize: 11,
+        color: KidsRelayPdfColors.ardoise,
+      ),
+    ),
+  );
+}
+
+/// Titre de section pour ce qui relève de l'urgence vitale — consignes
+/// d'urgence, médicaments d'urgence. C'est le pendant imprimé des
+/// encarts rouges de l'application.
+///
+/// Volontairement un bandeau court et non un cadre autour de toute la
+/// section : sur une fiche longue, un cadre qui ne tient pas sur une
+/// page casse la pagination de `pw.MultiPage`. Le bandeau, lui, tient
+/// toujours.
+pw.Widget pdfEmergencySectionTitle(String titre) {
+  return pw.Container(
+    margin: const pw.EdgeInsets.only(top: 14, bottom: 8),
+    padding: const pw.EdgeInsets.symmetric(
+      horizontal: 10,
+      vertical: 6,
+    ),
+    decoration: pw.BoxDecoration(
+      color: KidsRelayPdfColors.urgenceFond,
+      border: pw.Border.all(
+        color: KidsRelayPdfColors.urgenceBordure,
+      ),
+      borderRadius: pw.BorderRadius.circular(4),
+    ),
+    child: pw.Text(
+      pdfSafeText(titre),
+      style: pw.TextStyle(
+        fontSize: 15,
+        fontWeight: pw.FontWeight.bold,
+        color: KidsRelayPdfColors.urgence,
       ),
     ),
   );

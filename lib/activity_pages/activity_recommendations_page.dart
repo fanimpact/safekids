@@ -20,6 +20,7 @@ import '../recommendation_engine/models/recommendation_category.dart';
 import '../repositories/child_repository.dart';
 import '../utils/age_utils.dart';
 import '../utils/date_format_utils.dart';
+import '../utils/pdf_theme.dart';
 import '../utils/pdf_text.dart';
 import '../utils/treatment_audience.dart';
 import 'activities_home_page.dart';
@@ -1501,7 +1502,7 @@ class _ActivityRecommendationsPageState
     }
 
     return [
-      pdfSectionTitle('Médicaments d’urgence'),
+      pdfEmergencySectionTitle('Médicaments d’urgence'),
       ...childBlocks,
     ];
   }
@@ -1552,6 +1553,9 @@ class _ActivityRecommendationsPageState
   Future<Uint8List> _buildPdfBytes() async {
     final document = pw.Document();
 
+    final theme = await pdfKidsRelayTheme();
+    final policeTitres = await pdfTitleFont();
+
     final activityName = widget.activitySession.activityName;
     final activityDate = widget.activitySession.date;
     final activityLocation =
@@ -1560,13 +1564,11 @@ class _ActivityRecommendationsPageState
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
+        theme: theme,
         build: (context) => [
           pw.Text(
             'Fiche de recommandations',
-            style: pw.TextStyle(
-              fontSize: 20,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: pdfDocumentTitleStyle(policeTitres),
           ),
 
           if (activityName != null &&

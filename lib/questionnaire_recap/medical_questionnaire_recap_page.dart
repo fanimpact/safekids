@@ -10,6 +10,7 @@ import '../models/trigger_factor_data.dart';
 import '../models/allergy_data.dart';
 import '../utils/allergy_category_labels.dart';
 import '../utils/date_format_utils.dart';
+import '../utils/pdf_theme.dart';
 import '../utils/pdf_text.dart';
 
 /// Récapitulatif intégral du questionnaire santé pour un enfant : chaque
@@ -905,18 +906,19 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
   Future<Uint8List> _buildPdfBytes() async {
     final document = pw.Document();
 
+    final theme = await pdfKidsRelayTheme();
+    final policeTitres = await pdfTitleFont();
+
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
+        theme: theme,
         build: (context) => [
           pw.Text(
             pdfSafeText(
               'Questionnaire santé — $_displayName',
             ),
-            style: pw.TextStyle(
-              fontSize: 20,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: pdfDocumentTitleStyle(policeTitres),
           ),
           for (final section in _sections) ...[
             pdfSectionTitle(section.title),

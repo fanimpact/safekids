@@ -15,6 +15,7 @@ import '../recommendation_engine/rules/universal_trigger_rules.dart';
 import '../utils/age_utils.dart';
 import '../utils/date_format_utils.dart';
 import '../utils/medical_professional_line.dart';
+import '../utils/pdf_theme.dart';
 import '../utils/pdf_text.dart';
 import '../utils/treatment_audience.dart';
 
@@ -756,18 +757,19 @@ class EmergencyInfoSheetPage extends StatelessWidget {
   Future<Uint8List> _buildPdfBytes() async {
     final document = pw.Document();
 
+    final theme = await pdfKidsRelayTheme();
+    final policeTitres = await pdfTitleFont();
+
     document.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
+        theme: theme,
         build: (context) => [
           pw.Text(
             pdfSafeText(
               'Informations essentielles — $_displayName',
             ),
-            style: pw.TextStyle(
-              fontSize: 20,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: pdfDocumentTitleStyle(policeTitres),
           ),
 
           if (_identityDetails.isNotEmpty)
@@ -777,7 +779,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
                 pdfSafeText(
                   _identityDetails.join(' — '),
                 ),
-                style: const pw.TextStyle(fontSize: 12),
+                style: pdfSubtitleStyle,
               ),
             ),
 
@@ -887,7 +889,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
     }
 
     final widgets = <pw.Widget>[
-      pdfSectionTitle('Consignes d’urgence'),
+      pdfEmergencySectionTitle('Consignes d’urgence'),
     ];
 
     for (final entry in entries) {
