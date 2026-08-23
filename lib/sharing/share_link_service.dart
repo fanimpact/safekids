@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../config/supabase_config.dart';
 import '../models/share_link_data.dart';
 
 /// Côté parent : lister et révoquer les liens de partage ponctuels
@@ -31,5 +32,39 @@ class ShareLinkService {
 
   Future<void> revokeLink(String id) async {
     await _client.from('partages').delete().eq('id', id);
+  }
+
+  /// Crée un lien de partage et renvoie son adresse complète.
+  ///
+  /// L'insertion était faite depuis l'écran `CreateShareLinkPage`
+  /// (23/08/2026) : c'était le seul écran de l'app à écrire en base.
+  /// [contenuFige] est la "photo" des recommandations au moment du
+  /// partage, quand la fiche partagée est celle d'une activité.
+  Future<String> createLink({
+    required String childId,
+    required String typeFiche,
+    required String destinataire,
+    required DateTime dateExpiration,
+    Map<String, dynamic>? contenuFige,
+    String? activiteId,
+  }) async {
+    final response = await _client
+        .from('partages')
+        .insert({
+          'enfant_id': childId,
+          'type_fiche': typeFiche,
+          'date_expiration':
+              dateExpiration.toUtc().toIso8601String(),
+          'destinataire': destinataire,
+          'contenu_fige': contenuFige,
+          'activite_id': activiteId,
+        })
+        .select('token')
+        .single();
+
+    final token = response['token'] as String;
+
+    return '${SupabaseConfig.url}/functions/v1/voir-partage'
+        '?token=$token';
   }
 }

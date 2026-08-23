@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../config/supabase_config.dart';
 import '../models/activity_session/complete_activity_session_data.dart';
 import '../models/complete_child_profile_data.dart';
 import '../models/share_link_data.dart';
@@ -12,6 +10,7 @@ import '../repositories/activity_session_repository.dart';
 import '../repositories/child_repository.dart';
 import '../utils/date_format_utils.dart';
 import 'activity_recommendation_snapshot.dart';
+import 'share_link_service.dart';
 
 const _selectableFicheTypes = [
   ShareFicheType.secours,
@@ -195,24 +194,15 @@ class _CreateShareLinkPageState
     );
 
     try {
-      final response = await Supabase.instance.client
-          .from('partages')
-          .insert({
-            'enfant_id': child.childId,
-            'type_fiche': _selectedFicheType.value,
-            'date_expiration':
-                dateExpiration.toIso8601String(),
-            'destinataire': _selectedDestinataire.value,
-            'contenu_fige': contenuFige,
-            'activite_id': _selectedActivity?.id,
-          })
-          .select('token')
-          .single();
-
-      final token = response['token'] as String;
-
-      final link =
-          '${SupabaseConfig.url}/functions/v1/voir-partage?token=$token';
+      final link = await ShareLinkService.instance.createLink(
+        // Non nul : garanti par le garde en tête de cette méthode.
+        childId: child.childId!,
+        typeFiche: _selectedFicheType.value,
+        destinataire: _selectedDestinataire.value,
+        dateExpiration: dateExpiration,
+        contenuFige: contenuFige,
+        activiteId: _selectedActivity?.id,
+      );
 
       setState(() {
         _generatedLink = link;

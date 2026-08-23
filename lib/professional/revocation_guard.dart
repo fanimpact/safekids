@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'professional_child_repository.dart';
 
 /// Enveloppe une fiche professionnelle (ou un enfant en Mode Urgence)
 /// et surveille, tant qu'elle reste ouverte, que l'accès à cet enfant
@@ -66,19 +67,15 @@ class _RevocationGuardState extends State<RevocationGuard> {
       return;
     }
 
-    try {
-      final row = await Supabase.instance.client
-          .from('enfants')
-          .select('id')
-          .eq('id', widget.childId)
-          .maybeSingle();
+    // Ne ferme jamais sur un simple problème réseau passager —
+    // uniquement sur une absence confirmée (RLS a refusé la ligne).
+    // C'est le dépôt qui porte cette garantie : il renvoie `true` en
+    // cas d'erreur.
+    final stillVisible = await ProfessionalChildRepository.instance
+        .childStillVisible(widget.childId);
 
-      if (row == null) {
-        await _closeForRevocation();
-      }
-    } catch (_) {
-      // Ne ferme jamais sur un simple problème réseau passager —
-      // uniquement sur une absence confirmée (RLS a refusé la ligne).
+    if (!stillVisible) {
+      await _closeForRevocation();
     }
   }
 

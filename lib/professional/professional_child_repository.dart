@@ -177,6 +177,31 @@ class ProfessionalChildRepository extends ChangeNotifier {
     }
   }
 
+  /// Vrai tant que l'enfant reste visible pour la personne connectée.
+  ///
+  /// S'appuie sur la même règle RLS que le reste de l'app
+  /// (`enfant_visible_par_etablissement`) : une lecture légère de la
+  /// ligne `enfants`. Si elle ne revient plus, l'accès a été révoqué ou
+  /// a expiré.
+  ///
+  /// Renvoie `true` en cas d'erreur réseau : l'appelant
+  /// (`RevocationGuard`) ne doit jamais fermer une fiche sur un simple
+  /// incident passager, uniquement sur une absence confirmée. La
+  /// requête était faite depuis le widget lui-même (23/08/2026).
+  Future<bool> childStillVisible(String childId) async {
+    try {
+      final row = await _client
+          .from('enfants')
+          .select('id')
+          .eq('id', childId)
+          .maybeSingle();
+
+      return row != null;
+    } catch (_) {
+      return true;
+    }
+  }
+
   /// Enregistre une consultation dans le journal de traçabilité —
   /// échec silencieux : ne doit jamais empêcher la consultation
   /// elle-même de s'afficher.
