@@ -228,7 +228,7 @@ une vraie base. À rouvrir seulement si une migration est décidée.
 | Tests Flutter | **309**, tous verts |
 | Tests JavaScript | **85** pour les fonctions serveur, **29** pour la page auth |
 | `flutter analyze` | propre |
-| Dernier commit | `<a completer>` — documentation des fonctions serveur |
+| Dernier chantier | fonctions serveur isolées de l'hébergeur, 6 commits |
 
 **Outillage installé sur le poste** (à savoir avant de chercher) :
 `postgresql` 18.6 via scoop (`pg_dump`, `psql`, plus un serveur local
