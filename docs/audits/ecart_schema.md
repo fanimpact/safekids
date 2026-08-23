@@ -5,7 +5,13 @@
 Comparaison entre l'état réel de la base et les 17 fichiers `supabase/*.sql`,
 appliqués à la main dans le SQL Editor depuis le début du projet.
 
-Instantané de référence : [`supabase/_snapshot/schema_reel_2026-08-23.sql`](../../supabase/_snapshot/schema_reel_2026-08-23.sql)
+Instantané de référence pour cette comparaison :
+[`supabase/_snapshot/schema_reel_2026-08-23.sql`](../../supabase/_snapshot/schema_reel_2026-08-23.sql)
+
+Un second instantané existe, produit le même jour par `pg_dump` :
+[`supabase/_snapshot/schema_dump_2026-08-23.sql`](../../supabase/_snapshot/schema_dump_2026-08-23.sql).
+Les deux décrivent la même base mais ne servent pas à la même chose —
+voir « Deux instantanés, deux usages » ci-dessous.
 
 **La base n'a été ni modifiée, ni touchée** — uniquement lue, par des
 `SELECT` sur les catalogues.
@@ -44,11 +50,55 @@ Editor : les deux existent, sont actives, et concordent avec les fichiers
 
 ---
 
-## Comment cet instantané a été produit
+## Deux instantanés, deux usages
+
+Le dossier `supabase/_snapshot/` contient **deux fichiers datés du même
+jour**. Ils décrivent la même base, mais ne servent pas à la même chose.
+
+| Fichier | Nature | Sert à |
+|---|---|---|
+| `schema_reel_2026-08-23.sql` | Reconstruction depuis les catalogues | **Comparer** avec les 17 fichiers `supabase/*.sql` — c'est la base de ce rapport |
+| `schema_dump_2026-08-23.sql` | Vrai `pg_dump --schema-only` | **Recréer** la structure sur une autre base |
+
+**Le reconstruit** est né d'une contrainte : `pg_dump` n'était pas
+installé sur le poste au moment de l'audit (voir ci-dessous). Il est
+lisible, ordonné alphabétiquement, sans `GRANT` ni propriétaires — pensé
+pour être lu et comparé, pas exécuté.
+
+**Le dump** a été produit ensuite, après installation des outils clients
+PostgreSQL. Il respecte l'ordre des dépendances, inclut les `GRANT` et les
+propriétaires, et quote tous les identifiants.
+
+Les deux ont été comparés le 23/08/2026 : **tables, colonnes, politiques
+et fonctions concordent à l'identique**. Seule la forme diffère, et les
+deux écarts apparents se réconcilient — `pg_dump` émet les 22 index de
+contrainte comme `ADD CONSTRAINT` (22 + 4 explicites = 26) et les 12
+contraintes `CHECK` en ligne dans `CREATE TABLE` (56 + 12 = 68).
+
+### Le dump n'est rejouable que sur un projet Supabase
+
+Vérifié le 23/08/2026 en le rejouant réellement sur un PostgreSQL 18.6
+vierge : **178 erreurs, 14 tables créées sur 16**. Il suppose un
+environnement Supabase qu'il ne recrée pas — les rôles `anon`,
+`authenticated`, `service_role`, les schémas `auth` et `extensions`, et
+quelques extensions.
+
+Les deux tables en échec sont `partages` et `enfants_etablissements` :
+leur colonne `token` a pour valeur par défaut
+`extensions.gen_random_bytes(24)`.
+
+La liste complète des prérequis, avec ce à quoi chacun sert réellement,
+est dans [`../migration/prerequis_base_cible.md`](../migration/prerequis_base_cible.md).
+
+---
+
+## Comment le reconstruit a été produit
 
 `supabase db dump` exécute `pg_dump` dans Docker. Ni `pg_dump`, ni `psql`,
-ni Docker ne sont installés sur le poste — la commande échoue et laisse un
-fichier vide.
+ni Docker n'étaient installés sur le poste au moment de l'audit — la
+commande échouait et laissait un fichier vide. Les outils clients ont été
+installés depuis (`scoop install postgresql`), ce qui a permis le second
+instantané.
 
 L'instantané a donc été reconstruit en interrogeant directement les
 catalogues PostgreSQL (`pg_class`, `pg_attribute`, `pg_constraint`,
