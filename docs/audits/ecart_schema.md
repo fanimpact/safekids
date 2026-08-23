@@ -24,7 +24,9 @@ seule modification, et elle ne change rien à l'état de la production.
 divergence de définition détectée sur les colonnes, les commandes des
 politiques ou les fonctions.
 
-Une seule zone reste **non vérifiable** : les tâches planifiées `pg_cron`
+**Aucun point ouvert.** Les tâches planifiées `pg_cron`, hors de portée du
+rôle utilisé pour l'audit, ont été vérifiées le 23/08/2026 depuis le SQL
+Editor : les deux existent, sont actives, et concordent avec les fichiers
 (voir §7).
 
 | Catégorie | Base | Fichiers | Verdict |
@@ -38,7 +40,7 @@ Une seule zone reste **non vérifiable** : les tâches planifiées `pg_cron`
 | Politiques RLS | 40 | 41 distinctes, 1 supprimée volontairement | cohérentes |
 | Fonctions | 18 | 18 | identiques |
 | Extensions | 6 | 2 déclarées, 4 par défaut Supabase | à connaître |
-| Tâches `pg_cron` | ? | 2 déclarées | **non vérifiable** |
+| Tâches `pg_cron` | 2 actives | 2 déclarées | identiques (§7) |
 
 ---
 
@@ -64,7 +66,8 @@ Deux requêtes ont buté sur les privilèges du rôle temporaire :
 - `information_schema.columns` renvoyait 0 ligne (ce catalogue filtre selon
   les droits). Contourné par `pg_attribute`, qui a bien rendu les 150
   colonnes.
-- `cron.job` : `permission denied for schema cron`. Non contournable.
+- `cron.job` : `permission denied for schema cron`. Non contournable avec
+  ce rôle — tranché depuis le SQL Editor le 23/08/2026 (§7).
 
 ---
 
@@ -309,37 +312,65 @@ pour permettre les `upsert … on conflict (enfant_id)` côté application.
 
 ---
 
-## 7. Le point non vérifiable : `pg_cron`
+## 7. `pg_cron` : vérifié, les deux tâches sont actives
 
-Le rôle temporaire de la CLI n'a pas accès au schéma `cron` :
+**Ce point était resté ouvert à la clôture de l'audit automatisé.** Le rôle
+de connexion temporaire de la CLI n'a pas accès au schéma `cron` :
 
 ```
 permission denied for schema cron
 ```
 
-**Impossible de dire si les tâches planifiées existent, sont actives, ou
-correspondent aux fichiers.** Deux sont déclarées :
-
-| Tâche | Fréquence | Fichier |
-|---|---|---|
-| `supprimer-partages-expires` | `0 3 * * *` | `partages_liens.sql:32` |
-| `purge-journal-consultations-fiche` | 12 mois | `schema_espace_professionnel_fiches.sql:88` |
-
-L'extension `pg_cron` **est bien installée** (v1.6.4) — ça, c'est vérifié.
-Mais son installation ne dit rien de la programmation des tâches.
-
-Le second fichier enveloppe d'ailleurs sa programmation dans un
-`do $$ … exception when others then null; end $$`, qui **avale toute
-erreur en silence**. Si cette tâche n'a pas été créée, rien ne l'aura
-signalé, et le journal des consultations n'est jamais purgé.
-
-**Pour trancher**, dans le SQL Editor du tableau de bord :
+**Il a été tranché le 23/08/2026 par Fanny, depuis le SQL Editor du
+tableau de bord Supabase** — c'est-à-dire hors de mon analyse, avec un rôle
+qui, lui, a les droits nécessaires. Requête exécutée :
 
 ```sql
 select jobid, jobname, schedule, active from cron.job order by jobname;
 ```
 
-C'est le seul point de cet audit qui reste ouvert.
+Résultat constaté :
+
+| jobid | Tâche | Fréquence constatée | Active |
+|---|---|---|---|
+| 3 | `purge-journal-consultations-fiche` | `0 3 * * *` | **oui** |
+| 2 | `supprimer-partages-expires` | `0 3 * * *` | **oui** |
+
+### Concordance avec les fichiers : complète
+
+| Tâche | Fichier | Fréquence déclarée | Concorde |
+|---|---|---|---|
+| `supprimer-partages-expires` | `partages_liens.sql:32` | `0 3 * * *` | ✔ |
+| `purge-journal-consultations-fiche` | `schema_espace_professionnel_fiches.sql:97` | `0 3 * * *` | ✔ |
+
+Les deux tâches existent, sont actives, et tournent à la fréquence
+déclarée. **Plus aucun point ouvert sur `pg_cron`.**
+
+### Correction d'une imprécision de la première version de ce rapport
+
+La première version indiquait « 12 mois » dans la colonne *Fréquence* pour
+`purge-journal-consultations-fiche`. C'était une confusion entre deux
+notions distinctes :
+
+- **Fréquence d'exécution** : `0 3 * * *`, soit tous les jours à 3 h.
+- **Durée de conservation** : 12 mois, portée par la clause `where` du
+  `DELETE` — `consulte_le < now() - interval '12 months'`.
+
+La tâche tourne donc quotidiennement et supprime, à chaque passage, les
+entrées de plus de 12 mois. C'est bien ce que déclare
+`schema_espace_professionnel_fiches.sql:100-103`.
+
+### Pourquoi ce point méritait d'être tranché
+
+`schema_espace_professionnel_fiches.sql:105-106` enveloppe la
+programmation dans un `do $$ … exception when others end $$` qui **avale
+toute erreur**. Si la tâche n'avait pas été créée, rien ne l'aurait
+signalé — ni au moment de l'exécution du script, ni ensuite — et le
+journal des consultations aurait grossi indéfiniment sans purge.
+
+Le contrôle confirme que ce scénario ne s'est pas produit. Voir
+[`retention_journal_consultations.md`](retention_journal_consultations.md)
+pour la note conservée au dossier RGPD.
 
 ---
 
