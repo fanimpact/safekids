@@ -1261,7 +1261,7 @@ class CareInfoSheetPage extends StatelessWidget {
         theme: theme,
         build: (context) => [
           pw.Text(
-            pdfSafeText(_pageTitle),
+            _pageTitle,
             style: pdfDocumentTitleStyle(policeTitres),
           ),
 
@@ -1269,9 +1269,7 @@ class CareInfoSheetPage extends StatelessWidget {
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 4),
               child: pw.Text(
-                pdfSafeText(
-                  _identityDetails.join(' — '),
-                ),
+                _identityDetails.join(' — '),
                 style: pdfSubtitleStyle,
               ),
             ),
@@ -1290,7 +1288,7 @@ class CareInfoSheetPage extends StatelessWidget {
                   bottom: 2,
                 ),
                 child: pw.Text(
-                  pdfSafeText(group.heading),
+                  group.heading,
                   style: pw.TextStyle(
                     fontSize: 12,
                     fontWeight: pw.FontWeight.bold,

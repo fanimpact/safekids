@@ -15,6 +15,12 @@ import '../theme/kidsrelay_theme.dart';
 /// Le fond des pages reste blanc : le lin est un fond d'écran, pas un
 /// fond d'impression — l'imprimer reviendrait à couvrir chaque page
 /// d'encre pour rien.
+///
+/// Embarquer ces polices a supprimé au passage la contrainte qui
+/// obligeait les fiches à l'ASCII : apostrophes courbes, tirets longs,
+/// guillemets français et points de suspension s'impriment tels quels,
+/// comme à l'écran. La fonction `pdfSafeText` qui les convertissait
+/// n'existe plus.
 class KidsRelayPdfColors {
   KidsRelayPdfColors._();
 

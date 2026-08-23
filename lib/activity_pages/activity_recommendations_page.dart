@@ -466,11 +466,9 @@ class _ActivityRecommendationsPageState
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 2),
           child: pw.Text(
-            pdfSafeText(
-              details == null
-                  ? name
-                  : '$name — $details',
-            ),
+            details == null
+                ? name
+                : '$name — $details',
             style: const pw.TextStyle(fontSize: 11),
           ),
         ),
@@ -1339,7 +1337,7 @@ class _ActivityRecommendationsPageState
         bottom: 4,
       ),
       child: pw.Text(
-        pdfSafeText(_childDisplayName(childId)),
+        _childDisplayName(childId),
         style: pw.TextStyle(
           fontSize: 12,
           fontWeight: pw.FontWeight.bold,
@@ -1576,7 +1574,7 @@ class _ActivityRecommendationsPageState
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 4),
               child: pw.Text(
-                pdfSafeText(activityName.trim()),
+                activityName.trim(),
                 style: pw.TextStyle(
                   fontSize: 14,
                   fontWeight: pw.FontWeight.bold,
@@ -1599,7 +1597,7 @@ class _ActivityRecommendationsPageState
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 2),
               child: pw.Text(
-                pdfSafeText(activityLocation),
+                activityLocation,
                 style: const pw.TextStyle(fontSize: 11),
               ),
             ),

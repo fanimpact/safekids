@@ -858,9 +858,7 @@ class ActivityQuestionnaireRecapPage extends StatelessWidget {
         theme: theme,
         build: (context) => [
           pw.Text(
-            pdfSafeText(
-              'Profil Activités — $_displayName',
-            ),
+            'Profil Activités — $_displayName',
             style: pdfDocumentTitleStyle(policeTitres),
           ),
           for (final section in _sections(profile)) ...[

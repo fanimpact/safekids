@@ -2,34 +2,6 @@ import 'package:pdf/widgets.dart' as pw;
 
 import 'pdf_theme.dart';
 
-/// Remplace la ponctuation typographique par son équivalent ASCII
-/// avant le rendu.
-///
-/// Écrit à l'époque où les fiches sortaient dans la police PDF de
-/// base, qui ne connaît que l'ASCII : une apostrophe courbe y
-/// devenait un carré vide. Depuis que Mulish est embarquée dans les
-/// fiches (voir `pdf_theme.dart`), la contrainte technique n'existe
-/// plus — la conversion est conservée telle quelle pour ne pas
-/// changer le texte des fiches déjà imprimées ou partagées. Elle
-/// pourra être retirée en connaissance de cause.
-String pdfSafeText(
-  String text,
-) {
-  return text
-      .replaceAll('’', "'")
-      .replaceAll('‘', "'")
-      .replaceAll('–', '-')
-      .replaceAll('—', '-')
-      .replaceAll('…', '...')
-      .replaceAll('«', '"')
-      .replaceAll('»', '"')
-      .replaceAll('•', '-')
-      .replaceAll('œ', 'oe')
-      .replaceAll('Œ', 'OE')
-      .replaceAll('æ', 'ae')
-      .replaceAll('Æ', 'AE');
-}
-
 pw.Widget pdfSectionTitle(
   String title,
 ) {
@@ -39,7 +11,7 @@ pw.Widget pdfSectionTitle(
       bottom: 8,
     ),
     child: pw.Text(
-      pdfSafeText(title),
+      title,
       style: pw.TextStyle(
         fontSize: 15,
         fontWeight: pw.FontWeight.bold,
@@ -58,7 +30,7 @@ pw.Widget pdfBullet(
       left: 8,
     ),
     child: pw.Bullet(
-      text: pdfSafeText(text),
+      text: text,
       style: pw.TextStyle(
         fontSize: 11,
         color: KidsRelayPdfColors.ardoise,
@@ -90,7 +62,7 @@ pw.Widget pdfEmergencySectionTitle(String titre) {
       borderRadius: pw.BorderRadius.circular(4),
     ),
     child: pw.Text(
-      pdfSafeText(titre),
+      titre,
       style: pw.TextStyle(
         fontSize: 15,
         fontWeight: pw.FontWeight.bold,

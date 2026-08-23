@@ -915,9 +915,7 @@ class MedicalQuestionnaireRecapPage extends StatelessWidget {
         theme: theme,
         build: (context) => [
           pw.Text(
-            pdfSafeText(
-              'Questionnaire santé — $_displayName',
-            ),
+            'Questionnaire santé — $_displayName',
             style: pdfDocumentTitleStyle(policeTitres),
           ),
           for (final section in _sections) ...[

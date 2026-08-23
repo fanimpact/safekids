@@ -766,9 +766,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
         theme: theme,
         build: (context) => [
           pw.Text(
-            pdfSafeText(
-              'Informations essentielles — $_displayName',
-            ),
+            'Informations essentielles — $_displayName',
             style: pdfDocumentTitleStyle(policeTitres),
           ),
 
@@ -776,9 +774,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 4),
               child: pw.Text(
-                pdfSafeText(
-                  _identityDetails.join(' — '),
-                ),
+                _identityDetails.join(' — '),
                 style: pdfSubtitleStyle,
               ),
             ),
@@ -900,7 +896,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
             bottom: 2,
           ),
           child: pw.Text(
-            pdfSafeText(entry.label),
+            entry.label,
             style: pw.TextStyle(
               fontSize: 12,
               fontWeight: pw.FontWeight.bold,
@@ -918,9 +914,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
               bottom: 3,
             ),
             child: pw.Text(
-              pdfSafeText(
-                '${index + 1}. ${entry.steps[index]}',
-              ),
+              '${index + 1}. ${entry.steps[index]}',
               style: const pw.TextStyle(fontSize: 11),
             ),
           ),
