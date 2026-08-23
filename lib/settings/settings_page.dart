@@ -3,6 +3,10 @@ import '../auth/supabase_auth_provider.dart';
 
 import '../auth/account_service.dart';
 import '../export/section_export.dart';
+import '../home/home_page.dart';
+import '../suppression/garde_suppression.dart';
+import '../suppression/section_suppression_compte.dart';
+import '../suppression/suppression_en_cours_page.dart';
 import 'section_email_secours.dart';
 import '../auth/app_auth.dart';
 import '../repositories/child_repository.dart';
@@ -90,6 +94,30 @@ class _SettingsPageState extends State<SettingsPage> {
         });
       }
     }
+  }
+
+  // Apres une demande de suppression, plus rien de l'application ne
+  // doit rester atteignable : l'ecran de blocage remplace toute la
+  // pile. Annuler depuis cet ecran rouvre l'accueil, lui-meme
+  // enveloppe par GardeSuppression.
+  void _afficherBlocage(DateTime effacementLe) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => SuppressionEnCoursPage(
+          effacementLe: effacementLe,
+          onAnnule: () {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) =>
+                    const GardeSuppression(enfant: HomePage()),
+              ),
+              (route) => false,
+            );
+          },
+        ),
+      ),
+      (route) => false,
+    );
   }
 
   Future<void> _confirmSignOut() async {
@@ -229,6 +257,16 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(height: 40),
 
               const SectionExportDonnees(),
+
+              const SizedBox(height: 40),
+
+              const Divider(height: 56),
+
+              // En dernier, apres l'export : un parent qui veut partir
+              // doit passer devant le moyen d'emporter ses donnees.
+              SectionSuppressionCompte(
+                onDemandeEnregistree: _afficherBlocage,
+              ),
 
               const SizedBox(height: 40),
 
