@@ -49,6 +49,12 @@ void main() {
 
     // Export RGPD.
     'lib/export/source_export.dart',
+
+    // Etat administratif du compte : adresse de secours, demande de
+    // suppression. Ajoute le 23/08/2026 avec le chantier de
+    // conformite. Les regles (validation, decisions d'affichage) sont
+    // hors de ce fichier et testees sans base.
+    'lib/settings/compte_service.dart',
   };
 
   List<String> fichiersDartDeLib() {

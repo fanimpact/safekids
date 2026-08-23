@@ -22,6 +22,7 @@ class FakeSourceExport implements SourceExport {
   final Map<String, List<Map<String, dynamic>>> lignesJournal;
   final Map<String, List<Map<String, dynamic>>> lignesConfiance;
   final List<Map<String, dynamic>> lignesActivitesPreparees;
+  final Map<String, dynamic>? ligneCompteParent;
 
   /// Chaque `(rubrique, enfantId)` demandé, dans l'ordre.
   final List<String> lectures = [];
@@ -38,10 +39,17 @@ class FakeSourceExport implements SourceExport {
     this.lignesJournal = const {},
     this.lignesConfiance = const {},
     this.lignesActivitesPreparees = const [],
+    this.ligneCompteParent,
   });
 
   void _noter(String rubrique, String enfantId) {
     lectures.add('$rubrique:$enfantId');
+  }
+
+  @override
+  Future<Map<String, dynamic>?> compteParent(String compteId) async {
+    lectures.add('compteParent:$compteId');
+    return ligneCompteParent;
   }
 
   @override

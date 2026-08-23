@@ -43,9 +43,14 @@ class CompteExporte {
   final String id;
   final String? email;
 
+  /// Ligne `comptes_parents` : adresse de secours, etat d'une demande
+  /// de suppression. Nulle si le compte n'en a pas encore.
+  final Map<String, dynamic>? detailsCompte;
+
   const CompteExporte({
     required this.id,
     required this.email,
+    this.detailsCompte,
   });
 }
 

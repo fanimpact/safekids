@@ -15,6 +15,13 @@ abstract class SourceExport {
   /// Email du compte connecté.
   String? get emailCompte;
 
+  /// Ligne `comptes_parents` du compte connecté, si elle existe.
+  ///
+  /// Elle porte des donnees personnelles que l'authentification ne
+  /// connait pas : adresse de secours, etat d'une demande de
+  /// suppression. Sans elle, l'export cesserait d'etre complet.
+  Future<Map<String, dynamic>?> compteParent(String compteId);
+
   /// **Toutes** les lignes de `enfants` visibles par ce compte —
   /// c'est-à-dire ses propres enfants **et** ceux sur lesquels il est
   /// personne de confiance. Le tri est fait par [collecterExport], pas
@@ -110,6 +117,7 @@ Future<DonneesExport> collecterExport(
     compte: CompteExporte(
       id: compteId,
       email: source.emailCompte,
+      detailsCompte: await source.compteParent(compteId),
     ),
     enfants: enfants,
     activitesPreparees: await source.activitesPreparees(compteId),
@@ -164,6 +172,15 @@ class SourceExportSupabase implements SourceExport {
     return (resultat as List<dynamic>)
         .cast<Map<String, dynamic>>()
         .toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>?> compteParent(String compteId) async {
+    return await _client
+        .from('comptes_parents')
+        .select()
+        .eq('id', compteId)
+        .maybeSingle();
   }
 
   @override

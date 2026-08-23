@@ -88,6 +88,13 @@ List<BlocExport> _pagePresentation(DonneesExport donnees) {
       '${donnees.compte.email ?? 'votre compte'}.',
     ),
 
+    ..._rubrique(
+      'Votre compte',
+      donnees.compte.detailsCompte == null
+          ? const []
+          : [donnees.compte.detailsCompte!],
+    ),
+
     const BlocExport(
       StyleBloc.titreSection,
       'Ce que contient ce document',

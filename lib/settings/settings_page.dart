@@ -3,6 +3,7 @@ import '../auth/supabase_auth_provider.dart';
 
 import '../auth/account_service.dart';
 import '../export/section_export.dart';
+import 'section_email_secours.dart';
 import '../auth/app_auth.dart';
 import '../repositories/child_repository.dart';
 import '../utils/auth_error_message.dart';
@@ -220,6 +221,10 @@ class _SettingsPageState extends State<SettingsPage> {
                         'Mettre à jour le mot de passe',
                       ),
               ),
+
+              const SizedBox(height: 40),
+
+              SectionEmailSecours(emailPrincipal: email),
 
               const SizedBox(height: 40),
 

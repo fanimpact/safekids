@@ -66,6 +66,9 @@ Map<String, dynamic> construireExportJson(DonneesExport donnees) {
     'compte': {
       'id': donnees.compte.id,
       'email': donnees.compte.email,
+      'details': donnees.compte.detailsCompte == null
+          ? null
+          : ligneSansJeton(donnees.compte.detailsCompte!),
     },
     'enfants': donnees.enfants.map(_enfantEnJson).toList(),
     'activites_preparees':
