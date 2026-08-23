@@ -216,33 +216,23 @@ explicite aux données de santé, compteurs d'usage anonymisés, adresse
 email de secours.
 
 **Le fichier SQL a été appliqué le 24/08/2026**, sans erreur
-(`supabase/schema_conformite_rgpd.sql`). Les colonnes, les fonctions,
-les politiques modifiées et les deux tâches automatiques sont en
-place.
-**Tâches automatiques — un écart à lever.** Le dépôt en définit
-**quatre** au total :
+(`supabase/schema_conformite_rgpd.sql`). Colonnes, fonctions et
+politiques modifiées sont en place.
 
-| Nom | Fichier | Fréquence |
-|---|---|---|
-| `supprimer-partages-expires` | `partages_liens.sql` | 3h |
-| `purge-journal-consultations-fiche` | `schema_espace_professionnel_fiches.sql` | 3h |
-| `effacer-comptes-supprimes` | `schema_conformite_rgpd.sql` | 4h |
-| `consolider-compteurs-usage` | `schema_conformite_rgpd.sql` | 4h30, le 1er du mois |
+**Les quatre tâches automatiques sont en place**, vérifiées le
+24/08/2026 : `jobid` 2 à 5, correspondant exactement aux quatre que
+définit le dépôt.
 
-La vérification après application en a compté **cinq**. La cinquième
-n'est définie nulle part dans le dépôt : elle a été créée à la main,
-vient de Supabase, ou est un doublon d'une des quatre. À identifier
-avant de considérer le sujet clos :
+| `jobid` | Nom | Fichier | Fréquence |
+|---|---|---|---|
+| 2 | `supprimer-partages-expires` | `partages_liens.sql` | 3h |
+| 3 | `purge-journal-consultations-fiche` | `schema_espace_professionnel_fiches.sql` | 3h |
+| 4 | `effacer-comptes-supprimes` | `schema_conformite_rgpd.sql` | 4h |
+| 5 | `consolider-compteurs-usage` | `schema_conformite_rgpd.sql` | 4h30, le 1er du mois |
 
-```sql
-select jobid, jobname, schedule, active, command
-from cron.job order by jobid;
-```
-
-Si c'est un doublon d'une tâche du dépôt, la retirer avec
-`select cron.unschedule(<jobid>);` — deux tâches identiques effaceraient
-deux fois, ce qui est sans effet ici mais brouille la lecture.
-
+Aucun doublon. Le `jobid` 1 a été consommé par une tâche supprimée
+autrefois — `pg_cron` ne réutilise pas ses identifiants, donc la
+numérotation commence à 2 et cela n'indique rien d'anormal.
 
 Ce qui compte le plus, dans l'ordre :
 

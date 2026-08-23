@@ -10,8 +10,8 @@ de votre côté.
 >
 > **Le fichier SQL a été appliqué le 24/08/2026**, sans erreur.
 > Colonnes, fonctions, politiques modifiées et tâches automatiques
-> sont en place. Un écart reste à lever sur le nombre de tâches
-> planifiées : voir le point de reprise.
+> sont en place, et les quatre tâches planifiées ont été vérifiées une
+> à une.
 >
 > **Les fonctions serveur ne sont toujours pas redéployées**, et il
 > y en a désormais **six**. La sixième,
