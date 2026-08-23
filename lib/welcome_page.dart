@@ -28,8 +28,8 @@ class _WelcomePageState extends State<WelcomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Pas de fond impose : l'ecran herite du lin defini par le theme.
     return Scaffold(
-      backgroundColor: Colors.white,
       body: const Center(
         child: Text(
           "Bienvenue dans\nKidsRelay",

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/kidsrelay_theme.dart';
+
 import '../activity_pages/activities_home_page.dart';
 import '../activity_profile_pages/activity_profile_entry_page.dart';
 import '../auth/supabase_auth_provider.dart';
@@ -284,8 +286,8 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
               ? Icons.check_circle
               : Icons.hourglass_top,
           color: completed
-              ? Colors.green
-              : Colors.orange,
+              ? KidsRelayColors.vertPin
+              : KidsRelayColors.ambre,
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -975,8 +977,11 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
           TextButton(
             onPressed: () =>
                 Navigator.pop(context, true),
+            // Ardoise et non rouge : supprimer un profil est une action
+            // destructrice, pas une urgence vitale. Le poids vient du
+            // libelle et de la confirmation demandee juste avant.
             style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
+              foregroundColor: KidsRelayColors.ardoise,
             ),
             child: const Text('Supprimer'),
           ),
@@ -1127,7 +1132,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
             _actionButton(
               icon: Icons.event,
-              color: Colors.blue,
+              color: KidsRelayColors.vertPin,
               title: 'Préparer une activité',
               subtitle:
                   'Créer une préparation adaptée à cet enfant.',
@@ -1137,7 +1142,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
             _actionButton(
               icon: Icons.warning,
-              color: Colors.red,
+              color: KidsRelayColors.urgence,
               title: 'Mode Urgence',
               subtitle:
                   'Accéder immédiatement au protocole d’urgence.',
@@ -1156,7 +1161,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
             _actionButton(
               icon: Icons.description,
-              color: Colors.green,
+              color: KidsRelayColors.vertPin,
               title:
                   'Informations pour les secours',
               subtitle:
@@ -1179,7 +1184,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
             _actionButton(
               icon: Icons.fact_check_outlined,
-              color: Colors.teal,
+              color: KidsRelayColors.vertPin,
               title:
                   'Questionnaire santé (récapitulatif)',
               subtitle:
@@ -1199,7 +1204,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
             _actionButton(
               icon: Icons.checklist_rtl,
-              color: Colors.indigo,
+              color: KidsRelayColors.vertPin,
               title:
                   'Questionnaire activité (récapitulatif)',
               subtitle:
@@ -1219,7 +1224,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
             _actionButton(
               icon: Icons.family_restroom,
-              color: Colors.brown,
+              color: KidsRelayColors.vertPin,
               title: "Ce qu'il faut savoir sur $_displayName",
               subtitle:
                   'Informations à connaître pour un accompagnement de plusieurs jours (ex. grands-parents).',
@@ -1290,7 +1295,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
               _actionButton(
                 icon: Icons.history,
-                color: Colors.blueGrey,
+                color: KidsRelayColors.vertPin,
                 title: 'Journal des consultations',
                 subtitle:
                     'Voir quel établissement a consulté la fiche '
@@ -1325,7 +1330,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
               _actionButton(
                 icon: Icons.edit_document,
-                color: Colors.orange,
+                color: KidsRelayColors.ambre,
                 title:
                     'Informations essentielles',
                 subtitle:
@@ -1354,7 +1359,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
               _actionButton(
                 icon: Icons.edit,
-                color: Colors.deepPurple,
+                color: KidsRelayColors.vertPin,
                 title: 'Profil Activités',
                 subtitle:
                     'Modifier les informations utilisées pour préparer les activités.',

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/kidsrelay_theme.dart';
+
 import '../controllers/transmission_controller.dart';
 import '../models/allergy_data.dart';
 import '../utils/allergy_category_labels.dart';
@@ -183,7 +185,7 @@ class _DiagnosedPathologiesPageState
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
+            color: KidsRelayColors.lin,
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Column(

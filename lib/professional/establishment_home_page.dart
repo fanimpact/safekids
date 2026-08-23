@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/kidsrelay_theme.dart';
+
 import '../activity_pages/activities_home_page.dart';
 import '../models/etablissement_data.dart';
 import 'claim_attachment_page.dart';
@@ -316,7 +318,7 @@ class _EstablishmentMenuState extends State<_EstablishmentMenu> {
                 context: context,
                 label: 'Mode Urgence',
                 icon: Icons.emergency_outlined,
-                color: Colors.red.shade700,
+                color: KidsRelayColors.urgence,
                 onPressed: () {
                   Navigator.push(
                     context,

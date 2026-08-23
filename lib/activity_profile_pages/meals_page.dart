@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/kidsrelay_theme.dart';
+
 import '../controllers/activity_profile_controller.dart';
 import '../models/meals_data.dart';
 import '../widgets/questionnaire_page.dart';
@@ -445,7 +447,7 @@ class _MealsPageState extends State<MealsPage> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: KidsRelayColors.lin,
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Text(

@@ -43,6 +43,13 @@ class KidsRelayColors {
   static const Color urgenceFond = Color(0xFFFBEDEB);
   static const Color urgenceBordure = Color(0xFFE0A49D);
 
+  /// Déclinaisons de l'ambre, pour les bandeaux d'information et de
+  /// mise en garde — par exemple le bandeau « données hors ligne » de
+  /// l'accueil. C'est ce qui remplace le réflexe d'utiliser du rouge
+  /// pour attirer l'attention.
+  static const Color ambreFond = Color(0xFFFBF1DF);
+  static const Color ambreBordure = Color(0xFFE8C98A);
+
   /// Texte secondaire : légendes, aides à la saisie, précisions.
   static const Color ardoiseDouce = Color(0xFF5F6B66);
 

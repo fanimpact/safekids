@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/kidsrelay_theme.dart';
+
 import '../models/complete_child_profile_data.dart';
 import '../repositories/child_repository.dart';
 import 'emergency_mode_button_list_page.dart';
@@ -59,7 +61,7 @@ class EmergencyModeChildPickerPage extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Mode Urgence'),
-            backgroundColor: Colors.red.shade700,
+            backgroundColor: KidsRelayColors.urgence,
             foregroundColor: Colors.white,
           ),
           body: SafeArea(

@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
+
+import '../theme/kidsrelay_theme.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
@@ -421,7 +423,7 @@ class _ActivityRecommendationsPageState
             text: TextSpan(
               style: const TextStyle(
                 fontSize: 15,
-                color: Colors.black,
+                color: KidsRelayColors.ardoise,
               ),
               children: [
                 TextSpan(
@@ -731,7 +733,7 @@ class _ActivityRecommendationsPageState
                 fontSize: 15,
                 height: 1.4,
                 color: masque
-                    ? Colors.black45
+                    ? KidsRelayColors.ardoiseDouce
                     : null,
                 decoration: masque
                     ? TextDecoration.lineThrough
@@ -831,7 +833,7 @@ class _ActivityRecommendationsPageState
                   fontSize: 13,
                   fontStyle: FontStyle.italic,
                   decoration: TextDecoration.underline,
-                  color: Colors.grey.shade700,
+                  color: KidsRelayColors.ardoiseDouce,
                 ),
               ),
             ),
@@ -1110,13 +1112,13 @@ class _ActivityRecommendationsPageState
     }
 
     return Card(
-      color: Colors.red.shade50,
+      color: KidsRelayColors.urgenceFond,
       margin: const EdgeInsets.only(
         bottom: 20,
       ),
       shape: RoundedRectangleBorder(
         side: BorderSide(
-          color: Colors.red.shade300,
+          color: KidsRelayColors.urgenceBordure,
         ),
         borderRadius:
             BorderRadius.circular(12),
@@ -1132,7 +1134,7 @@ class _ActivityRecommendationsPageState
               icon:
                   Icons.medical_services_outlined,
               color:
-                  Colors.red.shade800,
+                  KidsRelayColors.urgence,
             ),
             ...childWidgets,
           ],
@@ -1306,7 +1308,7 @@ class _ActivityRecommendationsPageState
                         _formatNoteDate(note.creeLe),
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade600,
+                          color: KidsRelayColors.ardoiseDouce,
                         ),
                       ),
                     ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'theme/kidsrelay_theme.dart';
+
 import 'register_page.dart';
 
 class DemoPage extends StatefulWidget {
@@ -108,7 +110,7 @@ class _DemoPageState extends State<DemoPage> {
                         child: Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
+                            color: KidsRelayColors.lin,
                             borderRadius:
                                 BorderRadius.circular(
                               20,
@@ -148,8 +150,8 @@ class _DemoPageState extends State<DemoPage> {
                 ),
                 decoration: BoxDecoration(
                   color: index == _currentPage
-                      ? Colors.blue
-                      : Colors.grey.shade400,
+                      ? KidsRelayColors.vertPin
+                      : KidsRelayColors.bordure,
                   borderRadius:
                       BorderRadius.circular(10),
                 ),

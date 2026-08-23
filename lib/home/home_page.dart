@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/kidsrelay_theme.dart';
+
 import '../activity_pages/activity_session_start_page.dart';
 import '../children/children_page.dart';
 import '../emergency_info/emergency_info_child_picker_page.dart';
@@ -49,17 +51,17 @@ class HomePage extends StatelessWidget {
               vertical: 12,
             ),
             decoration: BoxDecoration(
-              color: Colors.orange.shade50,
+              color: KidsRelayColors.ambreFond,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: Colors.orange.shade200,
+                color: KidsRelayColors.ambreBordure,
               ),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.cloud_off,
-                  color: Colors.orange.shade800,
+                  color: KidsRelayColors.ambre,
                   size: 20,
                 ),
                 const SizedBox(width: 10),
@@ -69,7 +71,7 @@ class HomePage extends StatelessWidget {
                       ChildRepository.instance.lastSyncAt,
                     ),
                     style: TextStyle(
-                      color: Colors.orange.shade900,
+                      color: KidsRelayColors.ardoise,
                       fontSize: 13,
                     ),
                   ),
@@ -313,7 +315,7 @@ class HomePage extends StatelessWidget {
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: KidsRelayColors.urgence,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(
             horizontal: 20,

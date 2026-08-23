@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/kidsrelay_theme.dart';
+
 import '../models/emergency_treatment_data.dart';
 import '../utils/emergency_treatment_step.dart';
 
@@ -59,8 +61,8 @@ class EmergencyModeInstructionsPage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        border: Border.all(color: Colors.red.shade300),
+        color: KidsRelayColors.urgenceFond,
+        border: Border.all(color: KidsRelayColors.urgenceBordure),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -90,7 +92,7 @@ class EmergencyModeInstructionsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mode Urgence'),
-        backgroundColor: Colors.red.shade700,
+        backgroundColor: KidsRelayColors.urgence,
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
@@ -172,7 +174,7 @@ class EmergencyModeInstructionsPage extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
-              color: Colors.red.shade700,
+              color: KidsRelayColors.urgence,
               child: const Text(
                 'Appelez les secours (15 ou 112)',
                 textAlign: TextAlign.center,

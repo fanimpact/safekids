@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
+
+import '../theme/kidsrelay_theme.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
@@ -947,9 +949,9 @@ class EmergencyInfoSheetPage extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      color: Colors.red.shade50,
+      color: KidsRelayColors.urgenceFond,
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.red.shade300),
+        side: BorderSide(color: KidsRelayColors.urgenceBordure),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Padding(
@@ -962,7 +964,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
                 Icon(
                   Icons.emergency_outlined,
                   size: 22,
-                  color: Colors.red.shade800,
+                  color: KidsRelayColors.urgence,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -971,7 +973,7 @@ class EmergencyInfoSheetPage extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.red.shade800,
+                      color: KidsRelayColors.urgence,
                     ),
                   ),
                 ),

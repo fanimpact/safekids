@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/kidsrelay_theme.dart';
+
 import '../emergency_mode/emergency_mode_button_list_page.dart';
 import '../models/complete_child_profile_data.dart';
 import 'professional_child_repository.dart';
@@ -72,7 +74,7 @@ class ProfessionalEmergencyModeChildPickerPage
         return Scaffold(
           appBar: AppBar(
             title: const Text('Mode Urgence'),
-            backgroundColor: Colors.red.shade700,
+            backgroundColor: KidsRelayColors.urgence,
             foregroundColor: Colors.white,
           ),
           body: SafeArea(
