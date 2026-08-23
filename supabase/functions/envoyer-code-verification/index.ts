@@ -6,6 +6,12 @@
 // clair) dans "codes_verification" avec une expiration courte, et
 // l'envoie par email via Brevo.
 //
+// Ce fichier ne contient que l'enveloppe : lecture des variables,
+// identification de l'appelant, branchement du depot sur Supabase,
+// traduction des resultats en reponses HTTP. La logique est dans
+// ../_logique/codes_verification.mts et ../_logique/emails.mts, ou
+// elle est testee sans base ni reseau.
+//
 // Necessite un appelant authentifie (le mot de passe a deja ete
 // verifie par Supabase Auth avant cet appel) : deployee AVEC
 // verification JWT (pas de --no-verify-jwt).
@@ -20,203 +26,130 @@
 //                        de l'expediteur (sinon, BREVO_SENDER_EMAIL
 //                        sert aussi de reply-to)
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import {
+  enTeteAutorisation,
+  estPreflight,
+  lireCorpsJson,
+  reponseJson,
+  reponsePreflight,
+} from '../_enveloppe/http.mts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
-};
+import {
+  lireConfigurationBase,
+  lireConfigurationEmail,
+} from '../_enveloppe/environnement.mts';
 
-const CODE_VALIDE_MINUTES = 10;
+import {
+  clientServiceRole,
+  identifierAppelant,
+} from '../_enveloppe/supabase.mts';
 
-function jsonResponse(body: unknown, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      'Content-Type': 'application/json',
-    },
-  });
-}
+import { depotCodesSupabase } from '../_enveloppe/depot_codes.mts';
 
-function genererCode(): string {
-  const bytes = new Uint32Array(1);
-  crypto.getRandomValues(bytes);
-  // 6 chiffres, toujours avec les zeros de tete conserves.
-  return String(bytes[0] % 1_000_000).padStart(6, '0');
-}
+import {
+  CODE_VALIDE_MINUTES,
+  aleaCryptographique,
+  dateExpiration,
+  genererCode,
+  hacher,
+  jetonAppareilValide,
+} from '../_logique/codes_verification.mts';
 
-async function hacher(valeur: string): Promise<string> {
-  const donnees = new TextEncoder().encode(valeur);
-  const empreinte = await crypto.subtle.digest(
-    'SHA-256',
-    donnees,
-  );
-
-  return Array.from(new Uint8Array(empreinte))
-    .map((octet) => octet.toString(16).padStart(2, '0'))
-    .join('');
-}
+import {
+  envoyerParBrevo,
+  messageCodeVerification,
+} from '../_logique/emails.mts';
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  if (estPreflight(req)) {
+    return reponsePreflight();
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-  const serviceRoleKey = Deno.env.get(
-    'SUPABASE_SERVICE_ROLE_KEY',
-  );
-  const brevoApiKey = Deno.env.get('BREVO_API_KEY');
-  const brevoSenderEmail = Deno.env.get(
-    'BREVO_SENDER_EMAIL',
-  );
-  const brevoSenderName =
-    Deno.env.get('BREVO_SENDER_NAME') ?? 'KidsRelay';
-  const brevoReplyToEmail =
-    Deno.env.get('BREVO_REPLY_TO_EMAIL') ?? brevoSenderEmail;
+  const base = lireConfigurationBase();
+  const email = lireConfigurationEmail();
 
-  if (
-    !supabaseUrl ||
-    !anonKey ||
-    !serviceRoleKey ||
-    !brevoApiKey ||
-    !brevoSenderEmail
-  ) {
+  if (!base || !email) {
     console.error(
       'Variable d’environnement manquante (Supabase ou Brevo).',
     );
-    return jsonResponse(
+    return reponseJson(
       { error: 'Configuration serveur incomplete.' },
       500,
     );
   }
 
-  const authHeader = req.headers.get('Authorization');
+  const autorisation = enTeteAutorisation(req);
 
-  if (!authHeader) {
-    return jsonResponse({ error: 'Non authentifie.' }, 401);
+  if (!autorisation) {
+    return reponseJson({ error: 'Non authentifie.' }, 401);
   }
 
-  // Client "au nom de l'appelant" : sert uniquement a identifier
-  // l'utilisateur a partir de son jeton, jamais a lire/ecrire les
-  // tables sensibles (ca reste le role du client service_role).
-  const supabaseAppelant = createClient(
-    supabaseUrl,
-    anonKey,
-    { global: { headers: { Authorization: authHeader } } },
-  );
+  const appelant = await identifierAppelant(base, autorisation);
 
-  const { data: userData, error: userError } =
-    await supabaseAppelant.auth.getUser();
-
-  if (userError || !userData.user) {
-    return jsonResponse({ error: 'Non authentifie.' }, 401);
+  if (!appelant) {
+    return reponseJson({ error: 'Non authentifie.' }, 401);
   }
 
-  let jetonAppareilHash: unknown;
+  const corps = await lireCorpsJson(req);
 
-  try {
-    const body = await req.json();
-    jetonAppareilHash = body?.jetonAppareilHash;
-  } catch {
-    return jsonResponse(
-      { error: 'Requete invalide.' },
-      400,
-    );
+  if (!corps) {
+    return reponseJson({ error: 'Requete invalide.' }, 400);
   }
 
-  if (
-    typeof jetonAppareilHash !== 'string' ||
-    jetonAppareilHash.length < 32
-  ) {
-    return jsonResponse(
-      { error: 'Requete invalide.' },
-      400,
-    );
+  const jetonAppareilHash = corps.jetonAppareilHash;
+
+  if (!jetonAppareilValide(jetonAppareilHash)) {
+    return reponseJson({ error: 'Requete invalide.' }, 400);
   }
 
-  const email = userData.user.email;
-
-  if (!email) {
-    return jsonResponse(
+  if (!appelant.email) {
+    return reponseJson(
       { error: 'Compte sans adresse email.' },
       400,
     );
   }
 
-  const code = genererCode();
+  const code = genererCode(aleaCryptographique);
   const codeHash = await hacher(code);
 
-  const supabaseService = createClient(
-    supabaseUrl,
-    serviceRoleKey,
-  );
+  const depot = depotCodesSupabase(clientServiceRole(base));
 
-  const expireLe = new Date(
-    Date.now() + CODE_VALIDE_MINUTES * 60_000,
-  ).toISOString();
+  const { erreur: erreurInsertion } = await depot.enregistrerCode({
+    userId: appelant.id,
+    codeHash,
+    jetonAppareilHash,
+    expireLe: dateExpiration(new Date()),
+  });
 
-  const { error: insertError } = await supabaseService
-    .from('codes_verification')
-    .insert({
-      user_id: userData.user.id,
-      code_hash: codeHash,
-      jeton_appareil_hash: jetonAppareilHash,
-      expire_le: expireLe,
-    });
-
-  if (insertError) {
-    console.error(insertError);
-    return jsonResponse(
+  if (erreurInsertion) {
+    console.error(erreurInsertion);
+    return reponseJson(
       { error: 'Impossible de generer le code.' },
       500,
     );
   }
 
-  // Contrainte de contenu : jamais de donnee de sante, jamais de nom
-  // de famille d'enfant dans un email envoye par cette fonctionnalite.
-  const brevoResponse = await fetch(
-    'https://api.brevo.com/v3/smtp/email',
-    {
-      method: 'POST',
-      headers: {
-        'api-key': brevoApiKey,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        sender: {
-          email: brevoSenderEmail,
-          name: brevoSenderName,
-        },
-        replyTo: { email: brevoReplyToEmail },
-        to: [{ email }],
-        subject: 'Votre code de vérification KidsRelay',
-        htmlContent:
-          `<p>Nouvel appareil détecté sur votre compte KidsRelay.</p>` +
-          `<p>Votre code de vérification : ` +
-          `<strong style="font-size:20px">${code}</strong></p>` +
-          `<p>Ce code est valable ${CODE_VALIDE_MINUTES} minutes. ` +
-          `Si vous n’êtes pas à l’origine de cette ` +
-          `connexion, ignorez cet email.</p>`,
-      }),
-    },
+  const resultat = await envoyerParBrevo(
+    fetch,
+    email,
+    messageCodeVerification(
+      appelant.email,
+      code,
+      CODE_VALIDE_MINUTES,
+    ),
   );
 
-  if (!brevoResponse.ok) {
+  if (!resultat.envoye) {
     console.error(
       'Echec envoi Brevo',
-      brevoResponse.status,
-      await brevoResponse.text(),
+      resultat.statut,
+      resultat.detail,
     );
-    return jsonResponse(
+    return reponseJson(
       { error: 'Impossible d’envoyer le code.' },
       502,
     );
   }
 
-  return jsonResponse({ ok: true }, 200);
+  return reponseJson({ ok: true }, 200);
 });

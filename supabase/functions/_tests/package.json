@@ -1,0 +1,9 @@
+{
+  "name": "kidsrelay-fonctions-serveur-tests",
+  "private": true,
+  "type": "module",
+  "description": "Tests de la logique metier des Edge Functions. Aucune dependance : lanceur integre de Node (node --test), sur les modules de ../_logique/.",
+  "scripts": {
+    "test": "node --test"
+  }
+}

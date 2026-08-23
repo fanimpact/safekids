@@ -5,189 +5,116 @@
 // pour que les connexions suivantes depuis ce meme appareil n'aient
 // plus besoin de code.
 //
+// Ce fichier ne contient que l'enveloppe. La decision d'accepter ou de
+// refuser un code — expiration, compteur de tentatives, comparaison des
+// empreintes, ordre des ecritures — est dans
+// ../_logique/codes_verification.mts, ou elle est testee sans base.
+//
 // Necessite un appelant authentifie : deployee AVEC verification JWT.
 //   supabase functions deploy verifier-code
 //
 // Memes variables d'environnement Supabase que "envoyer-code-
 // verification" (BREVO_* non necessaires ici).
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import {
+  enTeteAutorisation,
+  estPreflight,
+  lireCorpsJson,
+  reponseJson,
+  reponsePreflight,
+} from '../_enveloppe/http.mts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
-};
+import { lireConfigurationBase } from '../_enveloppe/environnement.mts';
 
-const TENTATIVES_MAX = 5;
+import {
+  clientServiceRole,
+  identifierAppelant,
+} from '../_enveloppe/supabase.mts';
 
-function jsonResponse(body: unknown, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      'Content-Type': 'application/json',
-    },
-  });
-}
+import { depotCodesSupabase } from '../_enveloppe/depot_codes.mts';
 
-async function hacher(valeur: string): Promise<string> {
-  const donnees = new TextEncoder().encode(valeur);
-  const empreinte = await crypto.subtle.digest(
-    'SHA-256',
-    donnees,
-  );
-
-  return Array.from(new Uint8Array(empreinte))
-    .map((octet) => octet.toString(16).padStart(2, '0'))
-    .join('');
-}
+import {
+  CODE_INVALIDE,
+  jetonAppareilValide,
+  verifierCode,
+} from '../_logique/codes_verification.mts';
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  if (estPreflight(req)) {
+    return reponsePreflight();
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-  const serviceRoleKey = Deno.env.get(
-    'SUPABASE_SERVICE_ROLE_KEY',
-  );
+  const base = lireConfigurationBase();
 
-  if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+  if (!base) {
     console.error('Variable d’environnement Supabase manquante.');
-    return jsonResponse(
+    return reponseJson(
       { error: 'Configuration serveur incomplete.' },
       500,
     );
   }
 
-  const authHeader = req.headers.get('Authorization');
+  const autorisation = enTeteAutorisation(req);
 
-  if (!authHeader) {
-    return jsonResponse({ error: 'Non authentifie.' }, 401);
+  if (!autorisation) {
+    return reponseJson({ error: 'Non authentifie.' }, 401);
   }
 
-  const supabaseAppelant = createClient(
-    supabaseUrl,
-    anonKey,
-    { global: { headers: { Authorization: authHeader } } },
-  );
+  const appelant = await identifierAppelant(base, autorisation);
 
-  const { data: userData, error: userError } =
-    await supabaseAppelant.auth.getUser();
-
-  if (userError || !userData.user) {
-    return jsonResponse({ error: 'Non authentifie.' }, 401);
+  if (!appelant) {
+    return reponseJson({ error: 'Non authentifie.' }, 401);
   }
 
-  let code: unknown;
-  let jetonAppareilHash: unknown;
-  let nomAppareil: unknown;
+  const corps = await lireCorpsJson(req);
 
-  try {
-    const body = await req.json();
-    code = body?.code;
-    jetonAppareilHash = body?.jetonAppareilHash;
-    nomAppareil = body?.nomAppareil;
-  } catch {
-    return jsonResponse({ error: 'Requete invalide.' }, 400);
+  if (!corps) {
+    return reponseJson({ error: 'Requete invalide.' }, 400);
   }
+
+  const code = corps.code;
+  const jetonAppareilHash = corps.jetonAppareilHash;
+  const nomAppareil = corps.nomAppareil;
 
   if (
     typeof code !== 'string' ||
-    typeof jetonAppareilHash !== 'string' ||
-    jetonAppareilHash.length < 32
+    !jetonAppareilValide(jetonAppareilHash)
   ) {
-    return jsonResponse({ error: 'Requete invalide.' }, 400);
+    return reponseJson({ error: 'Requete invalide.' }, 400);
   }
 
-  const supabaseService = createClient(
-    supabaseUrl,
-    serviceRoleKey,
+  const resultat = await verifierCode(
+    depotCodesSupabase(clientServiceRole(base)),
+    {
+      userId: appelant.id,
+      code,
+      jetonAppareilHash,
+      nomAppareil:
+        typeof nomAppareil === 'string' ? nomAppareil : null,
+    },
+    new Date(),
   );
 
-  const { data: ligne, error: selectError } =
-    await supabaseService
-      .from('codes_verification')
-      .select(
-        'id, code_hash, expire_le, utilise_le, tentatives',
-      )
-      .eq('user_id', userData.user.id)
-      .eq('jeton_appareil_hash', jetonAppareilHash)
-      .is('utilise_le', null)
-      .order('cree_le', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  switch (resultat.statut) {
+    case 'accepte':
+      return reponseJson({ ok: true }, 200);
 
-  if (selectError) {
-    console.error(selectError);
-    return jsonResponse(
-      { error: 'Code invalide ou expire.' },
-      500,
-    );
+    case 'refuse':
+      return reponseJson({ error: CODE_INVALIDE }, 400);
+
+    case 'erreurBase':
+      return reponseJson({ error: CODE_INVALIDE }, 500);
+
+    case 'echecValidation':
+      return reponseJson(
+        { error: 'Impossible de valider le code.' },
+        500,
+      );
+
+    case 'echecAppareil':
+      return reponseJson(
+        { error: 'Impossible d’enregistrer l’appareil.' },
+        500,
+      );
   }
-
-  const CODE_INVALIDE = 'Code invalide ou expire.';
-
-  if (!ligne) {
-    return jsonResponse({ error: CODE_INVALIDE }, 400);
-  }
-
-  if (
-    new Date(ligne.expire_le).getTime() < Date.now() ||
-    ligne.tentatives >= TENTATIVES_MAX
-  ) {
-    return jsonResponse({ error: CODE_INVALIDE }, 400);
-  }
-
-  const codeHash = await hacher(code);
-
-  if (codeHash !== ligne.code_hash) {
-    await supabaseService
-      .from('codes_verification')
-      .update({ tentatives: ligne.tentatives + 1 })
-      .eq('id', ligne.id);
-
-    return jsonResponse({ error: CODE_INVALIDE }, 400);
-  }
-
-  const { error: updateError } = await supabaseService
-    .from('codes_verification')
-    .update({ utilise_le: new Date().toISOString() })
-    .eq('id', ligne.id);
-
-  if (updateError) {
-    console.error(updateError);
-    return jsonResponse(
-      { error: 'Impossible de valider le code.' },
-      500,
-    );
-  }
-
-  const { error: upsertError } = await supabaseService
-    .from('appareils_reconnus')
-    .upsert(
-      {
-        user_id: userData.user.id,
-        jeton_hash: jetonAppareilHash,
-        nom_appareil:
-          typeof nomAppareil === 'string'
-            ? nomAppareil
-            : null,
-        derniere_utilisation_le:
-          new Date().toISOString(),
-      },
-      { onConflict: 'user_id,jeton_hash' },
-    );
-
-  if (upsertError) {
-    console.error(upsertError);
-    return jsonResponse(
-      { error: 'Impossible d’enregistrer l’appareil.' },
-      500,
-    );
-  }
-
-  return jsonResponse({ ok: true }, 200);
 });
