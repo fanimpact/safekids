@@ -9,24 +9,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
 <meta name="referrer" content="no-referrer" />
+<meta name="theme-color" content="#1f4a3f" />
 <title>Votre compte KidsRelay</title>
 <style>
   /* Toute l'identité visuelle tient dans ces variables : restyler la
      page plus tard revient à changer ces valeurs, sans toucher au
-     balisage ni au script. */
+     balisage ni au script.
+
+     Ce sont les couleurs de KidsRelay, les mêmes que dans
+     lib/theme/kidsrelay_theme.dart côté application. Un parent qui
+     arrive ici depuis un email doit reconnaître d'où vient la page :
+     c'est ce qui distingue une vraie page d'une imitation.
+
+     Le rouge d'urgence #C0392B n'apparaît pas ici, volontairement :
+     il est réservé aux consignes vitales dans l'application. Un lien
+     de connexion périmé est une contrariété, pas une urgence — d'où
+     l'ambre.
+
+     Les polices de KidsRelay ne sont pas chargées : il faudrait
+     déposer des fichiers supplémentaires chez OVH et alourdir une page
+     que l'on ouvre trois secondes depuis un téléphone. La pile
+     système suffit ; ce sont les couleurs qui portent la
+     reconnaissance. */
   :root {
-    --texte: #1a1a1a;
-    --texte-doux: #5f6368;
-    --fond: #ffffff;
-    --carte: #fafafa;
-    --bordure: #e0e0e0;
-    --accent: #1565c0;
+    --texte: #26302c;
+    --texte-doux: #5f6b66;
+    --fond: #f5f3ef;
+    --carte: #ffffff;
+    --bordure: #d9d5ce;
+    --accent: #1f4a3f;
     --accent-texte: #ffffff;
-    --erreur-fond: #fdecea;
-    --erreur-bordure: #e57373;
-    --erreur-texte: #b3261e;
-    --succes-fond: #e8f5e9;
-    --succes-bordure: #81c784;
+    --alerte-fond: #fbf1df;
+    --alerte-bordure: #e8c98a;
+    --alerte-texte: #26302c;
+    --succes-fond: #eaf2ed;
+    --succes-bordure: #b8d0c4;
     --rayon: 8px;
     --largeur: 460px;
   }
@@ -141,9 +158,9 @@
   }
 
   .encart.erreur {
-    background: var(--erreur-fond);
-    border-color: var(--erreur-bordure);
-    color: var(--erreur-texte);
+    background: var(--alerte-fond);
+    border-color: var(--alerte-bordure);
+    color: var(--alerte-texte);
   }
 
   .encart.succes {

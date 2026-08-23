@@ -39,6 +39,12 @@ origine (`Access-Control-Allow-Origin: *`).
 
 ## Déposer une nouvelle version
 
+> **En attente de dépôt (23/08/2026)** : `index.html` est passé aux
+> couleurs de KidsRelay. La version en ligne est encore l'ancienne, en
+> bleu. Tant qu'elle n'est pas remplacée, le vérificateur signalera un
+> écart sur ce fichier — c'est attendu, et cela disparaîtra au dépôt.
+> `auth-lien.js` n'a pas changé.
+
 1. Se connecter en **SFTP** (FileZilla, port 22) avec les identifiants
    de l'onglet **FTP-SSH** de l'hébergement.
 2. Régler le type de transfert sur **binaire**, pour ne pas altérer les
