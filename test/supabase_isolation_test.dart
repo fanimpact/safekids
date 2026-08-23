@@ -28,6 +28,14 @@ void main() {
     'lib/auth/supabase_auth_provider.dart',
 
     // Services et dépôts : accès aux données.
+    //
+    // `source_export.dart` a rejoint la liste le 23/08/2026 avec le
+    // bouton « Exporter mes données ». C'est un accès aux données de
+    // plus, mais d'une nature particulière : il lit huit tables pour
+    // le droit d'accès RGPD, sans passer par les services existants
+    // qui, eux, sont taillés pour l'affichage et filtrent déjà. La
+    // règle de cloisonnement, elle, est hors du SDK et testée sans
+    // base (voir test/export_cloisonnement_test.dart).
     'lib/auth/account_service.dart',
     'lib/professional/establishment_activity_service.dart',
     'lib/professional/establishment_service.dart',
@@ -38,6 +46,9 @@ void main() {
     'lib/sharing/enfant_confiance_service.dart',
     'lib/sharing/establishment_attachment_service.dart',
     'lib/sharing/share_link_service.dart',
+
+    // Export RGPD.
+    'lib/export/source_export.dart',
   };
 
   List<String> fichiersDartDeLib() {

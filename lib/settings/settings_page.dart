@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../auth/supabase_auth_provider.dart';
 
 import '../auth/account_service.dart';
+import '../export/section_export.dart';
 import '../auth/app_auth.dart';
 import '../repositories/child_repository.dart';
 import '../utils/auth_error_message.dart';
@@ -219,6 +220,10 @@ class _SettingsPageState extends State<SettingsPage> {
                         'Mettre à jour le mot de passe',
                       ),
               ),
+
+              const SizedBox(height: 40),
+
+              const SectionExportDonnees(),
 
               const SizedBox(height: 40),
 
