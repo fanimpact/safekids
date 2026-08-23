@@ -69,6 +69,88 @@ elle-même les avoir vérifiés.
    qui simule l'échec réseau (ne doit jamais fermer par erreur), jamais
    testé avec une vraie révocation en conditions réelles.
 
+## Chantier d'abstraction de l'authentification (23/08/2026)
+
+Le 23/08/2026, les 30 appels au SDK Supabase dispersés dans 12 fichiers
+ont été regroupés derrière une interface unique (`AuthProvider`), et
+les 2 derniers appels de données faits depuis un écran sont passés par
+les services. Objectif : qu'un changement d'hébergeur ne concerne qu'un
+seul fichier.
+
+**Aucun changement de comportement n'était attendu.** Mais les 286
+tests couvrent le moteur de recommandations, les modèles et les
+questionnaires — **pas le câblage d'authentification**. Les points
+ci-dessous n'ont donc pour garantie que `flutter analyze` et la
+relecture. Ils sont classés par priorité de vérification.
+
+### Priorité haute — chemins réécrits en profondeur
+
+1. **Démarrage à froid (23/08/2026).** Lancer l'app sans session
+   ouverte : les enfants doivent s'afficher normalement.
+   `Supabase.initialize` a été remplacé par
+   `SupabaseAuthProvider.instance.initialize()`, suivi de l'ouverture
+   de la session anonyme. Si ce point échoue, l'app ne démarre pas —
+   ça se verra tout de suite.
+
+2. **Lien « mot de passe oublié » ouvert depuis un mobile où l'app est
+   installée (23/08/2026).** *Le point le plus sensible du chantier.*
+   `main.dart` n'écoute plus `AuthChangeEvent` mais `AuthSessionEvent`,
+   à travers un filtre écrit à la main qui ne laisse passer que trois
+   évènements. L'écran « Nouveau mot de passe » doit s'ouvrir tout
+   seul, sans action. **Si le filtre est trop strict, il ne se passera
+   rien du tout** — et l'échec est silencieux, rien ne s'affichera.
+
+3. **Création d'un compte professionnel alors qu'un compte parent est
+   connecté (23/08/2026).** C'est le scénario qui avait fait perdre
+   l'accès à Théo et Noé. La condition qui protège ce cas a été
+   réécrite (`currentUser != null && !isAnonymous` devient
+   `currentUserId != null && !isAnonymous`) : à vérifier que le compte
+   parent conserve bien ses enfants après création du compte
+   professionnel.
+
+### Priorité moyenne
+
+4. **Connexion avec un mauvais mot de passe (23/08/2026).** Doit
+   afficher « Adresse email ou mot de passe incorrect. », pas un
+   message générique. C'est toute la chaîne de traduction des erreurs
+   qui se valide là : `AuthApiException` → `AuthFailure` →
+   `friendlyAuthErrorMessage`. Vaut aussi pour l'inscription avec une
+   adresse déjà utilisée.
+
+5. **Créer un lien de partage (23/08/2026).** Une fiche secours, puis
+   une fiche de recommandations d'activité : le lien doit s'afficher et
+   fonctionner une fois ouvert. L'insertion en base a changé de fichier
+   — c'était le dernier écran de l'app à écrire directement en base.
+
+6. **Gérer l'équipe (23/08/2026).** Deux cas distincts, qui empruntent
+   désormais deux chemins différents :
+   - inviter avec le champ email **vide** → « Saisissez une adresse
+     email. » (message de validation, ne passe plus par le chemin des
+     erreurs serveur) ;
+   - inviter une adresse **déjà invitée** → le message d'erreur du
+     serveur doit s'afficher **tel quel** (ex. « Membre introuvable. »,
+     « L'adresse email est obligatoire. »), pas « Une erreur est
+     survenue. ». C'est ce qui vérifie que les messages des fonctions
+     RPC traversent bien la nouvelle `ServiceException`.
+
+### Priorité basse
+
+7. **Réglages (23/08/2026).** L'adresse email doit s'afficher en haut
+   de l'écran, et le changement de mot de passe doit fonctionner.
+
+8. **Fiche enfant (23/08/2026).** Les boutons d'écriture doivent rester
+   visibles pour le parent propriétaire — la lecture de l'identité
+   courante y est passée par le nouveau fournisseur, avec le même
+   garde-fou pour les cas sans session.
+
+9. **Révocation d'accès, deux cas opposés (23/08/2026).** La requête de
+   surveillance a quitté le widget pour rejoindre le dépôt :
+   - révoquer l'accès depuis un autre appareil → la fiche
+     professionnelle ouverte doit se fermer dans les ~20 secondes ;
+   - **couper le réseau** au lieu de révoquer → la fiche doit
+     **rester ouverte**. C'est la garantie « ne jamais fermer sur un
+     incident passager », qui a changé de fichier.
+
 ## Depuis la passe 3 (audit, jamais vérifié sur un vrai téléphone)
 
 Les tests automatisés de la passe 3 tournaient sur la version web de
