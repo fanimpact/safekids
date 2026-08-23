@@ -8,23 +8,6 @@ plutôt qu'à laisser vieillir.
 
 ---
 
-> ## ⚠️ Un fichier SQL à exécuter
->
-> **[`supabase/schema_conformite_rgpd.sql`](../../supabase/schema_conformite_rgpd.sql)
-> n'a pas été appliqué.** À exécuter en une fois dans le SQL Editor de
-> Supabase, comme les 17 autres.
->
-> Tant qu'il ne l'est pas, les quatre décisions RGPD du 24/08/2026 sont
-> dans le code mais inertes : la case de consentement s'affiche sans
-> que sa date soit enregistrée, l'adresse de secours ne peut pas être
-> sauvegardée, les compteurs restent silencieux et « Supprimer mon
-> compte » échoue avec un message. L'application ne casse pas pour
-> autant — chaque appel échoue seul.
->
-> Détail dans [`../migration/conformite_rgpd.md`](../migration/conformite_rgpd.md).
-
----
-
 > ## ⚠️ Six fonctions serveur à redéployer
 >
 > **Depuis le 23/08/2026**, les six Edge Functions ont été
@@ -230,8 +213,36 @@ d'une **personne de confiance** sur ses propres données.
 
 Délai de grâce de 7 jours à la suppression du compte, consentement
 explicite aux données de santé, compteurs d'usage anonymisés, adresse
-email de secours. **Rien de tout cela ne fonctionne tant que
-`supabase/schema_conformite_rgpd.sql` n'a pas été exécuté à la main.**
+email de secours.
+
+**Le fichier SQL a été appliqué le 24/08/2026**, sans erreur
+(`supabase/schema_conformite_rgpd.sql`). Les colonnes, les fonctions,
+les politiques modifiées et les deux tâches automatiques sont en
+place.
+**Tâches automatiques — un écart à lever.** Le dépôt en définit
+**quatre** au total :
+
+| Nom | Fichier | Fréquence |
+|---|---|---|
+| `supprimer-partages-expires` | `partages_liens.sql` | 3h |
+| `purge-journal-consultations-fiche` | `schema_espace_professionnel_fiches.sql` | 3h |
+| `effacer-comptes-supprimes` | `schema_conformite_rgpd.sql` | 4h |
+| `consolider-compteurs-usage` | `schema_conformite_rgpd.sql` | 4h30, le 1er du mois |
+
+La vérification après application en a compté **cinq**. La cinquième
+n'est définie nulle part dans le dépôt : elle a été créée à la main,
+vient de Supabase, ou est un doublon d'une des quatre. À identifier
+avant de considérer le sujet clos :
+
+```sql
+select jobid, jobname, schedule, active, command
+from cron.job order by jobid;
+```
+
+Si c'est un doublon d'une tâche du dépôt, la retirer avec
+`select cron.unschedule(<jobid>);` — deux tâches identiques effaceraient
+deux fois, ce qui est sans effet ici mais brouille la lecture.
+
 
 Ce qui compte le plus, dans l'ordre :
 

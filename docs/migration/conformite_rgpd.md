@@ -6,18 +6,14 @@ de votre côté.
 
 ---
 
-> ## ⚠️ Deux choses à exécuter avant que tout cela fonctionne
+> ## ⚠️ Ce qui reste à faire
 >
-> **1. Le fichier SQL n'est pas appliqué.**
-> [`supabase/schema_conformite_rgpd.sql`](../../supabase/schema_conformite_rgpd.sql)
-> est à exécuter en une fois dans le SQL Editor de Supabase, comme les
-> 17 autres. Tant qu'il ne l'est pas : la case de consentement
-> s'affiche mais sa date n'est enregistrée nulle part, l'adresse de
-> secours ne peut pas être sauvegardée, les compteurs sont silencieux
-> et le bouton « Supprimer mon compte » échoue avec un message.
-> L'application ne casse pas pour autant — chaque appel échoue seul.
+> **Le fichier SQL a été appliqué le 24/08/2026**, sans erreur.
+> Colonnes, fonctions, politiques modifiées et tâches automatiques
+> sont en place. Un écart reste à lever sur le nombre de tâches
+> planifiées : voir le point de reprise.
 >
-> **2. Les fonctions serveur ne sont toujours pas redéployées**, et il
+> **Les fonctions serveur ne sont toujours pas redéployées**, et il
 > y en a désormais **six**. La sixième,
 > `confirmer-suppression-compte`, envoie l'email de demande de
 > suppression : sans elle, la demande s'enregistre quand même et
@@ -60,8 +56,7 @@ là que l'application lit l'état de la demande. Un parent bloqué doit
 pouvoir revenir en arrière.
 
 **Choix assumé** : si l'état ne peut pas être lu — hors ligne, ou
-fichier SQL pas encore appliqué — la barrière de l'application laisse
-passer. Bloquer sur une incertitude enfermerait dehors un parent qui
+session expirée — la barrière de l'application laisse passer. Bloquer sur une incertitude enfermerait dehors un parent qui
 n'a rien demandé, alors que sans réseau il n'y a de toute façon aucune
 donnée à protéger côté application.
 
