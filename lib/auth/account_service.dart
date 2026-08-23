@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/supabase_config.dart';
@@ -30,7 +31,20 @@ class AccountService {
   /// Tout ce qui touche au compte lui-même passe par cette frontière —
   /// plus aucun appel direct au SDK d'authentification ici
   /// (23/08/2026).
-  AuthProvider get _auth => SupabaseAuthProvider.instance;
+  AuthProvider get _auth =>
+      _authProviderForTesting ?? SupabaseAuthProvider.instance;
+
+  AuthProvider? _authProviderForTesting;
+
+  /// Remplace le fournisseur, uniquement pour les tests.
+  ///
+  /// Passer `null` rétablit l'implémentation Supabase — à faire en
+  /// `tearDown`, sinon le remplacement fuiterait d'un test à l'autre
+  /// (ce service est un singleton).
+  @visibleForTesting
+  void useAuthProviderForTesting(AuthProvider? authProvider) {
+    _authProviderForTesting = authProvider;
+  }
 
   /// Conservé uniquement pour les tables et les Edge Functions :
   /// `appareils_reconnus`, `comptes_parents`, `codes_verification`.
