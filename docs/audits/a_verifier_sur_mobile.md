@@ -232,6 +232,86 @@ système d'exploitation mobile, du stockage natif, ou du matériel.
    compilation native fait de même sur du matériel modeste — à observer
    simplement à l'usage.
 
+## Identité visuelle (23/08/2026)
+
+Sept commits ont changé l'apparence de toute l'application sans
+toucher à son comportement : palette, polices embarquées, fiches PDF,
+page `auth.kidsrelay.fr`. Les tests garantissent que rien ne s'est
+cassé — ils ne disent rien de ce que ça donne à l'œil. Ces points-là
+ne peuvent être tranchés qu'en usage réel.
+
+1. **Les neuf boutons d'action du profil enfant sont tous en vert
+   pin.** Ils avaient chacun leur couleur (bleu, vert, sarcelle,
+   indigo, brun, gris-bleu, violet, orange) ; le codage par couleur a
+   disparu avec le passage à une palette de cinq teintes. Décision
+   prise de garder ainsi pour l'instant.
+
+   **À juger à l'usage** : si l'écran paraît monotone ou si l'on met
+   plus de temps à retrouver un bouton connu, on rétablira une
+   distinction **avec la sauge et l'ambre uniquement** — pas de retour
+   aux neuf couleurs. Le rouge du bouton « Mode Urgence », lui, ne
+   bouge pas : c'est sa rareté sur l'écran qui le rend visible.
+
+2. **Lisibilité du texte blanc sur vert pin.** Concerne les barres de
+   titre de tous les écrans, les boutons pleins et le bouton
+   « Ouvrir l'application » de la page web. Le contraste est
+   théoriquement bon (vert pin `#1F4A3F` est sombre), mais à confirmer
+   **en plein soleil et sur un écran de téléphone en luminosité
+   basse** — c'est là que ça se joue, pas sur un écran d'ordinateur.
+
+3. **Lisibilité du texte sur ambre.** Concerne le bandeau « données
+   hors ligne » de l'accueil, l'encart d'erreur de la page
+   `auth.kidsrelay.fr`, et le bandeau des sections d'urgence dans les
+   PDF. Le texte y est en ardoise sur fond ambre clair `#FBF1DF`, pas
+   en ambre plein : c'est délibéré, l'ambre vif sur fond clair passe
+   mal. **À vérifier** que le bandeau attire quand même l'œil — c'est
+   ce qui remplace le réflexe d'utiliser du rouge, et s'il ne se voit
+   pas, il ne sert à rien.
+
+4. **Le rouge doit rester dominant dans le Mode Urgence.** C'est le
+   point le plus important de la liste. La règle tenue partout est que
+   le rouge `#C0392B` ne sert qu'à l'urgence vitale — sa valeur vient
+   entièrement de sa rareté ailleurs.
+
+   **À vérifier écran par écran du Mode Urgence** (choix de l'enfant,
+   liste des boutons, consignes) : que le rouge domine visuellement,
+   qu'aucun vert pin ni ambre ne lui vole l'attention, et qu'un
+   accompagnant qui découvre l'écran comprenne en une seconde qu'il
+   n'est plus dans le reste de l'application. Si le vert pin des
+   barres de titre affaiblit cet effet, c'est le Mode Urgence qui doit
+   gagner.
+
+5. **Les deux polices s'affichent bien sur un vrai téléphone.** Plus
+   Jakarta Sans pour les titres, Mulish pour le texte, embarquées dans
+   l'application. Sur ordinateur, si un fichier manquait, le système
+   remplacerait sans prévenir par une police proche : le défaut ne se
+   verrait pas. **À vérifier sur téléphone** que les titres et le
+   texte courant ont bien deux dessins différents, et qu'aucun
+   caractère accentué ne manque.
+
+6. **Les fiches PDF exportées.** Imprimer ou partager les trois fiches
+   (secours, garde, activité) et les deux récapitulatifs de
+   questionnaire. **À vérifier** : titres en vert pin, texte lisible à
+   l'impression noir et blanc aussi, bandeau rouge présent sur les
+   seules sections d'urgence, et **apostrophes courbes correctes**
+   (`l’enfant` avec une apostrophe courbe, et non `l'enfant` avec une
+   droite) — la conversion en ASCII a été retirée, et un caractère
+   absent de la police s'afficherait comme un vide.
+
+7. **L'écran de lancement ne fait plus de saut de couleur.** Il était
+   blanc sur Android en mode clair, noir en mode nuit, blanc sur iOS.
+   Il est maintenant au lin `#F5F3EF`, comme le fond de
+   l'application. **À vérifier au démarrage à froid** (application
+   fermée depuis les applications récentes), et en **mode nuit
+   activé** sur le téléphone.
+
+8. **La page `auth.kidsrelay.fr` aux nouvelles couleurs.** À ne
+   vérifier **qu'après avoir déposé `index.html` chez OVH** — jusque-là
+   la page en ligne est encore l'ancienne, en bleu, et
+   `verifier-deploiement.mjs` signalera un écart sur ce fichier. Une
+   fois déposée : ouvrir un vrai lien reçu par email depuis un
+   téléphone, et vérifier que la page ressemble à l'application.
+
 ## Hors périmètre pour l'instant
 
 Les notifications push ne sont pas listées ici : décision déjà prise de
