@@ -65,7 +65,26 @@ flutter:
 
   assets:
     - lib/assets/
-   
+
+  # Polices embarquees plutot que telechargees a l'execution : le mode
+  # hors-ligne est une fonctionnalite centrale de KidsRelay, et aucun
+  # appel a un tiers ne doit partir depuis l'appareil d'un parent.
+  # Licence SIL Open Font 1.1 pour les deux familles, voir
+  # assets/fonts/LICENCE.md.
+  fonts:
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PlusJakartaSans-Bold.ttf
+          weight: 700
+    - family: Mulish
+      fonts:
+        - asset: assets/fonts/Mulish-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Mulish-SemiBold.ttf
+          weight: 600
+
 
 
   # To add assets to your application, add an assets section, like this:
