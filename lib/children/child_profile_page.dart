@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../activity_pages/activities_home_page.dart';
 import '../activity_profile_pages/activity_profile_entry_page.dart';
+import '../auth/supabase_auth_provider.dart';
 import '../care_info/care_info_sheet_page.dart';
 import '../controllers/activity_profile_controller.dart';
 import '../controllers/transmission_controller.dart';
@@ -60,12 +60,12 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
     _loadPartages();
   }
 
-  /// `Supabase.instance` lève une AssertionError synchrone quand
-  /// Supabase n'a pas été initialisé (cas des tests de widgets) — voir
+  /// Le fournisseur lève une AssertionError synchrone quand
+  /// l'initialisation n'a pas eu lieu (cas des tests de widgets) — voir
   /// le même garde-fou dans _loadPartages.
   String? get _currentUserId {
     try {
-      return Supabase.instance.client.auth.currentUser?.id;
+      return SupabaseAuthProvider.instance.currentUserId;
     } catch (_) {
       return null;
     }

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/supabase_auth_provider.dart';
 import '../models/etablissement_data.dart';
 import '../models/membre_etablissement_data.dart';
+import '../services/service_exception.dart';
 
 /// Regroupe les opérations côté espace professionnel : créer un
 /// établissement, réclamer un rattachement envoyé par un parent, et
@@ -18,6 +19,23 @@ class EstablishmentService {
       EstablishmentService._();
 
   SupabaseClient get _client => Supabase.instance.client;
+
+  /// Exécute un appel serveur en traduisant ses refus en
+  /// [ServiceException].
+  ///
+  /// Les fonctions RPC lèvent des messages déjà rédigés pour la
+  /// personne (« Membre introuvable. », « L'adresse email est
+  /// obligatoire. »). Ils remontaient jusqu'aux écrans dans une
+  /// `PostgrestException`, ce qui obligeait un écran à connaître le
+  /// type d'exception du SDK. Le message est conservé tel quel : c'est
+  /// ce qui garantit que l'affichage ne change pas (23/08/2026).
+  Future<T> _execute<T>(Future<T> Function() operation) async {
+    try {
+      return await operation();
+    } on PostgrestException catch (error) {
+      throw ServiceException(error.message);
+    }
+  }
 
   Future<String> createEstablishment({
     required String nom,
@@ -105,13 +123,15 @@ class EstablishmentService {
     required String email,
     required RoleEtablissement role,
   }) async {
-    await _client.rpc(
-      'rpc_inviter_membre',
-      params: {
-        'p_etablissement_id': etablissementId,
-        'p_email': email,
-        'p_role': role.name,
-      },
+    await _execute(
+      () => _client.rpc(
+        'rpc_inviter_membre',
+        params: {
+          'p_etablissement_id': etablissementId,
+          'p_email': email,
+          'p_role': role.name,
+        },
+      ),
     );
   }
 
@@ -119,19 +139,23 @@ class EstablishmentService {
     required String membreId,
     required RoleEtablissement nouveauRole,
   }) async {
-    await _client.rpc(
-      'rpc_changer_role_membre',
-      params: {
-        'p_membre_id': membreId,
-        'p_nouveau_role': nouveauRole.name,
-      },
+    await _execute(
+      () => _client.rpc(
+        'rpc_changer_role_membre',
+        params: {
+          'p_membre_id': membreId,
+          'p_nouveau_role': nouveauRole.name,
+        },
+      ),
     );
   }
 
   Future<void> revokeMember(String membreId) async {
-    await _client.rpc(
-      'rpc_revoquer_membre',
-      params: {'p_membre_id': membreId},
+    await _execute(
+      () => _client.rpc(
+        'rpc_revoquer_membre',
+        params: {'p_membre_id': membreId},
+      ),
     );
   }
 }

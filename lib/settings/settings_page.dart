@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../auth/supabase_auth_provider.dart';
 
 import '../auth/account_service.dart';
 import '../auth/app_auth.dart';
@@ -61,8 +61,8 @@ class _SettingsPageState extends State<SettingsPage> {
     });
 
     try {
-      await Supabase.instance.client.auth.updateUser(
-        UserAttributes(password: newPassword),
+      await SupabaseAuthProvider.instance.updatePassword(
+        newPassword,
       );
 
       if (!mounted) {
@@ -153,7 +153,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final email =
-        Supabase.instance.client.auth.currentUser?.email;
+        SupabaseAuthProvider.instance.currentUserEmail;
 
     return Scaffold(
       appBar: AppBar(

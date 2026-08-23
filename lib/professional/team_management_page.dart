@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../auth/supabase_auth_provider.dart';
+import '../services/service_exception.dart';
 
 import '../models/membre_etablissement_data.dart';
 import 'establishment_service.dart';
@@ -64,7 +65,7 @@ class _TeamManagementPageState extends State<TeamManagementPage> {
   }
 
   String? get _myUserId =>
-      Supabase.instance.client.auth.currentUser?.id;
+      SupabaseAuthProvider.instance.currentUserId;
 
   RoleEtablissement? _myRole(
     List<MembreEtablissementData> members,
@@ -86,17 +87,29 @@ class _TeamManagementPageState extends State<TeamManagementPage> {
         role == RoleEtablissement.adjoint;
   }
 
-  void _showError(Object error) {
+  /// Affiche un message déjà rédigé pour la personne.
+  void _showMessage(String message) {
     if (!mounted) {
       return;
     }
 
-    final message = error is PostgrestException
-        ? error.message
-        : 'Une erreur est survenue.';
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
+    );
+  }
+
+  /// Affiche l'échec d'une opération serveur.
+  ///
+  /// Les services de l'espace professionnel remontent les refus de la
+  /// base sous forme de `ServiceException`, dont le message est écrit
+  /// pour être lu (ex. « Vous n'avez pas les droits pour inviter un
+  /// membre »). Tout le reste — panne réseau, bogue — reste générique :
+  /// on n'affiche jamais une exception brute.
+  void _showError(Object error) {
+    _showMessage(
+      error is ServiceException
+          ? error.message
+          : 'Une erreur est survenue.',
     );
   }
 
@@ -169,11 +182,10 @@ class _TeamManagementPageState extends State<TeamManagementPage> {
     final email = emailController.text.trim();
 
     if (email.isEmpty) {
-      _showError(
-        PostgrestException(
-          message: 'Saisissez une adresse email.',
-        ),
-      );
+      // Message de validation de saisie, pas un échec serveur : il
+      // était jusqu'ici enveloppé dans une fausse PostgrestException
+      // pour emprunter le chemin d'affichage des erreurs (23/08/2026).
+      _showMessage('Saisissez une adresse email.');
       return;
     }
 

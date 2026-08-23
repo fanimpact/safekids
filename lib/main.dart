@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'auth/app_auth.dart';
+import 'auth/auth_provider.dart';
 import 'auth/set_new_password_page.dart';
-import 'config/supabase_config.dart';
+import 'auth/supabase_auth_provider.dart';
 import 'repositories/child_repository.dart';
 import 'welcome_page.dart';
 
@@ -18,10 +18,7 @@ final navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Supabase.initialize(
-    url: SupabaseConfig.url,
-    publishableKey: SupabaseConfig.publishableKey,
-  );
+  await SupabaseAuthProvider.instance.initialize();
 
   // L'app doit pouvoir s'ouvrir même sans réseau ou si Supabase est
   // indisponible (Mode Urgence en particulier ne doit jamais rester
@@ -64,7 +61,7 @@ class KidsRelayApp extends StatefulWidget {
 }
 
 class _KidsRelayAppState extends State<KidsRelayApp> {
-  late final StreamSubscription<AuthState> _authSubscription;
+  late final StreamSubscription<AuthSessionEvent> _authSubscription;
 
   @override
   void initState() {
@@ -76,9 +73,9 @@ class _KidsRelayAppState extends State<KidsRelayApp> {
     // sur l'écran de saisie du nouveau mot de passe, y compris si
     // l'app vient d'être lancée à froid par ce lien.
     _authSubscription =
-        Supabase.instance.client.auth.onAuthStateChange.listen(
-      (state) {
-        if (state.event == AuthChangeEvent.passwordRecovery) {
+        SupabaseAuthProvider.instance.onSessionEvent.listen(
+      (event) {
+        if (event == AuthSessionEvent.passwordRecovery) {
           navigatorKey.currentState?.push(
             MaterialPageRoute(
               builder: (context) => const SetNewPasswordPage(),

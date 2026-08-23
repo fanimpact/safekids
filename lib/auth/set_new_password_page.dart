@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'supabase_auth_provider.dart';
 
 import '../home/home_page.dart';
 import '../utils/auth_error_message.dart';
@@ -60,8 +60,8 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
     });
 
     try {
-      await Supabase.instance.client.auth.updateUser(
-        UserAttributes(password: password),
+      await SupabaseAuthProvider.instance.updatePassword(
+        password,
       );
 
       if (!mounted) {
