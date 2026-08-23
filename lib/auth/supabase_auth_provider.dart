@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/supabase_config.dart';
@@ -119,6 +120,20 @@ class SupabaseAuthProvider implements AuthProvider {
   /// Tous les autres (rafraîchissement de jeton, mise à jour du
   /// profil…) sont filtrés : les transcrire n'apporterait rien et
   /// exposerait le vocabulaire du SDK.
+  ///
+  /// Exposé pour les tests : c'est ce filtre qui décide si l'écran de
+  /// nouveau mot de passe s'ouvre. Trop strict, il ne se passerait
+  /// rien — et l'échec serait silencieux.
+  @visibleForTesting
+  static AuthSessionEvent? toSessionEventForTesting(AuthState state) =>
+      _toSessionEvent(state);
+
+  /// Exposé pour les tests : cette table décide du message français
+  /// affiché à la personne (voir `friendlyAuthErrorMessage`).
+  @visibleForTesting
+  static AuthErrorCode toErrorCodeForTesting(String? code) =>
+      _toErrorCode(code);
+
   static AuthSessionEvent? _toSessionEvent(AuthState state) {
     switch (state.event) {
       case AuthChangeEvent.passwordRecovery:
