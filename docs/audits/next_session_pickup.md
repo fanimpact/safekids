@@ -8,12 +8,51 @@ plutôt qu'à laisser vieillir.
 
 ---
 
+> ## ⚠️ Cinq fonctions serveur à redéployer
+>
+> **Depuis le 23/08/2026**, les cinq Edge Functions ont été
+> réorganisées dans le dépôt : la logique métier est sortie des
+> fichiers déployés, vers `supabase/functions/_logique/`.
+> **Aucune n'a été redéployée.** Les cinq fonctions en ligne tournent
+> encore la version d'avant cette date.
+>
+> Le décalage est assumé et sans effet sur la production tant qu'aucun
+> déploiement n'est lancé. Mais contrairement à `auth.kidsrelay.fr`,
+> **aucun vérificateur** ne peut comparer ce qui tourne à ce qui est
+> versionné.
+>
+> ```
+> supabase functions deploy envoyer-code-verification
+> supabase functions deploy verifier-code
+> supabase functions deploy notifier-note-ajoutee
+> supabase functions deploy consulter-partage --no-verify-jwt
+> supabase functions deploy voir-partage --no-verify-jwt
+> ```
+>
+> Les drapeaux ne sont pas interchangeables : `--no-verify-jwt` sur les
+> deux dernières seulement, qui sont ouvertes à un accompagnant non
+> connecté. L'oublier casserait tous les liens de partage ; l'ajouter
+> aux trois premières ouvrirait à n'importe qui des fonctions qui
+> écrivent en base.
+>
+> Le bundling des modules partagés n'a **pas pu être vérifié en local**
+> (Docker absent de ce poste). Commencer par `consulter-partage`, la
+> moins risquée à casser.
+>
+> Détail complet : [`../migration/fonctions_serveur.md`](../migration/fonctions_serveur.md).
+
+---
+
 ## En une phrase
 
 Le socle technique est **prêt à être quitté** : le schéma est figé et
-versionné, les prérequis d'une base cible sont documentés, et
-l'authentification est isolée derrière une interface unique. **Rien ne
-bouge tant que Clever Cloud n'a pas répondu sur l'hébergement HDS.**
+versionné, les prérequis d'une base cible sont documentés,
+l'authentification est isolée derrière une interface unique, et la
+logique des cinq fonctions serveur ne dépend plus de l'environnement
+Supabase.
+
+**Rien ne bouge tant que Clever Cloud n'a pas répondu sur l'hébergement
+HDS.**
 
 ---
 
@@ -99,6 +138,33 @@ dans `test/support/`.
 
 ---
 
+### 4. Les fonctions serveur sont isolées de l'hébergeur
+
+Même principe que pour l'authentification, appliqué aux cinq Edge
+Functions. La logique métier vit dans `supabase/functions/_logique/` :
+aucun import réseau, aucun appel à `Deno.*`, aucun accès base direct,
+aucun `fetch` direct, aucune lecture de l'horloge. Les accès base
+entrent par des interfaces, l'email et la date courante sont passés en
+paramètre.
+
+Ce qui est propre à Supabase est rassemblé dans `_enveloppe/` : import
+du SDK depuis `esm.sh`, variables injectées à l'exécution, jeton
+d'appel, branchement des dépôts. Un déplacement se réduit à réécrire
+`environnement.mts` et `supabase.mts`.
+
+**85 tests**, lancés par `node --test supabase/functions/_tests/*.test.mjs`.
+Ils couvrent l'envoi et la vérification d'un code, la notification
+d'une note ajoutée, la consultation d'un partage et le rendu de la page
+publique — ce dernier en exécutant le script réel de la page dans un
+faux DOM, donc exactement ce qui sera servi. C'était le seul rendu de
+données de santé d'enfant qui échappait complètement à Flutter.
+
+Rien n'est redéployé : voir l'avertissement en tête de ce document.
+État des lieux complet dans
+[`../migration/fonctions_serveur.md`](../migration/fonctions_serveur.md).
+
+---
+
 ## Ce qui bloque
 
 **En attente d'une réponse de Clever Cloud sur l'hébergement HDS.**
@@ -143,7 +209,8 @@ une vraie base. À rouvrir seulement si une migration est décidée.
 - **SPF / DKIM / DMARC de `kidsrelay.fr` dans Brevo** — les Edge
   Functions ont été redéployées avec `contact@kidsrelay.fr`, mais rien
   ne confirme que les emails arrivent en boîte de réception plutôt
-  qu'en spam.
+  qu'en spam. Indépendant de tout choix d'hébergeur : c'est de la
+  configuration DNS du domaine, à faire côté Fanny.
 - **Modèles d'email Supabase** — à coller dans le tableau de bord pour
   que les liens pointent vers `auth.kidsrelay.fr` (contenu exact fourni
   en session, non encore appliqué au 23/08/2026).
@@ -158,9 +225,10 @@ une vraie base. À rouvrir seulement si une migration est décidée.
 | | |
 |---|---|
 | Branche | `main`, synchronisée avec `origin/main` |
-| Tests | **309**, tous verts |
+| Tests Flutter | **309**, tous verts |
+| Tests JavaScript | **85** pour les fonctions serveur, **29** pour la page auth |
 | `flutter analyze` | propre |
-| Dernier commit | `3352252` — tests du câblage d'authentification |
+| Dernier commit | `<a completer>` — documentation des fonctions serveur |
 
 **Outillage installé sur le poste** (à savoir avant de chercher) :
 `postgresql` 18.6 via scoop (`pg_dump`, `psql`, plus un serveur local
