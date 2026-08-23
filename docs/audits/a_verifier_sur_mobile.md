@@ -72,84 +72,104 @@ elle-même les avoir vérifiés.
 ## Chantier d'abstraction de l'authentification (23/08/2026)
 
 Le 23/08/2026, les 30 appels au SDK Supabase dispersés dans 12 fichiers
-ont été regroupés derrière une interface unique (`AuthProvider`), et
-les 2 derniers appels de données faits depuis un écran sont passés par
-les services. Objectif : qu'un changement d'hébergeur ne concerne qu'un
-seul fichier.
+ont été regroupés derrière `AuthProvider`. Neuf vérifications manuelles
+avaient été listées, faute de tests sur ce câblage.
 
-**Aucun changement de comportement n'était attendu.** Mais les 286
-tests couvrent le moteur de recommandations, les modèles et les
-questionnaires — **pas le câblage d'authentification**. Les points
-ci-dessous n'ont donc pour garantie que `flutter analyze` et la
-relecture. Ils sont classés par priorité de vérification.
+**Six ont été couvertes par des tests automatisés le 23/08/2026** (39
+tests : `auth_translation_test.dart`, `auth_wiring_test.dart`,
+`account_separate_account_test.dart`, plus `auth_error_message_test.dart`
+déjà existant). Elles sont retirées de cette liste.
 
-### Priorité haute — chemins réécrits en profondeur
+Chacun de ces tests a été vérifié **en cassant volontairement le code
+qu'il protège**, pour s'assurer qu'il échoue bien — un test de câblage
+peut sinon passer pour de mauvaises raisons.
 
-1. **Démarrage à froid (23/08/2026).** Lancer l'app sans session
-   ouverte : les enfants doivent s'afficher normalement.
-   `Supabase.initialize` a été remplacé par
-   `SupabaseAuthProvider.instance.initialize()`, suivi de l'ouverture
-   de la session anonyme. Si ce point échoue, l'app ne démarre pas —
-   ça se verra tout de suite.
+Ce qui reste ci-dessous demande un **vrai appareil, un vrai serveur, ou
+un second compte** : aucun test ne peut s'y substituer.
 
-2. **Lien « mot de passe oublié » ouvert depuis un mobile où l'app est
-   installée (23/08/2026).** *Le point le plus sensible du chantier.*
-   `main.dart` n'écoute plus `AuthChangeEvent` mais `AuthSessionEvent`,
-   à travers un filtre écrit à la main qui ne laisse passer que trois
-   évènements. L'écran « Nouveau mot de passe » doit s'ouvrir tout
-   seul, sans action. **Si le filtre est trop strict, il ne se passera
-   rien du tout** — et l'échec est silencieux, rien ne s'affichera.
+### Priorité haute
 
-3. **Création d'un compte professionnel alors qu'un compte parent est
-   connecté (23/08/2026).** C'est le scénario qui avait fait perdre
-   l'accès à Théo et Noé. La condition qui protège ce cas a été
-   réécrite (`currentUser != null && !isAnonymous` devient
-   `currentUserId != null && !isAnonymous`) : à vérifier que le compte
-   parent conserve bien ses enfants après création du compte
-   professionnel.
+1. **Lien « mot de passe oublié » ouvert depuis un vrai mobile
+   (23/08/2026).** *La partie logique est désormais testée* — le filtre
+   d'évènements et l'ouverture de l'écran de nouveau mot de passe le
+   sont, y compris le fait que les autres évènements n'ouvrent rien.
+
+   **Ce qui reste à vérifier ne l'est pas et ne peut pas l'être** : que
+   le système d'exploitation ouvre bien l'application sur le lien reçu
+   par email, et que Supabase émette réellement l'évènement de
+   récupération à ce moment-là. C'est la chaîne email → OS → SDK, hors
+   de portée d'un test. À faire depuis un téléphone où l'app est
+   installée, en cliquant le lien dans une vraie boîte mail.
+
+2. **Création d'un compte professionnel alors qu'un compte parent est
+   connecté, sur un vrai serveur (23/08/2026).** *La décision est
+   testée* : déconnexion puis session anonyme neuve avant rattachement,
+   dans cet ordre, et l'identité change bien.
+
+   **Ce qui reste** : confirmer contre la vraie base que le compte
+   parent conserve effectivement ses enfants après l'opération. Les
+   tests s'arrêtent avant l'écriture en base. C'est le scénario qui
+   avait fait perdre l'accès à Théo et Noé — il mérite une confirmation
+   réelle.
 
 ### Priorité moyenne
 
-4. **Connexion avec un mauvais mot de passe (23/08/2026).** Doit
-   afficher « Adresse email ou mot de passe incorrect. », pas un
-   message générique. C'est toute la chaîne de traduction des erreurs
-   qui se valide là : `AuthApiException` → `AuthFailure` →
-   `friendlyAuthErrorMessage`. Vaut aussi pour l'inscription avec une
-   adresse déjà utilisée.
-
-5. **Créer un lien de partage (23/08/2026).** Une fiche secours, puis
+3. **Créer un lien de partage (23/08/2026).** Une fiche secours, puis
    une fiche de recommandations d'activité : le lien doit s'afficher et
-   fonctionner une fois ouvert. L'insertion en base a changé de fichier
-   — c'était le dernier écran de l'app à écrire directement en base.
+   fonctionner une fois ouvert. L'insertion a changé de fichier — c'était
+   le dernier écran à écrire directement en base. Non automatisable :
+   demande une écriture réelle dans `partages` et l'ouverture du lien
+   servi par l'Edge Function.
 
-6. **Gérer l'équipe (23/08/2026).** Deux cas distincts, qui empruntent
-   désormais deux chemins différents :
-   - inviter avec le champ email **vide** → « Saisissez une adresse
-     email. » (message de validation, ne passe plus par le chemin des
-     erreurs serveur) ;
-   - inviter une adresse **déjà invitée** → le message d'erreur du
-     serveur doit s'afficher **tel quel** (ex. « Membre introuvable. »,
-     « L'adresse email est obligatoire. »), pas « Une erreur est
-     survenue. ». C'est ce qui vérifie que les messages des fonctions
-     RPC traversent bien la nouvelle `ServiceException`.
+4. **Gérer l'équipe (23/08/2026).** Deux cas, deux chemins désormais
+   distincts :
+   - champ email **vide** → « Saisissez une adresse email. » ;
+   - adresse **déjà invitée** → le message du serveur doit s'afficher
+     **tel quel**, pas « Une erreur est survenue. ».
+
+   Non automatisable : le second cas exige qu'une fonction RPC lève
+   réellement son message, et l'écran charge l'équipe au démarrage.
 
 ### Priorité basse
 
-7. **Réglages (23/08/2026).** L'adresse email doit s'afficher en haut
-   de l'écran, et le changement de mot de passe doit fonctionner.
+5. **Réglages (23/08/2026).** L'adresse email affichée en haut de
+   l'écran, et le changement de mot de passe. La lecture de l'email
+   passe par le nouveau fournisseur ; l'écran a besoin d'une session
+   réelle pour s'afficher entièrement.
 
-8. **Fiche enfant (23/08/2026).** Les boutons d'écriture doivent rester
-   visibles pour le parent propriétaire — la lecture de l'identité
-   courante y est passée par le nouveau fournisseur, avec le même
-   garde-fou pour les cas sans session.
-
-9. **Révocation d'accès, deux cas opposés (23/08/2026).** La requête de
+6. **Révocation d'accès, deux cas opposés (23/08/2026).** La requête de
    surveillance a quitté le widget pour rejoindre le dépôt :
-   - révoquer l'accès depuis un autre appareil → la fiche
-     professionnelle ouverte doit se fermer dans les ~20 secondes ;
-   - **couper le réseau** au lieu de révoquer → la fiche doit
-     **rester ouverte**. C'est la garantie « ne jamais fermer sur un
-     incident passager », qui a changé de fichier.
+   - accès révoqué depuis un autre appareil → la fiche doit se fermer
+     dans les ~20 secondes ;
+   - **réseau coupé** → elle doit **rester ouverte**.
+
+   Non automatisable en l'état : demande un second appareil, une vraie
+   révocation, et le passage du temps. Recoupe le point 6 de la section
+   précédente.
+
+### Ce qui n'a plus besoin d'être vérifié à la main
+
+Couvert par des tests depuis le 23/08/2026 :
+
+- **Démarrage à froid sans session** — l'ouverture d'une session
+  anonyme, et surtout le fait qu'une session existante n'en déclenche
+  pas une seconde (ce qui changerait `auth.uid()` et ferait perdre les
+  enfants).
+- **Filtre des évènements de session** — les 3 évènements traités
+  passent, les 5 autres du SDK sont filtrés, et `passwordRecovery`
+  ouvre bien l'écran attendu.
+- **Traduction des erreurs d'authentification** — les 8 codes Supabase
+  connus donnent le bon message français, de bout en bout, et un code
+  inconnu retombe sur un message générique plutôt qu'un message précis
+  et faux.
+- **Ordre des opérations du compte séparé** — déconnexion avant
+  rattachement, et conversion sans déconnexion pour une session
+  anonyme.
+- **Fiche enfant, droits du propriétaire** — déjà exercé par les tests
+  d'écran existants.
+- **Empilement d'écrans et fermeture de l'abonnement** — deux
+  évènements de récupération n'ouvrent pas deux écrans, et rien ne se
+  déclenche après démontage.
 
 ## Depuis la passe 3 (audit, jamais vérifié sur un vrai téléphone)
 

@@ -90,6 +90,13 @@ pour les refus de la base.
 échoue dès qu'un fichier la franchit, et nomme le fautif. Vérifié en
 injectant une violation.
 
+**Le câblage est couvert par 39 tests depuis le 23/08/2026** : les deux
+tables de correspondance écrites à la main (filtre d'évènements, codes
+d'erreur), la réaction de l'app à un évènement de session, et le garde
+de `createSeparateAccount`. Chacun a été vérifié en cassant
+volontairement le code qu'il protège. Un double `FakeAuthProvider` vit
+dans `test/support/`.
+
 ---
 
 ## Ce qui bloque
@@ -112,13 +119,16 @@ rangé.
 
 ### Vérifications manuelles, prioritaires
 
-Les 9 points du chantier d'authentification dans
-[`a_verifier_sur_mobile.md`](a_verifier_sur_mobile.md). **Les 286 tests
-ne couvrent pas le câblage d'authentification** : ces vérifications sont
-la seule garantie sur ce chantier.
+Des 9 points du chantier d'authentification, **6 ont été couverts par
+des tests le 23/08/2026** (39 tests). Il en reste **6** dans
+[`a_verifier_sur_mobile.md`](a_verifier_sur_mobile.md) — certains sont
+des restes partiels des neuf d'origine — et tous exigent un vrai
+appareil, un vrai serveur ou un second compte.
 
-Le point 2 — lien « mot de passe oublié » — est le plus sensible, et son
-échec serait **silencieux** : rien ne s'afficherait.
+Les deux prioritaires : le lien « mot de passe oublié » ouvert depuis un
+vrai mobile (la chaîne email → système → SDK reste hors de portée d'un
+test), et la création d'un compte professionnel confirmée contre la
+vraie base — le scénario qui avait fait perdre l'accès à Théo et Noé.
 
 ### Chantier « périmètre C », non décidé
 
@@ -148,9 +158,9 @@ une vraie base. À rouvrir seulement si une migration est décidée.
 | | |
 |---|---|
 | Branche | `main`, synchronisée avec `origin/main` |
-| Tests | **286**, tous verts |
+| Tests | **309**, tous verts |
 | `flutter analyze` | propre |
-| Dernier commit | `eaa217a` — étape 7/7 du chantier d'authentification |
+| Dernier commit | `3352252` — tests du câblage d'authentification |
 
 **Outillage installé sur le poste** (à savoir avant de chercher) :
 `postgresql` 18.6 via scoop (`pg_dump`, `psql`, plus un serveur local
