@@ -9,6 +9,7 @@ import '../emergency_info/emergency_info_sheet_page.dart';
 import '../emergency_mode/emergency_mode_button_list_page.dart';
 import '../emergency_mode/emergency_mode_child_picker_page.dart';
 import '../repositories/child_repository.dart';
+import '../usage/compteur_usage.dart';
 import '../settings/settings_page.dart';
 import '../sharing/create_establishment_link_page.dart';
 import '../sharing/create_share_link_page.dart';
@@ -112,6 +113,8 @@ class HomePage extends StatelessWidget {
       return;
     }
 
+    compteurUsage.marquer(FonctionnaliteUsage.ficheSecoursGeneree);
+
     if (children.length == 1) {
       Navigator.push(
         context,
@@ -136,6 +139,10 @@ class HomePage extends StatelessWidget {
   }
 
   void _openEmergencyMode(BuildContext context) {
+    // Marque avant tout le reste, et sans attendre : le Mode Urgence
+    // ne doit jamais dependre d'un aller-retour reseau statistique.
+    compteurUsage.marquer(FonctionnaliteUsage.modeUrgenceOuvert);
+
     final children =
         ChildRepository.instance.children;
 

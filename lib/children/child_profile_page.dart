@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/kidsrelay_theme.dart';
+import '../usage/compteur_usage.dart';
 
 import '../activity_pages/activities_home_page.dart';
 import '../activity_profile_pages/activity_profile_entry_page.dart';
@@ -1178,6 +1179,10 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
               subtitle:
                   'Afficher la fiche destinée aux services de secours.',
               onPressed: () {
+                compteurUsage.marquer(
+                  FonctionnaliteUsage.ficheSecoursGeneree,
+                );
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(

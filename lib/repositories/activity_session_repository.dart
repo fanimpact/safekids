@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/supabase_auth_provider.dart';
+import '../usage/compteur_usage.dart';
 import '../models/activity_session/activity_session_codec.dart';
 import '../models/activity_session/activity_session_data.dart';
 import '../models/activity_session/complete_activity_session_data.dart';
@@ -29,6 +30,8 @@ class ActivitySessionRepository {
         'Aucun utilisateur connecté.',
       );
     }
+
+    compteurUsage.marquer(FonctionnaliteUsage.activitePreparee);
 
     final row = await _client
         .from('activites_preparees')

@@ -50,6 +50,10 @@ void main() {
     // Export RGPD.
     'lib/export/source_export.dart',
 
+    // Compteurs d'usage : un seul appel, a une fonction de la base
+    // qui ne recoit que le nom d'une fonctionnalite.
+    'lib/usage/compteur_usage.dart',
+
     // Etat administratif du compte : adresse de secours, demande de
     // suppression. Ajoute le 23/08/2026 avec le chantier de
     // conformite. Les regles (validation, decisions d'affichage) sont

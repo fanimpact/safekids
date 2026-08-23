@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/supabase_config.dart';
 import '../models/share_link_data.dart';
+import '../usage/compteur_usage.dart';
 
 /// Côté parent : lister et révoquer les liens de partage ponctuels
 /// (`partages`) d'un enfant. Il n'existe pas de statut "révoqué" en
@@ -48,6 +49,8 @@ class ShareLinkService {
     Map<String, dynamic>? contenuFige,
     String? activiteId,
   }) async {
+    compteurUsage.marquer(FonctionnaliteUsage.lienPartageCree);
+
     final response = await _client
         .from('partages')
         .insert({
