@@ -9,8 +9,11 @@ import 'supabase_auth_provider.dart';
 /// La garde "ne rien faire si une session existe déjà" vit désormais
 /// dans [AuthProvider.signInAnonymously] : ce fichier ne connaît plus
 /// aucun SDK (23/08/2026).
-Future<void> ensureSignedIn() {
-  final AuthProvider auth = SupabaseAuthProvider.instance;
+/// [authProvider] n'est renseigné que par les tests, pour vérifier
+/// qu'une session déjà ouverte n'en déclenche pas une seconde.
+Future<void> ensureSignedIn({AuthProvider? authProvider}) {
+  final AuthProvider auth =
+      authProvider ?? SupabaseAuthProvider.instance;
 
   return auth.signInAnonymously();
 }

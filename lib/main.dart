@@ -52,8 +52,18 @@ void main() async {
 }
 
 class KidsRelayApp extends StatefulWidget {
+  /// Fournisseur d'authentification écouté par l'app. Laissé à `null`
+  /// en production — l'implémentation Supabase est alors utilisée.
+  ///
+  /// Ce paramètre n'existe que pour permettre aux tests de fournir un
+  /// double et de vérifier ce que l'app fait d'un évènement de session.
+  /// Le câblage du lien « mot de passe oublié » ne reposait sinon que
+  /// sur une vérification manuelle.
+  final AuthProvider? authProvider;
+
   const KidsRelayApp({
     super.key,
+    this.authProvider,
   });
 
   @override
@@ -72,8 +82,10 @@ class _KidsRelayAppState extends State<KidsRelayApp> {
     // temporaire établie par Supabase : on bascule alors directement
     // sur l'écran de saisie du nouveau mot de passe, y compris si
     // l'app vient d'être lancée à froid par ce lien.
-    _authSubscription =
-        SupabaseAuthProvider.instance.onSessionEvent.listen(
+    final auth =
+        widget.authProvider ?? SupabaseAuthProvider.instance;
+
+    _authSubscription = auth.onSessionEvent.listen(
       (event) {
         if (event == AuthSessionEvent.passwordRecovery) {
           navigatorKey.currentState?.push(
