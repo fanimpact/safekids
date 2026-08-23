@@ -1,5 +1,5 @@
 name: kidsrelay
-description: "A new Flutter project."
+description: "Transmettre à la personne qui garde votre enfant ce qu’il faut savoir sur lui, et les gestes à faire en cas d’urgence."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
