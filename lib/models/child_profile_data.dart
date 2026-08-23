@@ -17,6 +17,14 @@ class ChildProfileData {
   final String? userId;
   final String? childId;
 
+  /// Date a laquelle le parent a coche la case autorisant
+  /// l'enregistrement des informations de sante de cet enfant.
+  ///
+  /// Nulle pour les fiches creees avant le 23/08/2026 : elles ne sont
+  /// pas invalides pour autant, le consentement n'etait alors pas
+  /// demande. Seule la creation d'une nouvelle fiche l'exige.
+  final DateTime? consentementSanteLe;
+
   final IdentityData identity;
 
   final bool? hasPathologies;
@@ -50,6 +58,7 @@ class ChildProfileData {
   ChildProfileData({
     this.userId,
     this.childId,
+    this.consentementSanteLe,
     required this.identity,
     this.hasPathologies,
     this.hasAllergies,
@@ -76,6 +85,7 @@ class ChildProfileData {
     return ChildProfileData(
       userId: draft.userId,
       childId: draft.childId,
+      consentementSanteLe: draft.consentementSanteLe,
       hasPathologies: draft.hasPathologies,
       hasAllergies: draft.hasAllergies,
       hasDailyTreatments: draft.hasDailyTreatments,

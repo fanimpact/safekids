@@ -965,8 +965,19 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
         title: const Text(
           'Supprimer ce profil ?',
         ),
+        // Le retrait du consentement aux donnees de sante et la
+        // suppression de la fiche sont la meme chose : il n'y a rien a
+        // retirer d'autre que les donnees elles-memes. Plutot qu'un
+        // second bouton qui ferait exactement ceci, la confirmation le
+        // dit.
         content: Text(
-          'Le profil de $_displayName sera définitivement supprimé, ainsi que toutes les informations enregistrées (profil santé, profil activités, fiche secours). Cette action est irréversible.',
+          'Le profil de $_displayName sera définitivement supprimé, '
+          'ainsi que toutes les informations enregistrées (profil '
+          'santé, profil activités, fiche secours). Cette action est '
+          'irréversible.\n\n'
+          'C’est aussi la façon de retirer votre accord à '
+          'l’enregistrement des informations de santé de $_displayName : '
+          'retirer cet accord et supprimer la fiche sont la même chose.',
         ),
         actions: [
           TextButton(

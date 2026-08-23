@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../controllers/transmission_controller.dart';
-import '../transmission_pages/identity_page.dart';
+import '../consentement/consentement_sante_page.dart';
 
 class CreateChildProfileIntroPage extends StatelessWidget {
   const CreateChildProfileIntroPage({
@@ -15,7 +15,7 @@ class CreateChildProfileIntroPage extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => IdentityPage(
+        builder: (context) => ConsentementSantePage(
           transmissionController:
               transmissionController,
         ),

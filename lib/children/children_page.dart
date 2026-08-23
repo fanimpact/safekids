@@ -4,7 +4,7 @@ import '../child_profile_pages/create_child_profile_intro_page.dart';
 import '../controllers/transmission_controller.dart';
 import '../models/complete_child_profile_data.dart';
 import '../repositories/child_repository.dart';
-import '../transmission_pages/identity_page.dart';
+import '../consentement/consentement_sante_page.dart';
 import '../utils/child_name_utils.dart';
 import 'child_profile_page.dart';
 
@@ -34,7 +34,7 @@ class ChildrenPage extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => IdentityPage(
+        builder: (context) => ConsentementSantePage(
           transmissionController:
               transmissionController,
         ),

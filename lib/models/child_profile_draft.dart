@@ -17,6 +17,10 @@ import 'trigger_factor_data.dart';
 
 class ChildProfileDraft {
   String? userId;
+
+  /// Renseignee par l'ecran de consentement, avant le questionnaire.
+  /// Voir `ChildProfileData.consentementSanteLe`.
+  DateTime? consentementSanteLe;
   String childId;
 
   final IdentityData identity;
@@ -54,6 +58,7 @@ class ChildProfileDraft {
 
   ChildProfileDraft({
     this.userId,
+    this.consentementSanteLe,
     String? childId,
     IdentityData? identity,
     this.hasPathologies,
@@ -104,6 +109,7 @@ class ChildProfileDraft {
     return ChildProfileDraft(
       userId: data.userId,
       childId: data.childId,
+      consentementSanteLe: data.consentementSanteLe,
       hasPathologies: data.hasPathologies,
       hasAllergies: data.hasAllergies,
       hasDailyTreatments: data.hasDailyTreatments,

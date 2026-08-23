@@ -56,6 +56,8 @@ class ChildProfileCodec {
           dateOnly(identity.measurementsUpdatedAt),
       'a_pathologies_diagnostiquees':
           identity.hasDiagnosedPathologies,
+      'consentement_sante_le':
+          child.consentementSanteLe?.toIso8601String(),
     };
   }
 
@@ -126,6 +128,9 @@ class ChildProfileCodec {
     return ChildProfileData(
       childId: childId,
       userId: enfant['parent_id'] as String?,
+      consentementSanteLe: DateTime.tryParse(
+        enfant['consentement_sante_le'] as String? ?? '',
+      ),
       identity: identityFromRow(enfant),
       hasPathologies: sante?['a_pathologies'] as bool?,
       hasAllergies: sante?['a_allergies'] as bool?,
