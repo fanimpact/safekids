@@ -165,6 +165,48 @@ Rien n'est redéployé : voir l'avertissement en tête de ce document.
 
 ---
 
+### 5. Le droit d'accès RGPD est outillé
+
+Un parent récupère seul, depuis **Paramètres → Mes données**, une copie
+de tout ce que l'application détient sur lui et sur ses enfants :
+compte, profils de santé et d'activités, partages, rattachements aux
+établissements, notes ajoutées par un professionnel, journal des
+consultations, personnes de confiance, activités préparées.
+
+Deux fichiers partent ensemble : un **PDF** lisible, destiné à être
+remis à un médecin ou à un établissement, et un **`.json`**
+réutilisable, versionné et accompagné d'un `_lisez_moi` en français.
+
+Trois règles tiennent le tout :
+
+- **Un enfant n'est exporté que par son parent.** La table `enfants`
+  renvoie aussi, par le RLS, les enfants sur lesquels le compte est
+  personne de confiance : l'export refiltre sur `parent_id`. Les tests
+  vérifient qu'aucune donnée d'un enfant d'autrui n'est même *lue*.
+- **Les jetons de partage sont retirés des deux fichiers.** Ce sont
+  des clés d'accès aux fiches, et ces fichiers sont faits pour être
+  transmis. Les partages eux-mêmes (date, destinataire, expiration,
+  consultations) restent présents.
+- **Un export est complet ou n'est pas.** Une lecture qui échoue fait
+  échouer l'export entier, avec un message clair.
+
+**69 tests.** Le contenu du PDF est décidé et vérifié en texte
+(`export_contenu.dart`), séparément de sa mise en page : le texte d'un
+PDF y est écrit en identifiants de glyphes, un test qui tenterait de
+le relire passerait toujours.
+
+Reste à vérifier à l'œil : voir
+[`a_verifier_sur_mobile.md`](a_verifier_sur_mobile.md), section
+« Export Mes données » — dont la relecture du contenu par Fanny, la
+seule vérification qui puisse confirmer que l'export est réellement
+complet.
+
+Non traité, et noté dans
+[`corrections_a_faire.md`](corrections_a_faire.md) : le droit d'accès
+d'une **personne de confiance** sur ses propres données.
+
+---
+
 ## Ce qui bloque
 
 **En attente d'une réponse de Clever Cloud sur l'hébergement HDS.**
@@ -225,10 +267,10 @@ une vraie base. À rouvrir seulement si une migration est décidée.
 | | |
 |---|---|
 | Branche | `main`, synchronisée avec `origin/main` |
-| Tests Flutter | **309**, tous verts |
+| Tests Flutter | **378**, tous verts |
 | Tests JavaScript | **85** pour les fonctions serveur, **29** pour la page auth |
 | `flutter analyze` | propre |
-| Dernier chantier | fonctions serveur isolées de l'hébergeur, 6 commits |
+| Dernier chantier | export RGPD « Mes données », 5 commits |
 
 **Outillage installé sur le poste** (à savoir avant de chercher) :
 `postgresql` 18.6 via scoop (`pg_dump`, `psql`, plus un serveur local

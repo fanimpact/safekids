@@ -101,6 +101,18 @@ class ChildRepository extends ChangeNotifier {
           .activatePendingInvitations();
     } catch (_) {}
 
+    // PIEGE. Aucun filtre ici, volontairement : c'est le RLS qui
+    // decide. Or il renvoie les enfants de ce compte **et** ceux sur
+    // lesquels il est personne de confiance. `children` n'est donc
+    // pas "mes enfants" mais "les enfants que je peux voir".
+    //
+    // C'est ce qu'il faut pour l'affichage : une personne de
+    // confiance doit voir la fiche sur laquelle elle a ete invitee.
+    // Mais tout ecran ou toute fonction qui veut dire "mes enfants"
+    // doit refiltrer sur `parent_id == currentUserId` — sinon il
+    // melange deux familles. L'export RGPD du 23/08/2026 le fait
+    // (voir `collecterExport` dans lib/export/source_export.dart, et
+    // test/export_cloisonnement_test.dart).
     final enfantsRows = await _client
         .from('enfants')
         .select();

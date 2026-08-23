@@ -312,6 +312,63 @@ ne peuvent être tranchés qu'en usage réel.
    fois déposée : ouvrir un vrai lien reçu par email depuis un
    téléphone, et vérifier que la page ressemble à l'application.
 
+## Export « Mes données » — droit d'accès RGPD (23/08/2026)
+
+Le bouton vit dans **Paramètres → Mes données**. Il produit deux
+fichiers en même temps : un PDF lisible et un `.json` réutilisable.
+
+Ce qui suit ne peut être tranché ni par les 69 tests du chantier, ni
+par `flutter analyze`.
+
+1. **La feuille de partage avec deux fichiers**, sur un vrai
+   téléphone. Android et iOS ne présentent pas la même chose, et
+   certaines applications de destination n'acceptent qu'un seul
+   fichier — auquel cas il faut savoir laquelle, pour le dire au
+   parent. **À vérifier** : que les deux fichiers partent bien
+   ensemble vers une boîte mail, et ce qui se passe avec une
+   application qui n'en prend qu'un.
+
+2. **Le PDF d'un profil très rempli.** Les tests garantissent que la
+   génération ne casse pas ; ils ne disent rien de la mise en page.
+   **À vérifier** : que les sauts de page tombent au bon endroit,
+   qu'aucun titre de rubrique ne se retrouve seul en bas d'une page,
+   et que le document reste lisible imprimé en noir et blanc.
+
+3. **Le PDF de plusieurs enfants.** Chaque enfant démarre sa propre
+   page, c'est testé. **À vérifier à l'œil** : qu'on ne puisse pas
+   confondre deux enfants en feuilletant — notamment que le prénom
+   soit visible sans revenir au début de la section.
+
+4. **Le fichier `.json` ouvert sur un ordinateur.** **À vérifier** :
+   qu'il s'ouvre dans un éditeur de texte ordinaire, que les accents
+   sont corrects (« Noé » et non « NoÃ© »), et que le `_lisez_moi` en
+   tête est compréhensible par quelqu'un qui n'est pas informaticien.
+
+5. **L'absence du bouton pour une personne de confiance.** Demande un
+   **second compte**, invité en consultation seule sur la fiche de
+   Théo ou de Noé. **À vérifier** : que la section « Mes données »
+   affiche la phrase d'explication et aucun bouton. Le comportement
+   est testé avec un double, mais la valeur qui décide vient de la
+   base — c'est cette chaîne-là qui reste à confirmer en vrai.
+
+6. **Le temps de génération** sur un profil réel. **À vérifier** : que
+   « Préparation en cours… » apparaisse assez vite pour qu'on ne croie
+   pas à un blocage, et combien de temps l'ensemble prend avec les
+   deux profils de test.
+
+7. **Le contenu, relu par vous.** C'est la vérification la plus
+   importante et la seule qui ne soit pas technique : **est-ce que
+   l'export est réellement complet ?** Ouvrir le PDF et vérifier que
+   rien de ce que vous avez saisi sur Théo et Noé n'y manque. Le rendu
+   est générique, donc rien ne devrait être omis — mais c'est
+   exactement le genre d'affirmation qu'il faut vérifier une fois.
+
+8. **Les intitulés fabriqués.** Un champ absent du dictionnaire de
+   `export_libelles.dart` sort quand même, sous un intitulé dérivé de
+   son nom technique. **À noter en lisant le PDF** : les intitulés qui
+   sonnent faux ou incompréhensibles, pour les ajouter au
+   dictionnaire.
+
 ## Hors périmètre pour l'instant
 
 Les notifications push ne sont pas listées ici : décision déjà prise de

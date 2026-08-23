@@ -347,6 +347,39 @@ confiance") :
 - Révoquer un membre et vérifier que son accès au trombinoscope de
   l'établissement est coupé immédiatement.
 
+## Depuis le bouton « Exporter mes données » (23/08/2026)
+
+**Le droit d'accès d'une personne de confiance n'est pas traité.**
+
+L'export RGPD livré le 23/08/2026 est réservé au parent qui possède
+les fiches : une personne de confiance en consultation seule n'y a pas
+accès, c'est le cadrage décidé et il est testé
+(`test/export_section_test.dart`).
+
+Mais une personne de confiance est elle aussi une personne concernée
+au sens du RGPD, et l'application détient des données **sur elle** :
+son adresse email, la date de son invitation, son niveau d'accès, la
+date d'acceptation ou de révocation, et son identifiant de compte.
+L'article 15 lui ouvre donc un droit d'accès sur ces données-là.
+
+Aujourd'hui, ces informations ne sortent que dans l'export **du
+parent** qui l'a invitée — jamais dans un export à elle, puisqu'elle
+n'a pas de bouton.
+
+Ce qu'il faudrait, si le sujet est repris : un export réduit pour un
+compte sans enfant, contenant son propre compte et ses rattachements
+en tant que personne de confiance, sans aucune donnée d'enfant.
+
+Décision de Fanny le 23/08/2026 : on ne le traite pas maintenant, mais
+on ne le perd pas.
+
+**Piège connexe à ne pas oublier** :
+`ChildRepository.loadFromSupabase` fait un `select()` sans filtre sur
+`enfants`. La liste renvoyée contient donc aussi les enfants sur
+lesquels le compte est seulement personne de confiance. Documenté sur
+place depuis le 23/08/2026 ; tout futur écran qui affichera
+« mes enfants » doit filtrer sur `parent_id`.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base
