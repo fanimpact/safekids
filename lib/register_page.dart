@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'auth/account_service.dart';
 import 'home/home_page.dart';
+import 'suppression/garde_suppression.dart';
 import 'utils/auth_error_message.dart';
 import 'widgets/sk_password_field.dart';
 
@@ -77,7 +78,7 @@ class _RegisterPageState extends State<RegisterPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const HomePage(),
+          builder: (context) => const GardeSuppression(enfant: HomePage()),
         ),
       );
     } catch (error) {

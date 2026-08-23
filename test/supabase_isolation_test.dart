@@ -50,6 +50,10 @@ void main() {
     // Export RGPD.
     'lib/export/source_export.dart',
 
+    // Suppression du compte avec delai de grace : trois fonctions de
+    // la base et un appel a l'Edge Function qui previent par email.
+    'lib/suppression/suppression_compte_service.dart',
+
     // Compteurs d'usage : un seul appel, a une fonction de la base
     // qui ne recoit que le nom d'une fonctionnalite.
     'lib/usage/compteur_usage.dart',

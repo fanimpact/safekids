@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'supabase_auth_provider.dart';
 
 import '../home/home_page.dart';
+import '../suppression/garde_suppression.dart';
 import '../utils/auth_error_message.dart';
 import '../widgets/sk_password_field.dart';
 
@@ -71,7 +72,7 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (context) => const HomePage(),
+          builder: (context) => const GardeSuppression(enfant: HomePage()),
         ),
         (route) => false,
       );

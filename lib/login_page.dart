@@ -4,6 +4,7 @@ import 'auth/device_verification_page.dart';
 import 'auth/account_service.dart';
 import 'forgot_password_page.dart';
 import 'home/home_page.dart';
+import 'suppression/garde_suppression.dart';
 import 'register_page.dart';
 import 'repositories/child_repository.dart';
 import 'utils/auth_error_message.dart';
@@ -80,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
         context,
         MaterialPageRoute(
           builder: (context) => isRecognized
-              ? const HomePage()
+              ? const GardeSuppression(enfant: HomePage())
               : const DeviceVerificationPage(),
         ),
       );

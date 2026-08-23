@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../home/home_page.dart';
+import '../suppression/garde_suppression.dart';
 import '../repositories/child_repository.dart';
 import 'account_service.dart';
 
@@ -21,7 +22,7 @@ class DeviceVerificationPage extends StatefulWidget {
   });
 
   static Widget _buildHomePage(BuildContext context) =>
-      const HomePage();
+      const GardeSuppression(enfant: HomePage());
 
   @override
   State<DeviceVerificationPage> createState() =>
