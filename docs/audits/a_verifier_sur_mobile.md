@@ -369,6 +369,80 @@ par `flutter analyze`.
    sonnent faux ou incompréhensibles, pour les ajouter au
    dictionnaire.
 
+## Conformité RGPD — les quatre décisions (24/08/2026)
+
+**Rien de ceci ne fonctionne tant que
+`supabase/schema_conformite_rgpd.sql` n'a pas été exécuté**, et l'email
+de suppression tant que `confirmer-suppression-compte` n'est pas
+déployée. Voir [`../migration/conformite_rgpd.md`](../migration/conformite_rgpd.md).
+
+### Suppression du compte
+
+1. **L'email de demande de suppression.** Qu'il arrive, qu'il porte la
+   bonne date d'effacement, et que le moyen d'annuler soit
+   compréhensible sans être informaticien. **Demande un vrai envoi** —
+   et donc SPF/DKIM configuré, sinon il partira en indésirables. C'est
+   le seul endroit où la date sort de l'application.
+
+2. **Le compte devenu inaccessible.** Après la demande : se
+   déconnecter, se reconnecter, et vérifier qu'on tombe sur l'écran
+   d'annulation et **rien d'autre** — pas de menu, pas de retour, pas
+   de fiche consultable. À vérifier aussi que le Mode Urgence n'est
+   plus atteignable : c'est volontaire, mais il faut le voir de ses
+   yeux avant de le laisser en production.
+
+3. **L'annulation dans le délai.** Annuler, puis vérifier que tout est
+   revenu : profils, partages, rattachements, activités préparées.
+   C'est le test le plus important des quatre — un délai de grâce qui
+   ne restaure pas serait pire qu'une suppression immédiate.
+
+4. **L'effacement au bout de 7 jours.** Ne se vérifie qu'en attendant,
+   ou en avançant `suppression_effective_le` à la main dans la base sur
+   un compte de test. **Ne pas faire sur Théo ou Noé.**
+
+5. **Le blocage côté base, sans l'application.** Le vrai blocage est le
+   RLS. Pour le vérifier : demander la suppression, puis lire
+   `enfants` depuis le SQL Editor en se faisant passer pour ce compte
+   (`set request.jwt.claims`). Aucune ligne ne doit sortir. Sans cette
+   vérification, on ne sait pas si le blocage tient ailleurs que dans
+   l'écran.
+
+### Consentement
+
+6. **L'écran apparaît pour un deuxième enfant.** Le chemin « ajouter un
+   enfant » sautait la page d'introduction ; il passe maintenant par le
+   consentement. À vérifier que l'enchaînement reste fluide.
+
+7. **Il n'apparaît jamais en modification.** Ouvrir la fiche de Théo,
+   modifier son poids : aucune case ne doit être redemandée.
+
+8. **La date est bien enregistrée.** Après avoir créé un enfant,
+   vérifier en SQL que `enfants.consentement_sante_le` est renseignée.
+
+### Compteurs
+
+9. **Ils comptent, et une seule fois par famille.** Après avoir préparé
+   deux activités depuis le même compte :
+   `select mois, fonctionnalite, count(*) from marqueurs_usage group by 1,2;`
+   doit rendre **1**, pas 2.
+
+10. **Ils ne ralentissent rien.** Ouvrir le Mode Urgence en mode avion.
+    Il doit s'ouvrir instantanément, sans le moindre délai — c'est la
+    garantie la plus importante de ce lot.
+
+11. **La consolidation.** Ne se voit qu'au 1er du mois, ou en appelant
+    `select public.consolider_compteurs_usage();` à la main. Après
+    quoi `marqueurs_usage` et `sels_usage` doivent être vides pour le
+    mois consolidé, et `compteurs_usage` porter un entier.
+
+### Adresse de secours
+
+12. **Un format invalide est refusé** et un format valide accepté, y
+    compris une adresse inhabituelle (`prenom.nom+kidsrelay@...`).
+
+13. **Elle ressort dans l'export RGPD.** Enregistrer une adresse, puis
+    exporter : elle doit figurer dans le PDF **et** dans le `.json`.
+
 ## Hors périmètre pour l'instant
 
 Les notifications push ne sont pas listées ici : décision déjà prise de

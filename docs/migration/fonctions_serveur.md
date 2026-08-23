@@ -1,4 +1,4 @@
-# Les cinq fonctions serveur
+# Les six fonctions serveur
 
 État des lieux et conditions de déplacement. Document factuel : il ne
 recommande aucun hébergeur et ne décrit aucune migration.
@@ -7,9 +7,10 @@ recommande aucun hébergeur et ne décrit aucune migration.
 
 > ## ⚠️ Le dépôt ne correspond plus à la production
 >
-> **Depuis le 23/08/2026**, les cinq fonctions ont été réorganisées
-> dans ce dépôt : la logique métier est sortie des fichiers déployés.
-> **Aucune n'a été redéployée.** Les cinq fonctions en ligne tournent
+> **Depuis le 23/08/2026**, les fonctions ont été réorganisées dans ce
+> dépôt : la logique métier est sortie des fichiers déployés. Une
+> sixième, `confirmer-suppression-compte`, s'est ajoutée le
+> 24/08/2026. **Aucune n'a été redéployée.** Les fonctions en ligne tournent
 > encore la version d'avant cette date.
 >
 > Ce décalage est assumé et n'a aucun effet sur la production tant
@@ -17,20 +18,21 @@ recommande aucun hébergeur et ne décrit aucune migration.
 > à la page `auth.kidsrelay.fr`, il n'existe **aucun vérificateur**
 > capable de comparer ce qui tourne à ce qui est versionné.
 >
-> Les cinq commandes, à lancer depuis la racine du dépôt, dans cet
+> Les six commandes, à lancer depuis la racine du dépôt, dans cet
 > ordre indifférent — **les drapeaux ne sont pas interchangeables** :
 >
 > ```
 > supabase functions deploy envoyer-code-verification
 > supabase functions deploy verifier-code
 > supabase functions deploy notifier-note-ajoutee
+> supabase functions deploy confirmer-suppression-compte
 > supabase functions deploy consulter-partage --no-verify-jwt
 > supabase functions deploy voir-partage --no-verify-jwt
 > ```
 >
 > `--no-verify-jwt` sur les deux dernières : elles sont ouvertes à un
 > accompagnant qui n'est pas connecté. L'oublier rendrait tout lien de
-> partage inutilisable. À l'inverse, l'ajouter sur les trois premières
+> partage inutilisable. À l'inverse, l'ajouter sur les quatre premières
 > ouvrirait à n'importe qui des fonctions qui écrivent en base.
 >
 > **Point non vérifiable en local** : les fonctions importent
@@ -67,7 +69,7 @@ C'est ce qui rend ces modules exécutables sans base ni réseau :
 node --test supabase/functions/_tests/*.test.mjs
 ```
 
-**85 tests** au 23/08/2026. Ils ne remplacent pas les 309 tests Flutter,
+**99 tests** au 24/08/2026. Ils ne remplacent pas les tests Flutter,
 qui ne couvrent rien de ce qui se passe côté serveur.
 
 ---
@@ -147,6 +149,35 @@ du tout ne changerait rien à leur nécessité.
 Le canal push, prévu au moment de la publication sur les stores, lira
 et écrira sur `evenements_notification_parent` plutôt que de dupliquer
 cette logique.
+
+### `confirmer-suppression-compte`
+
+**Ce qu'elle fait.** Envoie au parent l'email qui rappelle la date
+d'effacement définitif de son compte et la façon d'annuler. Ajoutée le
+24/08/2026 avec le délai de grâce.
+
+**Ne décide rien et n'écrit rien** : la demande est déjà enregistrée en
+base par `demander_suppression_compte()`, qui a posé les dates et rendu
+le compte inaccessible. C'est pour cela que son échec n'annule pas la
+demande côté application.
+
+**Appelée par** `lib/suppression/suppression_compte_service.dart`.
+
+| Besoin | Détail |
+|---|---|
+| Authentification | oui — JWT vérifié par la plateforme |
+| Secrets | les quatre `BREVO_*` |
+| Variables injectées | `SUPABASE_URL`, `SUPABASE_ANON_KEY` |
+| Accès base | aucun |
+| Appels externes | `api.brevo.com` |
+
+**À changer hors de Supabase** : rien de particulier au-delà de ce qui
+vaut pour les autres. Elle ne touche pas à la base.
+
+L'email ne contient **aucun lien cliquable** : l'annulation se fait
+dans l'application, où le parent est déjà authentifié. Un lien
+d'annulation dans un email serait un moyen supplémentaire de détourner
+un compte.
 
 ### `consulter-partage`
 

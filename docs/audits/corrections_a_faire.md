@@ -380,6 +380,24 @@ lesquels le compte est seulement personne de confiance. Documenté sur
 place depuis le 23/08/2026 ; tout futur écran qui affichera
 « mes enfants » doit filtrer sur `parent_id`.
 
+## Depuis la conformité RGPD (24/08/2026)
+
+**L'adresse de secours n'a pas de procédure d'usage.**
+
+Le champ existe dans Paramètres et l'adresse est enregistrée. Mais
+rien n'écrit ce qui se passe le jour où un parent l'invoque : qui
+vérifie quoi, avec quelle preuve d'identité, et par quel canal la
+réponse part.
+
+Tant que cette procédure n'existe pas, c'est une donnée collectée dont
+l'usage n'est pas documenté — précisément ce que le RGPD demande
+d'éviter. Le champ est un prérequis, pas une fonctionnalité complète.
+
+**La durée de conservation des comptes inactifs n'est pas définie.**
+Rien n'expire aujourd'hui en dehors des partages (24h après leur date
+d'expiration) et du journal de consultations. Un compte abandonné garde
+ses données de santé d'enfant indéfiniment.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base

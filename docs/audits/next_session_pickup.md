@@ -1,6 +1,6 @@
 # Où nous en sommes — point de reprise
 
-**Dernière mise à jour : 23/08/2026**
+**Dernière mise à jour : 24/08/2026**
 
 Document de reprise : à lire en premier au début d'une session pour
 savoir ce qui est fait, ce qui attend, et ce qui bloque. À tenir à jour
@@ -8,9 +8,26 @@ plutôt qu'à laisser vieillir.
 
 ---
 
-> ## ⚠️ Cinq fonctions serveur à redéployer
+> ## ⚠️ Un fichier SQL à exécuter
 >
-> **Depuis le 23/08/2026**, les cinq Edge Functions ont été
+> **[`supabase/schema_conformite_rgpd.sql`](../../supabase/schema_conformite_rgpd.sql)
+> n'a pas été appliqué.** À exécuter en une fois dans le SQL Editor de
+> Supabase, comme les 17 autres.
+>
+> Tant qu'il ne l'est pas, les quatre décisions RGPD du 24/08/2026 sont
+> dans le code mais inertes : la case de consentement s'affiche sans
+> que sa date soit enregistrée, l'adresse de secours ne peut pas être
+> sauvegardée, les compteurs restent silencieux et « Supprimer mon
+> compte » échoue avec un message. L'application ne casse pas pour
+> autant — chaque appel échoue seul.
+>
+> Détail dans [`../migration/conformite_rgpd.md`](../migration/conformite_rgpd.md).
+
+---
+
+> ## ⚠️ Six fonctions serveur à redéployer
+>
+> **Depuis le 23/08/2026**, les six Edge Functions ont été
 > réorganisées dans le dépôt : la logique métier est sortie des
 > fichiers déployés, vers `supabase/functions/_logique/`.
 > **Aucune n'a été redéployée.** Les cinq fonctions en ligne tournent
@@ -25,6 +42,7 @@ plutôt qu'à laisser vieillir.
 > supabase functions deploy envoyer-code-verification
 > supabase functions deploy verifier-code
 > supabase functions deploy notifier-note-ajoutee
+> supabase functions deploy confirmer-suppression-compte
 > supabase functions deploy consulter-partage --no-verify-jwt
 > supabase functions deploy voir-partage --no-verify-jwt
 > ```
@@ -48,8 +66,9 @@ plutôt qu'à laisser vieillir.
 Le socle technique est **prêt à être quitté** : le schéma est figé et
 versionné, les prérequis d'une base cible sont documentés,
 l'authentification est isolée derrière une interface unique, et la
-logique des cinq fonctions serveur ne dépend plus de l'environnement
-Supabase.
+logique des six fonctions serveur ne dépend plus de l'environnement
+Supabase. Les quatre décisions RGPD prises le 24/08/2026 sont en
+place, en attente de l'exécution de leur fichier SQL.
 
 **Rien ne bouge tant que Clever Cloud n'a pas répondu sur l'hébergement
 HDS.**
@@ -207,6 +226,39 @@ d'une **personne de confiance** sur ses propres données.
 
 ---
 
+### 6. Quatre décisions RGPD sont en place
+
+Délai de grâce de 7 jours à la suppression du compte, consentement
+explicite aux données de santé, compteurs d'usage anonymisés, adresse
+email de secours. **Rien de tout cela ne fonctionne tant que
+`supabase/schema_conformite_rgpd.sql` n'a pas été exécuté à la main.**
+
+Ce qui compte le plus, dans l'ordre :
+
+- **Le blocage d'un compte en suppression tient en base**, par le RLS,
+  et pas seulement dans l'application. L'écran double le blocage pour
+  que le parent comprenne ce qu'il voit ; c'est le RLS qui protège.
+- **Le mois en cours des compteurs est pseudonyme, pas anonyme.**
+  Compter des familles distinctes l'impose. La consolidation mensuelle
+  détruit les empreintes et le sel, et ne laisse qu'un entier : c'est
+  elle qui rend l'historique anonyme.
+- **Un compteur ne retarde jamais une action.** Le Mode Urgence en
+  particulier : l'appel n'est pas attendu et ses erreurs sont avalées.
+- **L'export RGPD a été étendu** à `comptes_parents` : sans cela il
+  aurait cessé d'être complet le jour où les trois nouvelles colonnes
+  ont été ajoutées.
+
+**86 tests** ajoutés (Flutter et JavaScript). État des lieux complet
+dans [`../migration/conformite_rgpd.md`](../migration/conformite_rgpd.md),
+vérifications à l'œil dans
+[`a_verifier_sur_mobile.md`](a_verifier_sur_mobile.md).
+
+Non traité, et noté : la procédure d'usage de l'adresse de secours
+n'existe pas encore — le champ est un prérequis, pas une fonctionnalité
+complète.
+
+---
+
 ## Ce qui bloque
 
 **En attente d'une réponse de Clever Cloud sur l'hébergement HDS.**
@@ -262,15 +314,15 @@ une vraie base. À rouvrir seulement si une migration est décidée.
 
 ---
 
-## État du dépôt au 23/08/2026
+## État du dépôt au 24/08/2026
 
 | | |
 |---|---|
 | Branche | `main`, synchronisée avec `origin/main` |
-| Tests Flutter | **378**, tous verts |
-| Tests JavaScript | **85** pour les fonctions serveur, **29** pour la page auth |
+| Tests Flutter | **448**, tous verts |
+| Tests JavaScript | **99** pour les fonctions serveur, **29** pour la page auth |
 | `flutter analyze` | propre |
-| Dernier chantier | export RGPD « Mes données », 5 commits |
+| Dernier chantier | conformité RGPD, 8 commits |
 
 **Outillage installé sur le poste** (à savoir avant de chercher) :
 `postgresql` 18.6 via scoop (`pg_dump`, `psql`, plus un serveur local
