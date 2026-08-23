@@ -11,48 +11,46 @@
 // automatiquement par Supabase à l'exécution) pour pouvoir lire les
 // données malgré le RLS, puisque l'appelant n'est pas authentifié.
 //
+// Ce fichier ne contient que l'enveloppe. La validité du lien, le choix
+// des données à charger selon le type de fiche et la forme de la
+// réponse sont dans ../_logique/partage_consultation.mts, où ils sont
+// testés sans base.
+//
 // Déploiement : cette fonction doit être publiée avec la vérification
 // JWT désactivée, sinon Supabase exigera un en-tête d'autorisation que
 // l'accompagnant (non connecté) n'a pas :
 //   supabase functions deploy consulter-partage --no-verify-jwt
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import {
+  estPreflight,
+  reponseJson,
+  reponsePreflight,
+} from '../_enveloppe/http.mts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
-};
+import { lireConfigurationBaseServiceSeul } from '../_enveloppe/environnement.mts';
 
-const LIEN_INVALIDE = 'Lien expiré ou invalide.';
+import { clientServiceRole } from '../_enveloppe/supabase.mts';
 
-function jsonResponse(
-  body: unknown,
-  status: number,
-) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...corsHeaders,
-      'Content-Type': 'application/json',
-    },
-  });
-}
+import { depotPartagesSupabase } from '../_enveloppe/depot_partages.mts';
 
-function erreur(status: number) {
-  return jsonResponse({ error: LIEN_INVALIDE }, status);
+import {
+  LIEN_INVALIDE,
+  consulterPartage,
+} from '../_logique/partage_consultation.mts';
+
+function erreur(statut: number) {
+  return reponseJson({ error: LIEN_INVALIDE }, statut);
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  if (estPreflight(req)) {
+    return reponsePreflight();
   }
 
   let token: string | null;
 
   try {
-    const url = new URL(req.url);
-    token = url.searchParams.get('token');
+    token = new URL(req.url).searchParams.get('token');
   } catch {
     return erreur(400);
   }
@@ -61,112 +59,40 @@ Deno.serve(async (req) => {
     return erreur(400);
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const serviceRoleKey = Deno.env.get(
-    'SUPABASE_SERVICE_ROLE_KEY',
-  );
+  const base = lireConfigurationBaseServiceSeul();
 
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!base) {
     console.error(
       'SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY manquant.',
     );
     return erreur(500);
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-  const { data: partage, error: partageError } =
-    await supabase
-      .from('partages')
-      .select(
-        'id, enfant_id, type_fiche, date_expiration, contenu_fige, destinataire',
-      )
-      .eq('token', token)
-      .maybeSingle();
-
-  if (partageError) {
-    console.error(partageError);
-    return erreur(500);
-  }
-
-  // Token inconnu : même message que "expiré", pour ne pas
-  // laisser deviner si un token a existé ou non.
-  if (!partage) {
-    return erreur(404);
-  }
-
-  const dateExpiration = new Date(
-    partage.date_expiration,
+  const resultat = await consulterPartage(
+    depotPartagesSupabase(clientServiceRole(base)),
+    token,
+    new Date(),
   );
 
-  if (
-    Number.isNaN(dateExpiration.getTime()) ||
-    dateExpiration.getTime() < Date.now()
-  ) {
-    return erreur(410);
+  switch (resultat.statut) {
+    case 'ok':
+      return reponseJson(resultat.fiche, 200);
+
+    // Token inconnu : même message que "expiré", pour ne pas
+    // laisser deviner si un token a existé ou non.
+    case 'tokenAbsent':
+      return erreur(400);
+
+    case 'tokenInconnu':
+      return erreur(404);
+
+    case 'lienExpire':
+      return erreur(410);
+
+    case 'enfantIntrouvable':
+      return erreur(404);
+
+    case 'erreurBase':
+      return erreur(500);
   }
-
-  const { data: enfant, error: enfantError } =
-    await supabase
-      .from('enfants')
-      .select(
-        'id, prenom, nom, date_naissance, poids, taille, date_maj_poids',
-      )
-      .eq('id', partage.enfant_id)
-      .maybeSingle();
-
-  if (enfantError || !enfant) {
-    console.error(enfantError);
-    return erreur(404);
-  }
-
-  // "recommandations_activite" est une photo figée au moment du
-  // partage (contenu_fige) : jamais recalculée ici, le moteur de
-  // recommandations n'existe qu'en Dart/Flutter. Les profils santé et
-  // activités ne sont donc pas nécessaires pour ce type de fiche.
-  let profilSante = null;
-  let profilActivites = null;
-
-  if (partage.type_fiche !== 'recommandations_activite') {
-    const { data: profilSanteRow } = await supabase
-      .from('profils_sante')
-      .select('*')
-      .eq('enfant_id', partage.enfant_id)
-      .maybeSingle();
-
-    const { data: profilActivitesRow } = await supabase
-      .from('profils_activites')
-      .select('*')
-      .eq('enfant_id', partage.enfant_id)
-      .maybeSingle();
-
-    profilSante = profilSanteRow ?? null;
-    profilActivites = profilActivitesRow ?? null;
-  }
-
-  // Mise à jour de la date de dernière consultation. Une erreur ici
-  // ne doit pas empêcher de renvoyer la fiche à l'accompagnant.
-  const { error: updateError } = await supabase
-    .from('partages')
-    .update({
-      date_derniere_consultation:
-        new Date().toISOString(),
-    })
-    .eq('id', partage.id);
-
-  if (updateError) {
-    console.error(updateError);
-  }
-
-  return jsonResponse(
-    {
-      type_fiche: partage.type_fiche,
-      destinataire: partage.destinataire ?? 'particulier',
-      enfant,
-      profil_sante: profilSante,
-      profil_activites: profilActivites,
-      contenu_fige: partage.contenu_fige ?? null,
-    },
-    200,
-  );
 });
