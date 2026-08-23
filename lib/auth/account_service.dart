@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/supabase_config.dart';
+import 'auth_provider.dart';
 import 'device_identity.dart';
+import 'supabase_auth_provider.dart';
 
 /// Regroupe toutes les opérations liées au compte réel — email + mot de
 /// passe — communes aux parents et au personnel scolaire (espace
@@ -25,6 +27,14 @@ class AccountService {
 
   static final AccountService instance = AccountService._();
 
+  /// Tout ce qui touche au compte lui-même passe par cette frontière —
+  /// plus aucun appel direct au SDK d'authentification ici
+  /// (23/08/2026).
+  AuthProvider get _auth => SupabaseAuthProvider.instance;
+
+  /// Conservé uniquement pour les tables et les Edge Functions :
+  /// `appareils_reconnus`, `comptes_parents`, `codes_verification`.
+  /// L'accès aux données n'est pas encore abstrait.
   SupabaseClient get _client => Supabase.instance.client;
 
   /// Convertit la session anonyme actuelle en compte réel. L'identité
@@ -35,9 +45,10 @@ class AccountService {
     required String email,
     required String password,
   }) async {
-    await _client.auth.updateUser(
-      UserAttributes(email: email, password: password),
-      emailRedirectTo: SupabaseConfig.authRedirectUrl,
+    await _auth.attachAccountToCurrentSession(
+      email: email,
+      password: password,
+      emailRedirectUrl: SupabaseConfig.authRedirectUrl,
     );
 
     // Sans ça, la connexion par mot de passe peut échouer tant que la
@@ -53,7 +64,7 @@ class AccountService {
       // valable, seule cette garantie supplémentaire est absente.
     }
 
-    final userId = _client.auth.currentUser?.id;
+    final userId = _auth.currentUserId;
 
     if (userId == null) {
       return;
@@ -82,11 +93,16 @@ class AccountService {
     required String email,
     required String password,
   }) async {
-    final currentUser = _client.auth.currentUser;
-
-    if (currentUser != null && currentUser.isAnonymous == false) {
-      await _client.auth.signOut();
-      await _client.auth.signInAnonymously();
+    // Un compte réel déjà connecté doit céder la place à une session
+    // anonyme neuve, sinon le nouveau compte reprendrait son identité
+    // technique — et donc ses enfants.
+    //
+    // La condition porte sur l'identité et non sur la session, pour
+    // rester strictement équivalente au code d'origine
+    // (`currentUser != null && currentUser.isAnonymous == false`).
+    if (_auth.currentUserId != null && !_auth.isAnonymous) {
+      await _auth.signOut();
+      await _auth.signInAnonymously();
     }
 
     await createAccount(email: email, password: password);
@@ -99,20 +115,20 @@ class AccountService {
     required String email,
     required String password,
   }) {
-    return _client.auth.signInWithPassword(
+    return _auth.signInWithPassword(
       email: email,
       password: password,
     );
   }
 
   Future<void> signOut() {
-    return _client.auth.signOut();
+    return _auth.signOut();
   }
 
   /// À appeler juste après une connexion réussie : vérifie si cet
   /// appareil a déjà été validé pour le compte connecté.
   Future<bool> isCurrentDeviceRecognized() async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = _auth.currentUserId;
 
     if (userId == null) {
       return false;
@@ -186,9 +202,9 @@ class AccountService {
   }
 
   Future<void> requestPasswordReset(String email) {
-    return _client.auth.resetPasswordForEmail(
-      email,
-      redirectTo: SupabaseConfig.authRedirectUrl,
+    return _auth.requestPasswordReset(
+      email: email,
+      redirectUrl: SupabaseConfig.authRedirectUrl,
     );
   }
 
@@ -198,7 +214,7 @@ class AccountService {
   /// défini, il n'y a pas de risque supplémentaire à le considérer
   /// comme reconnu).
   Future<void> _registerCurrentDeviceDirectly() async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = _auth.currentUserId;
 
     if (userId == null) {
       return;

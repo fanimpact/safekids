@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/supabase_auth_provider.dart';
 import '../models/complete_child_profile_data.dart';
 import '../repositories/child_profile_codec.dart';
 
@@ -183,7 +184,7 @@ class ProfessionalChildRepository extends ChangeNotifier {
     required String enfantId,
     required String typeFiche,
   }) async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = SupabaseAuthProvider.instance.currentUserId;
     final etablissementId = _etablissementId;
 
     if (userId == null || etablissementId == null) {

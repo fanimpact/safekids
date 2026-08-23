@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/supabase_auth_provider.dart';
 import '../models/activity_session/activity_session_codec.dart';
 import '../models/activity_session/activity_session_data.dart';
 import '../models/activity_session/complete_activity_session_data.dart';
@@ -33,7 +34,7 @@ class EstablishmentActivityService {
     required List<String> childIds,
     required String etablissementId,
   }) async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = SupabaseAuthProvider.instance.currentUserId;
 
     if (userId == null) {
       throw StateError(
@@ -71,7 +72,7 @@ class EstablishmentActivityService {
     required String activiteId,
     required List<String> childIds,
   }) async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = SupabaseAuthProvider.instance.currentUserId;
 
     final row = await _client
         .from('activites_preparees')
@@ -96,7 +97,7 @@ class EstablishmentActivityService {
     required String activiteId,
     required ActivitySessionData activity,
   }) async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = SupabaseAuthProvider.instance.currentUserId;
 
     final row = await _client
         .from('activites_preparees')
@@ -138,7 +139,7 @@ class EstablishmentActivityService {
   Future<Set<String>> loadMaskedKeys(
     String activiteId,
   ) async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = SupabaseAuthProvider.instance.currentUserId;
 
     if (userId == null) {
       return {};
@@ -163,7 +164,7 @@ class EstablishmentActivityService {
     required String cle,
     required bool masquer,
   }) async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = SupabaseAuthProvider.instance.currentUserId;
 
     if (userId == null) {
       return;
@@ -199,7 +200,7 @@ class EstablishmentActivityService {
     required String texte,
     String? enfantId,
   }) async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = SupabaseAuthProvider.instance.currentUserId;
 
     if (userId == null) {
       throw StateError(

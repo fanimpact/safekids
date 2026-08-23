@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/supabase_auth_provider.dart';
 import '../models/activity_profile_data.dart';
 import '../models/child_profile_data.dart';
 import '../models/complete_child_profile_data.dart';
@@ -76,7 +77,7 @@ class ChildRepository extends ChangeNotifier {
   }
 
   Future<void> loadFromSupabase() async {
-    final parentId = _client.auth.currentUser?.id;
+    final parentId = SupabaseAuthProvider.instance.currentUserId;
 
     if (parentId == null) {
       // Ne jamais réussir silencieusement ici : si on ne sait pas qui
@@ -388,7 +389,7 @@ class ChildRepository extends ChangeNotifier {
   }
 
   String _requireParentId() {
-    final parentId = _client.auth.currentUser?.id;
+    final parentId = SupabaseAuthProvider.instance.currentUserId;
 
     if (parentId == null) {
       throw StateError(

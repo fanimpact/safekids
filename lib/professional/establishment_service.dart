@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/supabase_auth_provider.dart';
 import '../models/etablissement_data.dart';
 import '../models/membre_etablissement_data.dart';
 
@@ -34,7 +35,7 @@ class EstablishmentService {
   /// (directeur, adjoint ou membre — phase 2 ne crée que des
   /// directeurs, les autres rôles arrivent en phase 3).
   Future<List<EtablissementData>> myEstablishments() async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = SupabaseAuthProvider.instance.currentUserId;
 
     if (userId == null) {
       return [];

@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/supabase_auth_provider.dart';
 import '../models/activity_session/activity_session_codec.dart';
 import '../models/activity_session/activity_session_data.dart';
 import '../models/activity_session/complete_activity_session_data.dart';
@@ -21,7 +22,7 @@ class ActivitySessionRepository {
     ActivitySessionData activity, {
     List<String> childIds = const [],
   }) async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = SupabaseAuthProvider.instance.currentUserId;
 
     if (userId == null) {
       throw StateError(
@@ -53,7 +54,7 @@ class ActivitySessionRepository {
 
   Future<List<CompleteActivitySessionData>>
       listActivities() async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = SupabaseAuthProvider.instance.currentUserId;
 
     if (userId == null) {
       return [];
