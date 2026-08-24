@@ -1,12 +1,25 @@
 # Icone de l'application
 
-Ce dossier attend **deux fichiers PNG** a fournir. Tant qu'ils ne sont
-pas la, l'application garde l'icone Flutter par defaut : rien n'est
-casse, l'icone n'est simplement pas encore la bonne.
+**Les icones sont generees** (24/08/2026). Ce dossier contient les
+sources ; les tailles produites vivent dans les dossiers de chaque
+plateforme et sont versionnees.
 
-## Fichiers attendus
+Pour les regenerer apres avoir modifie une source :
 
-### 1. `kidsrelay_1024.png` — obligatoire
+```
+dart run flutter_launcher_icons
+```
+
+> **Apres chaque generation**, verifier `ios/Runner.xcodeproj/project.pbxproj` :
+> l'outil y ecrit `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = AppIcon`
+> a la place de `YES`. C'est un champ booleen, la valeur est invalide.
+> Annuler cette modification (`git checkout -- ios/Runner.xcodeproj/project.pbxproj`) :
+> l'icone iOS fonctionne sans elle, le catalogue d'assets suffit.
+> L'outil retire aussi le saut de ligne final de `web/manifest.json`.
+
+## Les sources
+
+### `kidsrelay_1024.png`
 
 L'icone complete, fond compris.
 
@@ -30,7 +43,7 @@ peuvent etre rognes par l'arrondi d'iOS ou le masque d'Android.
 taille reelle d'une icone sur un telephone (environ 60 pixels de cote),
 un texte devient illisible. Une lettre seule ou un symbole, oui.
 
-### 2. `kidsrelay_premier_plan.png` — recommande
+### `kidsrelay_premier_plan.png`
 
 Le motif **seul**, sur fond **transparent**, pour les icones adaptatives
 d'Android (celles que le systeme recadre en rond, en carre arrondi ou en
@@ -48,28 +61,46 @@ zoome et recadre ce calque, et tout ce qui depasse du cercle inscrit
 peut disparaitre.
 
 Le fond de l'icone adaptative n'est pas un fichier : c'est la couleur
-`kidsrelay_vert_pin` declaree dans
-`android/app/src/main/res/values/colors.xml`.
+`ic_launcher_background` declaree dans
+`android/app/src/main/res/values/colors.xml`, ecrite par le generateur
+depuis `pubspec.yaml`. Elle vaut le lin `#F5F3EF`.
 
-Si ce second fichier n'est pas fourni, retirer le bloc
-`adaptive_icon_foreground` de `pubspec.yaml` avant de lancer la
-generation.
+**Surtout pas le vert pin** : le K du motif est vert pin, il
+disparaitrait sur un fond de la meme couleur.
 
-## Generer les icones
+Il sert aussi de logo a l'ecran sur la page de presentation
+(`lib/concept_page.dart`) : c'est le seul fichier declare dans la
+section `assets` de `pubspec.yaml`.
 
-Une fois les fichiers deposes ici :
+## Ce que la generation produit
 
-```
-flutter pub run flutter_launcher_icons
-```
+| Plateforme | Ou |
+|---|---|
+| Android | `res/mipmap-*` et `res/drawable-*` (icone adaptative) |
+| iOS | `ios/Runner/Assets.xcassets/AppIcon.appiconset` |
+| Web | `web/icons` et `web/favicon.png` |
+| macOS | `macos/Runner/Assets.xcassets/AppIcon.appiconset` |
+| Windows | `windows/runner/resources/app_icon.ico` |
 
-La commande ecrit les icones dans `android/app/src/main/res/mipmap-*`,
-`ios/Runner/Assets.xcassets/AppIcon.appiconset` et `web/icons`. Ces
-fichiers generes sont a committer.
+Tous ces fichiers sont versionnes.
 
-## Ce qui est deja fait
+## Zone sure Android : verifiee, et juste
 
-L'ecran de lancement — celui qui s'affiche entre le moment ou l'on
-touche l'icone et la premiere image dessinee par Flutter — est deja au
-lin `#F5F3EF` sur Android et sur iOS. Il n'y a donc pas de saut de
-couleur au demarrage, quelle que soit l'icone choisie.
+Le motif occupe 674 x 682 pixels sur les 1024 du canevas, soit 66 %.
+La zone garantie visible d'une icone adaptative fait exactement 66 % :
+le sommet du triangle ambre depasse de 7 pixels.
+
+Ce n'est pas un probleme parce que `flutter_launcher_icons` applique un
+retrait de 16 % au premier plan (`android:inset="16%"` dans
+`mipmap-anydpi-v26/ic_launcher.xml`). Le motif occupe alors 67 % du
+cercle visible — dans la fourchette recommandee par Material, et rien
+n'est rogne, y compris sur un lanceur rond.
+
+**Ne pas reduire ce retrait** sans revoir le motif : a 8 %, le triangle
+sort du cercle.
+
+## L'ecran de lancement
+
+Celui qui s'affiche entre le moment ou l'on touche l'icone et la
+premiere image dessinee par Flutter est au lin `#F5F3EF` sur Android et
+sur iOS. Il n'y a donc pas de saut de couleur au demarrage.

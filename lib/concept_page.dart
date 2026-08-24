@@ -15,9 +15,13 @@ class ConceptPage extends StatelessWidget {
               children: [
                 const SizedBox(height: 30),
 
-                const Icon(
-                  Icons.child_care,
-                  size: 80,
+                // Le logo plutot qu'un pictogramme generique : c'est le
+                // premier ecran que voit quelqu'un qui ne connait pas
+                // encore l'application.
+                Image.asset(
+                  'assets/icone/kidsrelay_premier_plan.png',
+                  width: 140,
+                  height: 140,
                 ),
 
                 const SizedBox(height: 30),
@@ -35,7 +39,7 @@ class ConceptPage extends StatelessWidget {
 
                 const Text(
                   "Certains enfants vivent avec une pathologie, un trouble du neurodéveloppement (TSA, TDAH, troubles Dys…), un handicap, un appareillage ou toute autre situation nécessitant une attention particulière.\n\n"
-                  "Les informations renseignées par la famille permettent aux accompagnants d’accéder rapidement aux éléments importants concernant chaque enfant et de préparer leurs activités en tenant compte de ses besoins.\n\n"
+                  "KidsRelay permet de rassembler les informations essentielles concernant l’enfant et de les transmettre aux personnes qui l’accueillent : ses besoins au quotidien, et les conduites à tenir en cas de difficulté.\n\n"
                   "Un mode Urgence a été conçu pour faciliter la prise en charge de l’enfant lorsqu’une intervention est nécessaire.\n\n"
                   "Notre objectif : réduire la charge mentale des accompagnants et rassurer les familles en facilitant l’accès aux bonnes informations, au bon moment.",
                   textAlign: TextAlign.center,

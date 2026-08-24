@@ -59,8 +59,21 @@ flutter_launcher_icons:
     generate: true
     background_color: "#F5F3EF"
     theme_color: "#1F4A3F"
-  adaptive_icon_background: "#1F4A3F"
+  # Lin, comme le fond de l'icone complete. Surtout pas le vert pin :
+  # le K du motif est vert pin, il disparaitrait sur un fond de la meme
+  # couleur.
+  adaptive_icon_background: "#F5F3EF"
   adaptive_icon_foreground: "assets/icone/kidsrelay_premier_plan.png"
+
+  # L'application se compile aussi pour ces deux plateformes : sans
+  # cela, elles garderaient l'icone Flutter par defaut.
+  macos:
+    generate: true
+    image_path: "assets/icone/kidsrelay_1024.png"
+  windows:
+    generate: true
+    image_path: "assets/icone/kidsrelay_1024.png"
+    icon_size: 256
 
 dev_dependencies:
   flutter_test:
@@ -83,6 +96,10 @@ flutter:
 
   assets:
     - lib/assets/
+    # Le logo, motif seul sur fond transparent, affiche sur l'ecran de
+    # presentation. Le meme fichier sert de premier plan a l'icone
+    # adaptative Android.
+    - assets/icone/kidsrelay_premier_plan.png
 
   # Polices embarquees plutot que telechargees a l'execution : le mode
   # hors-ligne est une fonctionnalite centrale de KidsRelay, et aucun

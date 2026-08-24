@@ -6,4 +6,5 @@
 <resources>
     <color name="kidsrelay_lin">#F5F3EF</color>
     <color name="kidsrelay_vert_pin">#1F4A3F</color>
+	<color name="ic_launcher_background">#F5F3EF</color>
 </resources>
