@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'establishment_service.dart';
+
 /// La fonction qu'un professionnel déclare, et que le parent lira sous
 /// chaque note écrite sur son enfant.
 ///
@@ -157,6 +159,153 @@ class _SelecteurFonctionState extends State<SelecteurFonction> {
             onChanged: (_) => _prevenir(),
           ),
         ],
+      ],
+    );
+  }
+}
+
+/// Ce qu'une note portera comme signature, une fois le champ résolu.
+///
+/// [dejaEnregistree] évite une écriture inutile en base quand la
+/// personne avait déjà déclaré sa fonction : la note n'a pas à
+/// réécrire ce qui n'a pas changé.
+class SignatureNote {
+  final String? fonction;
+  final bool dejaEnregistree;
+
+  const SignatureNote(
+    this.fonction, {
+    required this.dejaEnregistree,
+  });
+
+  /// Faux tant que la fonction n'est pas exploitable — « Autre » choisi
+  /// sans texte, ou rien de déclaré et rien de choisi.
+  bool get utilisable => fonction != null;
+}
+
+/// Le filet, sur les deux écrans qui écrivent une note.
+///
+/// Décision du 25/08/2026 : **pas de note écrite tant que la fonction
+/// n'est pas renseignée.** C'est le seul moyen que la promesse faite au
+/// parent — savoir si l'observation vient de la maîtresse, de la
+/// cantine ou de la direction — soit vraie pour toutes les notes
+/// futures. Les notes antérieures, elles, afficheront « Fonction non
+/// précisée » : le trou se referme à la première note de chacun au
+/// lieu de rester un repli permanent.
+///
+/// Ne bloque rien tant que le chargement n'a pas abouti : c'est
+/// l'écran qui refuse au moment d'enregistrer, avec son propre
+/// message.
+class ChampSignatureNote extends StatefulWidget {
+  final String etablissementId;
+  final ValueChanged<SignatureNote> onChanged;
+
+  const ChampSignatureNote({
+    super.key,
+    required this.etablissementId,
+    required this.onChanged,
+  });
+
+  @override
+  State<ChampSignatureNote> createState() =>
+      _ChampSignatureNoteState();
+}
+
+class _ChampSignatureNoteState extends State<ChampSignatureNote> {
+  String? _enregistree;
+  bool _chargee = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _charger();
+  }
+
+  Future<void> _charger() async {
+    String? fonction;
+
+    try {
+      fonction = await EstablishmentService.instance.myFonction(
+        widget.etablissementId,
+      );
+    } catch (_) {
+      // Hors connexion, ou lecture refusée : on se comporte comme si
+      // rien n'était déclaré. La personne ressaisira, et la base
+      // recevra la même valeur — jamais un blocage définitif.
+      fonction = null;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    final propre = fonction?.trim();
+    final connue = propre != null && propre.isNotEmpty;
+
+    setState(() {
+      _enregistree = connue ? propre : null;
+      _chargee = true;
+    });
+
+    widget.onChanged(
+      SignatureNote(
+        connue ? propre : null,
+        dejaEnregistree: connue,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_chargee) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_enregistree != null) {
+      // Déjà déclarée : on ne redemande pas, mais on montre ce que le
+      // parent lira. Une signature qu'on n'a pas relue depuis des mois
+      // se corrige dans « Gérer l'équipe ».
+      return Padding(
+        padding: const EdgeInsets.only(top: 4, bottom: 4),
+        child: Text(
+          'Cette note sera signée : $_enregistree',
+          style: const TextStyle(
+            fontSize: 13,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Votre fonction',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        const Text(
+          'Le parent lira cette fonction sous votre note. Elle est '
+          'demandée une fois, puis retenue.',
+          style: TextStyle(fontSize: 13),
+        ),
+
+        const SizedBox(height: 12),
+
+        SelecteurFonction(
+          onChanged: (fonction) => widget.onChanged(
+            SignatureNote(fonction, dejaEnregistree: false),
+          ),
+        ),
       ],
     );
   }

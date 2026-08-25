@@ -4,6 +4,8 @@ import '../activity_pages/activity_recommendations_page.dart';
 import '../models/activity_session/complete_activity_session_data.dart';
 import '../recommendation_engine/models/activity_recommendation_result.dart';
 import 'establishment_activity_service.dart';
+import 'establishment_service.dart';
+import 'fonction_professionnelle.dart';
 import 'establishment_home_page.dart';
 import 'professional_child_repository.dart';
 
@@ -37,6 +39,9 @@ class _ActivityNotePageState extends State<ActivityNotePage> {
   bool? _linkToChild;
   String? _selectedChildId;
   bool _isSaving = false;
+
+  /// Nulle tant que le champ n'a pas rendu son verdict.
+  SignatureNote? _signature;
 
   @override
   void dispose() {
@@ -137,6 +142,23 @@ class _ActivityNotePageState extends State<ActivityNotePage> {
       return;
     }
 
+    // Pas de note ecrite sans fonction : le parent doit savoir si
+    // l'observation vient de la maitresse, de la cantine ou de la
+    // direction.
+    final signature = _signature;
+
+    if (signature == null || !signature.utilisable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Indiquez votre fonction avant d’enregistrer. Le parent '
+            'la lira sous votre note.',
+          ),
+        ),
+      );
+      return;
+    }
+
     final activiteId = widget.activity.id;
 
     if (activiteId == null) {
@@ -149,6 +171,13 @@ class _ActivityNotePageState extends State<ActivityNotePage> {
     });
 
     try {
+      if (!signature.dejaEnregistree) {
+        await EstablishmentService.instance.setMyFonction(
+          etablissementId: widget.etablissementId,
+          fonction: signature.fonction!,
+        );
+      }
+
       await EstablishmentActivityService.instance.saveNote(
         activiteId: activiteId,
         texte: texte,
@@ -314,6 +343,14 @@ class _ActivityNotePageState extends State<ActivityNotePage> {
                 ),
               ],
             ],
+
+            const SizedBox(height: 24),
+
+            if (_wantsNote == true)
+              ChampSignatureNote(
+                etablissementId: widget.etablissementId,
+                onChanged: (signature) => _signature = signature,
+              ),
 
             const SizedBox(height: 32),
 

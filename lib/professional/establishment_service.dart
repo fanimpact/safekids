@@ -155,6 +155,32 @@ class EstablishmentService {
     );
   }
 
+  /// La fonction que l'utilisateur connecté a déclarée dans cet
+  /// établissement, ou `null`. Sert de filet avant d'écrire une note :
+  /// le parent doit savoir d'où vient l'observation.
+  Future<String?> myFonction(String etablissementId) async {
+    final userId = SupabaseAuthProvider.instance.currentUserId;
+
+    if (userId == null) {
+      return null;
+    }
+
+    final rows = await _client
+        .from('membres_etablissement')
+        .select('fonction')
+        .eq('etablissement_id', etablissementId)
+        .eq('user_id', userId)
+        .limit(1);
+
+    final liste = rows as List<dynamic>;
+
+    if (liste.isEmpty) {
+      return null;
+    }
+
+    return (liste.first as Map<String, dynamic>)['fonction'] as String?;
+  }
+
   /// Chacun déclare la sienne, et seulement la sienne : le `where` de
   /// la fonction en base porte `user_id = auth.uid()`.
   Future<void> setMyFonction({

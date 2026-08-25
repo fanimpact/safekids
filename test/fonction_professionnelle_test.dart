@@ -201,4 +201,118 @@ void main() {
       expect(code, contains("tooltip: 'Ma fonction'"));
     });
   });
+
+  group('La signature d’une note', () {
+    test('Rien de choisi n’est pas utilisable', () {
+      expect(
+        const SignatureNote(null, dejaEnregistree: false).utilisable,
+        isFalse,
+      );
+    });
+
+    test('Une fonction choisie est utilisable', () {
+      const signature = SignatureNote(
+        'ATSEM',
+        dejaEnregistree: false,
+      );
+
+      expect(signature.utilisable, isTrue);
+      expect(signature.fonction, 'ATSEM');
+    });
+
+    test('Déjà enregistrée, elle n’a rien à réécrire', () {
+      const signature = SignatureNote(
+        'Direction',
+        dejaEnregistree: true,
+      );
+
+      expect(signature.utilisable, isTrue);
+      expect(signature.dejaEnregistree, isTrue);
+    });
+
+    testWidgets(
+      'Sans connexion, le champ propose la saisie au lieu de bloquer',
+      (tester) async {
+        // La lecture de la fonction échoue (pas de Supabase en test).
+        // Le professionnel doit pouvoir ressaisir : la base recevra la
+        // même valeur, et jamais un blocage définitif.
+        SignatureNote? rendue;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ChampSignatureNote(
+                etablissementId: 'etab-1',
+                onChanged: (signature) => rendue = signature,
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SelecteurFonction), findsOneWidget);
+        expect(rendue?.utilisable, isFalse);
+      },
+    );
+  });
+
+  group('Pas de note écrite sans fonction', () {
+    // Décision du 25/08/2026. C'est le seul moyen que la promesse faite
+    // au parent soit vraie pour toutes les notes futures.
+
+    String source(String chemin) => File(chemin).readAsStringSync();
+
+    const ecrans = [
+      'lib/professional/add_activity_note_page.dart',
+      'lib/professional/activity_note_page.dart',
+    ];
+
+    test('Les deux écrans qui écrivent une note portent le filet', () {
+      for (final ecran in ecrans) {
+        final code = source(ecran);
+
+        expect(
+          code,
+          contains('ChampSignatureNote('),
+          reason: '$ecran ne demande pas la fonction',
+        );
+        expect(
+          code,
+          contains('if (signature == null || !signature.utilisable)'),
+          reason: '$ecran ne refuse pas sans fonction',
+        );
+      }
+    });
+
+    test('Le refus tombe avant l’enregistrement, jamais après', () {
+      for (final ecran in ecrans) {
+        final code = source(ecran);
+
+        expect(
+          code.indexOf('!signature.utilisable'),
+          lessThan(code.indexOf('.saveNote(')),
+          reason: '$ecran enregistre avant de vérifier',
+        );
+      }
+    });
+
+    test('La fonction n’est réécrite que si elle a changé', () {
+      for (final ecran in ecrans) {
+        expect(
+          source(ecran),
+          contains('if (!signature.dejaEnregistree)'),
+          reason: '$ecran réécrit une fonction inchangée',
+        );
+      }
+    });
+
+    test('Les deux écrans savent de quel établissement il s’agit', () {
+      // Sans lui, impossible de lire ni d'écrire la fonction : elle est
+      // portée par le rattachement, pas par le compte.
+      for (final ecran in ecrans) {
+        expect(source(ecran), contains('widget.etablissementId'));
+      }
+    });
+  });
 }

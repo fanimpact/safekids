@@ -146,8 +146,12 @@ class _ActivityRecommendationsPageState
 
   Future<void> _openAddNote() async {
     final activiteId = widget.activitySession.id;
+    final etablissementId = widget.etablissementId;
 
-    if (activiteId == null) {
+    // Les deux sont garantis par `_canEdit`, qui conditionne l'accès au
+    // bouton. On revérifie plutôt que de forcer : l'écran de note en a
+    // besoin pour lire et écrire la fonction de l'auteur.
+    if (activiteId == null || etablissementId == null) {
       return;
     }
 
@@ -157,6 +161,7 @@ class _ActivityRecommendationsPageState
         builder: (context) => AddActivityNotePage(
           activiteId: activiteId,
           childIds: widget.activitySession.childIds,
+          etablissementId: etablissementId,
         ),
       ),
     );
