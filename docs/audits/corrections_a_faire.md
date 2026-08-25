@@ -362,6 +362,31 @@ Rien n'expire aujourd'hui en dehors des partages (24h après leur date
 d'expiration) et du journal de consultations. Un compte abandonné garde
 ses données de santé d'enfant indéfiniment.
 
+## Chantier decide, a attaquer (25/08/2026)
+
+**Enregistrer le brouillon de questionnaire a chaque ecran.**
+
+Aujourd'hui rien n'est ecrit en base avant la derniere page. Le profil
+sante n'est enregistre qu'a `transition_to_activities_page`, apres le
+sixieme ecran ; le profil Activites qu'a `other_information_page`,
+apres le onzieme. Entre les deux, tout vit dans un brouillon en
+memoire.
+
+Un parent qui abandonne au cinquieme ecran sur onze perd les cinq.
+Rien ne le lui dit, et la page de transition ecrit meme « ou revenir
+plus tard » — vrai pour le profil sante deja enregistre, trompeur pour
+les Activites commencees puis interrompues.
+
+Decision du 25/08/2026 : **ne rien ecrire a l'ecran a ce sujet.**
+Avouer le defaut plutot que le corriger n'aurait pas de sens alors que
+personne n'utilise encore l'application. Le chantier suit celui de la
+couche explicative.
+
+Ce qu'il faudra regarder : ou stocker le brouillon (base ou stockage
+local), ce qui se passe si deux appareils reprennent le meme brouillon,
+et comment reprendre a l'ecran ou l'on s'etait arrete plutot qu'au
+debut.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base

@@ -13,11 +13,11 @@ Aucun n'est retiré avant que Fanny confirme elle-même l'avoir vérifié.
 résultat attendu pour chaque point, en vue d'une session unique sur un
 appareil Android.
 
-- **64 points** au total.
+- **65 points** au total.
 - **Priorité haute : 14** — à faire en premier, ce sont ceux dont
   l'échec aurait des conséquences réelles.
 - **Priorité moyenne : 33**.
-- **Priorité basse : 17**.
+- **Priorité basse : 18**.
 
 ---
 
@@ -620,6 +620,28 @@ pour le mois consolidé, et `compteurs_usage` porte un entier.
 
 **Attendu** : une saisie sans arobase est refusée ; une adresse
 inhabituelle mais valide (`prenom.nom+kidsrelay@…`) est acceptée.
+
+
+## 65. La longueur de l'écran de création d'un lien
+*Lien de partage, 25/08/2026 · à juger à l'usage*
+
+L'écran a gagné trois sous-titres longs et un encart ambre avec les
+explications du 25/08/2026. Il compte maintenant cinq sections, et sur
+un petit téléphone le bouton « Générer le lien » se retrouve loin sous
+la ligne de flottaison.
+
+**Attendu** : jugez si le parcours reste supportable — combien de
+défilement entre l'ouverture de l'écran et le bouton, et si l'on perd
+le fil en chemin.
+
+**Solution de repli si c'est pénible** : n'afficher le sous-titre que
+sous la **fiche sélectionnée**, les deux autres restant réduites à leur
+intitulé. Le texte reste disponible au moment où il sert — quand on
+hésite entre deux fiches, on les coche tour à tour — mais l'écran
+retrouve sa hauteur.
+
+Ce qu'il ne faut **pas** faire : raccourcir les textes. Ils disent ce
+qu'on vient de décider qu'il fallait dire.
 
 ---
 
