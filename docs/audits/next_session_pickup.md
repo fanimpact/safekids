@@ -368,10 +368,10 @@ une vraie base. À rouvrir seulement si une migration est décidée.
 | | |
 |---|---|
 | Branche | `main`, synchronisée avec `origin/main` |
-| Tests Flutter | **517**, tous verts |
+| Tests Flutter | **535**, tous verts |
 | Tests JavaScript | **120** pour les fonctions serveur, **29** pour la page auth |
 | `flutter analyze` | propre |
-| Dernier chantier | brouillon de questionnaire enregistré à chaque écran |
+| Dernier chantier | notes d’établissement visibles du parent |
 
 **Outillage installé sur le poste** (à savoir avant de chercher) :
 `postgresql` 18.6 via scoop (`pg_dump`, `psql`, plus un serveur local
