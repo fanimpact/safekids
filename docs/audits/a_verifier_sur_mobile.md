@@ -13,7 +13,7 @@ Aucun n'est retiré avant que Fanny confirme elle-même l'avoir vérifié.
 résultat attendu pour chaque point, en vue d'une session unique sur un
 appareil Android.
 
-- **67 points** au total.
+- **70 points** au total.
 - **Priorité haute : 14** — à faire en premier, ce sont ceux dont
   l'échec aurait des conséquences réelles.
 - **Priorité moyenne : 33**.
@@ -678,6 +678,60 @@ silencieusement — aucun test ne peut le détecter, puisque le total est
 **Ce n'est pas une vérification à faire sur l'appareil** : c'est une
 note pour le jour où le parcours changera.
 
+## 68. La reprise d'un questionnaire commencé
+*Brouillon de questionnaire, 25/08/2026 · priorité haute*
+
+Le vrai test, celui qu'aucun test automatique ne fait : commencer le
+questionnaire santé d'un enfant, s'arrêter au troisième ou quatrième
+écran, **tuer l'application** (pas seulement la mettre en arrière-plan
+— la faire glisser hors de la liste des applications récentes), la
+rouvrir, aller dans « Mes enfants ».
+
+**Attendu** : une carte ambre « Reprendre le profil de Théo, commencé
+le 25/08 », avec dessous « Ce profil n'est pas encore enregistré.
+Terminez le questionnaire pour qu'il le soit. » En la touchant, le
+questionnaire repart **au premier écran**, avec les réponses déjà
+saisies pré-remplies — c'est délibéré : le parent relit ce qu'il avait
+répondu.
+
+Refaire la même chose sur le profil Activités, à partir d'un enfant
+déjà enregistré : la ligne « Profil Activités : à compléter » de sa
+carte devient un bouton de reprise.
+
+**Ce qui serait un défaut** : la carte n'apparaît pas ; ou elle
+apparaît mais les réponses sont vides ; ou le prénom manque alors
+qu'il avait été saisi.
+
+## 69. Le brouillon disparaît quand le questionnaire va au bout
+*Brouillon de questionnaire, 25/08/2026 · priorité haute*
+
+Terminer un questionnaire santé jusqu'à l'enregistrement de l'enfant,
+puis revenir sur « Mes enfants ».
+
+**Attendu** : l'enfant apparaît dans la liste, et **aucune carte
+ambre** ne subsiste à côté. Un brouillon qui survivrait à la
+validation ferait croire au parent qu'il lui reste du travail, et
+laisserait des données de santé sur l'appareil sans raison.
+
+Même chose au bout du profil Activités : le bouton de reprise doit
+avoir disparu de la carte de l'enfant.
+
+## 70. Un brouillon abandonné 30 jours
+*Brouillon de questionnaire, 25/08/2026 · priorité basse · demande du temps*
+
+Un questionnaire commencé et laissé de côté est effacé de l'appareil
+au bout de 30 jours — il contient des pathologies, des allergies et
+des traitements, il n'a pas à y rester indéfiniment. La règle et le
+tri sont testés ; ce qui ne l'est pas, c'est le passage réel du temps
+sur un vrai téléphone.
+
+**Attendu**, si l'occasion se présente : la carte ambre a disparu
+d'elle-même, sans que rien n'ait été touché.
+
+**Raccourci possible** : avancer la date de l'appareil de 31 jours,
+puis rouvrir « Mes enfants ». À faire sur l'appareil de test
+uniquement.
+
 ---
 
 # Ce qui n'a plus besoin d'être vérifié à la main
@@ -713,4 +767,4 @@ Les points qui demandent **deux appareils ou deux comptes** : 1, 6, 7,
 
 Les points qui demandent le **SQL Editor** : 10, 33, 62, 63.
 
-Les points qui demandent **du temps** (jours) : 20, 21, 62.
+Les points qui demandent **du temps** (jours) : 20, 21, 62, 70.

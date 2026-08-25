@@ -255,6 +255,57 @@ Non traité, et noté : la procédure d'usage de l'adresse de secours
 n'existe pas encore — le champ est un prérequis, pas une fonctionnalité
 complète.
 
+### Le questionnaire commencé n'est plus perdu — 25/08/2026
+
+Jusqu'à ce jour, **rien n'était écrit avant la dernière page** : le
+profil de santé après le sixième écran, le profil Activités après le
+onzième. Un parent interrompu au milieu — un appel, une batterie vide,
+l'application balayée hors des récentes — perdait tout et recommençait.
+
+Le brouillon est désormais écrit **à chaque écran validé**, sur
+l'appareil (`SharedPreferences`), et nulle part ailleurs.
+
+Ce qui a été décidé, et pourquoi :
+
+- **Sur l'appareil, pas en base.** Écrire un brouillon en base aurait
+  voulu dire créer une ligne `enfants` incomplète, et donc apprendre à
+  toute l'application — jusqu'au Mode Urgence — à distinguer un enfant
+  d'un brouillon. Un enfant à moitié saisi apparaissant dans le Mode
+  Urgence avec « Aucune consigne particulière » aurait été un mauvais
+  échange. **Ce que cela coûte** : le brouillon meurt avec l'appareil
+  (réinstallation, téléphone perdu, second appareil). Une table de
+  brouillons en base réglerait cela ; elle attend qu'un besoin réel se
+  manifeste.
+- **La reprise repart du premier écran**, réponses pré-remplies. Plus
+  simple, et cela laisse au parent l'occasion de relire ce qu'il avait
+  saisi trois semaines plus tôt.
+- **Le parent est prévenu, jamais de reprise silencieuse.** « Mes
+  enfants » affiche « Reprendre le profil de Théo, commencé le 25/08 ».
+- **Le brouillon est jeté à la validation finale, et au bout de 30
+  jours s'il dort.** Il contient des pathologies, des allergies et des
+  traitements : il n'a pas à rester indéfiniment sur un téléphone. La
+  purge a lieu **à la lecture** et est réécrite aussitôt — un brouillon
+  périmé ne survit pas parce que personne n'est repassé derrière.
+
+Un défaut introduit puis corrigé, à ne pas réintroduire :
+**l'écriture du brouillon n'est jamais attendue avant de naviguer.**
+Le premier câblage attendait `SharedPreferences` avant
+`Navigator.push` ; quatorze tests sont tombés, et surtout un parent
+dont le stockage aurait toussé serait resté bloqué au milieu de son
+questionnaire — exactement le problème qu'on cherchait à résoudre. Les
+trois fonctions de `lib/brouillons/enregistrement_brouillon.dart`
+avalent leurs erreurs, et les écrans les appellent sans `await`. Un
+test de câblage le verrouille.
+
+**41 tests** ajoutés : conversions aller-retour, règle des 30 jours aux
+bornes, tolérance à un stockage abîmé, effacement réel du disque, et
+lecture des sources des dix-sept écrans. Vérifié en cassant
+volontairement le code protégé — le câblage retiré d'un écran et la
+durée de vie portée à dix ans font tomber les tests concernés.
+
+Trois vérifications à l'œil ajoutées : points 68, 69 et 70 de
+[`a_verifier_sur_mobile.md`](a_verifier_sur_mobile.md).
+
 ---
 
 ## Ce qui bloque
@@ -317,10 +368,10 @@ une vraie base. À rouvrir seulement si une migration est décidée.
 | | |
 |---|---|
 | Branche | `main`, synchronisée avec `origin/main` |
-| Tests Flutter | **457**, tous verts |
+| Tests Flutter | **517**, tous verts |
 | Tests JavaScript | **120** pour les fonctions serveur, **29** pour la page auth |
 | `flutter analyze` | propre |
-| Dernier chantier | lien de partage : minimisation vérifiée en production |
+| Dernier chantier | brouillon de questionnaire enregistré à chaque écran |
 
 **Outillage installé sur le poste** (à savoir avant de chercher) :
 `postgresql` 18.6 via scoop (`pg_dump`, `psql`, plus un serveur local

@@ -362,30 +362,35 @@ Rien n'expire aujourd'hui en dehors des partages (24h après leur date
 d'expiration) et du journal de consultations. Un compte abandonné garde
 ses données de santé d'enfant indéfiniment.
 
-## Chantier decide, a attaquer (25/08/2026)
+## Chantier fait le 25/08/2026 : le brouillon de questionnaire
 
-**Enregistrer le brouillon de questionnaire a chaque ecran.**
+**Enregistrer le brouillon de questionnaire a chaque ecran.** — fait.
 
-Aujourd'hui rien n'est ecrit en base avant la derniere page. Le profil
-sante n'est enregistre qu'a `transition_to_activities_page`, apres le
+Le defaut : rien n'etait ecrit avant la derniere page. Le profil sante
+n'etait enregistre qu'a `transition_to_activities_page`, apres le
 sixieme ecran ; le profil Activites qu'a `other_information_page`,
-apres le onzieme. Entre les deux, tout vit dans un brouillon en
-memoire.
-
-Un parent qui abandonne au cinquieme ecran sur onze perd les cinq.
-Rien ne le lui dit, et la page de transition ecrit meme « ou revenir
+apres le onzieme. Un parent qui abandonnait au cinquieme ecran sur onze
+perdait les cinq, et la page de transition ecrivait meme « ou revenir
 plus tard » — vrai pour le profil sante deja enregistre, trompeur pour
 les Activites commencees puis interrompues.
 
-Decision du 25/08/2026 : **ne rien ecrire a l'ecran a ce sujet.**
-Avouer le defaut plutot que le corriger n'aurait pas de sens alors que
-personne n'utilise encore l'application. Le chantier suit celui de la
-couche explicative.
+Ce qui a ete fait : le brouillon est ecrit sur l'appareil a chaque
+ecran valide, propose a la reprise dans « Mes enfants », jete a la
+validation finale et au bout de 30 jours. Detail des quatre decisions
+et de leurs raisons dans
+[`next_session_pickup.md`](next_session_pickup.md).
 
-Ce qu'il faudra regarder : ou stocker le brouillon (base ou stockage
-local), ce qui se passe si deux appareils reprennent le meme brouillon,
-et comment reprendre a l'ecran ou l'on s'etait arrete plutot qu'au
-debut.
+Les deux questions restees ouvertes, volontairement :
+
+- **Deux appareils qui reprennent le meme brouillon** : ne peut pas se
+  produire, puisque le brouillon ne quitte pas l'appareil. Ce sera la
+  question du jour ou une table de brouillons existera en base.
+- **Reprendre a l'ecran ou l'on s'etait arrete** : ecarte au profit
+  d'une reprise au premier ecran, reponses pre-remplies. Plus simple,
+  et cela laisse au parent l'occasion de relire ce qu'il avait saisi.
+
+La decision du 25/08/2026 de **ne rien ecrire a l'ecran sur la perte du
+travail en cours** n'a plus d'objet : il n'y a plus de perte a avouer.
 
 ## Consigne permanente pour la suite de l'audit
 
