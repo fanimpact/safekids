@@ -301,51 +301,15 @@ pas seulement lecture du code).
 
 ## Tests manuels restants côté Fanny (19/08/2026)
 
-Deux fonctionnalités construites pendant la phase de corrections
-(points 9 et 10 de sa liste, hors périmètre des 4 passes d'audit
-ci-dessus) sont codées, testées automatiquement (`flutter analyze`
-propre, suite de tests complète) et appliquées sur le projet Supabase
-réel — mais jamais exercées avec de vrais comptes, conformément à la
-consigne permanente ci-dessous. Reste à vérifier en conditions
-réelles :
+Les deux séries — partage avec un co-parent ou tuteur, et gestion
+d'équipe côté établissement — ont été **déplacées dans
+[`a_verifier_sur_mobile.md`](a_verifier_sur_mobile.md)** le 25/08/2026,
+où elles sont devenues les points 11, 12, 22 à 29 avec leur résultat
+attendu.
 
-**Point 9 — partage de la fiche avec un co-parent ou tuteur**
-(`lib/children/child_profile_page.dart`, section "Personnes de
-confiance") :
-- Inviter une personne de confiance par email depuis la fiche d'un
-  enfant, avec le niveau "Consultation seule" (par défaut) — vérifier
-  qu'elle reçoit un accès une fois connectée avec cet email (compte
-  existant ou nouveau compte KidsRelay).
-- Vérifier qu'avec ce niveau, elle voit la fiche (pathologies,
-  allergies, profil activités, Mode Urgence) mais qu'aucun bouton de
-  modification, de suppression, ni la section Partages/Personnes de
-  confiance ne lui apparaissent.
-- Changer son niveau vers "Consultation et modification" depuis
-  l'écran du parent, et vérifier qu'elle peut alors modifier la fiche
-  (ex. ajouter une allergie) — la modification doit apparaître côté
-  parent aussi.
-- Vérifier la limite de 2 personnes maximum par enfant (la 3e
-  invitation doit être refusée avec un message clair).
-- Révoquer un accès et vérifier qu'il est coupé immédiatement (la
-  personne révoquée ne doit plus voir la fiche après une
-  actualisation).
-- Vérifier qu'inviter la même personne sur deux enfants différents
-  fonctionne indépendamment (révoquer sur l'un ne touche pas l'autre).
+Elles y ont leur place : ce sont des vérifications sur appareil avec
+de vrais comptes, pas des corrections à faire.
 
-**Point 10 — gestion d'équipe côté établissement**
-(`lib/professional/team_management_page.dart`, accessible depuis
-"Gérer l'équipe" sur l'accueil professionnel) :
-- Inviter un collègue par email avec le rôle "Membre", vérifier qu'il
-  apparaît dans l'équipe une fois connecté avec cet email.
-- Vérifier qu'un "Membre" simple voit l'équipe mais n'a accès à aucune
-  action de gestion (pas de bouton inviter/changer de rôle/révoquer).
-- Nommer ce membre "Adjoint(e)" depuis un compte directeur/adjoint,
-  vérifier qu'il peut alors lui-même inviter et révoquer quelqu'un.
-- Vérifier le garde-fou : impossible de révoquer ou de rétrograder le
-  dernier directeur/adjoint actif de l'établissement (message d'erreur
-  clair attendu, pas un plantage).
-- Révoquer un membre et vérifier que son accès au trombinoscope de
-  l'établissement est coupé immédiatement.
 
 ## Depuis le bouton « Exporter mes données » (23/08/2026)
 

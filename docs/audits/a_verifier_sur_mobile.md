@@ -1,490 +1,659 @@
-# À vérifier visuellement (mobile ou navigateur)
+# À vérifier sur un vrai appareil
 
 Liste vivante, remplace `2026-08-19-passe-3-a-verifier-sur-mobile.md`
-(conservé pour l'historique, plus mis à jour). Regroupe tous les
-points qui demandent un œil humain — sur un vrai téléphone ou en
-ouvrant l'app — et que ni les tests automatisés ni l'audit de code ne
-peuvent couvrir. Chaque nouvelle correction qui a besoin d'une
-vérification visuelle vient s'ajouter ici au lieu de rester seulement
-dans le fil de discussion.
-
-Rien ici n'est un bug confirmé : ce sont des points à confirmer,
-listés au fur et à mesure, jamais retirés avant que Fanny confirme
-elle-même les avoir vérifiés.
-
-## Corrections récentes à confirmer visuellement
-
-1. **Mode Urgence — dose du traitement affichée sous la bonne étape
-   (19/08/2026).** Théo → Mode Urgence → "Urgence liée à : Epilepsie" :
-   l'étape 6 ("Au bout de 5 min administrer BUCCOLAM dans la joue")
-   doit maintenant afficher juste en dessous, dans un bloc bien
-   visible, "BUCCOLAM — 1 seringue — crise plus de 5 min — dans la
-   bouche(joue)". Vérifié par un test automatisé qui reproduit
-   exactement ces données, mais jamais regardé à l'écran.
-
-2. **Journal des consultations, nouvel écran (19/08/2026).** Fiche
-   d'un enfant → section "Traçabilité" → "Journal des consultations" :
-   doit lister, pour un enfant rattaché à un établissement, chaque
-   consultation de sa fiche (nom de l'établissement, fiche consultée,
-   date et heure), la plus récente en premier. Vérifié par un test de
-   décodage des données, jamais ouvert à l'écran avec de vraies
-   consultations enregistrées (ex. celles créées pendant les tests de
-   la passe 3 avec Théo, si elles existent encore).
-
-3. **Messages d'erreur de connexion/création de compte, reformulés en
-   français clair (19/08/2026).** Écrans concernés : création de
-   compte (particulier et professionnel), connexion (particulier et
-   professionnel), changement de mot de passe (réglages et lien "mot
-   de passe oublié"). À vérifier avec un scénario d'échec réel (ex.
-   mauvais mot de passe, email déjà utilisé) : le message affiché doit
-   être une phrase compréhensible, plus jamais un texte du type
-   `AuthApiException(message: ..., statusCode: ..., code: ...)`.
-   Vérifié par un test qui simule plusieurs codes d'erreur Supabase,
-   jamais déclenché pour de vrai à l'écran.
-
-4. **"Ce qu'il faut savoir sur..." — nouvelles sections Médecin
-   traitant et Antécédents médicaux (19/08/2026).** Ouvrir la fiche
-   d'un enfant avec un médecin traitant renseigné et au moins un
-   événement médical (antécédent) : les sections "Médecin traitant"
-   et les lignes "Antécédent : ..." doivent apparaître, à l'écran et
-   dans le PDF exporté. Vérifié par un test, jamais regardé à l'écran
-   ni dans un vrai PDF généré.
-
-5. **Fiche secours — médecin référent complet et dispositifs
-   permanents distingués (19/08/2026).** Pour Théo (pathologie
-   Epilepsie suivie par Dr Cabasson, neurologue au CHU Pau) : la ligne
-   du médecin référent doit maintenant afficher la spécialité, le lieu
-   d'exercice et le téléphone, pas seulement le nom. S'il a un
-   dispositif médical porté en permanence, une section dédiée doit
-   apparaître, séparée des dispositifs à emporter. Vérifié par un
-   test, jamais regardé à l'écran avec ses vraies données.
-
-6. **Fermeture automatique de la fiche professionnelle après révocation
-   (19/08/2026).** À vérifier avec un vrai deuxième appareil/compte
-   professionnel : ouvrir la fiche secours (ou une consigne du Mode
-   Urgence) d'un enfant, laisser l'écran ouvert, puis révoquer l'accès
-   depuis le compte parent. Une fenêtre "Accès révoqué" doit apparaître
-   sur l'écran professionnel dans les ~20 secondes, sans action de sa
-   part, et ramener à l'accueil une fois validée. Vérifié par un test
-   qui simule l'échec réseau (ne doit jamais fermer par erreur), jamais
-   testé avec une vraie révocation en conditions réelles.
-
-## Chantier d'abstraction de l'authentification (23/08/2026)
-
-Le 23/08/2026, les 30 appels au SDK Supabase dispersés dans 12 fichiers
-ont été regroupés derrière `AuthProvider`. Neuf vérifications manuelles
-avaient été listées, faute de tests sur ce câblage.
-
-**Six ont été couvertes par des tests automatisés le 23/08/2026** (39
-tests : `auth_translation_test.dart`, `auth_wiring_test.dart`,
-`account_separate_account_test.dart`, plus `auth_error_message_test.dart`
-déjà existant). Elles sont retirées de cette liste.
-
-Chacun de ces tests a été vérifié **en cassant volontairement le code
-qu'il protège**, pour s'assurer qu'il échoue bien — un test de câblage
-peut sinon passer pour de mauvaises raisons.
-
-Ce qui reste ci-dessous demande un **vrai appareil, un vrai serveur, ou
-un second compte** : aucun test ne peut s'y substituer.
-
-### Priorité haute
-
-1. **Lien « mot de passe oublié » ouvert depuis un vrai mobile
-   (23/08/2026).** *La partie logique est désormais testée* — le filtre
-   d'évènements et l'ouverture de l'écran de nouveau mot de passe le
-   sont, y compris le fait que les autres évènements n'ouvrent rien.
-
-   **Ce qui reste à vérifier ne l'est pas et ne peut pas l'être** : que
-   le système d'exploitation ouvre bien l'application sur le lien reçu
-   par email, et que Supabase émette réellement l'évènement de
-   récupération à ce moment-là. C'est la chaîne email → OS → SDK, hors
-   de portée d'un test. À faire depuis un téléphone où l'app est
-   installée, en cliquant le lien dans une vraie boîte mail.
-
-2. **Création d'un compte professionnel alors qu'un compte parent est
-   connecté, sur un vrai serveur (23/08/2026).** *La décision est
-   testée* : déconnexion puis session anonyme neuve avant rattachement,
-   dans cet ordre, et l'identité change bien.
-
-   **Ce qui reste** : confirmer contre la vraie base que le compte
-   parent conserve effectivement ses enfants après l'opération. Les
-   tests s'arrêtent avant l'écriture en base. C'est le scénario qui
-   avait fait perdre l'accès à Théo et Noé — il mérite une confirmation
-   réelle.
-
-### Priorité moyenne
-
-3. **Créer un lien de partage (23/08/2026).** Une fiche secours, puis
-   une fiche de recommandations d'activité : le lien doit s'afficher et
-   fonctionner une fois ouvert. L'insertion a changé de fichier — c'était
-   le dernier écran à écrire directement en base. Non automatisable :
-   demande une écriture réelle dans `partages` et l'ouverture du lien
-   servi par l'Edge Function.
-
-4. **Gérer l'équipe (23/08/2026).** Deux cas, deux chemins désormais
-   distincts :
-   - champ email **vide** → « Saisissez une adresse email. » ;
-   - adresse **déjà invitée** → le message du serveur doit s'afficher
-     **tel quel**, pas « Une erreur est survenue. ».
-
-   Non automatisable : le second cas exige qu'une fonction RPC lève
-   réellement son message, et l'écran charge l'équipe au démarrage.
-
-### Priorité basse
-
-5. **Réglages (23/08/2026).** L'adresse email affichée en haut de
-   l'écran, et le changement de mot de passe. La lecture de l'email
-   passe par le nouveau fournisseur ; l'écran a besoin d'une session
-   réelle pour s'afficher entièrement.
-
-6. **Révocation d'accès, deux cas opposés (23/08/2026).** La requête de
-   surveillance a quitté le widget pour rejoindre le dépôt :
-   - accès révoqué depuis un autre appareil → la fiche doit se fermer
-     dans les ~20 secondes ;
-   - **réseau coupé** → elle doit **rester ouverte**.
-
-   Non automatisable en l'état : demande un second appareil, une vraie
-   révocation, et le passage du temps. Recoupe le point 6 de la section
-   précédente.
-
-### Ce qui n'a plus besoin d'être vérifié à la main
-
-Couvert par des tests depuis le 23/08/2026 :
-
-- **Démarrage à froid sans session** — l'ouverture d'une session
-  anonyme, et surtout le fait qu'une session existante n'en déclenche
-  pas une seconde (ce qui changerait `auth.uid()` et ferait perdre les
-  enfants).
-- **Filtre des évènements de session** — les 3 évènements traités
-  passent, les 5 autres du SDK sont filtrés, et `passwordRecovery`
-  ouvre bien l'écran attendu.
-- **Traduction des erreurs d'authentification** — les 8 codes Supabase
-  connus donnent le bon message français, de bout en bout, et un code
-  inconnu retombe sur un message générique plutôt qu'un message précis
-  et faux.
-- **Ordre des opérations du compte séparé** — déconnexion avant
-  rattachement, et conversion sans déconnexion pour une session
-  anonyme.
-- **Fiche enfant, droits du propriétaire** — déjà exercé par les tests
-  d'écran existants.
-- **Empilement d'écrans et fermeture de l'abonnement** — deux
-  évènements de récupération n'ouvrent pas deux écrans, et rien ne se
-  déclenche après démontage.
-
-## Depuis la passe 3 (audit, jamais vérifié sur un vrai téléphone)
-
-Les tests automatisés de la passe 3 tournaient sur la version web de
-l'app (build release, piloté par un vrai navigateur headless — pas une
-simulation). Ça couvre fidèlement tout ce qui touche à Supabase
-(création de compte, connexion, écriture en base, RLS) et à l'affichage
-des écrans. Ça ne peut pas couvrir ce qui dépend spécifiquement du
-système d'exploitation mobile, du stockage natif, ou du matériel.
-
-2. **Confiance de l'appareil dans la durée.** Sur le web, chaque
-   session de test repart de zéro (pas de stockage persistant entre
-   deux lancements du navigateur headless) — impossible donc de
-   vérifier qu'un téléphone, une fois reconnu après le premier code de
-   vérification, reste "de confiance" durablement (jours/semaines) sans
-   redemander de code à chaque ouverture de l'app. À vérifier : se
-   connecter une fois, fermer complètement l'app, la rouvrir plusieurs
-   heures/jours après — le code ne doit pas être redemandé tant que
-   l'appareil reste le même.
-
-3. **Comportement du cache hors-ligne côté professionnel en conditions
-   réelles.** La logique de purge à 7 jours sans synchronisation est
-   testée par du code, mais jamais avec un vrai appareil dont l'horloge
-   avance normalement et qui perd/retrouve une vraie connexion réseau
-   (mode avion, zone sans réseau). À vérifier : couper le réseau du
-   téléphone, ouvrir l'app, confirmer que les fiches déjà en cache
-   restent lisibles ; au bout de plus de 7 jours sans synchronisation
-   réussie, confirmer que l'app refuse de faire confiance au cache et
-   redemande une connexion.
-
-4. **Purge immédiate du cache après révocation ou expiration.** Même
-   limite que le point 3 : à vérifier avec un vrai deuxième appareil
-   (le professionnel) qui avait un enfant en cache, une fois son accès
-   révoqué ou expiré côté parent.
-
-5. **Rendu de l'email de code de vérification dans une vraie
-   application mail mobile** (Gmail, Mail iOS, Outlook...). Le contenu
-   a été vérifié par un test web (texte reçu, code lisible), mais pas
-   son rendu visuel dans un client mail mobile réel.
-
-6. **Partage du lien public (fiche secours / "ce qu'il faut savoir")
-   via les mécanismes natifs du téléphone** (SMS, WhatsApp, partage
-   natif iOS/Android) et ouverture par un tiers qui n'a pas l'app
-   installée, sur son propre téléphone. Le lien lui-même a été testé
-   réellement (voir le rapport de la passe 2, round 2), mais pas le
-   parcours de partage natif de bout en bout.
-
-7. **Mode Urgence accessible rapidement, y compris depuis l'écran
-   verrouillé si un raccourci est prévu.** À vérifier concrètement :
-   combien de temps/d'étapes pour un accompagnant stressé pour arriver
-   à la fiche secours d'un enfant précis, sur un vrai téléphone.
-
-8. **Autofill / gestionnaire de mots de passe natif** sur les écrans de
-   connexion et de création de compte (suggestion automatique du mot de
-   passe, remplissage automatique par le gestionnaire de mots de passe
-   du téléphone) — jamais testé, le navigateur headless n'en a pas.
-
-9. **Performance de démarrage sur un téléphone d'entrée/moyenne
-   gamme.** Le test web release démarre vite, mais rien ne dit qu'une
-   compilation native fait de même sur du matériel modeste — à observer
-   simplement à l'usage.
-
-## Identité visuelle (23/08/2026)
-
-Sept commits ont changé l'apparence de toute l'application sans
-toucher à son comportement : palette, polices embarquées, fiches PDF,
-page `auth.kidsrelay.fr`. Les tests garantissent que rien ne s'est
-cassé — ils ne disent rien de ce que ça donne à l'œil. Ces points-là
-ne peuvent être tranchés qu'en usage réel.
-
-1. **Les neuf boutons d'action du profil enfant sont tous en vert
-   pin.** Ils avaient chacun leur couleur (bleu, vert, sarcelle,
-   indigo, brun, gris-bleu, violet, orange) ; le codage par couleur a
-   disparu avec le passage à une palette de cinq teintes. Décision
-   prise de garder ainsi pour l'instant.
-
-   **À juger à l'usage** : si l'écran paraît monotone ou si l'on met
-   plus de temps à retrouver un bouton connu, on rétablira une
-   distinction **avec la sauge et l'ambre uniquement** — pas de retour
-   aux neuf couleurs. Le rouge du bouton « Mode Urgence », lui, ne
-   bouge pas : c'est sa rareté sur l'écran qui le rend visible.
-
-2. **Lisibilité du texte blanc sur vert pin.** Concerne les barres de
-   titre de tous les écrans, les boutons pleins et le bouton
-   « Ouvrir l'application » de la page web. Le contraste est
-   théoriquement bon (vert pin `#1F4A3F` est sombre), mais à confirmer
-   **en plein soleil et sur un écran de téléphone en luminosité
-   basse** — c'est là que ça se joue, pas sur un écran d'ordinateur.
-
-3. **Lisibilité du texte sur ambre.** Concerne le bandeau « données
-   hors ligne » de l'accueil, l'encart d'erreur de la page
-   `auth.kidsrelay.fr`, et le bandeau des sections d'urgence dans les
-   PDF. Le texte y est en ardoise sur fond ambre clair `#FBF1DF`, pas
-   en ambre plein : c'est délibéré, l'ambre vif sur fond clair passe
-   mal. **À vérifier** que le bandeau attire quand même l'œil — c'est
-   ce qui remplace le réflexe d'utiliser du rouge, et s'il ne se voit
-   pas, il ne sert à rien.
-
-4. **Le rouge doit rester dominant dans le Mode Urgence.** C'est le
-   point le plus important de la liste. La règle tenue partout est que
-   le rouge `#C0392B` ne sert qu'à l'urgence vitale — sa valeur vient
-   entièrement de sa rareté ailleurs.
-
-   **À vérifier écran par écran du Mode Urgence** (choix de l'enfant,
-   liste des boutons, consignes) : que le rouge domine visuellement,
-   qu'aucun vert pin ni ambre ne lui vole l'attention, et qu'un
-   accompagnant qui découvre l'écran comprenne en une seconde qu'il
-   n'est plus dans le reste de l'application. Si le vert pin des
-   barres de titre affaiblit cet effet, c'est le Mode Urgence qui doit
-   gagner.
-
-5. **Les deux polices s'affichent bien sur un vrai téléphone.** Plus
-   Jakarta Sans pour les titres, Mulish pour le texte, embarquées dans
-   l'application. Sur ordinateur, si un fichier manquait, le système
-   remplacerait sans prévenir par une police proche : le défaut ne se
-   verrait pas. **À vérifier sur téléphone** que les titres et le
-   texte courant ont bien deux dessins différents, et qu'aucun
-   caractère accentué ne manque.
-
-6. **Les fiches PDF exportées.** Imprimer ou partager les trois fiches
-   (secours, garde, activité) et les deux récapitulatifs de
-   questionnaire. **À vérifier** : titres en vert pin, texte lisible à
-   l'impression noir et blanc aussi, bandeau rouge présent sur les
-   seules sections d'urgence, et **apostrophes courbes correctes**
-   (`l’enfant` avec une apostrophe courbe, et non `l'enfant` avec une
-   droite) — la conversion en ASCII a été retirée, et un caractère
-   absent de la police s'afficherait comme un vide.
-
-7. **L'écran de lancement ne fait plus de saut de couleur.** Il était
-   blanc sur Android en mode clair, noir en mode nuit, blanc sur iOS.
-   Il est maintenant au lin `#F5F3EF`, comme le fond de
-   l'application. **À vérifier au démarrage à froid** (application
-   fermée depuis les applications récentes), et en **mode nuit
-   activé** sur le téléphone.
-
-8. **La page `auth.kidsrelay.fr` aux nouvelles couleurs.** À ne
-   vérifier **qu'après avoir déposé `index.html` chez OVH** — jusque-là
-   la page en ligne est encore l'ancienne, en bleu, et
-   `verifier-deploiement.mjs` signalera un écart sur ce fichier. Une
-   fois déposée : ouvrir un vrai lien reçu par email depuis un
-   téléphone, et vérifier que la page ressemble à l'application.
-
-## Export « Mes données » — droit d'accès RGPD (23/08/2026)
-
-Le bouton vit dans **Paramètres → Mes données**. Il produit deux
-fichiers en même temps : un PDF lisible et un `.json` réutilisable.
-
-Ce qui suit ne peut être tranché ni par les 69 tests du chantier, ni
-par `flutter analyze`.
-
-1. **La feuille de partage avec deux fichiers**, sur un vrai
-   téléphone. Android et iOS ne présentent pas la même chose, et
-   certaines applications de destination n'acceptent qu'un seul
-   fichier — auquel cas il faut savoir laquelle, pour le dire au
-   parent. **À vérifier** : que les deux fichiers partent bien
-   ensemble vers une boîte mail, et ce qui se passe avec une
-   application qui n'en prend qu'un.
-
-2. **Le PDF d'un profil très rempli.** Les tests garantissent que la
-   génération ne casse pas ; ils ne disent rien de la mise en page.
-   **À vérifier** : que les sauts de page tombent au bon endroit,
-   qu'aucun titre de rubrique ne se retrouve seul en bas d'une page,
-   et que le document reste lisible imprimé en noir et blanc.
-
-3. **Le PDF de plusieurs enfants.** Chaque enfant démarre sa propre
-   page, c'est testé. **À vérifier à l'œil** : qu'on ne puisse pas
-   confondre deux enfants en feuilletant — notamment que le prénom
-   soit visible sans revenir au début de la section.
-
-4. **Le fichier `.json` ouvert sur un ordinateur.** **À vérifier** :
-   qu'il s'ouvre dans un éditeur de texte ordinaire, que les accents
-   sont corrects (« Noé » et non « NoÃ© »), et que le `_lisez_moi` en
-   tête est compréhensible par quelqu'un qui n'est pas informaticien.
-
-5. **L'absence du bouton pour une personne de confiance.** Demande un
-   **second compte**, invité en consultation seule sur la fiche de
-   Théo ou de Noé. **À vérifier** : que la section « Mes données »
-   affiche la phrase d'explication et aucun bouton. Le comportement
-   est testé avec un double, mais la valeur qui décide vient de la
-   base — c'est cette chaîne-là qui reste à confirmer en vrai.
-
-6. **Le temps de génération** sur un profil réel. **À vérifier** : que
-   « Préparation en cours… » apparaisse assez vite pour qu'on ne croie
-   pas à un blocage, et combien de temps l'ensemble prend avec les
-   deux profils de test.
-
-7. **Le contenu, relu par vous.** C'est la vérification la plus
-   importante et la seule qui ne soit pas technique : **est-ce que
-   l'export est réellement complet ?** Ouvrir le PDF et vérifier que
-   rien de ce que vous avez saisi sur Théo et Noé n'y manque. Le rendu
-   est générique, donc rien ne devrait être omis — mais c'est
-   exactement le genre d'affirmation qu'il faut vérifier une fois.
-
-8. **Les intitulés fabriqués.** Un champ absent du dictionnaire de
-   `export_libelles.dart` sort quand même, sous un intitulé dérivé de
-   son nom technique. **À noter en lisant le PDF** : les intitulés qui
-   sonnent faux ou incompréhensibles, pour les ajouter au
-   dictionnaire.
-
-## Conformité RGPD — les quatre décisions (24/08/2026)
-
-**Rien de ceci ne fonctionne tant que
-`supabase/schema_conformite_rgpd.sql` n'a pas été exécuté**, et l'email
-de suppression tant que `confirmer-suppression-compte` n'est pas
-déployée. Voir [`../migration/conformite_rgpd.md`](../migration/conformite_rgpd.md).
-
-### Suppression du compte
-
-1. **L'email de demande de suppression.** Qu'il arrive, qu'il porte la
-   bonne date d'effacement, et que le moyen d'annuler soit
-   compréhensible sans être informaticien. **Demande un vrai envoi** —
-   et donc SPF/DKIM configuré, sinon il partira en indésirables. C'est
-   le seul endroit où la date sort de l'application.
-
-2. **Le compte devenu inaccessible.** Après la demande : se
-   déconnecter, se reconnecter, et vérifier qu'on tombe sur l'écran
-   d'annulation et **rien d'autre** — pas de menu, pas de retour, pas
-   de fiche consultable. À vérifier aussi que le Mode Urgence n'est
-   plus atteignable : c'est volontaire, mais il faut le voir de ses
-   yeux avant de le laisser en production.
-
-3. **L'annulation dans le délai.** Annuler, puis vérifier que tout est
-   revenu : profils, partages, rattachements, activités préparées.
-   C'est le test le plus important des quatre — un délai de grâce qui
-   ne restaure pas serait pire qu'une suppression immédiate.
-
-4. **L'effacement au bout de 7 jours.** Ne se vérifie qu'en attendant,
-   ou en avançant `suppression_effective_le` à la main dans la base sur
-   un compte de test. **Ne pas faire sur Théo ou Noé.**
-
-5. **Le blocage côté base, sans l'application.** Le vrai blocage est le
-   RLS. Pour le vérifier : demander la suppression, puis lire
-   `enfants` depuis le SQL Editor en se faisant passer pour ce compte
-   (`set request.jwt.claims`). Aucune ligne ne doit sortir. Sans cette
-   vérification, on ne sait pas si le blocage tient ailleurs que dans
-   l'écran.
-
-### Consentement
-
-6. **L'écran apparaît pour un deuxième enfant.** Le chemin « ajouter un
-   enfant » sautait la page d'introduction ; il passe maintenant par le
-   consentement. À vérifier que l'enchaînement reste fluide.
-
-7. **Il n'apparaît jamais en modification.** Ouvrir la fiche de Théo,
-   modifier son poids : aucune case ne doit être redemandée.
-
-8. **La date est bien enregistrée.** Après avoir créé un enfant,
-   vérifier en SQL que `enfants.consentement_sante_le` est renseignée.
-
-### Compteurs
-
-9. **Ils comptent, et une seule fois par famille.** Après avoir préparé
-   deux activités depuis le même compte :
-   `select mois, fonctionnalite, count(*) from marqueurs_usage group by 1,2;`
-   doit rendre **1**, pas 2.
-
-10. **Ils ne ralentissent rien.** Ouvrir le Mode Urgence en mode avion.
-    Il doit s'ouvrir instantanément, sans le moindre délai — c'est la
-    garantie la plus importante de ce lot.
-
-11. **La consolidation.** Ne se voit qu'au 1er du mois, ou en appelant
-    `select public.consolider_compteurs_usage();` à la main. Après
-    quoi `marqueurs_usage` et `sels_usage` doivent être vides pour le
-    mois consolidé, et `compteurs_usage` porter un entier.
-
-### Adresse de secours
-
-12. **Un format invalide est refusé** et un format valide accepté, y
-    compris une adresse inhabituelle (`prenom.nom+kidsrelay@...`).
-
-13. **Elle ressort dans l'export RGPD.** Enregistrer une adresse, puis
-    exporter : elle doit figurer dans le PDF **et** dans le `.json`.
-
-## Lien de partage — corrections du 25/08/2026
-
-Le fichier SQL a été exécuté et les six fonctions redéployées le
-25/08/2026 : ces points sont donc vérifiables dès maintenant.
-
-**La minimisation des données est déjà vérifiée, et ne figure pas
-ici.** Elle se contrôle en lisant la réponse du serveur, sur
-ordinateur — pas à l'œil sur un téléphone. Faite le 25/08/2026 sur
-trois liens réels de Théo : aucune fuite sur les trois types de fiche.
-Voir `docs/migration/minimisation_partage.md`.
-
-1. **Le bouton « Générer le lien » à l'ouverture de l'écran.** Il doit
-   être **grisé**, et aucune des trois fiches cochée.
-
-2. **La date d'expiration annoncée.** Elle s'affiche sous le choix de
-   durée, et se met à jour quand on change de durée. Vérifier qu'elle
-   correspond bien à l'heure réelle plus 24 h / 3 j / 7 j.
-
-3. **Une ouverture de lien apparaît dans la traçabilité.** Ouvrir un
-   lien depuis un autre appareil, puis fiche de l'enfant →
-   Traçabilité. **Attendu** : une ligne « Ouverture d'un lien de
-   partage » avec une icône de maillon, distincte des consultations
-   d'établissement.
-
-4. **Deux ouvertures font deux lignes.** C'est le point de la
-   correction : l'ancienne date unique était écrasée. Ouvrir le même
-   lien deux fois, vérifier qu'il y a bien deux lignes.
-
-5. **Une fiche de recommandations d'activité s'affiche correctement**
-   dans la traçabilité — ce type manquait à la contrainte SQL et au
-   libellé.
-
-## Hors périmètre pour l'instant
-
-Les notifications push ne sont pas listées ici : décision déjà prise de
-les reporter au moment de la préparation de la publication sur les
-stores (voir le plan d'espace professionnel), donc pas un sujet pour
-cette liste.
-
-## Comment utiliser cette liste
-
-À reprendre point par point dès que Fanny peut faire des vérifications
-visuelles (téléphone disponible, ou simplement le temps d'ouvrir
-l'app). Un point vérifié et confirmé bon peut être supprimé de la
-liste ou marqué comme tel — à la discrétion de Fanny.
+(conservé pour l'historique, plus mis à jour). Tout ce qui demande un
+œil humain, un vrai téléphone, un second compte ou le passage du temps
+— et que ni les tests automatisés ni l'audit de code ne peuvent
+couvrir.
+
+Rien ici n'est un bug confirmé : ce sont des points à confirmer.
+Aucun n'est retiré avant que Fanny confirme elle-même l'avoir vérifié.
+
+**Refondu le 25/08/2026** : numérotation continue, priorité et
+résultat attendu pour chaque point, en vue d'une session unique sur un
+appareil Android.
+
+- **64 points** au total.
+- **Priorité haute : 14** — à faire en premier, ce sont ceux dont
+  l'échec aurait des conséquences réelles.
+- **Priorité moyenne : 33**.
+- **Priorité basse : 17**.
+
+---
+
+# Ce qu'il faut préparer avant
+
+À faire **avant** d'avoir l'appareil, pour ne pas perdre la session à
+de l'installation.
+
+## A. Construire l'APK
+
+```
+flutter build apk --release
+```
+
+Le fichier sort dans `build/app/outputs/flutter-apk/app-release.apk`
+(une trentaine de Mo). Compter dix à quinze minutes la première fois.
+
+Cet APK est **signé avec la clé de débogage** : Android l'installera,
+mais il ne pourra jamais être publié ni mis à jour par le Play Store.
+C'est sans importance pour des tests ; à refaire proprement au moment
+de la publication.
+
+## B. Le transférer sur l'appareil
+
+Le plus simple, sans câble : envoyez-vous l'APK par email à vous-même,
+ouvrez la pièce jointe depuis le téléphone. Android demandera
+d'autoriser l'installation d'applications de source inconnue — c'est
+attendu, une seule fois.
+
+Par câble, si vous préférez : `adb install app-release.apk` (nécessite
+d'activer le mode développeur sur le téléphone, sept appuis sur le
+numéro de build dans les réglages).
+
+## C. Les comptes à créer d'avance
+
+Cinq comptes sont nécessaires, avec des adresses email **réelles et
+distinctes** — chacune doit pouvoir recevoir du courrier, plusieurs
+points en dépendent.
+
+| Compte | Rôle dans les tests | Sert aux points |
+|---|---|---|
+| **Le vôtre** (parent principal) | Théo et Noé, déjà en place | presque tous |
+| **Personne de confiance** | invitée sur Théo en consultation seule | 11, 12, 22, 23, 24, 25 |
+| **Professionnel n° 1** | directeur d'un établissement de test | 6, 7, 13, 15, 19, 20, 26 à 29, 43 |
+| **Professionnel n° 2** | membre de la même équipe | 13, 26, 27, 28, 29 |
+| **Destinataire d'un lien** | quelqu'un sans compte KidsRelay | 17, 40 |
+
+Un compte Gmail accepte les adresses `votreadresse+test1@gmail.com` :
+elles arrivent toutes dans la même boîte, et Supabase les traite comme
+distinctes. C'est la façon la plus rapide d'en avoir cinq.
+
+## D. Un établissement de test
+
+Créez-le depuis le compte professionnel n° 1 **avant la session**, et
+rattachez-y Théo par un code depuis votre compte parent. Sans cela,
+tous les points professionnels sont bloqués dès le départ.
+
+Nommez-le clairement (« Établissement de test ») : un établissement
+ne se supprime pas.
+
+## E. Un second appareil
+
+Plusieurs points demandent deux appareils en même temps : révocation
+d'accès vue en direct, ouverture d'un lien par un tiers, cache
+hors-ligne. Votre téléphone actuel fera le second — c'est justement
+pour cela que l'Android d'occasion sert.
+
+## F. Ce qui n'est pas encore en place
+
+- **SPF / DKIM / DMARC sur `kidsrelay.fr`** : sans eux, les emails
+  partiront en indésirables et les points 2, 30 et 39 seront faussés.
+  À faire avant la session si possible.
+- **`index.html` d'`auth.kidsrelay.fr` chez OVH** : sans dépôt, le
+  point 44 ne peut pas être fait.
+
+---
+
+# Priorité haute
+
+## 1. Compte professionnel créé alors qu'un compte parent est connecté
+*Authentification, 23/08/2026 · deux comptes*
+
+La décision est testée : déconnexion puis session anonyme neuve avant
+rattachement, dans cet ordre, et l'identité change bien. Les tests
+s'arrêtent avant l'écriture en base.
+
+C'est le scénario qui avait **fait perdre l'accès à Théo et Noé**.
+
+**Attendu** : après création du compte professionnel, se reconnecter
+au compte parent — Théo et Noé sont toujours là, avec leurs profils
+complets.
+
+## 2. Lien « mot de passe oublié » ouvert depuis un vrai mobile
+*Authentification, 23/08/2026*
+
+La partie logique est testée. Ce qui reste ne peut pas l'être : que le
+système d'exploitation ouvre l'application sur le lien reçu par email,
+et que Supabase émette l'évènement de récupération à ce moment-là.
+
+**Attendu** : cliquer le lien depuis une vraie boîte mail sur le
+téléphone ouvre KidsRelay directement sur l'écran « Nouveau mot de
+passe ». Pas le navigateur, pas l'accueil.
+
+## 3. L'annulation d'une suppression de compte restaure tout
+*Conformité RGPD, 24/08/2026 · compte de test uniquement*
+
+Le test le plus important du lot RGPD. Un délai de grâce qui ne
+restaure pas serait pire qu'une suppression immédiate.
+
+**Attendu** : après demande de suppression puis annulation, tout est
+revenu — profils des enfants, liens de partage, rattachements aux
+établissements, activités préparées. Rien ne manque.
+
+## 4. Le compte devenu inaccessible l'est vraiment
+*Conformité RGPD, 24/08/2026 · compte de test uniquement*
+
+**Attendu** : après la demande, se déconnecter puis se reconnecter
+mène à l'écran d'annulation **et rien d'autre**. Pas de menu, pas de
+bouton retour, aucune fiche consultable. **Le Mode Urgence n'est plus
+atteignable non plus** — c'est volontaire, mais il faut le voir de ses
+yeux avant de laisser cela en production.
+
+## 5. Le Mode Urgence ne ralentit jamais
+*Compteurs d'usage, 24/08/2026*
+
+La garantie la plus importante du lot des compteurs.
+
+**Attendu** : téléphone en mode avion, le Mode Urgence s'ouvre
+**instantanément**, sans le moindre délai perceptible. Si vous sentez
+une hésitation, c'est un défaut.
+
+## 6. Fermeture automatique de la fiche après révocation
+*Correction du 19/08/2026 · deux appareils*
+
+**Attendu** : le professionnel a la fiche secours ouverte ; le parent
+révoque depuis son appareil. Dans les ~20 secondes, une fenêtre
+« Accès révoqué » apparaît côté professionnel sans qu'il touche à
+rien, et le ramène à l'accueil une fois validée.
+
+## 7. Réseau coupé, la fiche reste ouverte
+*Authentification, 23/08/2026 · le revers du point 6*
+
+**Attendu** : couper le réseau du téléphone professionnel pendant
+qu'une fiche est ouverte. Elle doit **rester ouverte**. Une fermeture
+sur simple perte de réseau serait un défaut grave — un accompagnant
+perdrait la fiche au pire moment.
+
+## 8. Le rouge reste dominant dans le Mode Urgence
+*Identité visuelle, 23/08/2026*
+
+La règle tenue partout : le rouge `#C0392B` ne sert qu'à l'urgence
+vitale, et sa valeur vient de sa rareté ailleurs.
+
+**Attendu**, écran par écran (choix de l'enfant, liste des boutons,
+consignes) : le rouge domine visuellement, aucun vert pin ni ambre ne
+lui vole l'attention, et un accompagnant qui découvre l'écran comprend
+en une seconde qu'il n'est plus dans le reste de l'application. Si le
+vert pin des barres de titre affaiblit cet effet, **c'est le Mode
+Urgence qui doit gagner**.
+
+## 9. Le Mode Urgence est atteignable vite
+*Passe 3*
+
+**Attendu** : comptez les étapes et le temps, pour un accompagnant
+stressé, entre l'écran verrouillé et la consigne d'urgence d'un enfant
+précis. Notez le chiffre — c'est lui qui dira si le parcours est
+acceptable.
+
+## 10. Le blocage d'un compte supprimé tient côté base
+*Conformité RGPD, 24/08/2026 · SQL Editor*
+
+L'écran ne protège rien de qui contournerait l'application. Le vrai
+blocage est le RLS.
+
+**Attendu** : demander la suppression sur un compte de test, puis lire
+`enfants` depuis le SQL Editor en se faisant passer pour ce compte
+(`set request.jwt.claims`). **Aucune ligne ne doit sortir.**
+
+## 11. Une personne de confiance en consultation seule ne peut rien modifier
+*Co-parent, 19/08/2026 · deux comptes*
+
+**Attendu** : invitée avec le niveau « Consultation seule » (par
+défaut), elle voit la fiche — pathologies, allergies, profil
+activités, Mode Urgence — mais **aucun bouton de modification ni de
+suppression**, et **ni la section Partages ni la section Personnes de
+confiance** ne lui apparaissent.
+
+## 12. Une révocation de personne de confiance coupe immédiatement
+*Co-parent, 19/08/2026 · deux comptes*
+
+**Attendu** : après révocation depuis le compte parent, la personne
+révoquée ne voit plus la fiche dès l'actualisation suivante. Pas au
+prochain démarrage — tout de suite.
+
+## 13. Le garde-fou du dernier directeur tient
+*Gestion d'équipe, 19/08/2026 · deux comptes professionnels*
+
+**Attendu** : tenter de révoquer ou de rétrograder le **dernier**
+directeur ou adjoint actif de l'établissement. Un message d'erreur
+clair doit apparaître — **pas un plantage**, pas un silence, et
+surtout pas une réussite.
+
+## 14. Le contenu de l'export RGPD, relu par vous
+*Export « Mes données », 23/08/2026*
+
+La vérification la plus importante de ce lot, et la seule qui ne soit
+pas technique.
+
+**Attendu** : ouvrir le PDF exporté et vérifier que **rien** de ce que
+vous avez saisi sur Théo et Noé n'y manque. Le rendu est générique,
+donc rien ne devrait être omis — c'est exactement le genre
+d'affirmation qu'il faut vérifier une fois.
+
+---
+
+# Priorité moyenne
+
+## 15. Journal des consultations, avec de vraies données
+*Correction du 19/08/2026*
+
+**Attendu** : fiche d'un enfant → Traçabilité → Journal des
+consultations. Chaque consultation par un établissement rattaché
+apparaît avec le nom de l'établissement, la fiche consultée, la date
+et l'heure — la plus récente en premier.
+
+## 16. Les deux origines se distinguent dans la traçabilité
+*Lien de partage, 25/08/2026 · deux appareils*
+
+Le point de la correction : jusqu'ici seules les consultations
+d'établissement y figuraient.
+
+**Attendu** : dans le même écran, deux sortes de lignes cohabitent et
+se distinguent d'un coup d'œil —
+« **Ouverture d'un lien de partage** » avec une icône de maillon, et
+le **nom de l'établissement** avec une icône d'œil. Provoquez les deux
+avant de regarder.
+
+## 17. Le rendu de la page publique avec les données réduites
+*Lien de partage, 25/08/2026 · appareil sans l'application*
+
+La minimisation est vérifiée côté serveur (voir
+[`../migration/minimisation_partage.md`](../migration/minimisation_partage.md)),
+mais la page n'a pas été ouverte dans un vrai navigateur depuis.
+
+**Attendu**, sur les trois types de fiche : la page s'affiche
+complètement, aucune section n'est vide ni tronquée, et rien n'a
+disparu de ce qui doit être lu. En particulier — **la fiche secours
+montre bien les consignes d'urgence et le médecin traitant**, et
+« Ce qu'il faut savoir » ne les montre pas.
+
+## 18. Deux ouvertures d'un même lien font deux lignes
+*Lien de partage, 25/08/2026*
+
+**Attendu** : ouvrir le même lien deux fois, puis Traçabilité — deux
+lignes distinctes, avec deux horaires. L'ancienne date unique était
+écrasée.
+
+## 19. Purge du cache après révocation ou expiration
+*Passe 3 · deux appareils*
+
+**Attendu** : le professionnel avait un enfant en cache ; le parent
+révoque. Les fiches de cet enfant disparaissent de l'appareil
+professionnel, y compris hors ligne.
+
+## 20. Cache hors-ligne côté professionnel, en vrai
+*Passe 3 · deux appareils, et du temps*
+
+**Attendu** : réseau coupé, les fiches déjà en cache restent lisibles.
+Au-delà de 7 jours sans synchronisation réussie, l'application refuse
+le cache et redemande une connexion.
+
+## 21. Confiance de l'appareil dans la durée
+*Passe 3 · plusieurs jours*
+
+**Attendu** : se connecter une fois, saisir le code de vérification,
+fermer complètement l'application, la rouvrir plusieurs heures ou
+plusieurs jours après — **le code n'est pas redemandé** tant que c'est
+le même appareil.
+
+## 22. Absence du bouton d'export pour une personne de confiance
+*Export RGPD, 23/08/2026 · deux comptes*
+
+**Attendu** : depuis le compte de la personne de confiance,
+Paramètres → Mes données affiche la phrase d'explication et
+**aucun bouton**. Le comportement est testé avec un double ; c'est la
+valeur venue de la base qui reste à confirmer.
+
+## 23. Une personne de confiance passée en modification peut modifier
+*Co-parent, 19/08/2026 · deux comptes*
+
+**Attendu** : après passage au niveau « Consultation et
+modification », elle peut ajouter une allergie — et cette
+modification apparaît **aussi côté parent**.
+
+## 24. La limite de deux personnes de confiance par enfant
+*Co-parent, 19/08/2026*
+
+**Attendu** : la troisième invitation sur le même enfant est refusée,
+avec un message clair.
+
+## 25. Deux enfants, deux invitations indépendantes
+*Co-parent, 19/08/2026*
+
+**Attendu** : inviter la même personne sur Théo et sur Noé, puis
+révoquer sur l'un — l'accès à l'autre reste intact.
+
+## 26. Un membre simple ne gère pas l'équipe
+*Gestion d'équipe, 19/08/2026 · deux comptes professionnels*
+
+**Attendu** : un compte avec le rôle « Membre » voit l'équipe mais
+n'a **aucune action de gestion** — pas de bouton inviter, changer de
+rôle, ni révoquer.
+
+## 27. Nommer un adjoint lui ouvre la gestion
+*Gestion d'équipe, 19/08/2026*
+
+**Attendu** : après passage du membre à « Adjoint(e) » depuis un
+compte directeur, il peut lui-même inviter et révoquer quelqu'un.
+
+## 28. Révoquer un membre coupe son accès au trombinoscope
+*Gestion d'équipe, 19/08/2026*
+
+**Attendu** : immédiatement après révocation, le membre n'accède plus
+au trombinoscope de l'établissement.
+
+## 29. Inviter un collègue par email
+*Gestion d'équipe, 19/08/2026 · deux comptes professionnels*
+
+**Attendu** : le collègue invité avec le rôle « Membre » apparaît dans
+l'équipe une fois connecté avec cette adresse.
+
+## 30. L'email de demande de suppression de compte
+*Conformité RGPD, 24/08/2026 · compte de test*
+
+**Attendu** : il arrive (voir la préparation, point SPF/DKIM), il
+porte la **bonne date d'effacement**, et le moyen d'annuler est
+compréhensible sans être informaticien. C'est le seul endroit où cette
+date sort de l'application.
+
+## 31. L'écran de consentement apparaît pour un deuxième enfant
+*Conformité RGPD, 24/08/2026*
+
+Le chemin « ajouter un enfant » sautait la page d'introduction ; il
+passe maintenant par le consentement.
+
+**Attendu** : l'écran apparaît, l'enchaînement reste fluide, et le
+bouton « Continuer » reste inerte tant que la case n'est pas cochée.
+
+## 32. Le consentement n'apparaît jamais en modification
+*Conformité RGPD, 24/08/2026*
+
+**Attendu** : ouvrir la fiche de Théo, modifier son poids —
+**aucune case n'est redemandée**.
+
+## 33. Les compteurs ne comptent qu'une fois par famille
+*Conformité RGPD, 24/08/2026 · SQL Editor*
+
+**Attendu** : après avoir préparé **deux** activités depuis le même
+compte, `select mois, fonctionnalite, count(*) from marqueurs_usage
+group by 1,2;` rend **1**, pas 2.
+
+## 34. L'adresse de secours ressort dans l'export
+*Conformité RGPD, 24/08/2026*
+
+**Attendu** : enregistrer une adresse de secours, puis exporter — elle
+figure dans le PDF **et** dans le `.json`.
+
+## 35. Le bouton « Générer le lien » est grisé à l'ouverture
+*Lien de partage, 25/08/2026*
+
+**Attendu** : à l'ouverture de l'écran, **aucune des trois fiches
+n'est cochée** et le bouton est inactif. La fiche secours était
+pré-cochée, et c'est la plus sensible.
+
+## 36. La date d'expiration annoncée est juste
+*Lien de partage, 25/08/2026*
+
+**Attendu** : la date s'affiche sous le choix de durée, se met à jour
+quand on change de durée, et correspond bien à l'heure réelle plus
+24 h / 3 j / 7 j.
+
+## 37. La feuille de partage avec deux fichiers
+*Export RGPD, 23/08/2026*
+
+**Attendu** : les deux fichiers (PDF et `.json`) partent **ensemble**
+vers une boîte mail. Notez ce qui se passe avec une application qui
+n'en accepte qu'un — il faudra le dire au parent.
+
+## 38. Le PDF d'un profil très rempli
+*Export RGPD, 23/08/2026*
+
+**Attendu** : les sauts de page tombent au bon endroit, aucun titre de
+rubrique ne se retrouve seul en bas d'une page, et le document reste
+lisible imprimé en noir et blanc.
+
+## 39. Rendu de l'email de code de vérification
+*Passe 3 · vraie application mail*
+
+**Attendu** : dans Gmail, Mail iOS ou Outlook sur mobile, le code est
+lisible et la mise en page tient. Testé en web, jamais dans un client
+mobile.
+
+## 40. Partage d'un lien par les mécanismes natifs
+*Passe 3 · deux appareils*
+
+**Attendu** : partager le lien par SMS, WhatsApp ou le partage natif,
+puis l'ouvrir depuis un téléphone **sans l'application installée**. La
+fiche s'affiche.
+
+## 41. Messages d'erreur de connexion en français clair
+*Correction du 19/08/2026*
+
+**Attendu** : provoquer un échec réel (mauvais mot de passe, email
+déjà utilisé) sur les cinq écrans concernés. Le message est une phrase
+compréhensible — **jamais** un texte du type
+`AuthApiException(message: ..., statusCode: ...)`.
+
+## 42. Créer un lien de partage de bout en bout
+*Authentification, 23/08/2026*
+
+**Attendu** : une fiche secours puis une fiche de recommandations
+d'activité. Le lien s'affiche et fonctionne une fois ouvert.
+L'insertion a changé de fichier — c'était le dernier écran à écrire
+directement en base.
+
+## 43. Gérer l'équipe : les deux messages d'erreur
+*Authentification, 23/08/2026*
+
+**Attendu** : champ email vide → « Saisissez une adresse email. » ;
+adresse déjà invitée → le message du serveur **tel quel**, pas « Une
+erreur est survenue. ».
+
+## 44. La page `auth.kidsrelay.fr` aux nouvelles couleurs
+*Identité visuelle, 23/08/2026 · après dépôt chez OVH*
+
+**Ne peut pas être fait** tant qu'`index.html` n'est pas déposé —
+jusque-là la page en ligne est l'ancienne, en bleu.
+
+**Attendu** une fois déposée : ouvrir un vrai lien reçu par email
+depuis le téléphone, la page ressemble à l'application.
+
+## 45. Les deux polices s'affichent sur un vrai téléphone
+*Identité visuelle, 23/08/2026*
+
+Sur ordinateur, un fichier manquant serait remplacé sans prévenir par
+une police proche : le défaut ne se verrait pas.
+
+**Attendu** : les titres (Plus Jakarta Sans) et le texte courant
+(Mulish) ont **deux dessins visiblement différents**, et aucun
+caractère accentué ne manque.
+
+## 46. Les fiches PDF exportées
+*Identité visuelle, 23/08/2026*
+
+**Attendu**, sur les trois fiches et les deux récapitulatifs : titres
+en vert pin, texte lisible aussi à l'impression noir et blanc, bandeau
+rouge présent sur les **seules** sections d'urgence, et **apostrophes
+courbes correctes** (`l’enfant`, pas `l'enfant`) — la conversion en
+ASCII a été retirée, un caractère absent de la police s'afficherait
+comme un vide.
+
+## 47. Mode Urgence — dose affichée sous la bonne étape
+*Correction du 19/08/2026*
+
+**Attendu** : Théo → Mode Urgence → « Urgence liée à : Epilepsie ».
+Sous l'étape 6 (« Au bout de 5 min administrer BUCCOLAM dans la
+joue »), un bloc bien visible affiche « BUCCOLAM — 1 seringue — crise
+plus de 5 min — dans la bouche (joue) ».
+
+---
+
+# Priorité basse
+
+## 48. Le PDF de plusieurs enfants
+*Export RGPD, 23/08/2026*
+
+**Attendu** : on ne peut pas confondre deux enfants en feuilletant —
+le prénom reste visible sans revenir au début de la section.
+
+## 49. Le fichier `.json` ouvert sur un ordinateur
+*Export RGPD, 23/08/2026 · sur PC*
+
+**Attendu** : il s'ouvre dans un éditeur de texte ordinaire, les
+accents sont corrects (« Noé » et non « NoÃ© »), et le `_lisez_moi` en
+tête est compréhensible par quelqu'un qui n'est pas informaticien.
+
+## 50. Le temps de génération de l'export
+*Export RGPD, 23/08/2026*
+
+**Attendu** : « Préparation en cours… » apparaît assez vite pour qu'on
+ne croie pas à un blocage. Notez la durée totale avec les deux profils.
+
+## 51. Les intitulés fabriqués de l'export
+*Export RGPD, 23/08/2026*
+
+Un champ absent du dictionnaire sort quand même, sous un intitulé
+dérivé de son nom technique.
+
+**Attendu** : notez en lisant le PDF les intitulés qui sonnent faux ou
+sont incompréhensibles, pour les ajouter au dictionnaire.
+
+## 52. Les neuf boutons du profil enfant, tous en vert pin
+*Identité visuelle, 23/08/2026 · à juger à l'usage*
+
+**Attendu** : si l'écran paraît monotone, ou si vous mettez plus de
+temps à retrouver un bouton connu, on rétablira une distinction
+**avec la sauge et l'ambre uniquement** — pas de retour aux neuf
+couleurs. Le rouge du bouton « Mode Urgence » ne bouge pas.
+
+## 53. Lisibilité du texte blanc sur vert pin
+*Identité visuelle, 23/08/2026*
+
+**Attendu** : lisible **en plein soleil** et **en luminosité basse**.
+C'est là que ça se joue, pas sur un écran d'ordinateur.
+
+## 54. Lisibilité du texte sur ambre
+*Identité visuelle, 23/08/2026*
+
+Le texte y est en ardoise sur fond ambre clair, pas en ambre plein :
+c'est délibéré.
+
+**Attendu** : le bandeau **attire quand même l'œil**. C'est ce qui
+remplace le réflexe d'utiliser du rouge — s'il ne se voit pas, il ne
+sert à rien.
+
+## 55. L'écran de lancement ne saute plus de couleur
+*Identité visuelle, 23/08/2026*
+
+**Attendu** : au démarrage à froid (application fermée depuis les
+applications récentes), et **en mode nuit activé**, l'écran de
+lancement est au lin `#F5F3EF` — pas de flash blanc ni noir avant
+l'application.
+
+## 56. Réglages : email affiché et changement de mot de passe
+*Authentification, 23/08/2026*
+
+**Attendu** : l'adresse email affichée en haut de l'écran est la
+bonne, et le changement de mot de passe fonctionne avec une session
+réelle.
+
+## 57. Autofill et gestionnaire de mots de passe natif
+*Passe 3*
+
+**Attendu** : sur les écrans de connexion et de création de compte, le
+gestionnaire du téléphone propose d'enregistrer puis de remplir. Le
+navigateur headless des tests n'en a pas.
+
+## 58. Performance de démarrage sur du matériel modeste
+*Passe 3*
+
+**Attendu** : simplement observer. Un Android d'occasion est
+précisément le bon banc d'essai.
+
+## 59. « Ce qu'il faut savoir » — médecin traitant et antécédents
+*Correction du 19/08/2026*
+
+**Attendu** : sur un enfant avec un médecin traitant et au moins un
+événement médical, les sections « Médecin traitant » et les lignes
+« Antécédent : … » apparaissent — à l'écran **et** dans le PDF.
+
+## 60. Fiche secours — médecin référent complet
+*Correction du 19/08/2026*
+
+**Attendu** : pour Théo (Epilepsie suivie par Dr Cabasson, neurologue
+au CHU de Pau), la ligne du médecin référent affiche **spécialité,
+lieu d'exercice et téléphone**, pas seulement le nom. Un dispositif
+porté en permanence apparaît dans une section séparée de ceux à
+emporter.
+
+## 61. Une fiche de recommandations d'activité dans la traçabilité
+*Lien de partage, 25/08/2026*
+
+Ce type manquait à la contrainte SQL et au libellé.
+
+**Attendu** : après ouverture d'un lien de ce type, la ligne apparaît
+avec le libellé « Recommandations d'activité » — pas un code
+technique, pas une ligne vide.
+
+## 62. L'effacement définitif au bout de 7 jours
+*Conformité RGPD, 24/08/2026 · compte de test uniquement*
+
+Ne se vérifie qu'en attendant, ou en avançant
+`suppression_effective_le` à la main dans la base.
+
+**Attendu** : au passage de la tâche de 4h, la ligne `auth.users`
+disparaît et tout ce qui en dépend avec.
+**Ne pas faire sur Théo ou Noé.**
+
+## 63. La consolidation mensuelle des compteurs
+*Conformité RGPD, 24/08/2026 · SQL Editor*
+
+Ne se voit qu'au 1er du mois, ou en appelant
+`select public.consolider_compteurs_usage();` à la main.
+
+**Attendu** : après quoi `marqueurs_usage` et `sels_usage` sont vides
+pour le mois consolidé, et `compteurs_usage` porte un entier.
+
+## 64. L'adresse de secours refuse un format invalide
+*Conformité RGPD, 24/08/2026*
+
+**Attendu** : une saisie sans arobase est refusée ; une adresse
+inhabituelle mais valide (`prenom.nom+kidsrelay@…`) est acceptée.
+
+---
+
+# Ce qui n'a plus besoin d'être vérifié à la main
+
+**Couvert par des tests depuis le 23/08/2026** — démarrage à froid
+sans session, filtre des évènements de session, traduction des erreurs
+d'authentification, ordre des opérations du compte séparé, droits du
+propriétaire sur la fiche enfant, empilement d'écrans et fermeture de
+l'abonnement. Chacun de ces tests a été vérifié en cassant
+volontairement le code qu'il protège.
+
+**Vérifié en production le 25/08/2026** — la minimisation des données
+envoyées par un lien de partage. Faite sur trois liens réels de Théo,
+un par type de fiche : aucune fuite. Elle se contrôle en lisant la
+réponse du serveur sur ordinateur, pas à l'œil sur un téléphone. Voir
+[`../migration/minimisation_partage.md`](../migration/minimisation_partage.md).
+
+---
+
+# Hors périmètre
+
+Les notifications push : décision prise de les reporter au moment de
+la préparation de la publication sur les stores.
+
+# Comment utiliser cette liste
+
+Dans l'ordre des priorités, pas dans l'ordre des numéros. Un point
+vérifié et confirmé bon peut être supprimé ou marqué comme tel — à la
+discrétion de Fanny.
+
+Les points qui demandent **deux appareils ou deux comptes** : 1, 6, 7,
+11, 12, 13, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 40, 43.
+
+Les points qui demandent le **SQL Editor** : 10, 33, 62, 63.
+
+Les points qui demandent **du temps** (jours) : 20, 21, 62.
