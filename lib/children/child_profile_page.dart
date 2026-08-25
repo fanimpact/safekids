@@ -977,7 +977,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                       Text(note.note),
                       const SizedBox(height: 8),
                       Text(
-                        libelleAuteurNote(note.roleAuteur),
+                        libelleAuteurNote(note.fonctionAuteur),
                         style: const TextStyle(
                           fontSize: 13,
                           fontStyle: FontStyle.italic,

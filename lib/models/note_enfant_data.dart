@@ -23,9 +23,14 @@ class NoteEnfantData {
   final DateTime? dateActivite;
   final String? nomEtablissement;
 
-  /// `directeur`, `adjoint`, `membre` — ou nul si l'auteur n'est plus
-  /// membre de l'établissement.
-  final String? roleAuteur;
+  /// La fonction déclarée par l'auteur lui-même — « Enseignant·e »,
+  /// « Restauration », ou ce qu'il a écrit sous « Autre ». Nulle tant
+  /// qu'il ne l'a pas renseignée.
+  ///
+  /// Ce n'est pas son rôle administratif : `directeur`, `adjoint` et
+  /// `membre` ne décrivent que qui gère l'équipe dans l'application, et
+  /// ne disent rien de qui a écrit.
+  final String? fonctionAuteur;
 
   const NoteEnfantData({
     required this.id,
@@ -34,7 +39,7 @@ class NoteEnfantData {
     this.nomActivite,
     this.dateActivite,
     this.nomEtablissement,
-    this.roleAuteur,
+    this.fonctionAuteur,
   });
 
   factory NoteEnfantData.fromRow(Map<String, dynamic> row) {
@@ -49,34 +54,35 @@ class NoteEnfantData {
           ? null
           : DateTime.parse(dateActivite).toLocal(),
       nomEtablissement: row['nom_etablissement'] as String?,
-      roleAuteur: row['role_auteur'] as String?,
+      fonctionAuteur: row['fonction_auteur'] as String?,
     );
   }
 }
 
 /// Qui a écrit, sans dire qui.
 ///
-/// Décision du 25/08/2026 : le parent voit la QUALITÉ de l'auteur, pas
-/// son adresse email — la seule identité qu'un professionnel possède en
-/// base, et que le parent n'a jamais eu à voir ailleurs dans
-/// l'application. Il sait à qui s'adresser sans qu'aucune adresse
-/// personnelle ne sorte ; il reprend contact par l'établissement.
+/// Le parent voit la FONCTION de l'auteur, jamais son adresse email —
+/// la seule identité qu'un professionnel possède en base, et qu'il n'a
+/// jamais eu à voir ailleurs dans l'application. Il sait à qui
+/// s'adresser sans qu'aucune adresse personnelle ne sorte ; il reprend
+/// contact par l'établissement.
 ///
-/// Aucune de ces formulations n'accorde en genre : rien dans la base ne
-/// dit celui de l'auteur, et deviner serait pire que ne rien dire.
-String libelleAuteurNote(String? roleAuteur) {
-  switch (roleAuteur) {
-    case 'directeur':
-      return 'Écrit par la direction de l’établissement';
-    case 'adjoint':
-      return 'Écrit par la direction adjointe';
-    case 'membre':
-      return 'Écrit par un membre de l’équipe';
-    default:
-      // L'auteur n'est plus membre : sa qualité au moment où il a écrit
-      // n'est plus lisible. On ne l'invente pas.
-      return 'Écrit par l’établissement';
+/// **Recopié tel quel, sans accord ajouté.** La personne a écrit ce
+/// qu'elle est ; l'application n'ajoute ni « une », ni « (e) », ni
+/// féminin de circonstance. C'est le seul moyen que la ligne soit vraie
+/// pour tout le monde.
+///
+/// Le repli ne dure pas : une note nouvelle est impossible tant que la
+/// fonction manque. Seules les notes écrites avant le 25/08/2026
+/// peuvent l'afficher.
+String libelleAuteurNote(String? fonctionAuteur) {
+  final fonction = fonctionAuteur?.trim();
+
+  if (fonction == null || fonction.isEmpty) {
+    return 'Fonction non précisée';
   }
+
+  return 'Écrit par : $fonction';
 }
 
 /// L'en-tête d'une note : où et quand cela s'est passé.
