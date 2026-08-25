@@ -173,6 +173,9 @@ class _ContactsPageState extends State<ContactsPage> {
       title: 'Contacts d’urgence',
       subtitle:
           'Qui les services de secours doivent-ils pouvoir contacter ?',
+      consigne:
+          'Aucun contact n’est obligatoire — mais c’est la '
+          'première chose que les secours chercheront.',
       child: RadioGroup<int>(
         groupValue: primaryIndex < 0 ? null : primaryIndex,
         onChanged: (value) {

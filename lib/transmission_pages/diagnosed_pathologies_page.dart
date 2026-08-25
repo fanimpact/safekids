@@ -474,6 +474,9 @@ class _DiagnosedPathologiesPageState
       title: 'Pathologies et allergies',
       subtitle:
           'Ce qu’un accompagnant doit connaître pour reconnaître un problème.',
+      consigne:
+          'Répondez aux deux questions. Si c’est oui, chaque '
+          'pathologie et chaque allergie doit être nommée.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

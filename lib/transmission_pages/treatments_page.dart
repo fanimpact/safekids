@@ -707,6 +707,10 @@ class _TreatmentsPageState
       title: 'Traitements et dispositifs',
       subtitle:
           'Les traitements en cours, ceux à donner en urgence, et les dispositifs médicaux.',
+      consigne:
+          'Répondez à chaque question. Pour un traitement '
+          'd’urgence, la situation dans laquelle il doit être '
+          'donné est indispensable.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,

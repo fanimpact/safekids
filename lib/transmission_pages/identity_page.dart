@@ -173,6 +173,10 @@ class _IdentityPageState extends State<IdentityPage> {
       title: 'Identité de l’enfant',
       subtitle:
           'Ces informations figurent en tête de toutes les fiches de votre enfant.',
+      consigne:
+          'Le prénom, le nom et la date de naissance sont '
+          'nécessaires pour créer la fiche. La taille et le poids '
+          'peuvent être ajoutés plus tard.',
       child: Form(
         child: Column(
           crossAxisAlignment:

@@ -185,6 +185,9 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
       title: 'Antécédents médicaux',
       subtitle:
           'Quels événements médicaux importants se sont déjà produits ?',
+      consigne:
+          'Rien n’est obligatoire ici. Un bloc commencé doit '
+          'seulement être complété, ou supprimé.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

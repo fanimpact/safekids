@@ -392,6 +392,36 @@ Les deux questions restees ouvertes, volontairement :
 La decision du 25/08/2026 de **ne rien ecrire a l'ecran sur la perte du
 travail en cours** n'a plus d'objet : il n'y a plus de perte a avouer.
 
+## Une saisie numerique incomprise disparait sans un mot (25/08/2026)
+
+**Ou** : `lib/widgets/sk_number_field.dart`, et les deux appels de
+`lib/transmission_pages/identity_page.dart` (taille et poids).
+
+`SkNumberField` n'est qu'un `TextFormField` avec un clavier numerique.
+Il n'a ni `validator`, ni `inputFormatters`. Ce que le parent tape part
+dans `updateHeightCm` / `updateWeightKg`, qui font
+`double.tryParse(value.replaceAll(',', '.'))` : une saisie que Dart ne
+comprend pas - « 24,5 kg », « environ 25 », « 1m20 » - rend `null`.
+
+**Le champ garde le texte a l'ecran. La valeur enregistree est vide. Le
+parent ne l'apprend jamais.** Il n'y a ni message, ni marque rouge, ni
+refus au moment de continuer : ces deux champs sont facultatifs, donc
+rien ne se declenche.
+
+Sur telephone, le clavier numerique limite la casse. Sur ordinateur, et
+avec les claviers qui laissent taper des lettres, non.
+
+**Pourquoi cela compte ici plus qu'ailleurs** : un parent qui croit
+avoir renseigne le poids de son enfant et dont la valeur est perdue,
+c'est une fiche de sante incomplete sans que personne le sache. Le
+poids sert au dosage.
+
+**Decision du 25/08/2026** : a corriger, mais pas dans le chantier du
+brouillon. Ce qu'il faudra regarder : refuser la saisie invalide a
+l'ecran plutot que de l'avaler, ou l'accepter et le dire. Verifier au
+passage si d'autres `SkNumberField` sont dans le meme cas ailleurs dans
+l'application.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base

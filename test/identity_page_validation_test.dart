@@ -65,8 +65,11 @@ void main() {
       await tester.tap(find.text('Continuer'));
       await tester.pumpAndSettle();
 
+      // Le message exact, et non un fragment : depuis le 25/08/2026 la
+      // consigne en tête de l'écran nomme elle aussi la date de
+      // naissance, et un `textContaining` en trouverait deux.
       expect(
-        find.textContaining('date de naissance'),
+        find.text('Sélectionnez la date de naissance avant de continuer.'),
         findsOneWidget,
         reason:
             'Prénom et nom renseignés, mais pas encore la date de '

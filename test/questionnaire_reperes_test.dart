@@ -239,7 +239,7 @@ void main() {
     );
   });
 
-  group('Les onze écrans d’activités disent ce qu’ils exigent', () {
+  group('Chaque écran dit ce qu’il exige, avant l’appui', () {
     test('Chacun porte sa consigne, avant l’appui', () {
       // Le bouton « Continuer » n'est jamais grisé : sans cette ligne,
       // le parent découvre l'exigence en étant refusé.
@@ -252,14 +252,57 @@ void main() {
       }
     });
 
-    test('Aucun écran de santé ne porte de consigne pour l’instant', () {
+    test('Les six écrans de santé portent chacun la leur', () {
       // Vérifié écran par écran le 25/08/2026 : le régime diffère
       // vraiment d'un écran à l'autre — dix questions obligatoires sur
-      // les facteurs déclenchants, aucune sur les contacts. Une phrase
-      // commune serait fausse. Six lignes sur mesure sont en attente de
-      // validation.
+      // les facteurs déclenchants, aucune sur les contacts. C'est
+      // pourquoi il n'y a pas de phrase commune ici, contrairement au
+      // profil Activités : six lignes sur mesure, validées le
+      // 25/08/2026.
       for (final ecran in _ecransSante) {
-        expect(_sourceSante(ecran), isNot(contains('consigne:')));
+        expect(
+          _sourceSante(ecran),
+          contains('consigne:'),
+          reason: '$ecran ne dit pas ce qu’il exige',
+        );
+      }
+    });
+
+    test('Aucune de ces six lignes n’est recopiée d’un écran à l’autre',
+        () {
+      // Une consigne copiée serait fausse quelque part : c'est
+      // précisément ce qu'on a refusé d'écrire.
+      final vues = <String>{};
+
+      for (final ecran in _ecransSante) {
+        final source = _sourceSante(ecran);
+        final debut = source.indexOf('consigne:');
+        final fin = source.indexOf('child:', debut);
+
+        expect(
+          vues.add(source.substring(debut, fin)),
+          isTrue,
+          reason: '$ecran partage sa consigne avec un autre écran',
+        );
+      }
+    });
+
+    test('La phrase générale écartée n’est revenue nulle part', () {
+      // « Seuls les champs indispensables sont à renseigner, vous
+      // pouvez laisser le reste vide » : vérifiée le 25/08/2026 et
+      // trouvée fausse — les facteurs déclenchants exigent dix
+      // réponses d'affilée, l'identité exige une date de naissance.
+      // Un parent bloqué après avoir lu qu'il pouvait laisser vide,
+      // c'est pire que pas de phrase du tout.
+      for (final ecran in _ecransSante) {
+        expect(
+          _sourceSante(ecran),
+          isNot(contains('laisser le reste vide')),
+        );
+        expect(
+          _sourceSante(ecran),
+          isNot(contains('champs indispensables')),
+        );
       }
     });
   });

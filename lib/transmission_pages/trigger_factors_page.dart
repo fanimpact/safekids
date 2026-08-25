@@ -709,6 +709,9 @@ class _TriggerFactorsPageState
       title: 'Facteurs déclenchants',
       subtitle:
           'Ce qui peut provoquer un problème, pour que l’accompagnant l’évite ou s’y prépare.',
+      consigne:
+          'Toutes les questions sont à renseigner, y compris par '
+          '« non » — un « non » est une information utile.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,
