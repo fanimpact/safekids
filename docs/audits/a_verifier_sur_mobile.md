@@ -13,11 +13,11 @@ Aucun n'est retiré avant que Fanny confirme elle-même l'avoir vérifié.
 résultat attendu pour chaque point, en vue d'une session unique sur un
 appareil Android.
 
-- **65 points** au total.
+- **67 points** au total.
 - **Priorité haute : 14** — à faire en premier, ce sont ceux dont
   l'échec aurait des conséquences réelles.
 - **Priorité moyenne : 33**.
-- **Priorité basse : 18**.
+- **Priorité basse : 20**.
 
 ---
 
@@ -642,6 +642,41 @@ retrouve sa hauteur.
 
 Ce qu'il ne faut **pas** faire : raccourcir les textes. Ils disent ce
 qu'on vient de décider qu'il fallait dire.
+
+
+## 66. La longueur des en-têtes de questionnaire
+*Couche explicative, 25/08/2026 · à juger à l'usage*
+
+Chaque écran du profil Activités a gagné un sous-titre propre et une
+ligne de consigne, là où il n'y avait qu'une phrase courte. L'en-tête
+prend deux à trois lignes de plus, avant la première question.
+
+**Attendu** : sur un petit écran, jugez s'il faut faire défiler avant
+d'atteindre la première question, et si cela devient pénible sur onze
+écrans d'affilée.
+
+**Solution de repli si c'est le cas** : la consigne (« Toutes les
+questions oui / non sont à renseigner ») n'a besoin d'apparaître que
+sur le **premier** écran du parcours — le régime ne change pas ensuite.
+Les sous-titres, eux, ne se raccourcissent pas : ils disent ce qu'on
+vient de décider qu'il fallait dire.
+
+## 67. La numérotation « sur 11 » suppose un parcours fixe
+*Couche explicative, 25/08/2026 · veille, pas vérification*
+
+« Étape 9 sur 11 » est exact aujourd'hui : les onze écrans du profil
+Activités sont toujours parcourus dans le même ordre, aucun n'est
+sauté, et aucune question filtre ne raccourcit le parcours depuis la
+correction du 19/08/2026. Le questionnaire santé, de même, fait
+toujours six écrans.
+
+**À revérifier** le jour où une question filtre est ajoutée, ou un
+écran rendu conditionnel : le compteur mentirait, et il mentirait
+silencieusement — aucun test ne peut le détecter, puisque le total est
+écrit en dur dans chaque écran.
+
+**Ce n'est pas une vérification à faire sur l'appareil** : c'est une
+note pour le jour où le parcours changera.
 
 ---
 
