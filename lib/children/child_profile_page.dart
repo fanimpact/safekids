@@ -16,6 +16,7 @@ import '../models/child_profile_draft.dart';
 import '../models/complete_child_profile_data.dart';
 import '../models/enfant_confiance_data.dart';
 import '../models/enfant_etablissement_data.dart';
+import '../models/note_enfant_data.dart';
 import '../models/share_link_data.dart';
 import '../questionnaire_recap/activity_questionnaire_recap_page.dart';
 import '../questionnaire_recap/medical_questionnaire_recap_page.dart';
@@ -24,6 +25,7 @@ import '../sharing/consultation_journal_page.dart';
 import '../sharing/create_share_link_page.dart';
 import '../sharing/enfant_confiance_service.dart';
 import '../sharing/establishment_attachment_service.dart';
+import '../sharing/notes_enfant_service.dart';
 import '../sharing/share_link_service.dart';
 import '../transmission_pages/identity_page.dart';
 import '../utils/age_utils.dart';
@@ -49,6 +51,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
   Future<List<ShareLinkData>>? _shareLinksFuture;
   Future<List<EnfantEtablissementData>>? _attachmentsFuture;
   Future<List<EnfantConfianceData>>? _trustedPeopleFuture;
+  Future<List<NoteEnfantData>>? _notesFuture;
 
   // Copie résolue de _trustedPeopleFuture, utilisée pour savoir tout
   // de suite (sans reconstruire tout un FutureBuilder) si la personne
@@ -131,6 +134,8 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
         .attachmentsForChild(childId);
     final trustedPeopleFuture = EnfantConfianceService.instance
         .trustedPeopleForChild(childId);
+    final notesFuture =
+        NotesEnfantService.instance.notesForChild(childId);
 
     // `.ignore()` marque immédiatement ces futures comme "gérées" pour
     // Dart, en plus du traitement normal fait juste après par les
@@ -140,6 +145,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
     shareLinksFuture.ignore();
     attachmentsFuture.ignore();
     trustedPeopleFuture.ignore();
+    notesFuture.ignore();
 
     trustedPeopleFuture.then((people) {
       if (mounted) {
@@ -159,6 +165,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
       _shareLinksFuture = shareLinksFuture;
       _attachmentsFuture = attachmentsFuture;
       _trustedPeopleFuture = trustedPeopleFuture;
+      _notesFuture = notesFuture;
     });
   }
 
@@ -227,6 +234,23 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
       MaterialPageRoute(
         builder: (context) => ActivitiesHomePage(
           selectedChild: child,
+        ),
+      ),
+    );
+  }
+
+  /// Sous-titre à l'intérieur d'une section, plus discret que
+  /// `_sectionTitle` : « Traçabilité » reste le titre, les
+  /// consultations et les notes en sont deux volets.
+  Widget _sousTitreTracabilite(String titre) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        titre,
+        style: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.bold,
+          color: KidsRelayColors.ardoiseDouce,
         ),
       ),
     );
@@ -870,6 +894,105 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
     }
   }
 
+  /// Les notes que le personnel d'un établissement a écrites sur cet
+  /// enfant.
+  ///
+  /// Elles existaient depuis toujours en base, et le parent avait déjà
+  /// le droit de les lire — mais aucun écran ne les affichait. L'email
+  /// de notification lui disait pourtant « connectez-vous à
+  /// l'application pour la consulter » : il était convoqué devant une
+  /// porte fermée.
+  ///
+  /// Ici et pas ailleurs : c'est dans « Traçabilité » que le parent
+  /// regarde déjà ce qui s'est passé autour de son enfant, à côté des
+  /// consultations de fiche.
+  Widget _buildNotesSection(BuildContext context) {
+    if (!_isOwner || child.childId == null) {
+      return const SizedBox.shrink();
+    }
+
+    return FutureBuilder<List<NoteEnfantData>>(
+      future: _notesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              'Impossible de charger les notes des établissements. '
+              'Vérifiez votre connexion.',
+            ),
+          );
+        }
+
+        final notes = snapshot.data ?? [];
+
+        if (notes.isEmpty) {
+          return const Card(
+            child: ListTile(
+              leading: CircleAvatar(
+                child: Icon(Icons.sticky_note_2_outlined),
+              ),
+              title: Text(
+                'Aucune note pour le moment',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                'Quand un établissement rattaché écrit une '
+                'observation sur cet enfant, elle apparaît ici. '
+                'Vous êtes aussi prévenu par email.',
+              ),
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final note in notes) ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        libelleContexteNote(note),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(note.note),
+                      const SizedBox(height: 8),
+                      Text(
+                        libelleAuteurNote(note.roleAuteur),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontStyle: FontStyle.italic,
+                          color: KidsRelayColors.ardoiseDouce,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildTrustedPeopleSection(BuildContext context) {
     if (!_isOwner || child.childId == null) {
       return const SizedBox.shrink();
@@ -1309,6 +1432,10 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                 'Traçabilité',
               ),
 
+              _sousTitreTracabilite(
+                'Consultations de la fiche',
+              ),
+
               _actionButton(
                 icon: Icons.history,
                 color: KidsRelayColors.vertPin,
@@ -1335,6 +1462,14 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                   );
                 },
               ),
+
+              const SizedBox(height: 20),
+
+              _sousTitreTracabilite(
+                'Notes des établissements',
+              ),
+
+              _buildNotesSection(context),
             ],
 
             if (_canWrite) ...[

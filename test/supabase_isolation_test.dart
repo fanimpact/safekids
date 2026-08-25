@@ -45,6 +45,7 @@ void main() {
     'lib/sharing/consultation_journal_service.dart',
     'lib/sharing/enfant_confiance_service.dart',
     'lib/sharing/establishment_attachment_service.dart',
+    'lib/sharing/notes_enfant_service.dart',
     'lib/sharing/share_link_service.dart',
 
     // Export RGPD.
