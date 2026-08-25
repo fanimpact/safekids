@@ -480,6 +480,21 @@ class _CreateShareLinkPageState
               ),
             ),
 
+            const SizedBox(height: 6),
+
+            // La question laissait croire qu'elle determinait un niveau
+            // d'acces. Elle ne change qu'une phrase sur la fiche : la
+            // mention accolee aux traitements.
+            const Text(
+              'Seule la mention accolée aux traitements change : '
+              '« selon vos indications » ou « selon le PAI ». '
+              'Le contenu est le même.',
+              style: TextStyle(
+                fontSize: 14,
+                color: KidsRelayColors.ardoiseDouce,
+              ),
+            ),
+
             const SizedBox(height: 8),
 
             RadioGroup<ShareDestinataire>(

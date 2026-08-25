@@ -449,32 +449,29 @@ déployée. Voir [`../migration/conformite_rgpd.md`](../migration/conformite_rgp
 exécuter `supabase/schema_journal_ouvertures_partage.sql`, et
 redéployer `consulter-partage`.
 
-1. **La réponse du serveur, dans la console du navigateur.** C'est la
-   vérification demandée, et la seule qui prouve la minimisation en
-   conditions réelles. Ouvrir un vrai lien, onglet Réseau, requête
-   `consulter-partage`, puis lire la réponse. **Attendu** : sur « Ce
-   qu'il faut savoir », aucune consigne d'urgence, aucun médecin
-   traitant, aucun `profil_activites`, aucun identifiant. Sur la fiche
-   secours, les consignes et le médecin, rien de plus.
+La vérification de ce que le serveur envoie réellement (console du
+navigateur, requête `consulter-partage`) **ne figure pas ici** : elle
+se fait sur ordinateur, pas à l'œil sur un téléphone, et c'est l'agent
+qui la conduit une fois le SQL exécuté et les fonctions redéployées.
 
-2. **Le bouton « Générer le lien » à l'ouverture de l'écran.** Il doit
+1. **Le bouton « Générer le lien » à l'ouverture de l'écran.** Il doit
    être **grisé**, et aucune des trois fiches cochée.
 
-3. **La date d'expiration annoncée.** Elle s'affiche sous le choix de
+2. **La date d'expiration annoncée.** Elle s'affiche sous le choix de
    durée, et se met à jour quand on change de durée. Vérifier qu'elle
    correspond bien à l'heure réelle plus 24 h / 3 j / 7 j.
 
-4. **Une ouverture de lien apparaît dans la traçabilité.** Ouvrir un
+3. **Une ouverture de lien apparaît dans la traçabilité.** Ouvrir un
    lien depuis un autre appareil, puis fiche de l'enfant →
    Traçabilité. **Attendu** : une ligne « Ouverture d'un lien de
    partage » avec une icône de maillon, distincte des consultations
    d'établissement.
 
-5. **Deux ouvertures font deux lignes.** C'est le point de la
+4. **Deux ouvertures font deux lignes.** C'est le point de la
    correction : l'ancienne date unique était écrasée. Ouvrir le même
    lien deux fois, vérifier qu'il y a bien deux lignes.
 
-6. **Une fiche de recommandations d'activité s'affiche correctement**
+5. **Une fiche de recommandations d'activité s'affiche correctement**
    dans la traçabilité — ce type manquait à la contrainte SQL et au
    libellé.
 
