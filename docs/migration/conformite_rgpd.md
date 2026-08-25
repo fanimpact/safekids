@@ -6,23 +6,15 @@ de votre côté.
 
 ---
 
-> ## ⚠️ Ce qui reste à faire
+> ## ✅ Tout est en service
 >
-> **Un fichier SQL est à exécuter** :
-> `supabase/schema_journal_ouvertures_partage.sql` (25/08/2026), qui
-> ouvre le journal des consultations aux ouvertures de lien. Tant
-> qu'il ne l'est pas, `consulter-partage` échouera à journaliser — et
-> avalera l'erreur, donc la fiche restera servie, mais la traçabilité
-> restera muette.
+> **Tout est en place depuis le 25/08/2026.** Les deux fichiers SQL
+> sont exécutés et les six fonctions déployées. Le dépôt et la
+> production correspondent.
 >
-> `supabase/schema_conformite_rgpd.sql` a été appliqué le 24/08/2026,
-> sans erreur, et ses quatre tâches planifiées vérifiées une à une.
->
-> **Les fonctions serveur ne sont toujours pas redéployées**, et il
-> y en a désormais **six**. La sixième,
-> `confirmer-suppression-compte`, envoie l'email de demande de
-> suppression : sans elle, la demande s'enregistre quand même et
-> l'application affiche la date à l'écran, mais aucun email ne part.
+> Pour mémoire, les commandes de redéploiement — à relancer après
+> toute modification d'une fonction, aucun vérificateur ne signalera
+> l'écart :
 >
 > ```
 > supabase functions deploy envoyer-code-verification

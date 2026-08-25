@@ -445,14 +445,14 @@ déployée. Voir [`../migration/conformite_rgpd.md`](../migration/conformite_rgp
 
 ## Lien de partage — corrections du 25/08/2026
 
-**Rien de ceci n'est actif tant que deux choses n'ont pas été faites** :
-exécuter `supabase/schema_journal_ouvertures_partage.sql`, et
-redéployer `consulter-partage`.
+Le fichier SQL a été exécuté et les six fonctions redéployées le
+25/08/2026 : ces points sont donc vérifiables dès maintenant.
 
-La vérification de ce que le serveur envoie réellement (console du
-navigateur, requête `consulter-partage`) **ne figure pas ici** : elle
-se fait sur ordinateur, pas à l'œil sur un téléphone, et c'est l'agent
-qui la conduit une fois le SQL exécuté et les fonctions redéployées.
+**La minimisation des données est déjà vérifiée, et ne figure pas
+ici.** Elle se contrôle en lisant la réponse du serveur, sur
+ordinateur — pas à l'œil sur un téléphone. Faite le 25/08/2026 sur
+trois liens réels de Théo : aucune fuite sur les trois types de fiche.
+Voir `docs/migration/minimisation_partage.md`.
 
 1. **Le bouton « Générer le lien » à l'ouverture de l'écran.** Il doit
    être **grisé**, et aucune des trois fiches cochée.

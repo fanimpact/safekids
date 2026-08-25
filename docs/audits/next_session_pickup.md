@@ -1,6 +1,6 @@
 # Où nous en sommes — point de reprise
 
-**Dernière mise à jour : 24/08/2026**
+**Dernière mise à jour : 25/08/2026**
 
 Document de reprise : à lire en premier au début d'une session pour
 savoir ce qui est fait, ce qui attend, et ce qui bloque. À tenir à jour
@@ -8,35 +8,20 @@ plutôt qu'à laisser vieillir.
 
 ---
 
-> ## ⚠️ Un fichier SQL à exécuter
+> ## ✅ Les six fonctions serveur sont déployées
 >
-> **[`supabase/schema_journal_ouvertures_partage.sql`](../../supabase/schema_journal_ouvertures_partage.sql)**
-> (25/08/2026) ouvre le journal des consultations aux ouvertures de
-> lien de partage : `user_id` devient facultatif, deux colonnes
-> `origine` et `partage_id` s'ajoutent, et le type
-> `recommandations_activite` rejoint la contrainte.
+> **Le 25/08/2026**, les six Edge Functions ont été redéployées depuis
+> le dépôt. Le bundling des modules partagés `_enveloppe/` et
+> `_logique/` — seul point du chantier qui n'avait jamais pu être
+> vérifié faute de Docker sur ce poste — a fonctionné.
 >
-> Tant qu'il n'est pas exécuté, `consulter-partage` échouera à
-> journaliser. L'échec est avalé — la fiche reste servie à
-> l'accompagnant — mais la traçabilité restera muette sur les
-> ouvertures de lien.
+> `schema_conformite_rgpd.sql` (24/08) et
+> `schema_journal_ouvertures_partage.sql` (25/08) sont exécutés.
+> **Le dépôt et la production correspondent.**
 >
-> `schema_conformite_rgpd.sql` a été appliqué le 24/08/2026.
-
----
-
-> ## ⚠️ Six fonctions serveur à redéployer
->
-> **Depuis le 23/08/2026**, les six Edge Functions ont été
-> réorganisées dans le dépôt : la logique métier est sortie des
-> fichiers déployés, vers `supabase/functions/_logique/`.
-> **Aucune n'a été redéployée.** Les cinq fonctions en ligne tournent
-> encore la version d'avant cette date.
->
-> Le décalage est assumé et sans effet sur la production tant qu'aucun
-> déploiement n'est lancé. Mais contrairement à `auth.kidsrelay.fr`,
-> **aucun vérificateur** ne peut comparer ce qui tourne à ce qui est
-> versionné.
+> À savoir pour la suite : contrairement à `auth.kidsrelay.fr`, **aucun
+> vérificateur** ne peut comparer ce qui tourne à ce qui est versionné.
+> Toute modification d'une fonction doit être redéployée à la main :
 >
 > ```
 > supabase functions deploy envoyer-code-verification
@@ -50,16 +35,11 @@ plutôt qu'à laisser vieillir.
 > Les drapeaux ne sont pas interchangeables : `--no-verify-jwt` sur les
 > deux dernières seulement, qui sont ouvertes à un accompagnant non
 > connecté. L'oublier casserait tous les liens de partage ; l'ajouter
-> aux trois premières ouvrirait à n'importe qui des fonctions qui
+> aux quatre premières ouvrirait à n'importe qui des fonctions qui
 > écrivent en base.
->
-> Le bundling des modules partagés n'a **pas pu être vérifié en local**
-> (Docker absent de ce poste). Commencer par `consulter-partage`, la
-> moins risquée à casser.
->
-> Détail complet : [`../migration/fonctions_serveur.md`](../migration/fonctions_serveur.md).
 
 ---
+
 
 ## En une phrase
 
@@ -332,7 +312,7 @@ une vraie base. À rouvrir seulement si une migration est décidée.
 
 ---
 
-## État du dépôt au 24/08/2026
+## État du dépôt au 25/08/2026
 
 | | |
 |---|---|
@@ -340,7 +320,7 @@ une vraie base. À rouvrir seulement si une migration est décidée.
 | Tests Flutter | **457**, tous verts |
 | Tests JavaScript | **120** pour les fonctions serveur, **29** pour la page auth |
 | `flutter analyze` | propre |
-| Dernier chantier | corrections du lien de partage |
+| Dernier chantier | lien de partage : minimisation vérifiée en production |
 
 **Outillage installé sur le poste** (à savoir avant de chercher) :
 `postgresql` 18.6 via scoop (`pg_dump`, `psql`, plus un serveur local
