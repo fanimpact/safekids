@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'establishment_service.dart';
+import 'fonction_professionnelle.dart';
 
 enum _EstablishmentType {
   ecole('École', 'ecole'),
@@ -29,6 +30,10 @@ class _EstablishmentOnboardingPageState
   final _nomController = TextEditingController();
   _EstablishmentType _type = _EstablishmentType.ecole;
 
+  /// Nulle tant que le choix n'est pas exploitable — « Autre » sans
+  /// texte saisi compte pour rien choisi.
+  String? _fonction;
+
   bool _isSubmitting = false;
 
   @override
@@ -50,6 +55,22 @@ class _EstablishmentOnboardingPageState
       return;
     }
 
+    // Exigée dès la création : c'est ce que les parents liront sous
+    // les notes, et personne d'autre que l'intéressé ne peut la
+    // renseigner sans deviner.
+    if (_fonction == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Indiquez votre fonction. Si vous choisissez « Autre », '
+            'précisez-la.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
     });
@@ -58,6 +79,7 @@ class _EstablishmentOnboardingPageState
       await EstablishmentService.instance.createEstablishment(
         nom: nom,
         type: _type.value,
+        fonction: _fonction,
       );
 
       if (!mounted) {
@@ -92,7 +114,7 @@ class _EstablishmentOnboardingPageState
       appBar: AppBar(
         title: const Text('Créer mon établissement'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -139,6 +161,21 @@ class _EstablishmentOnboardingPageState
                   });
                 }
               },
+            ),
+
+            const SizedBox(height: 20),
+
+            SelecteurFonction(
+              onChanged: (fonction) => _fonction = fonction,
+            ),
+
+            const SizedBox(height: 4),
+
+            const Text(
+              'Votre fonction apparaît sous chaque note que vous '
+              'écrivez sur un enfant, pour que son parent sache d’où '
+              'vient l’observation.',
+              style: TextStyle(fontSize: 13),
             ),
 
             const SizedBox(height: 30),

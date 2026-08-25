@@ -40,10 +40,15 @@ class EstablishmentService {
   Future<String> createEstablishment({
     required String nom,
     String? type,
+    String? fonction,
   }) async {
     final response = await _client.rpc(
       'rpc_creer_etablissement',
-      params: {'p_nom': nom, 'p_type': type},
+      params: {
+        'p_nom': nom,
+        'p_type': type,
+        'p_fonction': fonction,
+      },
     );
 
     return response as String;
@@ -145,6 +150,23 @@ class EstablishmentService {
         params: {
           'p_membre_id': membreId,
           'p_nouveau_role': nouveauRole.name,
+        },
+      ),
+    );
+  }
+
+  /// Chacun déclare la sienne, et seulement la sienne : le `where` de
+  /// la fonction en base porte `user_id = auth.uid()`.
+  Future<void> setMyFonction({
+    required String etablissementId,
+    required String fonction,
+  }) async {
+    await _execute(
+      () => _client.rpc(
+        'rpc_definir_ma_fonction',
+        params: {
+          'p_etablissement_id': etablissementId,
+          'p_fonction': fonction,
         },
       ),
     );

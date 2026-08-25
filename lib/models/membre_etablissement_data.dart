@@ -43,6 +43,12 @@ class MembreEtablissementData {
   final DateTime? accepteLe;
   final DateTime? revoqueLe;
 
+  /// Ce que le parent lit sous une note écrite par cette personne.
+  /// Nulle tant qu'elle ne l'a pas déclarée — jamais devinée par qui
+  /// l'a invitée. Sans rapport avec [role], qui ne dit que qui gère
+  /// l'équipe dans l'application.
+  final String? fonction;
+
   const MembreEtablissementData({
     required this.id,
     required this.etablissementId,
@@ -53,6 +59,7 @@ class MembreEtablissementData {
     required this.inviteLe,
     required this.accepteLe,
     required this.revoqueLe,
+    this.fonction,
   });
 
   factory MembreEtablissementData.fromRow(
@@ -75,6 +82,7 @@ class MembreEtablissementData {
       revoqueLe: revoqueLe == null
           ? null
           : DateTime.parse(revoqueLe),
+      fonction: row['fonction'] as String?,
     );
   }
 }

@@ -4,6 +4,7 @@ import '../services/service_exception.dart';
 
 import '../models/membre_etablissement_data.dart';
 import 'establishment_service.dart';
+import 'fonction_professionnelle.dart';
 
 String _roleLabel(RoleEtablissement role) {
   switch (role) {
@@ -14,6 +15,22 @@ String _roleLabel(RoleEtablissement role) {
     case RoleEtablissement.membre:
       return 'Membre';
   }
+}
+
+/// La fonction telle qu'un collègue la voit dans la liste.
+///
+/// Distincte du rôle juste au-dessus, et volontairement : le rôle dit
+/// qui gère l'équipe dans l'application, la fonction dit ce que la
+/// personne fait auprès des enfants. C'est la seconde que les parents
+/// liront.
+String _fonctionLabel(MembreEtablissementData membre) {
+  final fonction = membre.fonction?.trim();
+
+  if (fonction == null || fonction.isEmpty) {
+    return 'Fonction non renseignée';
+  }
+
+  return fonction;
 }
 
 String _statutLabel(MembreEtablissementData membre) {
@@ -235,6 +252,78 @@ class _TeamManagementPageState extends State<TeamManagementPage> {
     }
   }
 
+  /// « Ma fonction » — chacun déclare la sienne, personne ne déclare
+  /// celle d'un autre.
+  ///
+  /// Le garde-fou est en base (`user_id = auth.uid()` dans
+  /// `rpc_definir_ma_fonction`) ; l'écran ne fait que ne pas proposer
+  /// le geste ailleurs que sur sa propre ligne.
+  Future<void> _editMyFonction(
+    MembreEtablissementData moi,
+  ) async {
+    String? choisie = moi.fonction;
+
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ma fonction'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'C’est ce que le parent lira sous chaque note que '
+                'vous écrivez sur son enfant.',
+              ),
+              const SizedBox(height: 16),
+              SelecteurFonction(
+                valeurInitiale: moi.fonction,
+                onChanged: (fonction) => choisie = fonction,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirme != true) {
+      return;
+    }
+
+    final fonction = choisie;
+
+    if (fonction == null) {
+      _showMessage(
+        'Indiquez votre fonction. Si vous choisissez « Autre », '
+        'précisez-la.',
+      );
+
+      return;
+    }
+
+    try {
+      await EstablishmentService.instance.setMyFonction(
+        etablissementId: widget.etablissementId,
+        fonction: fonction,
+      );
+
+      _reload();
+    } catch (error) {
+      _showError(error);
+    }
+  }
+
   Future<void> _revoke(MembreEtablissementData membre) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -311,10 +400,20 @@ class _TeamManagementPageState extends State<TeamManagementPage> {
                       title: Text(membre.email),
                       subtitle: Text(
                         '${_roleLabel(membre.role)} — '
-                        '${_statutLabel(membre)}',
+                        '${_statutLabel(membre)}\n'
+                        '${_fonctionLabel(membre)}',
                       ),
-                      trailing: (canManage &&
-                              membre.userId != _myUserId &&
+                      isThreeLine: true,
+                      trailing: membre.userId == _myUserId
+                          // Sur sa propre ligne, un seul geste : sa
+                          // fonction. Les gestes de gestion ne
+                          // s'appliquent jamais à soi-même.
+                          ? IconButton(
+                              icon: const Icon(Icons.badge_outlined),
+                              tooltip: 'Ma fonction',
+                              onPressed: () => _editMyFonction(membre),
+                            )
+                          : (canManage &&
                               membre.statut == StatutMembre.actif)
                           ? Row(
                               mainAxisSize: MainAxisSize.min,
