@@ -19,6 +19,31 @@ const _selectableFicheTypes = [
   ShareFicheType.recommandationsActivite,
 ];
 
+/// Ce que chaque fiche contient vraiment, dit sous son intitule.
+///
+/// Les intitules seuls ne permettent pas de choisir : "secours" et "ce
+/// qu'il faut savoir" sonnent proches alors que leur contenu differe
+/// sur deux rubriques precises. Sans repere, on coche la premiere — et
+/// la premiere est la plus complete.
+///
+/// Ces descriptions vivent ici plutot que sur `ShareFicheType` : elles
+/// servent au moment du choix, pas ailleurs. La fiche de l'enfant, qui
+/// liste les partages en cours, n'en a pas besoin.
+const Map<ShareFicheType, String> _descriptionsFiche = {
+  ShareFicheType.secours:
+      'Pathologies, allergies, traitements, dispositifs, médecin '
+      'traitant, contacts à prévenir — et les gestes d’urgence que '
+      'vous avez écrits. C’est la fiche la plus complète.',
+  ShareFicheType.ceQuIlFautSavoir:
+      'La même chose, sans les gestes d’urgence ni le médecin '
+      'traitant. Pour qui accompagne au quotidien.',
+  ShareFicheType.recommandationsActivite:
+      'Ce qu’il faut prévoir pour une activité précise : vigilance, '
+      'médicaments d’urgence, adaptations, matériel. Figée au moment '
+      'du partage — vos modifications ultérieures n’y apparaîtront '
+      'pas.',
+};
+
 enum _ShareDuration {
   jour1('24 heures', Duration(hours: 24)),
   jours3('3 jours', Duration(days: 3)),
@@ -458,6 +483,15 @@ class _CreateShareLinkPageState
                     RadioListTile<ShareFicheType?>(
                       contentPadding: EdgeInsets.zero,
                       title: Text(type.label),
+                      subtitle: Text(
+                        _descriptionsFiche[type] ?? '',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          height: 1.35,
+                          color: KidsRelayColors.ardoiseDouce,
+                        ),
+                      ),
+                      isThreeLine: true,
                       value: type,
                     ),
                 ],
@@ -569,10 +603,40 @@ class _CreateShareLinkPageState
 
             Text(
               'Le lien cessera de fonctionner le '
-              '${formatShortDateTime(DateTime.now().add(_selectedDuration.duration))}.',
+              '${formatShortDateTime(DateTime.now().add(_selectedDuration.duration))}. '
+              'Il ne peut pas être prolongé : il faudra en créer un '
+              'nouveau.',
               style: const TextStyle(
                 fontSize: 14,
                 color: KidsRelayColors.ardoiseDouce,
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // En ambre et non en gris : c'est la seule chose de cet
+            // ecran qui demande quelque chose au parent, et la seule
+            // qu'il ne peut pas deviner. Un lien de partage n'est pas
+            // un acces nominatif — il vaut pour qui l'a.
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: KidsRelayColors.ambreFond,
+                border: Border.all(
+                  color: KidsRelayColors.ambreBordure,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'Ce lien s’ouvre sans compte et sans mot de passe. '
+                'Toute personne qui le reçoit voit la fiche, et peut '
+                'le transmettre à quelqu’un d’autre. Ne l’envoyez '
+                'qu’aux personnes concernées.',
+                style: TextStyle(
+                  fontSize: 15,
+                  height: 1.45,
+                  color: KidsRelayColors.ardoise,
+                ),
               ),
             ),
 
@@ -628,7 +692,10 @@ class _CreateShareLinkPageState
               // aucune raison que le parent le devine.
               const Text(
                 'Pour couper ce lien avant cette date, ouvrez la fiche '
-                'de l’enfant, section « Partages ».',
+                'de l’enfant, section « Partages ». La coupure est '
+                'immédiate, y compris pour quelqu’un qui a déjà le '
+                'lien — mais ce qui a déjà été lu ou copié reste chez '
+                'la personne.',
                 style: TextStyle(
                   fontSize: 14,
                   color: KidsRelayColors.ardoiseDouce,
