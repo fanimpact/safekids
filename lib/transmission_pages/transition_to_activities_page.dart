@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../brouillons/brouillon_profil.dart';
+import '../brouillons/enregistrement_brouillon.dart';
 
 import '../activity_profile_pages/activity_profile_entry_page.dart';
 import '../children/children_page.dart';
@@ -20,6 +25,15 @@ class TransitionToActivitiesPage extends StatelessWidget {
         transmissionController.validateAndGetProfile();
 
     await ChildRepository.instance.addChild(profile);
+
+    // Le questionnaire est alle au bout : le brouillon n'a plus de
+    // raison d'etre, et il contient des donnees de sante.
+    unawaited(
+      supprimerBrouillon(
+        TypeBrouillon.sante,
+        transmissionController.formData.childId,
+      ),
+    );
 
     return profile;
   }

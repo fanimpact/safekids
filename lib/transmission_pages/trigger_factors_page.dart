@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../brouillons/enregistrement_brouillon.dart';
 
 import '../controllers/transmission_controller.dart';
 import '../models/trigger_factor_data.dart';
@@ -384,6 +388,14 @@ class _TriggerFactorsPageState
 
       return;
     }
+
+    // Le brouillon est ecrit a chaque ecran valide : sans cela, un
+    // parent interrompu au cinquieme des six ecrans perdait les cinq.
+    unawaited(
+      enregistrerBrouillonSante(
+        widget.transmissionController.formData,
+      ),
+    );
 
     Navigator.push(
       context,

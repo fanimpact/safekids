@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../brouillons/enregistrement_brouillon.dart';
 
 import '../controllers/activity_profile_controller.dart';
 import '../widgets/questionnaire_page.dart';
@@ -58,6 +62,14 @@ class _ClothingPageState extends State<ClothingPage> {
     }
 
     widget.activityProfileController.validateDraft();
+
+    // Le brouillon est ecrit a chaque ecran valide : sans cela, un
+    // parent interrompu au dixieme des onze ecrans perdait les dix.
+    unawaited(
+      enregistrerBrouillonActivites(
+        widget.activityProfileController.draft,
+      ),
+    );
 
     Navigator.push(
       context,

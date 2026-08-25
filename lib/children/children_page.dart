@@ -1,17 +1,37 @@
 import 'package:flutter/material.dart';
 
+import '../activity_profile_pages/activity_profile_entry_page.dart';
+import '../brouillons/brouillon_profil.dart';
+import '../brouillons/brouillon_repository.dart';
 import '../child_profile_pages/create_child_profile_intro_page.dart';
+import '../controllers/activity_profile_controller.dart';
+import '../transmission_pages/identity_page.dart';
 import '../controllers/transmission_controller.dart';
 import '../models/complete_child_profile_data.dart';
 import '../repositories/child_repository.dart';
+import '../theme/kidsrelay_theme.dart';
 import '../consentement/consentement_sante_page.dart';
 import '../utils/child_name_utils.dart';
 import 'child_profile_page.dart';
 
-class ChildrenPage extends StatelessWidget {
+class ChildrenPage extends StatefulWidget {
   const ChildrenPage({
     super.key,
   });
+
+  @override
+  State<ChildrenPage> createState() => _ChildrenPageState();
+}
+
+class _ChildrenPageState extends State<ChildrenPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    // Charge les questionnaires commences, et jette au passage ceux qui
+    // dorment depuis plus de 30 jours.
+    BrouillonRepository.instance.charger();
+  }
 
   void _openFirstChildProfile(
     BuildContext context,
@@ -147,6 +167,11 @@ class ChildrenPage extends StatelessWidget {
     required CompleteChildProfileData child,
     required int index,
   }) {
+    final brouillonActivites = BrouillonRepository.instance.trouver(
+      TypeBrouillon.activites,
+      child.childId ?? '',
+    );
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(4),
@@ -191,14 +216,30 @@ class ChildrenPage extends StatelessWidget {
                       'Informations essentielles : à compléter',
                 ),
                 const SizedBox(height: 6),
-                _buildCompletionLine(
-                  completed:
-                      child.activityProfileCompleted,
-                  completedText:
-                      'Profil Activités : complété',
-                  incompleteText:
-                      'Profil Activités : à compléter',
-                ),
+                if (brouillonActivites == null)
+                  _buildCompletionLine(
+                    completed:
+                        child.activityProfileCompleted,
+                    completedText:
+                        'Profil Activités : complété',
+                    incompleteText:
+                        'Profil Activités : à compléter',
+                  )
+                else
+                  // Un questionnaire Activités commencé remplace la
+                  // ligne « à compléter » : elle laisserait croire
+                  // qu'il faut tout reprendre de zéro.
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () => _reprendreActivites(
+                        context,
+                        brouillonActivites,
+                      ),
+                      icon: const Icon(Icons.edit_note, size: 18),
+                      label: Text(libelleReprise(brouillonActivites)),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -210,6 +251,122 @@ class ChildrenPage extends StatelessWidget {
             child,
           ),
         ),
+      ),
+    );
+  }
+
+  /// Reprend un questionnaire santé commencé, au début et avec les
+  /// réponses déjà saisies.
+  ///
+  /// Au début et non à l'écran quitté : c'est plus simple, et cela
+  /// laisse au parent l'occasion de relire ce qu'il avait répondu —
+  /// utile quand on reprend un questionnaire abandonné trois semaines
+  /// plus tôt.
+  void _reprendreSante(
+    BuildContext context,
+    BrouillonProfil brouillon,
+  ) {
+    final draft = santeDepuisBrouillon(brouillon);
+
+    if (draft == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Ce questionnaire commencé n’a pas pu être relu. '
+            'Recommencez-le, vos réponses n’ont pas pu être '
+            'retrouvées.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => IdentityPage(
+          transmissionController: TransmissionController(
+            initialDraft: draft,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _reprendreActivites(
+    BuildContext context,
+    BrouillonProfil brouillon,
+  ) {
+    final draft = activitesDepuisBrouillon(brouillon);
+
+    if (draft == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Ce questionnaire commencé n’a pas pu être relu. '
+            'Recommencez-le, vos réponses n’ont pas pu être '
+            'retrouvées.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ActivityProfileEntryPage(
+          activityProfileController: ActivityProfileController(
+            initialDraft: draft,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Un questionnaire santé commencé n'a pas encore d'enfant en base :
+  /// il ne peut donc apparaître nulle part ailleurs que dans sa propre
+  /// carte. Sans elle, le parent ne saurait pas qu'il a du travail en
+  /// cours.
+  Widget _buildCarteBrouillonSante(
+    BuildContext context,
+    BrouillonProfil brouillon,
+  ) {
+    return Card(
+      color: KidsRelayColors.ambreFond,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(
+          color: KidsRelayColors.ambreBordure,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 8,
+        ),
+        leading: const CircleAvatar(
+          backgroundColor: KidsRelayColors.ambreBordure,
+          child: Icon(Icons.edit_note),
+        ),
+        title: Text(
+          libelleReprise(brouillon),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: const Padding(
+          padding: EdgeInsets.only(top: 6),
+          child: Text(
+            'Ce profil n’est pas encore enregistré. Terminez le '
+            'questionnaire pour qu’il le soit.',
+          ),
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _reprendreSante(context, brouillon),
       ),
     );
   }
@@ -265,10 +422,15 @@ class ChildrenPage extends StatelessWidget {
   Widget _buildChildrenList(
     BuildContext context,
     List<CompleteChildProfileData> children,
+    List<BrouillonProfil> brouillonsSante,
   ) {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
+        for (final brouillon in brouillonsSante) ...[
+          _buildCarteBrouillonSante(context, brouillon),
+          const SizedBox(height: 12),
+        ],
         for (
           int index = 0;
           index < children.length;
@@ -303,11 +465,21 @@ class ChildrenPage extends StatelessWidget {
     // ça, elle continuerait d'afficher une liste figée au moment où
     // elle a été ouverte, même si un enfant vient d'être supprimé ou
     // ajouté entre-temps.
+    // Deux sources : les enfants enregistres, et les questionnaires
+    // commences qui n'en sont pas encore.
     return ListenableBuilder(
-      listenable: ChildRepository.instance,
+      listenable: Listenable.merge([
+        ChildRepository.instance,
+        BrouillonRepository.instance,
+      ]),
       builder: (context, _) {
         final children =
             ChildRepository.instance.children;
+
+        final brouillonsSante = BrouillonRepository
+            .instance.brouillons
+            .where((b) => b.type == TypeBrouillon.sante)
+            .toList();
 
         return Scaffold(
           appBar: AppBar(
@@ -316,11 +488,12 @@ class ChildrenPage extends StatelessWidget {
             ),
           ),
           body: SafeArea(
-            child: children.isEmpty
+            child: children.isEmpty && brouillonsSante.isEmpty
                 ? _buildEmptyState(context)
                 : _buildChildrenList(
                     context,
                     children,
+                    brouillonsSante,
                   ),
           ),
         );

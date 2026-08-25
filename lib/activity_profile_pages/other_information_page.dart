@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../brouillons/brouillon_profil.dart';
+import '../brouillons/enregistrement_brouillon.dart';
 import '../children/children_page.dart';
 import '../controllers/activity_profile_controller.dart';
 import '../repositories/child_repository.dart';
@@ -300,6 +304,12 @@ class _OtherInformationPageState
           .saveActivityProfile(
         childId: childId,
         activityProfile: activityProfile,
+      );
+
+      // Le questionnaire est alle au bout : le brouillon n'a plus de
+      // raison d'etre.
+      unawaited(
+        supprimerBrouillon(TypeBrouillon.activites, childId),
       );
     } catch (error) {
       if (mounted) {

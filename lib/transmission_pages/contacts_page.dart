@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../brouillons/enregistrement_brouillon.dart';
 
 import '../children/child_profile_page.dart';
 import '../controllers/transmission_controller.dart';
@@ -134,6 +138,15 @@ class _ContactsPageState extends State<ContactsPage> {
     }
 
     widget.transmissionController.validateDraft();
+
+    // Dernier ecran du questionnaire : le brouillon est ecrit ici
+    // aussi, parce que l'enregistrement en base a lieu a l'ecran
+    // suivant et peut echouer.
+    unawaited(
+      enregistrerBrouillonSante(
+        widget.transmissionController.formData,
+      ),
+    );
 
     Navigator.push(
       context,

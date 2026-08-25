@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../brouillons/enregistrement_brouillon.dart';
 
 import '../theme/kidsrelay_theme.dart';
 
@@ -437,6 +441,14 @@ class _DiagnosedPathologiesPageState
       );
       return;
     }
+
+    // Le brouillon est ecrit a chaque ecran valide : sans cela, un
+    // parent interrompu au cinquieme des six ecrans perdait les cinq.
+    unawaited(
+      enregistrerBrouillonSante(
+        widget.transmissionController.formData,
+      ),
+    );
 
     Navigator.push(
       context,

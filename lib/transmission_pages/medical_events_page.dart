@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../brouillons/enregistrement_brouillon.dart';
 import '../controllers/transmission_controller.dart';
 import '../utils/text_controller_cache.dart';
 import '../widgets/questionnaire_page.dart';
@@ -142,6 +145,14 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
     // renseigné (une conclusion sans description, par exemple) est
     // conservée telle quelle ; les blocs restés vides ont déjà été
     // retirés ci-dessus.
+
+    // Le brouillon est ecrit a chaque ecran valide : sans cela, un
+    // parent interrompu au cinquieme des six ecrans perdait les cinq.
+    unawaited(
+      enregistrerBrouillonSante(
+        widget.transmissionController.formData,
+      ),
+    );
 
     Navigator.push(
       context,
