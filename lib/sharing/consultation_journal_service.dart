@@ -20,6 +20,9 @@ class ConsultationJournalService {
   ) async {
     final rows = await _client
         .from('journal_consultations_fiche')
+        // `etablissements(nom)` reste une jointure facultative : une
+        // ouverture de lien n'a pas d'etablissement, et la ligne doit
+        // quand meme remonter.
         .select('*, etablissements(nom)')
         .eq('enfant_id', childId)
         .order('consulte_le', ascending: false);

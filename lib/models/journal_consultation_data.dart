@@ -3,6 +3,22 @@ enum TypeFicheConsultee {
   ceQuIlFautSavoir,
   profilActivites,
   modeUrgence,
+  recommandationsActivite,
+}
+
+/// D'ou vient la consultation.
+///
+/// Les deux origines ne se valent pas, et le parent doit pouvoir les
+/// distinguer : une consultation par un etablissement est faite par
+/// quelqu'un d'identifie, sous la responsabilite de sa structure. Une
+/// ouverture de lien ne l'est pas, par construction — le lien
+/// s'ouvre sans compte, et se transfere.
+enum OrigineConsultation { etablissement, lienPartage }
+
+OrigineConsultation _origineFromRow(String? valeur) {
+  return valeur == 'lien_partage'
+      ? OrigineConsultation.lienPartage
+      : OrigineConsultation.etablissement;
 }
 
 TypeFicheConsultee _typeFicheFromRow(String value) {
@@ -13,6 +29,8 @@ TypeFicheConsultee _typeFicheFromRow(String value) {
       return TypeFicheConsultee.ceQuIlFautSavoir;
     case 'profil_activites':
       return TypeFicheConsultee.profilActivites;
+    case 'recommandations_activite':
+      return TypeFicheConsultee.recommandationsActivite;
     case 'mode_urgence':
     default:
       return TypeFicheConsultee.modeUrgence;
@@ -29,6 +47,8 @@ String typeFicheConsulteeLabel(TypeFicheConsultee type) {
       return 'Profil Activités';
     case TypeFicheConsultee.modeUrgence:
       return 'Mode Urgence';
+    case TypeFicheConsultee.recommandationsActivite:
+      return 'Recommandations d’activité';
   }
 }
 
@@ -43,6 +63,7 @@ class JournalConsultationData {
   final String? etablissementNom;
   final TypeFicheConsultee typeFiche;
   final DateTime consulteLe;
+  final OrigineConsultation origine;
 
   const JournalConsultationData({
     required this.id,
@@ -51,6 +72,7 @@ class JournalConsultationData {
     required this.etablissementNom,
     required this.typeFiche,
     required this.consulteLe,
+    this.origine = OrigineConsultation.etablissement,
   });
 
   factory JournalConsultationData.fromRow(
@@ -70,6 +92,7 @@ class JournalConsultationData {
       consulteLe: DateTime.parse(
         row['consulte_le'] as String,
       ),
+      origine: _origineFromRow(row['origine'] as String?),
     );
   }
 }

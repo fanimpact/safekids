@@ -8,6 +8,7 @@ import '../models/share_link_data.dart';
 import '../recommendation_engine/recommendation_engine.dart';
 import '../repositories/activity_session_repository.dart';
 import '../repositories/child_repository.dart';
+import '../theme/kidsrelay_theme.dart';
 import '../utils/date_format_utils.dart';
 import 'activity_recommendation_snapshot.dart';
 import 'share_link_service.dart';
@@ -42,14 +43,18 @@ class CreateShareLinkPage extends StatefulWidget {
 class _CreateShareLinkPageState
     extends State<CreateShareLinkPage> {
   CompleteChildProfileData? _selectedChild;
-  ShareFicheType _selectedFicheType =
-      ShareFicheType.secours;
+  // Volontairement nul au depart : aucune fiche n'est pre-cochee.
+  // La fiche secours l'etait, et c'est la plus sensible — un parent
+  // qui appuyait sur "Generer" sans rien lire partageait l'ensemble
+  // des donnees de sante de son enfant, consignes d'urgence comprises.
+  ShareFicheType? _selectedFicheType;
   ShareDestinataire _selectedDestinataire =
       ShareDestinataire.particulier;
   _ShareDuration _selectedDuration = _ShareDuration.jour1;
 
   bool _isGenerating = false;
   String? _generatedLink;
+  DateTime? _expirationGeneree;
 
   // Activités enregistrées pour le partage "recommandations d'activité"
   // (voir corrections_a_faire.md point 5) : chargées pour l'enfant
@@ -157,7 +162,21 @@ class _CreateShareLinkPageState
 
     Map<String, dynamic>? contenuFige;
 
-    if (_selectedFicheType ==
+    final typeFiche = _selectedFicheType;
+
+    if (typeFiche == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Choisissez la fiche a partager avant de generer le lien.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    if (typeFiche ==
         ShareFicheType.recommandationsActivite) {
       final activity = _selectedActivity;
 
@@ -187,6 +206,7 @@ class _CreateShareLinkPageState
     setState(() {
       _isGenerating = true;
       _generatedLink = null;
+      _expirationGeneree = null;
     });
 
     final dateExpiration = DateTime.now().toUtc().add(
@@ -197,7 +217,7 @@ class _CreateShareLinkPageState
       final link = await ShareLinkService.instance.createLink(
         // Non nul : garanti par le garde en tête de cette méthode.
         childId: child.childId!,
-        typeFiche: _selectedFicheType.value,
+        typeFiche: typeFiche.value,
         destinataire: _selectedDestinataire.value,
         dateExpiration: dateExpiration,
         contenuFige: contenuFige,
@@ -206,6 +226,7 @@ class _CreateShareLinkPageState
 
       setState(() {
         _generatedLink = link;
+        _expirationGeneree = dateExpiration.toLocal();
       });
     } catch (error) {
       if (!mounted) {
@@ -336,6 +357,7 @@ class _CreateShareLinkPageState
         setState(() {
           _selectedActivity = activity;
           _generatedLink = null;
+          _expirationGeneree = null;
         });
       },
     );
@@ -400,6 +422,7 @@ class _CreateShareLinkPageState
                 setState(() {
                   _selectedChild = child;
                   _generatedLink = null;
+                  _expirationGeneree = null;
                 });
               },
             ),
@@ -416,7 +439,7 @@ class _CreateShareLinkPageState
 
             const SizedBox(height: 8),
 
-            RadioGroup<ShareFicheType>(
+            RadioGroup<ShareFicheType?>(
               groupValue: _selectedFicheType,
               onChanged: (value) {
                 if (value == null) {
@@ -426,12 +449,13 @@ class _CreateShareLinkPageState
                 setState(() {
                   _selectedFicheType = value;
                   _generatedLink = null;
+                  _expirationGeneree = null;
                 });
               },
               child: Column(
                 children: [
                   for (final type in _selectableFicheTypes)
-                    RadioListTile<ShareFicheType>(
+                    RadioListTile<ShareFicheType?>(
                       contentPadding: EdgeInsets.zero,
                       title: Text(type.label),
                       value: type,
@@ -468,6 +492,7 @@ class _CreateShareLinkPageState
                 setState(() {
                   _selectedDestinataire = value;
                   _generatedLink = null;
+                  _expirationGeneree = null;
                 });
               },
               child: Column(
@@ -505,6 +530,7 @@ class _CreateShareLinkPageState
                 setState(() {
                   _selectedDuration = value;
                   _generatedLink = null;
+                  _expirationGeneree = null;
                 });
               },
               child: Column(
@@ -520,13 +546,31 @@ class _CreateShareLinkPageState
               ),
             ),
 
+            // La duree ne dit rien tant qu'elle n'est pas rapportee a une
+            // date : "24 heures" a partir de quand ? Le parent doit
+            // pouvoir la lire, et la redire a la personne qui recoit le
+            // lien.
+            const SizedBox(height: 8),
+
+            Text(
+              'Le lien cessera de fonctionner le '
+              '${formatShortDateTime(DateTime.now().add(_selectedDuration.duration))}.',
+              style: const TextStyle(
+                fontSize: 14,
+                color: KidsRelayColors.ardoiseDouce,
+              ),
+            ),
+
             const SizedBox(height: 28),
 
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed:
-                    _isGenerating ? null : _generateLink,
+                // Inactif tant qu'aucune fiche n'est choisie : le geste
+                // doit etre delibere, pas un appui par defaut.
+                onPressed: _isGenerating || _selectedFicheType == null
+                    ? null
+                    : _generateLink,
                 child: Text(
                   _isGenerating
                       ? 'Génération en cours...'
@@ -549,6 +593,32 @@ class _CreateShareLinkPageState
               const SizedBox(height: 12),
 
               SelectableText(_generatedLink!),
+
+              const SizedBox(height: 12),
+
+              if (_expirationGeneree != null)
+                Text(
+                  'Valable jusqu’au ${formatShortDateTime(_expirationGeneree!)}. '
+                  'Passé cette date, le lien n’affiche plus rien.',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: KidsRelayColors.ardoiseDouce,
+                  ),
+                ),
+
+              const SizedBox(height: 8),
+
+              // L'ecran de creation ne disait pas ou couper un lien
+              // deja envoye. C'est sur la fiche de l'enfant, et il n'y a
+              // aucune raison que le parent le devine.
+              const Text(
+                'Pour couper ce lien avant cette date, ouvrez la fiche '
+                'de l’enfant, section « Partages ».',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: KidsRelayColors.ardoiseDouce,
+                ),
+              ),
 
               const SizedBox(height: 16),
 

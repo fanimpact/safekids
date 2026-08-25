@@ -8,10 +8,15 @@ de votre côté.
 
 > ## ⚠️ Ce qui reste à faire
 >
-> **Le fichier SQL a été appliqué le 24/08/2026**, sans erreur.
-> Colonnes, fonctions, politiques modifiées et tâches automatiques
-> sont en place, et les quatre tâches planifiées ont été vérifiées une
-> à une.
+> **Un fichier SQL est à exécuter** :
+> `supabase/schema_journal_ouvertures_partage.sql` (25/08/2026), qui
+> ouvre le journal des consultations aux ouvertures de lien. Tant
+> qu'il ne l'est pas, `consulter-partage` échouera à journaliser — et
+> avalera l'erreur, donc la fiche restera servie, mais la traçabilité
+> restera muette.
+>
+> `supabase/schema_conformite_rgpd.sql` a été appliqué le 24/08/2026,
+> sans erreur, et ses quatre tâches planifiées vérifiées une à une.
 >
 > **Les fonctions serveur ne sont toujours pas redéployées**, et il
 > y en a désormais **six**. La sixième,

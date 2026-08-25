@@ -443,6 +443,41 @@ déployée. Voir [`../migration/conformite_rgpd.md`](../migration/conformite_rgp
 13. **Elle ressort dans l'export RGPD.** Enregistrer une adresse, puis
     exporter : elle doit figurer dans le PDF **et** dans le `.json`.
 
+## Lien de partage — corrections du 25/08/2026
+
+**Rien de ceci n'est actif tant que deux choses n'ont pas été faites** :
+exécuter `supabase/schema_journal_ouvertures_partage.sql`, et
+redéployer `consulter-partage`.
+
+1. **La réponse du serveur, dans la console du navigateur.** C'est la
+   vérification demandée, et la seule qui prouve la minimisation en
+   conditions réelles. Ouvrir un vrai lien, onglet Réseau, requête
+   `consulter-partage`, puis lire la réponse. **Attendu** : sur « Ce
+   qu'il faut savoir », aucune consigne d'urgence, aucun médecin
+   traitant, aucun `profil_activites`, aucun identifiant. Sur la fiche
+   secours, les consignes et le médecin, rien de plus.
+
+2. **Le bouton « Générer le lien » à l'ouverture de l'écran.** Il doit
+   être **grisé**, et aucune des trois fiches cochée.
+
+3. **La date d'expiration annoncée.** Elle s'affiche sous le choix de
+   durée, et se met à jour quand on change de durée. Vérifier qu'elle
+   correspond bien à l'heure réelle plus 24 h / 3 j / 7 j.
+
+4. **Une ouverture de lien apparaît dans la traçabilité.** Ouvrir un
+   lien depuis un autre appareil, puis fiche de l'enfant →
+   Traçabilité. **Attendu** : une ligne « Ouverture d'un lien de
+   partage » avec une icône de maillon, distincte des consultations
+   d'établissement.
+
+5. **Deux ouvertures font deux lignes.** C'est le point de la
+   correction : l'ancienne date unique était écrasée. Ouvrir le même
+   lien deux fois, vérifier qu'il y a bien deux lignes.
+
+6. **Une fiche de recommandations d'activité s'affiche correctement**
+   dans la traçabilité — ce type manquait à la contrainte SQL et au
+   libellé.
+
 ## Hors périmètre pour l'instant
 
 Les notifications push ne sont pas listées ici : décision déjà prise de

@@ -73,6 +73,10 @@ function fauxDepot(etat = {}) {
       lectures.push({ nom: 'marquerConsulte', partageId, horodatage });
       return { erreur: null };
     },
+
+    async journaliserOuverture(entree) {
+      lectures.push({ nom: 'journaliserOuverture', ...entree });
+    },
   };
 }
 
@@ -201,10 +205,17 @@ describe('Cloisonnement', () => {
 
     await consulterPartage(depot, 'token-1', MAINTENANT);
 
-    for (const nom of ['profilSante', 'profilActivites']) {
-      const lecture = depot.lectures.find((l) => l.nom === nom);
-      assert.equal(lecture.enfantId, 'enfant-du-partage');
-    }
+    const lecture = depot.lectures.find(
+      (l) => l.nom === 'profilSante',
+    );
+
+    assert.equal(lecture.enfantId, 'enfant-du-partage');
+
+    // Le profil Activites n'est plus lu du tout : il n'etait affiche
+    // sur aucune fiche.
+    assert.ok(
+      !depot.lectures.some((l) => l.nom === 'profilActivites'),
+    );
   });
 
   test('La signature n’offre aucun moyen de désigner un autre enfant', () => {
@@ -216,7 +227,7 @@ describe('Cloisonnement', () => {
 });
 
 describe('Fiche renvoyée', () => {
-  test('Le chemin nominal renvoie la fiche complète', async () => {
+  test('Le chemin nominal renvoie la fiche demandee', async () => {
     const depot = fauxDepot();
 
     const resultat = await consulterPartage(
@@ -226,14 +237,24 @@ describe('Fiche renvoyée', () => {
     );
 
     assert.equal(resultat.statut, 'ok');
-    assert.deepEqual(resultat.fiche, {
-      type_fiche: 'secours',
-      destinataire: 'structure_accueil',
-      enfant: ENFANT,
-      profil_sante: { pathologies: [] },
-      profil_activites: { transport: {} },
-      contenu_fige: null,
-    });
+    assert.equal(resultat.fiche.type_fiche, 'secours');
+    assert.equal(resultat.fiche.destinataire, 'structure_accueil');
+    assert.equal(resultat.fiche.contenu_fige, null);
+
+    // L2019identifiant de l2019enfant ne sort pas : la page ne l2019affiche pas,
+    // le navigateur n2019a aucune raison de le connaitre.
+    assert.deepEqual(Object.keys(resultat.fiche.enfant), [
+      'prenom',
+      'nom',
+      'date_naissance',
+      'poids',
+      'taille',
+      'date_maj_poids',
+    ]);
+
+    // Le profil Activites n2019est affiche sur aucune fiche : il ne quitte
+    // plus la base.
+    assert.equal(resultat.fiche.profil_activites, null);
   });
 
   test('Un partage sans destinataire est traité comme un particulier', async () => {
@@ -309,10 +330,65 @@ describe('Fiche renvoyée', () => {
 
     await consulterPartage(depot, 'token-1', MAINTENANT);
 
-    assert.deepEqual(depot.lectures.at(-1), {
-      nom: 'marquerConsulte',
-      partageId: 'partage-1',
-      horodatage: '2026-08-23T12:00:00.000Z',
-    });
+    assert.deepEqual(
+      depot.lectures.find((l) => l.nom === 'marquerConsulte'),
+      {
+        nom: 'marquerConsulte',
+        partageId: 'partage-1',
+        horodatage: '2026-08-23T12:00:00.000Z',
+      },
+    );
   });
+
+  test('Chaque ouverture est journalisee, sans rien de plus', async () => {
+    // `marquerConsulte` n'ecrase qu'une date. C'est cette ligne-la que
+    // le parent lira dans la tracabilite de son enfant.
+    const depot = fauxDepot();
+
+    await consulterPartage(depot, 'token-1', MAINTENANT);
+
+    const journal = depot.lectures.find(
+      (l) => l.nom === 'journaliserOuverture',
+    );
+
+    assert.deepEqual(journal, {
+      nom: 'journaliserOuverture',
+      enfantId: 'enfant-1',
+      partageId: 'partage-1',
+      typeFiche: 'secours',
+      ouvertLe: '2026-08-23T12:00:00.000Z',
+    });
+
+    // Ni adresse IP, ni empreinte de navigateur : la signature ne
+    // permet meme pas d'en passer une.
+    assert.deepEqual(Object.keys(journal).sort(), [
+      'enfantId',
+      'nom',
+      'ouvertLe',
+      'partageId',
+      'typeFiche',
+    ]);
+  });
+
+  test(
+    'Une journalisation qui echoue ne prive pas l2019accompagnant de la fiche',
+    async () => {
+      // Une trace perdue est regrettable ; une fiche non rendue peut
+      // mettre un enfant en danger.
+      const depot = {
+        ...fauxDepot(),
+        async journaliserOuverture() {
+          throw new Error('base injoignable');
+        },
+      };
+
+      const resultat = await consulterPartage(
+        depot,
+        'token-1',
+        MAINTENANT,
+      );
+
+      assert.equal(resultat.statut, 'ok');
+    },
+  );
 });

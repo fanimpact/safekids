@@ -368,7 +368,6 @@ export function construirePage(
     }
 
     var profilSante = data.profil_sante || {};
-    var profilActivites = data.profil_activites || {};
 
     var mentionTraitement =
       data.destinataire === 'structure_accueil'

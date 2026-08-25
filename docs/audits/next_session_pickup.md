@@ -8,6 +8,23 @@ plutôt qu'à laisser vieillir.
 
 ---
 
+> ## ⚠️ Un fichier SQL à exécuter
+>
+> **[`supabase/schema_journal_ouvertures_partage.sql`](../../supabase/schema_journal_ouvertures_partage.sql)**
+> (25/08/2026) ouvre le journal des consultations aux ouvertures de
+> lien de partage : `user_id` devient facultatif, deux colonnes
+> `origine` et `partage_id` s'ajoutent, et le type
+> `recommandations_activite` rejoint la contrainte.
+>
+> Tant qu'il n'est pas exécuté, `consulter-partage` échouera à
+> journaliser. L'échec est avalé — la fiche reste servie à
+> l'accompagnant — mais la traçabilité restera muette sur les
+> ouvertures de lien.
+>
+> `schema_conformite_rgpd.sql` a été appliqué le 24/08/2026.
+
+---
+
 > ## ⚠️ Six fonctions serveur à redéployer
 >
 > **Depuis le 23/08/2026**, les six Edge Functions ont été
@@ -320,10 +337,10 @@ une vraie base. À rouvrir seulement si une migration est décidée.
 | | |
 |---|---|
 | Branche | `main`, synchronisée avec `origin/main` |
-| Tests Flutter | **448**, tous verts |
-| Tests JavaScript | **99** pour les fonctions serveur, **29** pour la page auth |
+| Tests Flutter | **457**, tous verts |
+| Tests JavaScript | **120** pour les fonctions serveur, **29** pour la page auth |
 | `flutter analyze` | propre |
-| Dernier chantier | conformité RGPD, 8 commits |
+| Dernier chantier | corrections du lien de partage |
 
 **Outillage installé sur le poste** (à savoir avant de chercher) :
 `postgresql` 18.6 via scoop (`pg_dump`, `psql`, plus un serveur local

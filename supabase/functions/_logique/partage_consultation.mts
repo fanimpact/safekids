@@ -20,9 +20,16 @@
 //     type de fiche — c'est aussi une donnée de santé qui ne quitte pas
 //     la base sans nécessité.
 
+import {
+  TYPE_RECOMMANDATIONS,
+  enfantPourFiche,
+  profilActivitesPourFiche,
+  profilSantePourFiche,
+} from './fiche_partagee.mts';
+
 export const LIEN_INVALIDE = 'Lien expiré ou invalide.';
 
-export const TYPE_RECOMMANDATIONS = 'recommandations_activite';
+export { TYPE_RECOMMANDATIONS };
 
 export interface Partage {
   id: string;
@@ -51,6 +58,18 @@ export interface DepotPartages {
     partageId: string,
     horodatage: string,
   ): Promise<{ erreur: unknown }>;
+
+  /// Une ligne par ouverture, jamais ecrasee — a la difference de
+  /// [marquerConsulte], qui ne garde que la derniere.
+  ///
+  /// Ce qui y entre : l'enfant, le partage, le type de fiche, la date.
+  /// Rien d'autre. Pas d'adresse IP, pas d'empreinte de navigateur.
+  journaliserOuverture(entree: {
+    enfantId: string;
+    partageId: string;
+    typeFiche: string;
+    ouvertLe: string;
+  }): Promise<void>;
 }
 
 export interface FichePartagee {
@@ -108,28 +127,45 @@ export async function consulterPartage(
   }
 
   let profilSante: unknown | null = null;
-  let profilActivites: unknown | null = null;
 
   if (partage.type_fiche !== TYPE_RECOMMANDATIONS) {
-    profilSante =
-      (await depot.profilSante(partage.enfant_id)) ?? null;
-    profilActivites =
-      (await depot.profilActivites(partage.enfant_id)) ?? null;
+    profilSante = profilSantePourFiche(
+      await depot.profilSante(partage.enfant_id),
+      partage.type_fiche,
+    );
   }
 
-  // Une erreur ici ne doit pas empêcher de renvoyer la fiche à
-  // l'accompagnant : la date de consultation est une commodité pour le
-  // parent, la fiche est ce dont dépend la sécurité de l'enfant.
-  await depot.marquerConsulte(partage.id, maintenant.toISOString());
+  const horodatage = maintenant.toISOString();
+
+  // Deux ecritures, deux usages. `marquerConsulte` ne garde que la
+  // derniere ouverture, et sert a afficher "consulte le ..." a cote du
+  // lien. La journalisation, elle, garde chaque ouverture : c'est ce
+  // que le parent lit dans la tracabilite de son enfant.
+  //
+  // Ni l'une ni l'autre ne doit empecher de rendre la fiche a
+  // l'accompagnant : une trace perdue est regrettable, une fiche non
+  // rendue peut mettre un enfant en danger.
+  await depot.marquerConsulte(partage.id, horodatage);
+
+  try {
+    await depot.journaliserOuverture({
+      enfantId: partage.enfant_id,
+      partageId: partage.id,
+      typeFiche: partage.type_fiche,
+      ouvertLe: horodatage,
+    });
+  } catch (_) {
+    // Volontairement avale.
+  }
 
   return {
     statut: 'ok',
     fiche: {
       type_fiche: partage.type_fiche,
       destinataire: partage.destinataire ?? DESTINATAIRE_PAR_DEFAUT,
-      enfant,
+      enfant: enfantPourFiche(enfant),
       profil_sante: profilSante,
-      profil_activites: profilActivites,
+      profil_activites: profilActivitesPourFiche(),
       contenu_fige: partage.contenu_fige ?? null,
     },
   };

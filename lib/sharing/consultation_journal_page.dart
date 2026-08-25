@@ -94,14 +94,28 @@ class _ConsultationJournalPageState
               itemBuilder: (context, index) {
                 final consultation = consultations[index];
 
+                final parLien = consultation.origine ==
+                    OrigineConsultation.lienPartage;
+
                 return Card(
                   child: ListTile(
-                    leading: const CircleAvatar(
-                      child: Icon(Icons.visibility_outlined),
+                    leading: CircleAvatar(
+                      child: Icon(
+                        parLien
+                            ? Icons.link
+                            : Icons.visibility_outlined,
+                      ),
                     ),
+                    // Les deux origines ne se valent pas. Une
+                    // consultation par un etablissement est faite par
+                    // quelqu'un d'identifie ; une ouverture de lien ne
+                    // l'est pas, et le parent doit le voir d'un coup
+                    // d'oeil.
                     title: Text(
-                      consultation.etablissementNom ??
-                          'Établissement',
+                      parLien
+                          ? 'Ouverture d’un lien de partage'
+                          : consultation.etablissementNom ??
+                              'Établissement',
                     ),
                     subtitle: Text(
                       '${typeFicheConsulteeLabel(consultation.typeFiche)} — '
