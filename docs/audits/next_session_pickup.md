@@ -363,15 +363,49 @@ une vraie base. À rouvrir seulement si une migration est décidée.
 
 ---
 
+## Pièges de l'outillage, appris à la dure
+
+**`git checkout -- <fichier>` restaure depuis HEAD, donc efface tout ce
+qui n'est pas commité.** Deux fois dans la session du 25/08/2026, il a
+fait reperdre des modifications en cours : une fois sur
+`medical_events_page.dart`, une fois sur
+`establishment_onboarding_page.dart`. Les deux fois, il fallait tout
+rejouer.
+
+Les deux fois, le geste venait du même besoin : **casser volontairement
+le code pour vérifier qu'un test tombe**, puis remettre en état. C'est
+une bonne pratique, gardée — mais elle demande un ordre précis.
+
+> **La règle : commiter d'abord, falsifier ensuite.**
+>
+> Le commit est le filet. `git checkout --` redevient alors sûr, parce
+> qu'il restaure exactement ce qui vient d'être commité, et non un état
+> antérieur au chantier.
+
+Corollaire, quand on ne veut pas encore commiter : copier le fichier
+(`cp x /tmp/x.bak`) avant de le casser, et restaurer par `cp` et non
+par `git`. C'est ce qui a été fait pour les scripts SQL, qui n'étaient
+pas suivis par git au moment de la vérification.
+
+**Autre piège du même ordre : le délimiteur de `perl -pe`.** `s|...|...|`
+casse sur toute expression contenant un `|` — un `||` de condition
+Dart, une table markdown. La substitution échoue en silence, ou pire,
+réussit à moitié. Utiliser `s{...}{...}`, et vérifier que la
+substitution a bien eu lieu (`die unless $n == 1`).
+
+Et jamais `\x{...}` au-dessus de 255 dans un remplacement perl : cela
+force la sémantique caractère et double-encode les fichiers UTF-8.
+Erreur commise deux fois, réparée deux fois par `git checkout --`.
+
 ## État du dépôt au 25/08/2026
 
 | | |
 |---|---|
 | Branche | `main`, synchronisée avec `origin/main` |
-| Tests Flutter | **535**, tous verts |
+| Tests Flutter | **578**, tous verts |
 | Tests JavaScript | **120** pour les fonctions serveur, **29** pour la page auth |
 | `flutter analyze` | propre |
-| Dernier chantier | notes d’établissement visibles du parent |
+| Dernier chantier | fonction du professionnel, lisible par le parent |
 
 **Outillage installé sur le poste** (à savoir avant de chercher) :
 `postgresql` 18.6 via scoop (`pg_dump`, `psql`, plus un serveur local

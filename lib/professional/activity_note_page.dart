@@ -5,6 +5,7 @@ import '../models/activity_session/complete_activity_session_data.dart';
 import '../recommendation_engine/models/activity_recommendation_result.dart';
 import 'establishment_activity_service.dart';
 import 'establishment_service.dart';
+import 'suite_note.dart';
 import 'fonction_professionnelle.dart';
 import 'establishment_home_page.dart';
 import 'professional_child_repository.dart';
@@ -170,6 +171,8 @@ class _ActivityNotePageState extends State<ActivityNotePage> {
       _isSaving = true;
     });
 
+    final SuiteNote suite;
+
     try {
       if (!signature.dejaEnregistree) {
         await EstablishmentService.instance.setMyFonction(
@@ -178,7 +181,7 @@ class _ActivityNotePageState extends State<ActivityNotePage> {
         );
       }
 
-      await EstablishmentActivityService.instance.saveNote(
+      suite = await EstablishmentActivityService.instance.saveNote(
         activiteId: activiteId,
         texte: texte,
         enfantId:
@@ -201,6 +204,18 @@ class _ActivityNotePageState extends State<ActivityNotePage> {
       }
 
       return;
+    }
+
+    if (mounted) {
+      // Dit ce qui est arrivé au parent, et non un succès uniforme.
+      // Une note générale au groupe ne prévient personne : le
+      // professionnel doit le lire, sinon il croit avoir informé.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(messageSuiteNote(suite)),
+          duration: const Duration(seconds: 6),
+        ),
+      );
     }
 
     _openRecommendations();

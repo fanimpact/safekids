@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'establishment_activity_service.dart';
 import 'establishment_service.dart';
+import 'suite_note.dart';
 import 'fonction_professionnelle.dart';
 import 'professional_child_repository.dart';
 
@@ -114,6 +115,8 @@ class _AddActivityNotePageState
       _isSaving = true;
     });
 
+    final SuiteNote suite;
+
     try {
       if (!signature.dejaEnregistree) {
         await EstablishmentService.instance.setMyFonction(
@@ -122,7 +125,7 @@ class _AddActivityNotePageState
         );
       }
 
-      await EstablishmentActivityService.instance.saveNote(
+      suite = await EstablishmentActivityService.instance.saveNote(
         activiteId: widget.activiteId,
         texte: texte,
         enfantId:
@@ -147,9 +150,21 @@ class _AddActivityNotePageState
       return;
     }
 
-    if (mounted) {
-      Navigator.pop(context, true);
+    if (!mounted) {
+      return;
     }
+
+    // Dit ce qui est arrivé au parent, et non un succès uniforme. Une
+    // note générale au groupe ne prévient personne : le professionnel
+    // doit le lire, sinon il croit avoir informé.
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(messageSuiteNote(suite)),
+        duration: const Duration(seconds: 6),
+      ),
+    );
+
+    Navigator.pop(context, true);
   }
 
   @override

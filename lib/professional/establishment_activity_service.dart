@@ -5,6 +5,7 @@ import '../models/activity_session/activity_session_codec.dart';
 import '../models/activity_session/activity_session_data.dart';
 import '../models/activity_session/complete_activity_session_data.dart';
 import '../models/activity_session/note_activite_data.dart';
+import 'suite_note.dart';
 
 /// Regroupe les opérations Supabase pour la préparation d'activité
 /// côté établissement : sauvegarde/liste des activités partagées à
@@ -195,7 +196,12 @@ class EstablishmentActivityService {
   /// déclenche la notification par email au parent — jamais pour une
   /// note générale au groupe (`enfantId` null), qui n'est envoyée à
   /// personne.
-  Future<void> saveNote({
+  ///
+  /// Rend ce qu'il est advenu du parent, au lieu de le taire : voir
+  /// `SuiteNote`. L'appelant doit le dire à l'écran — un succès
+  /// identique dans les trois cas laissait croire qu'une note générale
+  /// informait quelqu'un, et qu'un email en échec était parti.
+  Future<SuiteNote> saveNote({
     required String activiteId,
     required String texte,
     String? enfantId,
@@ -216,21 +222,27 @@ class EstablishmentActivityService {
     });
 
     if (enfantId == null) {
-      return;
+      return SuiteNote.sansDestinataire;
     }
 
     try {
-      await _client.functions.invoke(
+      final reponse = await _client.functions.invoke(
         'notifier-note-ajoutee',
         body: {
           'enfantId': enfantId,
           'activiteId': activiteId,
         },
       );
+
+      return suiteDepuisReponse(
+        reponse.data,
+        statut: reponse.status,
+      );
     } catch (_) {
-      // La note est déjà enregistrée : un échec d'envoi de la
-      // notification ne doit pas faire échouer la sauvegarde côté
-      // utilisateur, qui n'a aucune action à refaire pour ça.
+      // La note est déjà enregistrée : un échec d'envoi ne doit pas
+      // faire échouer la sauvegarde, l'utilisateur n'a rien à refaire.
+      // Mais il doit le savoir — d'où le retour plutôt que le silence.
+      return SuiteNote.parentNonPrevenu;
     }
   }
 
