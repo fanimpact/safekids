@@ -241,9 +241,15 @@ class _CommunicationPageState
   @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
+      barreTitre: 'Profil Activités',
+      etape: 7,
+      total: 11,
       title: 'Communication',
       subtitle:
-          'Répondez aux questions concernant votre enfant.',
+          'Comment votre enfant s’exprime et comprend, pour qu’on ne prenne pas un malentendu pour un refus.',
+      consigne:
+          'Toutes les questions oui / non sont à renseigner pour '
+          'continuer.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,

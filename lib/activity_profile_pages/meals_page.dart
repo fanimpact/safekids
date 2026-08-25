@@ -438,9 +438,15 @@ class _MealsPageState extends State<MealsPage> {
   @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
+      barreTitre: 'Profil Activités',
+      etape: 10,
+      total: 11,
       title: 'Repas',
       subtitle:
-          'Répondez aux questions concernant votre enfant.',
+          'Ce qui se joue au moment du repas : installation, aide, textures, refus.',
+      consigne:
+          'Toutes les questions oui / non sont à renseigner pour '
+          'continuer.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

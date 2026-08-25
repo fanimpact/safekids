@@ -155,8 +155,12 @@ class _IdentityPageState extends State<IdentityPage> {
     @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
-      title: "Identité de l’enfant",
-      subtitle: "Qui est l’enfant pris en charge ?",
+      barreTitre: 'Questionnaire santé',
+      etape: 1,
+      total: 6,
+      title: 'Identité de l’enfant',
+      subtitle:
+          'Ces informations figurent en tête de toutes les fiches de votre enfant.',
       child: Form(
         child: Column(
           crossAxisAlignment:

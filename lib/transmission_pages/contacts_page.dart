@@ -154,8 +154,12 @@ class _ContactsPageState extends State<ContactsPage> {
     );
 
     return QuestionnairePage(
-      title: "",
-      subtitle: "Qui les services de secours doivent-ils pouvoir contacter ?",
+      barreTitre: 'Questionnaire santé',
+      etape: 6,
+      total: 6,
+      title: 'Contacts d’urgence',
+      subtitle:
+          'Qui les services de secours doivent-ils pouvoir contacter ?',
       child: RadioGroup<int>(
         groupValue: primaryIndex < 0 ? null : primaryIndex,
         onChanged: (value) {

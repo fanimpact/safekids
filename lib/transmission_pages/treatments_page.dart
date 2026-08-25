@@ -689,9 +689,12 @@ class _TreatmentsPageState
         draft.medicalDevices;
 
     return QuestionnairePage(
-      title: "",
+      barreTitre: 'Questionnaire santé',
+      etape: 5,
+      total: 6,
+      title: 'Traitements et dispositifs',
       subtitle:
-          "Quels sont les traitements actuellement prescrits à votre enfant ?",
+          'Les traitements en cours, ceux à donner en urgence, et les dispositifs médicaux.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,

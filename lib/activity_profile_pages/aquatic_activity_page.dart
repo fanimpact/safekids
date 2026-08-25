@@ -378,10 +378,16 @@ class _AquaticActivityPageState
   @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
+      barreTitre: 'Profil Activités',
+      etape: 1,
+      total: 11,
       title:
           'Baignade / À proximité d’un point d’eau',
       subtitle:
-          'Répondez aux questions concernant votre enfant.',
+          'Pour qu’un accompagnant sache quoi surveiller près de l’eau, même quand l’activité n’est pas une baignade.',
+      consigne:
+          'Toutes les questions oui / non sont à renseigner pour '
+          'continuer.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,

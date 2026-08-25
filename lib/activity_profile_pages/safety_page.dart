@@ -138,9 +138,15 @@ class _SafetyPageState extends State<SafetyPage> {
   @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
+      barreTitre: 'Profil Activités',
+      etape: 9,
+      total: 11,
       title: 'Sécurité',
       subtitle:
-          'Répondez aux questions concernant votre enfant.',
+          'Les situations qui peuvent le mettre en danger, et ce qui les prévient.',
+      consigne:
+          'Toutes les questions oui / non sont à renseigner pour '
+          'continuer.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,

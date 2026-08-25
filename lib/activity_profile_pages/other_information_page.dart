@@ -332,9 +332,15 @@ class _OtherInformationPageState
   @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
+      barreTitre: 'Profil Activités',
+      etape: 11,
+      total: 11,
       title: 'Autres informations',
       subtitle:
-          'Dernière étape du questionnaire.',
+          'Tout ce qui compte et qui n’entrait dans aucune section précédente.',
+      consigne:
+          'Toutes les questions oui / non sont à renseigner pour '
+          'continuer.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,

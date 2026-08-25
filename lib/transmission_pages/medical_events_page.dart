@@ -168,9 +168,12 @@ class _MedicalEventsPageState extends State<MedicalEventsPage> {
         widget.transmissionController.formData.primaryCareDoctor;
 
     return QuestionnairePage(
-      title: "",
+      barreTitre: 'Questionnaire santé',
+      etape: 3,
+      total: 6,
+      title: 'Antécédents médicaux',
       subtitle:
-          "Quels événements médicaux importants se sont déjà produits ?",
+          'Quels événements médicaux importants se sont déjà produits ?',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

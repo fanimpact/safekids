@@ -414,9 +414,15 @@ class _TransportPageState extends State<TransportPage> {
         selectedTransports.length > 1;
 
     return QuestionnairePage(
+      barreTitre: 'Profil Activités',
+      etape: 2,
+      total: 11,
       title: 'Transport',
       subtitle:
-          'Répondez aux questions concernant votre enfant.',
+          'Car, voiture, trajet à pied : ce qu’il faut prévoir pour que le déplacement se passe bien.',
+      consigne:
+          'Toutes les questions oui / non sont à renseigner pour '
+          'continuer.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,

@@ -691,9 +691,12 @@ class _TriggerFactorsPageState
     BuildContext context,
   ) {
     return QuestionnairePage(
-      title: '',
+      barreTitre: 'Questionnaire santé',
+      etape: 4,
+      total: 6,
+      title: 'Facteurs déclenchants',
       subtitle:
-          'Facteurs déclenchants et sensibilités nécessitant une vigilance particulière.',
+          'Ce qui peut provoquer un problème, pour que l’accompagnant l’évite ou s’y prépare.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,

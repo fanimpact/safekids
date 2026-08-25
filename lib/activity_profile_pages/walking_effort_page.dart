@@ -98,9 +98,15 @@ class _WalkingEffortPageState
   @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
+      barreTitre: 'Profil Activités',
+      etape: 3,
+      total: 11,
       title: 'Marche prolongée / effort physique',
       subtitle:
-          'Répondez aux questions concernant votre enfant.',
+          'Sorties, randonnées, sport : jusqu’où votre enfant peut aller, et à quoi être attentif.',
+      consigne:
+          'Toutes les questions oui / non sont à renseigner pour '
+          'continuer.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,

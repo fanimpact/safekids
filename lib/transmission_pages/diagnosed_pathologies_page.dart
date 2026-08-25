@@ -456,8 +456,12 @@ class _DiagnosedPathologiesPageState
     final allergies = draft.allergies;
 
     return QuestionnairePage(
-      title: "",
-      subtitle: "Santé de votre enfant",
+      barreTitre: 'Questionnaire santé',
+      etape: 2,
+      total: 6,
+      title: 'Pathologies et allergies',
+      subtitle:
+          'Ce qu’un accompagnant doit connaître pour reconnaître un problème.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

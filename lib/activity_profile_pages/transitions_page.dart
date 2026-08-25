@@ -149,10 +149,16 @@ class _TransitionsPageState
   @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
+      barreTitre: 'Profil Activités',
+      etape: 8,
+      total: 11,
       title:
           'Transitions / changements d’activité',
       subtitle:
-          'Répondez aux questions concernant votre enfant.',
+          'Changer d’activité, partir, s’arrêter : ce qui l’aide à passer d’une chose à l’autre.',
+      consigne:
+          'Toutes les questions oui / non sont à renseigner pour '
+          'continuer.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,

@@ -73,9 +73,15 @@ class _ToiletsPageState extends State<ToiletsPage> {
   @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
+      barreTitre: 'Profil Activités',
+      etape: 6,
+      total: 11,
       title: 'Toilettes',
       subtitle:
-          'Répondez aux questions concernant votre enfant.',
+          'Ce qu’il faut savoir pour l’accompagner aux toilettes sans le mettre en difficulté.',
+      consigne:
+          'Toutes les questions oui / non sont à renseigner pour '
+          'continuer.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,

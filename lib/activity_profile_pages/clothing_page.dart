@@ -73,9 +73,15 @@ class _ClothingPageState extends State<ClothingPage> {
   @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
+      barreTitre: 'Profil Activités',
+      etape: 5,
+      total: 11,
       title: 'Changement de tenue',
       subtitle:
-          'Répondez aux questions concernant votre enfant.',
+          'Se déshabiller et se rhabiller : ce que votre enfant fait seul, et où il a besoin d’aide.',
+      consigne:
+          'Toutes les questions oui / non sont à renseigner pour '
+          'continuer.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

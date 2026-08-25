@@ -227,9 +227,15 @@ class _OvernightStayPageState
   @override
   Widget build(BuildContext context) {
     return QuestionnairePage(
+      barreTitre: 'Profil Activités',
+      etape: 4,
+      total: 11,
       title: 'Séjour avec nuitée',
       subtitle:
-          'Répondez aux questions concernant votre enfant.',
+          'Colonie, classe verte, nuit chez quelqu’un : ce qui change quand votre enfant dort ailleurs.',
+      consigne:
+          'Toutes les questions oui / non sont à renseigner pour '
+          'continuer.',
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.stretch,
