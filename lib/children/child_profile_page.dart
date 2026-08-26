@@ -945,13 +945,15 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                 'Aucune note pour le moment',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              // Pas un mot sur l'email tant que la notification n'est
-              // pas fiable : elle ne part pas pour une note générale au
-              // groupe, et son échec est avalé sans que personne le
-              // sache. On le réécrira quand ce sera vrai.
+              // « Normalement » plutôt qu'une promesse ferme : toute
+              // note qui apparaît ici est rattachée à un enfant, donc
+              // notifiée — mais l'email peut échouer, et le parent ne
+              // le saurait pas. Le professionnel, lui, l'apprend
+              // sur-le-champ depuis le 26/08/2026.
               subtitle: Text(
                 'Quand un établissement rattaché écrit une '
-                'observation sur cet enfant, elle apparaît ici.',
+                'observation sur cet enfant, elle apparaît ici. '
+                'Vous êtes normalement prévenu par email.',
               ),
             ),
           );

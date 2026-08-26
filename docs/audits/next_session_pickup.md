@@ -1,6 +1,6 @@
 # Où nous en sommes — point de reprise
 
-**Dernière mise à jour : 25/08/2026**
+**Dernière mise à jour : 26/08/2026**
 
 Document de reprise : à lire en premier au début d'une session pour
 savoir ce qui est fait, ce qui attend, et ce qui bloque. À tenir à jour
@@ -347,6 +347,59 @@ passer les 11 fichiers restants à 2. Écarté pour l'instant :
 expose les données d'un autre enfant, et sans test d'intégration contre
 une vraie base. À rouvrir seulement si une migration est décidée.
 
+### Ce qui reste, au soir du 26/08/2026
+
+Par ordre de ce qui bloque le plus la suite.
+
+**1. La session de test sur un vrai Android.** 70 points dans
+[`a_verifier_sur_mobile.md`](a_verifier_sur_mobile.md), qui ne peuvent
+pas être couverts autrement : reprise d'un questionnaire après
+l'application tuée, lisibilité du texte sur vert pin et sur ambre,
+parcours du co-parent et de la gestion d'équipe (deux comptes), longueur
+des écrans. Fanny prévoit d'acheter un appareil d'occasion. Le
+document dit en tête ce qu'il faut préparer à l'avance. **Rien d'autre
+n'est bloqué par ce point, mais rien ne le remplace non plus.**
+
+**2. SPF / DKIM / DMARC de `kidsrelay.fr` dans Brevo.** Configuration
+DNS, à faire côté Fanny. Tant que ce n'est pas fait, personne ne sait
+si les emails arrivent en boîte de réception ou en spam — ce qui rend
+la notification de note et la récupération de mot de passe théoriques.
+
+**3. Les deux modèles d'email Supabase.** À coller dans le tableau de
+bord pour que les liens pointent vers `auth.kidsrelay.fr`. Contenu
+exact fourni en session, non appliqué au 26/08/2026.
+
+**4. La suite de la couche explicative — deux écrans identifiés,
+non traités.** Le point 3 du chantier a bien avancé : la note
+d'activité est faite, et de bout en bout (comportement corrigé, écran
+parent construit, fonction du professionnel). Restent les deux autres
+de la priorité haute, tous deux dus à un **écart entre ce que l'écran
+laisse croire et ce qu'il fait** :
+
+- [`claim_attachment_page.dart`](../../lib/professional/claim_attachment_page.dart)
+  — « Rattacher un enfant ». L'écran ne dit pas que l'accès **expire à
+  une date choisie par le parent**, qu'il est **révocable à tout
+  instant**, ni que **chaque ouverture de fiche est journalisée** et
+  visible du parent. Un professionnel qui ignore ce qu'il obtient ne
+  sait pas non plus ce qu'il n'a pas le droit de faire. **Textes à
+  proposer, Fanny valide avant intégration.**
+- [`consultation_journal_page.dart`](../../lib/sharing/consultation_journal_page.dart)
+  — « Journal de consultation ». Sa phrase d'accueil dit « Chaque fois
+  qu'un **établissement rattaché** ouvre une fiche… » alors que le
+  journal enregistre **aussi les ouvertures de liens de partage**, par
+  des gens non identifiés. Et rien ne dit que tout s'efface à 12 mois.
+  **Même méthode.**
+
+L'inventaire complet, avec la priorité moyenne et basse (recommandations,
+rattachements, gestion d'équipe, Mode Urgence, les deux fiches,
+trombinoscope, création d'activité), est dans
+[`../mode_emploi/inventaire_ecrans.md`](../mode_emploi/inventaire_ecrans.md).
+
+**Décidé et non fait, sans urgence** : la reprise automatique des
+notifications en échec — écartée le 26/08 avec ses raisons écrites,
+voir [`../migration/notifications_non_parties.md`](../migration/notifications_non_parties.md).
+À rouvrir seulement si des `echoue` s'accumulent.
+
 ### Reste ouvert depuis les sessions précédentes
 
 - **SPF / DKIM / DMARC de `kidsrelay.fr` dans Brevo** — les Edge
@@ -397,7 +450,7 @@ Et jamais `\x{...}` au-dessus de 255 dans un remplacement perl : cela
 force la sémantique caractère et double-encode les fichiers UTF-8.
 Erreur commise deux fois, réparée deux fois par `git checkout --`.
 
-## État du dépôt au 25/08/2026
+## État du dépôt au 26/08/2026
 
 | | |
 |---|---|
@@ -405,7 +458,7 @@ Erreur commise deux fois, réparée deux fois par `git checkout --`.
 | Tests Flutter | **578**, tous verts |
 | Tests JavaScript | **120** pour les fonctions serveur, **29** pour la page auth |
 | `flutter analyze` | propre |
-| Dernier chantier | fonction du professionnel, lisible par le parent |
+| Dernier chantier | fonction du professionnel, vérifiée en production |
 
 **Outillage installé sur le poste** (à savoir avant de chercher) :
 `postgresql` 18.6 via scoop (`pg_dump`, `psql`, plus un serveur local
