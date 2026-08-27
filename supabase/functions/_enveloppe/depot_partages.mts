@@ -20,8 +20,7 @@ export function depotPartagesSupabase(
         .from('partages')
         .select(
           'id, enfant_id, type_fiche, date_expiration, contenu_fige, ' +
-            'destinataire, revoque_le, permanent, verrou_empreinte, ' +
-            'verrou_pose_le',
+            'destinataire, revoque_le, permanent, appareils_max',
         )
         .eq('token', token)
         .maybeSingle();
@@ -96,14 +95,43 @@ export function depotPartagesSupabase(
       }
     },
 
-    async poserVerrou(partageId, empreinte, poseLe) {
+    async placesDuPartage(partageId) {
+      const { data, error } = await service
+        .from('appareils_partage')
+        .select('id, empreinte, pris_le')
+        .eq('partage_id', partageId);
+
+      if (error) {
+        console.error(error);
+      }
+
+      return { places: data ?? [], erreur: error };
+    },
+
+    async prendrePlace(partageId, empreinte, prisLe) {
       const { error } = await service
-        .from('partages')
-        .update({
-          verrou_empreinte: empreinte,
-          verrou_pose_le: poseLe,
-        })
-        .eq('id', partageId);
+        .from('appareils_partage')
+        .insert({
+          partage_id: partageId,
+          empreinte,
+          pris_le: prisLe,
+        });
+
+      if (error) {
+        console.error(error);
+      }
+
+      return { erreur: error };
+    },
+
+    async remplacerPlace(placeId, empreinte) {
+      // `pris_le` n'est pas touche : c'est la date de premiere
+      // occupation de la place, et la reecrire ferait glisser la
+      // fenetre de tolerance.
+      const { error } = await service
+        .from('appareils_partage')
+        .update({ empreinte })
+        .eq('id', placeId);
 
       if (error) {
         console.error(error);

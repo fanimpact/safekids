@@ -83,6 +83,32 @@ enum _ShareDuration {
   final Duration? duration;
 }
 
+/// Combien d'appareils peuvent consulter la fiche.
+///
+/// Trois choix, pas de saisie libre : un champ ouvert invite le 20, et
+/// 20 n'est plus un partage. **Une seule personne reste le defaut.**
+///
+/// 1 couvre la nounou, un grand-parent, la maitresse. 2 couvre les
+/// couples. 5 couvre ce que le parent prevoit : une sortie, un
+/// week-end a plusieurs adultes. Au-dela, c'est le rattachement
+/// d'etablissement qui prend le relais, avec des professionnels
+/// identifies et des consultations nominatives.
+///
+/// Le choix s'applique **partout, QR compris** : restreindre le QR a
+/// un seul appareil pousserait la maitresse a photographier la fiche
+/// et a l'envoyer par messagerie — et la, plus de verrou, plus de
+/// revocation, plus de journal.
+enum _NombreAppareils {
+  un('Une seule personne', 1),
+  deux('Jusqu’à 2 personnes', 2),
+  cinq('Jusqu’à 5 personnes', 5);
+
+  const _NombreAppareils(this.label, this.nombre);
+
+  final String label;
+  final int nombre;
+}
+
 class CreateShareLinkPage extends StatefulWidget {
   final CompleteChildProfileData? initialChild;
 
@@ -109,6 +135,8 @@ class _CreateShareLinkPageState
   /// date » : sans elle, ce choix ne vaut rien et la generation est
   /// refusee.
   DateTime? _dateChoisie;
+
+  _NombreAppareils _appareils = _NombreAppareils.un;
 
   bool _isGenerating = false;
   String? _generatedLink;
@@ -338,6 +366,7 @@ class _CreateShareLinkPageState
         nomDestinataire: nomDestinataire,
         dateExpiration: dateExpiration,
         permanent: permanent,
+        appareilsMax: _appareils.nombre,
         contenuFige: contenuFige,
         activiteId: _selectedActivity?.id,
       );
@@ -779,6 +808,59 @@ class _CreateShareLinkPageState
                       contentPadding: EdgeInsets.zero,
                       title: Text(destinataire.label),
                       value: destinataire,
+                    ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'Combien de personnes doivent pouvoir consulter la fiche ?',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // Pas un avertissement : ce qui explique le chiffre. Sans
+            // cette ligne, le parent qui choisit « 2 personnes » pour
+            // deux grands-parents sera surpris que la grand-mere
+            // consomme les deux places a elle seule.
+            const Text(
+              'Chaque appareil compte. Si la même personne ouvre le '
+              'partage sur son téléphone puis sur son ordinateur, cela '
+              'fait deux.',
+              style: TextStyle(
+                fontSize: 14,
+                color: KidsRelayColors.ardoiseDouce,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            RadioGroup<_NombreAppareils>(
+              groupValue: _appareils,
+              onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+
+                setState(() {
+                  _appareils = value;
+                  _generatedLink = null;
+                  _expirationGeneree = null;
+                });
+              },
+              child: Column(
+                children: [
+                  for (final choix in _NombreAppareils.values)
+                    RadioListTile<_NombreAppareils>(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(choix.label),
+                      value: choix,
                     ),
                 ],
               ),

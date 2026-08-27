@@ -22,168 +22,228 @@ function ilYA(minutes) {
   ).toISOString();
 }
 
-describe('La décision du verrou', () => {
-  test('Aucun verrou posé : la première ouverture le pose', () => {
-    assert.equal(
+function place(empreinte, minutesAvant, id = 'place-1') {
+  return {
+    id,
+    empreinte,
+    pris_le: new Date(
+      MAINTENANT.getTime() - minutesAvant * 60000,
+    ).toISOString(),
+  };
+}
+
+describe('La décision', () => {
+  test('Aucune place occupée : la première ouverture en prend une', () => {
+    assert.deepEqual(
       decisionVerrou({
-        empreinteStockee: null,
-        verrouPoseLe: null,
+        places: [],
+        appareilsMax: 1,
         empreintePresentee: null,
         maintenant: MAINTENANT,
       }),
-      'poser',
+      { action: 'prendre' },
     );
   });
 
   test('Le même appareil repasse', () => {
-    assert.equal(
+    assert.deepEqual(
       decisionVerrou({
-        empreinteStockee: 'abc',
-        verrouPoseLe: ilYA(60 * 24),
+        places: [place('abc', 60 * 24)],
+        appareilsMax: 1,
         empreintePresentee: 'abc',
         maintenant: MAINTENANT,
       }),
-      'accepter',
+      { action: 'accepter' },
+    );
+  });
+
+  test('Il repasse même quand toutes les places sont prises', () => {
+    assert.deepEqual(
+      decisionVerrou({
+        places: [
+          place('abc', 60 * 24, 'p1'),
+          place('def', 60 * 24, 'p2'),
+        ],
+        appareilsMax: 2,
+        empreintePresentee: 'def',
+        maintenant: MAINTENANT,
+      }),
+      { action: 'accepter' },
     );
   });
 
   test('Un autre appareil, le lendemain, est refusé', () => {
-    assert.equal(
+    assert.deepEqual(
       decisionVerrou({
-        empreinteStockee: 'abc',
-        verrouPoseLe: ilYA(60 * 24),
+        places: [place('abc', 60 * 24)],
+        appareilsMax: 1,
         empreintePresentee: 'xyz',
         maintenant: MAINTENANT,
       }),
-      'refuser',
+      { action: 'refuser' },
     );
   });
 
-  test('Un appareil sans secret, le lendemain, est refusé', () => {
-    // Le cas de quelqu'un à qui le lien a été transféré : il n'a
-    // jamais rien reçu de nous.
-    assert.equal(
-      decisionVerrou({
-        empreinteStockee: 'abc',
-        verrouPoseLe: ilYA(60 * 24),
-        empreintePresentee: null,
-        maintenant: MAINTENANT,
-      }),
-      'refuser',
-    );
-  });
+  describe('L’ordre des trois règles', () => {
+    // Remplacement d'abord, place libre ensuite, refus en dernier.
+    // Decide par Fanny le 27/08/2026, et cet ordre n'est pas
+    // interchangeable.
 
-  describe('La fenêtre de tolérance', () => {
-    // Elle absorbe le cas très courant du navigateur intégré d'un
-    // client mail suivi de « ouvrir dans Chrome » : deux espaces de
-    // stockage distincts, et le destinataire légitime se verrouille
-    // dehors tout seul.
-
-    test('Une minute après, le second appareil reprend le verrou', () => {
-      assert.equal(
+    test('Le remplacement passe AVANT la place libre', () => {
+      // Le cas messagerie puis navigateur, avec deux places. Dans
+      // l'autre ordre, la grand-mere consommerait les deux places a
+      // elle seule et le grand-pere serait refuse le surlendemain.
+      assert.deepEqual(
         decisionVerrou({
-          empreinteStockee: 'abc',
-          verrouPoseLe: ilYA(1),
+          places: [place('abc', 1)],
+          appareilsMax: 2,
           empreintePresentee: null,
           maintenant: MAINTENANT,
         }),
-        'reprendre',
+        { action: 'remplacer', placeId: 'place-1' },
       );
     });
 
-    test('À la minute exacte de la fenêtre, encore toléré', () => {
-      assert.equal(
+    test('Hors fenêtre, une place libre est prise', () => {
+      // La grand-mere mardi, le grand-pere jeudi.
+      assert.deepEqual(
         decisionVerrou({
-          empreinteStockee: 'abc',
-          verrouPoseLe: ilYA(TOLERANCE_MINUTES),
+          places: [place('abc', 60 * 48)],
+          appareilsMax: 2,
           empreintePresentee: null,
           maintenant: MAINTENANT,
         }),
-        'reprendre',
+        { action: 'prendre' },
+      );
+    });
+
+    test('Hors fenêtre et sans place libre, refus', () => {
+      assert.deepEqual(
+        decisionVerrou({
+          places: [
+            place('abc', 60 * 48, 'p1'),
+            place('def', 60 * 48, 'p2'),
+          ],
+          appareilsMax: 2,
+          empreintePresentee: null,
+          maintenant: MAINTENANT,
+        }),
+        { action: 'refuser' },
+      );
+    });
+
+    test('C’est la place la plus récente qui est remplacée', () => {
+      const decision = decisionVerrou({
+        places: [
+          place('ancienne', 60 * 48, 'p1'),
+          place('recente', 2, 'p2'),
+        ],
+        appareilsMax: 5,
+        empreintePresentee: null,
+        maintenant: MAINTENANT,
+      });
+
+      assert.deepEqual(decision, {
+        action: 'remplacer',
+        placeId: 'p2',
+      });
+    });
+  });
+
+  describe('La fenêtre de tolérance', () => {
+    test('À la minute exacte de la fenêtre, encore tolérée', () => {
+      assert.equal(
+        decisionVerrou({
+          places: [place('abc', TOLERANCE_MINUTES)],
+          appareilsMax: 1,
+          empreintePresentee: null,
+          maintenant: MAINTENANT,
+        }).action,
+        'remplacer',
       );
     });
 
     test('Une minute plus tard, refusé', () => {
-      assert.equal(
+      assert.deepEqual(
         decisionVerrou({
-          empreinteStockee: 'abc',
-          verrouPoseLe: ilYA(TOLERANCE_MINUTES + 1),
+          places: [place('abc', TOLERANCE_MINUTES + 1)],
+          appareilsMax: 1,
           empreintePresentee: null,
           maintenant: MAINTENANT,
         }),
-        'refuser',
+        { action: 'refuser' },
       );
     });
 
-    test('La fenêtre est réglable, et le défaut est de quinze minutes',
+    test('Le défaut est de quinze minutes, et la fenêtre est réglable',
       () => {
         assert.equal(TOLERANCE_MINUTES, 15);
 
-        assert.equal(
+        assert.deepEqual(
           decisionVerrou({
-            empreinteStockee: 'abc',
-            verrouPoseLe: ilYA(3),
+            places: [place('abc', 3)],
+            appareilsMax: 1,
             empreintePresentee: null,
             maintenant: MAINTENANT,
             toleranceMinutes: 2,
           }),
-          'refuser',
+          { action: 'refuser' },
         );
       });
+
+    test('Elle se mesure sur la PREMIÈRE occupation de la place', () => {
+      // Le defaut corrige : `pris_le` n'est jamais reecrit, donc un
+      // remplacement ne repousse pas l'echeance. Sans cela, la
+      // tolerance etait renouvelable sans fin — constate en production
+      // le 27/08/2026.
+      assert.deepEqual(
+        decisionVerrou({
+          places: [place('remplacee-plusieurs-fois', 60)],
+          appareilsMax: 1,
+          empreintePresentee: null,
+          maintenant: MAINTENANT,
+        }),
+        { action: 'refuser' },
+      );
+    });
   });
 
-  describe('Ce qui ne doit pas ouvrir la fenêtre', () => {
-    test('Un verrou posé sans date n’est pas toléré', () => {
-      // On ne tolère pas ce qu'on ne sait pas situer dans le temps.
-      assert.equal(
+  describe('Ce qui n’ouvre pas la fenêtre', () => {
+    test('Une date de prise illisible', () => {
+      assert.deepEqual(
         decisionVerrou({
-          empreinteStockee: 'abc',
-          verrouPoseLe: null,
+          places: [{ id: 'p1', empreinte: 'abc', pris_le: 'pas une date' }],
+          appareilsMax: 1,
           empreintePresentee: null,
           maintenant: MAINTENANT,
         }),
-        'refuser',
+        { action: 'refuser' },
       );
     });
 
-    test('Une date de pose illisible n’est pas tolérée', () => {
-      assert.equal(
+    test('Une prise dans le futur', () => {
+      // Horloges desaccordees : un ecart d'horloge ne doit pas ouvrir
+      // une fenetre.
+      assert.deepEqual(
         decisionVerrou({
-          empreinteStockee: 'abc',
-          verrouPoseLe: 'pas une date',
+          places: [place('abc', -30)],
+          appareilsMax: 1,
           empreintePresentee: null,
           maintenant: MAINTENANT,
         }),
-        'refuser',
+        { action: 'refuser' },
       );
     });
 
-    test('Une pose dans le futur n’est pas tolérée', () => {
-      // Horloges désaccordées : un écart d'horloge ne doit pas ouvrir
-      // une fenêtre de quinze minutes.
-      assert.equal(
-        decisionVerrou({
-          empreinteStockee: 'abc',
-          verrouPoseLe: ilYA(-30),
-          empreintePresentee: null,
-          maintenant: MAINTENANT,
-        }),
-        'refuser',
-      );
-    });
-
-    test('Un secret qui ne correspond pas ne passe jamais, même frais',
+    test('Un secret qui ne correspond pas ne vaut jamais « accepter »',
       () => {
-        // Il reprend le verrou dans la fenêtre — ce qui est voulu —
-        // mais il n'est jamais « accepté » comme étant le même
-        // appareil.
         assert.notEqual(
           decisionVerrou({
-            empreinteStockee: 'abc',
-            verrouPoseLe: ilYA(1),
+            places: [place('abc', 1)],
+            appareilsMax: 1,
             empreintePresentee: 'xyz',
             maintenant: MAINTENANT,
-          }),
+          }).action,
           'accepter',
         );
       });

@@ -128,6 +128,7 @@ class ShareLinkService {
     String? activiteId,
     String? nomDestinataire,
     bool permanent = false,
+    int appareilsMax = 1,
   }) async {
     compteurUsage.marquer(FonctionnaliteUsage.lienPartageCree);
 
@@ -139,6 +140,7 @@ class ShareLinkService {
           'date_expiration':
               dateExpiration?.toUtc().toIso8601String(),
           'permanent': permanent,
+          'appareils_max': appareilsMax,
           'destinataire': destinataire,
           // Distinct de `destinataire`, qui porte le choix particulier /
           // structure d'accueil. Vide plutot que chaine vide : le

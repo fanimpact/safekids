@@ -25,6 +25,8 @@ import {
   empreinteDuSecret,
 } from './verrou_partage.mts';
 
+import type { PlacePartage } from './verrou_partage.mts';
+
 import {
   TYPE_RECOMMANDATIONS,
   enfantPourFiche,
@@ -64,11 +66,8 @@ export interface Partage {
   /// Lien sans date de fin. Seule la revocation l'arrete.
   permanent: boolean;
 
-  /// Hachage du secret depose sur l'appareil qui a ouvert le lien le
-  /// premier. Nul tant que personne ne l'a ouvert.
-  verrou_empreinte: string | null;
-
-  verrou_pose_le: string | null;
+  /// Nombre d'appareils autorises : 1, 2 ou 5, choisi par le parent.
+  appareils_max: number;
 }
 
 /// Ce dont la logique a besoin de la base, et rien de plus.
@@ -90,12 +89,24 @@ export interface DepotPartages {
     horodatage: string,
   ): Promise<{ erreur: unknown }>;
 
-  /// Pose ou reprend le verrou. L'empreinte remplace la precedente :
-  /// un seul appareil a la fois.
-  poserVerrou(
+  /// Les places deja occupees sur ce partage.
+  placesDuPartage(
+    partageId: string,
+  ): Promise<{ places: PlacePartage[]; erreur: unknown }>;
+
+  /// Occupe une place libre. `prisLe` est sa date de premiere
+  /// occupation, et ne sera plus jamais reecrite.
+  prendrePlace(
     partageId: string,
     empreinte: string,
-    poseLe: string,
+    prisLe: string,
+  ): Promise<{ erreur: unknown }>;
+
+  /// Remplace l'empreinte d'une place, **sans toucher a sa date**.
+  /// C'est ce qui empeche la fenetre de tolerance de glisser.
+  remplacerPlace(
+    placeId: string,
+    empreinte: string,
   ): Promise<{ erreur: unknown }>;
 
   /// Une ouverture depuis un autre appareil. `toleree` distingue la
@@ -186,9 +197,17 @@ export async function consulterPartage(
   // un appareil refuse ne doit charger aucune fiche.
   const secretPresente = verrou.secretPresente ?? null;
 
-  const action = decisionVerrou({
-    empreinteStockee: partage.verrou_empreinte,
-    verrouPoseLe: partage.verrou_pose_le,
+  const { places, erreur: erreurPlaces } = await depot.placesDuPartage(
+    partage.id,
+  );
+
+  if (erreurPlaces) {
+    return { statut: 'erreurBase' };
+  }
+
+  const decision = decisionVerrou({
+    places,
+    appareilsMax: partage.appareils_max,
     empreintePresentee: secretPresente
       ? await empreinteDuSecret(secretPresente)
       : null,
@@ -196,7 +215,7 @@ export async function consulterPartage(
     toleranceMinutes: verrou.toleranceMinutes,
   });
 
-  if (action === 'refuser') {
+  if (decision.action === 'refuser') {
     await depot.journaliserTentative({
       partageId: partage.id,
       tenteeLe: maintenant.toISOString(),
@@ -208,25 +227,29 @@ export async function consulterPartage(
 
   let secretADonner: string | undefined;
 
-  if (action === 'poser' || action === 'reprendre') {
+  if (decision.action !== 'accepter') {
     const nouveauSecret = (verrou.genererSecret ?? genererSecretParDefaut)();
+    const empreinte = await empreinteDuSecret(nouveauSecret);
 
-    const { erreur: erreurVerrou } = await depot.poserVerrou(
-      partage.id,
-      await empreinteDuSecret(nouveauSecret),
-      maintenant.toISOString(),
-    );
+    const { erreur: erreurPlace } =
+      decision.action === 'remplacer'
+        ? await depot.remplacerPlace(decision.placeId, empreinte)
+        : await depot.prendrePlace(
+            partage.id,
+            empreinte,
+            maintenant.toISOString(),
+          );
 
-    if (erreurVerrou) {
+    if (erreurPlace) {
       return { statut: 'erreurBase' };
     }
 
     secretADonner = nouveauSecret;
 
-    // La reprise est enregistree elle aussi : sans elle, la fenetre de
-    // quinze minutes serait un trou invisible pour le parent. Elle est
-    // marquee toleree — information, pas refus.
-    if (action === 'reprendre') {
+    // Le remplacement est enregistre : sans cela, la fenetre de
+    // tolerance serait un trou invisible pour le parent. Marque
+    // tolere — information, pas refus.
+    if (decision.action === 'remplacer') {
       await depot.journaliserTentative({
         partageId: partage.id,
         tenteeLe: maintenant.toISOString(),

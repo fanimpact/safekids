@@ -44,76 +44,125 @@
 // Les deux amortisseurs, décidés avec Fanny : la fenêtre de tolérance
 // ci-dessous, et le déverrouillage par le parent depuis sa liste.
 
-/// Quinze minutes après la première ouverture, un second appareil
-/// prend le verrou au lieu d'être refusé.
+/// La fenêtre de tolérance, en minutes.
 ///
-/// Le cas « webview puis navigateur » se produit toujours dans la
-/// minute ; quelqu'un qui reçoit le lien le lendemain, jamais. La
-/// fenêtre absorbe le premier sans rien ouvrir au second.
+/// Un appareil qui se présente sans secret reconnu **remplace** la
+/// place occupée le plus récemment, si elle l'a été il y a moins de ce
+/// délai. Le cas « webview puis navigateur » se produit toujours dans
+/// la minute ; quelqu'un qui reçoit le lien le lendemain, jamais.
 export const TOLERANCE_MINUTES = 15;
 
+/// Une place occupée sur un partage : un appareil.
+///
+/// [pris_le] est la date de **première** occupation, et n'est jamais
+/// réécrite. Un remplacement change l'empreinte, pas la date — sans
+/// quoi la fenêtre glisserait et deviendrait renouvelable sans fin.
+/// C'est le défaut constaté en production le 27/08/2026.
+export interface PlacePartage {
+  id: string;
+  empreinte: string;
+  pris_le: string;
+}
+
 export type ActionVerrou =
-  /// Aucun verrou encore posé : première ouverture.
-  | 'poser'
-  /// Le secret présenté correspond : c'est le même appareil.
-  | 'accepter'
-  /// Un autre appareil, mais dans la fenêtre de tolérance : il prend
-  /// le verrou. Le parent en est informé quand même.
-  | 'reprendre'
-  /// Un autre appareil, hors fenêtre : refusé.
-  | 'refuser';
+  /// Le secret présenté correspond à une place : même appareil.
+  | { action: 'accepter' }
+  /// Un autre appareil, dans la fenêtre : il remplace cette place-là
+  /// au lieu d'en consommer une nouvelle.
+  | { action: 'remplacer'; placeId: string }
+  /// Une place est libre : il la prend.
+  | { action: 'prendre' }
+  /// Toutes les places sont prises, hors fenêtre.
+  | { action: 'refuser' };
 
 /// Décide, sans rien lire ni écrire.
 ///
-/// Prend des empreintes déjà calculées et non les secrets : le hachage
-/// est asynchrone, cette décision ne l'est pas, et la garder pure la
-/// rend lisible d'un coup d'œil.
+/// **L'ordre des trois règles est décidé, pas accidentel** (Fanny,
+/// 27/08/2026) : remplacement d'abord, place libre ensuite, refus en
+/// dernier.
+///
+/// Dans l'autre ordre, la grand-mère qui ouvre le partage depuis sa
+/// messagerie puis dans son navigateur consommerait **deux** places au
+/// lieu d'une, et le grand-père serait refusé le surlendemain sans que
+/// personne comprenne pourquoi.
 export function decisionVerrou(entree: {
-  empreinteStockee: string | null;
-  verrouPoseLe: string | null;
+  places: PlacePartage[];
+  appareilsMax: number;
   empreintePresentee: string | null;
   maintenant: Date;
   toleranceMinutes?: number;
 }): ActionVerrou {
-  const {
-    empreinteStockee,
-    verrouPoseLe,
-    empreintePresentee,
-    maintenant,
-  } = entree;
+  const { places, appareilsMax, empreintePresentee, maintenant } = entree;
 
   const tolerance = entree.toleranceMinutes ?? TOLERANCE_MINUTES;
 
-  if (!empreinteStockee) {
-    return 'poser';
+  // 1. Le même appareil repasse.
+  if (empreintePresentee) {
+    const connue = places.find(
+      (place) => place.empreinte === empreintePresentee,
+    );
+
+    if (connue) {
+      return { action: 'accepter' };
+    }
   }
 
-  if (empreintePresentee && empreintePresentee === empreinteStockee) {
-    return 'accepter';
+  // 2. La place la plus récemment occupée, si elle est encore dans la
+  //    fenêtre. Avant la recherche d'une place libre, délibérément.
+  const derniere = placeLaPlusRecente(places);
+
+  if (derniere) {
+    const minutes = minutesEcoulees(derniere.pris_le, maintenant);
+
+    if (minutes !== null && minutes >= 0 && minutes <= tolerance) {
+      return { action: 'remplacer', placeId: derniere.id };
+    }
   }
 
-  // Un verrou posé sans date de pose ne peut pas être daté : on ne
-  // tolère pas ce qu'on ne sait pas situer dans le temps.
-  if (!verrouPoseLe) {
-    return 'refuser';
+  // 3. Une place libre.
+  if (places.length < appareilsMax) {
+    return { action: 'prendre' };
   }
 
-  const pose = new Date(verrouPoseLe);
+  return { action: 'refuser' };
+}
+
+/// `null` si la date est illisible — on ne tolère pas ce qu'on ne sait
+/// pas situer dans le temps. Négatif si la pose est dans le futur :
+/// un écart d'horloge ne doit pas ouvrir une fenêtre.
+function minutesEcoulees(
+  date: string,
+  maintenant: Date,
+): number | null {
+  const pose = new Date(date);
 
   if (Number.isNaN(pose.getTime())) {
-    return 'refuser';
+    return null;
   }
 
-  const minutesEcoulees =
-    (maintenant.getTime() - pose.getTime()) / 60000;
+  return (maintenant.getTime() - pose.getTime()) / 60000;
+}
 
-  // Négatif : la pose est dans le futur, horloges désaccordées. On ne
-  // tolère pas — un écart d'horloge ne doit pas ouvrir une fenêtre.
-  if (minutesEcoulees < 0) {
-    return 'refuser';
+function placeLaPlusRecente(
+  places: PlacePartage[],
+): PlacePartage | null {
+  let derniere: PlacePartage | null = null;
+  let meilleure = Number.NEGATIVE_INFINITY;
+
+  for (const place of places) {
+    const instant = new Date(place.pris_le).getTime();
+
+    if (Number.isNaN(instant)) {
+      continue;
+    }
+
+    if (instant > meilleure) {
+      meilleure = instant;
+      derniere = place;
+    }
   }
 
-  return minutesEcoulees <= tolerance ? 'reprendre' : 'refuser';
+  return derniere;
 }
 
 /// Le hachage d'un secret, en hexadécimal.

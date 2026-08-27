@@ -84,6 +84,11 @@ class ShareLinkData {
   final bool permanent;
   final DateTime? revoqueLe;
 
+  /// Combien d'appareils peuvent consulter la fiche : 1, 2 ou 5,
+  /// choisi par le parent à la création. Le choix s'applique partout,
+  /// QR compris.
+  final int appareilsMax;
+
   const ShareLinkData({
     required this.id,
     required this.token,
@@ -96,6 +101,7 @@ class ShareLinkData {
     this.nomDestinataire,
     this.permanent = false,
     this.revoqueLe,
+    this.appareilsMax = 1,
   });
 
   bool get estRevoque => revoqueLe != null;
@@ -143,6 +149,7 @@ class ShareLinkData {
           : DateTime.parse(dateDerniereConsultation),
       nomDestinataire: row['nom_destinataire'] as String?,
       permanent: row['permanent'] as bool? ?? false,
+      appareilsMax: (row['appareils_max'] as num?)?.toInt() ?? 1,
       revoqueLe:
           revoqueLe == null ? null : DateTime.parse(revoqueLe),
     );

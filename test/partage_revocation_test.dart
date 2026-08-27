@@ -625,4 +625,122 @@ void main() {
       expect(page, contains('afficherVerrouille('));
     });
   });
+
+  group('Le nombre d’appareils, choisi par le parent', () {
+    String source(String chemin) => File(chemin).readAsStringSync();
+
+    final ecran = source('lib/sharing/create_share_link_page.dart');
+
+    test('Trois choix, et une seule personne par défaut', () {
+      expect(ecran, contains("un('Une seule personne', 1)"));
+      expect(ecran, contains("deux('Jusqu’à 2 personnes', 2)"));
+      expect(ecran, contains("cinq('Jusqu’à 5 personnes', 5)"));
+      expect(
+        ecran,
+        contains('_NombreAppareils _appareils = _NombreAppareils.un'),
+        reason: 'Une seule personne est le défaut',
+      );
+    });
+
+    test('La question et sa ligne d’explication sont posées', () {
+      expect(
+        ecran,
+        contains(
+          'Combien de personnes doivent pouvoir consulter la fiche ?',
+        ),
+      );
+
+      // Ce n'est pas un avertissement : c'est ce qui explique le
+      // chiffre. Sans cette ligne, le parent qui choisit « 2 » pour
+      // deux grands-parents sera surpris que la grand-mère consomme
+      // les deux places à elle seule.
+      expect(ecran, contains('Chaque appareil compte.'));
+    });
+
+    test('Le choix part jusqu’à la base', () {
+      expect(ecran, contains('appareilsMax: _appareils.nombre'));
+
+      final service = source('lib/sharing/share_link_service.dart');
+
+      expect(service, contains('int appareilsMax = 1'));
+      expect(service, contains("'appareils_max': appareilsMax,"));
+    });
+
+    test('Le modèle relit la colonne, et vaut 1 si elle manque', () {
+      final lien = ShareLinkData.fromRow({
+        'id': 'partage-1',
+        'token': 'jeton',
+        'enfant_id': 'enfant-1',
+        'type_fiche': 'secours',
+        'destinataire': 'particulier',
+        'date_creation': '2026-08-27T10:00:00Z',
+        'date_expiration': '2026-08-28T10:00:00Z',
+        'date_derniere_consultation': null,
+        'appareils_max': 5,
+      });
+
+      expect(lien.appareilsMax, 5);
+
+      final ancien = ShareLinkData.fromRow({
+        'id': 'partage-1',
+        'token': 'jeton',
+        'enfant_id': 'enfant-1',
+        'type_fiche': 'secours',
+        'destinataire': 'particulier',
+        'date_creation': '2026-08-27T10:00:00Z',
+        'date_expiration': '2026-08-28T10:00:00Z',
+        'date_derniere_consultation': null,
+      });
+
+      expect(ancien.appareilsMax, 1);
+    });
+
+    test('Le QR n’est pas traité à part', () {
+      // Décision du 27/08/2026 : restreindre le QR à un seul appareil
+      // pousserait la maîtresse à photographier la fiche et à
+      // l'envoyer par messagerie — et là, plus de verrou, plus de
+      // révocation, plus de journal.
+      expect(ecran, contains('QR compris'));
+    });
+  });
+
+  group('La fenêtre de tolérance ne glisse plus', () {
+    String source(String chemin) => File(chemin).readAsStringSync();
+
+    test('Un remplacement ne touche pas à la date de prise', () {
+      // Le défaut constaté en production le 27/08/2026 :
+      // `verrou_pose_le` était réécrit à chaque reprise, donc la
+      // tolérance était renouvelable sans fin.
+      // Sans les commentaires : celui de la méthode cite `pris_le`
+      // pour expliquer qu'on n'y touche pas, et une assertion posée
+      // sur le texte brut s'y heurterait. Troisième fois ce soir.
+      final depot = _codeSansCommentaires(
+        'supabase/functions/_enveloppe/depot_partages.mts',
+      );
+      final debut = depot.indexOf('async remplacerPlace(');
+      final fin = depot.indexOf('async journaliserTentative(');
+      final methode = depot.substring(debut, fin);
+
+      expect(methode, contains('.update({ empreinte })'));
+      expect(
+        methode,
+        isNot(contains('pris_le')),
+        reason: 'Réécrire la date ferait glisser la fenêtre',
+      );
+    });
+
+    test('La base garde les deux colonnes de l’ancien verrou', () {
+      // Les supprimer avant le redéploiement casserait la fonction
+      // déployée, qui les lit encore : plus aucun lien ne s'ouvrirait
+      // entre les deux.
+      final sql = source('supabase/schema_appareils_partage.sql');
+
+      expect(sql, contains('drop column verrou_empreinte'));
+      expect(
+        sql.indexOf('--   alter table public.partages'),
+        greaterThan(0),
+        reason: 'La suppression doit rester commentée',
+      );
+    });
+  });
 }
