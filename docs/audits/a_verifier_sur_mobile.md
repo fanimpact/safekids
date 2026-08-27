@@ -13,7 +13,7 @@ Aucun n'est retiré avant que Fanny confirme elle-même l'avoir vérifié.
 résultat attendu pour chaque point, en vue d'une session unique sur un
 appareil Android.
 
-- **70 points** au total.
+- **71 points** au total.
 - **Priorité haute : 14** — à faire en premier, ce sont ceux dont
   l'échec aurait des conséquences réelles.
 - **Priorité moyenne : 33**.
@@ -732,6 +732,45 @@ d'elle-même, sans que rien n'ait été touché.
 puis rouvrir « Mes enfants ». À faire sur l'appareil de test
 uniquement.
 
+## 71. Le lien ouvert depuis Gmail, puis rouvert dans Chrome
+*Refonte des partages, 27/08/2026 · priorité haute · demande deux appareils*
+
+**Le cas le plus fréquent en usage réel**, et celui qui ne se reproduit
+pas sur un poste de développement : la personne qui reçoit le lien
+clique depuis sa boîte mail, et le téléphone ouvre d'abord un
+navigateur intégré à l'application de messagerie. Elle appuie ensuite
+sur « Ouvrir dans Chrome ». Ce sont **deux espaces de stockage
+distincts** — le destinataire légitime peut donc se verrouiller dehors
+tout seul.
+
+**À faire, dans cet ordre, sur le téléphone qui reçoit :**
+
+1. Ouvrir le lien **depuis Gmail** (ou l'application mail utilisée).
+   La fiche doit s'afficher.
+2. **Sans attendre**, appuyer sur « Ouvrir dans Chrome » ou
+   copier-coller le lien dans Chrome. La fiche doit **encore
+   s'afficher** — la fenêtre de tolérance de 15 minutes absorbe ce cas.
+3. Regarder la fiche de l'enfant côté parent : la ligne « Ce lien a été
+   rouvert depuis un autre appareil peu après la première ouverture »
+   doit apparaître, **sans bouton** (ce n'est pas un refus).
+
+**Puis, plus de 15 minutes après :**
+
+4. Ouvrir le même lien depuis un **autre appareil**, ou une fenêtre de
+   navigation privée. Attendu : « **Ce lien est déjà utilisé.** »
+5. Côté parent : « Une ouverture a été refusée depuis un autre
+   appareil », avec le bouton **« Autoriser ce nouvel appareil »**.
+6. Appuyer dessus, puis rouvrir le lien depuis ce second appareil : la
+   fiche doit s'afficher.
+
+**Ce qui serait un défaut** : que l'étape 2 refuse déjà — la tolérance
+ne fonctionnerait pas, et tout destinataire passant par sa messagerie
+serait bloqué. C'est le risque principal de cette fonctionnalité.
+
+**Prérequis** : les fonctions `consulter-partage` et `voir-partage`
+doivent avoir été redéployées. Sans cela, aucun verrou n'est posé et
+tout s'ouvre partout.
+
 ---
 
 # Ce qui n'a plus besoin d'être vérifié à la main
@@ -763,7 +802,8 @@ vérifié et confirmé bon peut être supprimé ou marqué comme tel — à la
 discrétion de Fanny.
 
 Les points qui demandent **deux appareils ou deux comptes** : 1, 6, 7,
-11, 12, 13, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 40, 43.
+11, 12, 13, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 40, 43,
+71.
 
 Les points qui demandent le **SQL Editor** : 10, 33, 62, 63.
 
