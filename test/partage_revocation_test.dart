@@ -221,4 +221,73 @@ void main() {
       expect(code, contains('return erreur(410);'));
     });
   });
+
+  group('Le nom du destinataire', () {
+    String source(String chemin) => File(chemin).readAsStringSync();
+
+    test('Le champ est proposé à la création, et facultatif', () {
+      final code = source('lib/sharing/create_share_link_page.dart');
+
+      expect(code, contains('À qui donnez-vous ce lien ?'));
+      expect(code, contains('_nomDestinataireController'));
+      expect(code, contains('Aurélie, animatrice piscine'));
+      expect(
+        code,
+        contains('Facultatif'),
+        reason: 'Le parent n’est pas obligé de nommer qui que ce soit',
+      );
+    });
+
+    test('L’écran dit que ce nom ne sort pas de l’application', () {
+      // Sans cette ligne, un parent peut croire que la personne qui
+      // ouvre le lien voit le nom qu'il a saisi.
+      final code = source('lib/sharing/create_share_link_page.dart');
+
+      expect(code, contains('n’apparaît'));
+      expect(code, contains('la fiche partagée'));
+    });
+
+    test('Une saisie vide part en `null`, jamais en chaîne vide', () {
+      // Une colonne qui contient '' se lit comme « nommé, mais sans
+      // nom » : l'écran afficherait un tiret suivi de rien.
+      final code = source('lib/sharing/create_share_link_page.dart');
+      final debut = code.indexOf('String? _nomDestinataireSaisi()');
+      final fin = code.indexOf('Future<void> _copyLink()');
+
+      expect(
+        code.substring(debut, fin),
+        contains('saisie.isEmpty ? null : saisie'),
+      );
+    });
+
+    test('Le service l’écrit dans sa propre colonne', () {
+      // Jamais dans `destinataire`, qui porte le choix particulier /
+      // structure d'accueil et gouverne la mention accolée aux
+      // traitements.
+      final code = source('lib/sharing/share_link_service.dart');
+
+      expect(code, contains("'nom_destinataire': nomDestinataire,"));
+      expect(code, contains("'destinataire': destinataire,"));
+    });
+
+    test('Il passe en tête de carte, le type de fiche en second', () {
+      expect(
+        _lien(
+          dateExpiration: _demain,
+          nomDestinataire: 'Aurélie, animatrice piscine',
+        ).nomDestinataire,
+        'Aurélie, animatrice piscine',
+      );
+
+      final code = source('lib/children/child_profile_page.dart');
+      final debut = code.indexOf('String _shareLinkTitle(');
+      final fin = code.indexOf('String _shareLinkStatusLabel(');
+
+      expect(
+        code.substring(debut, fin),
+        contains('link.ficheType.label'),
+        reason: 'Un lien sans nom reste identifiable par sa fiche',
+      );
+    });
+  });
 }

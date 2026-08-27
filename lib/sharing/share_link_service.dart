@@ -58,6 +58,7 @@ class ShareLinkService {
     required DateTime dateExpiration,
     Map<String, dynamic>? contenuFige,
     String? activiteId,
+    String? nomDestinataire,
   }) async {
     compteurUsage.marquer(FonctionnaliteUsage.lienPartageCree);
 
@@ -69,6 +70,10 @@ class ShareLinkService {
           'date_expiration':
               dateExpiration.toUtc().toIso8601String(),
           'destinataire': destinataire,
+          // Distinct de `destinataire`, qui porte le choix particulier /
+          // structure d'accueil. Vide plutot que chaine vide : le
+          // parent n'est pas oblige de nommer qui que ce soit.
+          'nom_destinataire': nomDestinataire,
           'contenu_fige': contenuFige,
           'activite_id': activiteId,
         })

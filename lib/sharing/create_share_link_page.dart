@@ -79,7 +79,18 @@ class _CreateShareLinkPageState
 
   bool _isGenerating = false;
   String? _generatedLink;
+
+  /// « Aurelie, animatrice piscine ». Facultatif : le parent n'est pas
+  /// oblige de nommer qui que ce soit, et un lien sans nom reste
+  /// identifiable par son type de fiche.
+  final _nomDestinataireController = TextEditingController();
   DateTime? _expirationGeneree;
+
+  @override
+  void dispose() {
+    _nomDestinataireController.dispose();
+    super.dispose();
+  }
 
   // Activités enregistrées pour le partage "recommandations d'activité"
   // (voir corrections_a_faire.md point 5) : chargées pour l'enfant
@@ -244,6 +255,7 @@ class _CreateShareLinkPageState
         childId: child.childId!,
         typeFiche: typeFiche.value,
         destinataire: _selectedDestinataire.value,
+        nomDestinataire: _nomDestinataireSaisi(),
         dateExpiration: dateExpiration,
         contenuFige: contenuFige,
         activiteId: _selectedActivity?.id,
@@ -273,6 +285,17 @@ class _CreateShareLinkPageState
         });
       }
     }
+  }
+
+  /// Le nom saisi, ou `null` si le parent n'a rien mis.
+  ///
+  /// Jamais une chaîne vide : une colonne qui contient `''` se lit
+  /// comme « nommé, mais sans nom », et l'écran afficherait un tiret
+  /// suivi de rien.
+  String? _nomDestinataireSaisi() {
+    final saisie = _nomDestinataireController.text.trim();
+
+    return saisie.isEmpty ? null : saisie;
   }
 
   Future<void> _copyLink() async {
@@ -503,6 +526,43 @@ class _CreateShareLinkPageState
               const SizedBox(height: 12),
               _buildActivityPicker(),
             ],
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'À qui donnez-vous ce lien ?',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // Pour le parent seul : ce nom ne quitte jamais
+            // l'application, il n'apparaît sur aucune fiche partagée et
+            // la personne qui ouvre le lien ne le voit pas.
+            const Text(
+              'Facultatif, et pour vous seul : ce nom vous aidera à '
+              'reconnaître ce lien dans votre liste. Il n’apparaît '
+              'nulle part sur la fiche partagée.',
+              style: TextStyle(
+                fontSize: 14,
+                color: KidsRelayColors.ardoiseDouce,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            TextField(
+              controller: _nomDestinataireController,
+              maxLength: 60,
+              decoration: const InputDecoration(
+                labelText: 'Nom du destinataire',
+                hintText: 'Aurélie, animatrice piscine',
+                border: OutlineInputBorder(),
+              ),
+            ),
 
             const SizedBox(height: 20),
 

@@ -422,6 +422,35 @@ l'ecran plutot que de l'avaler, ou l'accepter et le dire. Verifier au
 passage si d'autres `SkNumberField` sont dans le meme cas ailleurs dans
 l'application.
 
+## Règle permanente sur le contenu des emails (27/08/2026)
+
+Vaut pour les deux mails existants et **pour tous ceux à venir**.
+
+> **Jamais de nom de famille. Jamais le contenu d'une note. Jamais
+> aucune donnée de santé. Prénom seul au maximum.**
+
+Ce qui décide, dans chaque cas, c'est la **finalité du mail** — pas le
+confort de lecture.
+
+**Notification de note** — prénom de l'enfant **et** nom de
+l'établissement : conservés. Sa finalité est de dire au parent qu'une
+note vient d'être ajoutée sur un enfant précis par une structure
+précise, pour qu'il puisse juger de l'urgence sans ouvrir
+l'application en aveugle. Les deux informations servent cette
+finalité, donc elles sont justifiées. `messageNoteAjoutee` dans
+[`_logique/emails.mts`](../../supabase/functions/_logique/emails.mts) :
+**ne pas y toucher.**
+
+**Rappel semestriel des partages permanents** — **pas de prénom.** Sa
+finalité est seulement de faire ouvrir l'application pour vérifier les
+partages actifs ; la liste complète s'affiche à l'arrivée. Le prénom
+n'apporte rien à cette finalité. Un compte sans nom suffit si la
+clarté manque : « Vous avez 2 partages permanents toujours actifs. »
+
+Le raisonnement à reproduire pour un mail nouveau : *de quoi ce
+message a-t-il besoin pour que le parent sache quoi faire ?* Ce qui
+dépasse cette réponse ne part pas.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base
