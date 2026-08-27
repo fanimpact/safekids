@@ -556,18 +556,48 @@ pas la peine de demander qu'on vous le renvoie : un nouveau lien ne
 changerait rien. » C'est elle qui évite l'appel au parent pour un
 renvoi inutile, et tout le mécanisme de demande d'accès en dépend.
 
-### 3. Le nombre d'appareils — décision non prise
+### 3. Le nombre d’appareils — tranché le 27/08/2026
 
-Proposé et non tranché : **1 / 2 / 5 au choix** pour un lien envoyé par
-message, **1 imposé** pour un lien affiché en QR, et **tolérance à zéro**
-pour le QR — un scan ne passe jamais par la séquence messagerie →
-navigateur, et la fenêtre y serait une faille pendant les cinq minutes
-d'affichage du code.
+**Le parent choisit le nombre d’appareils à la création, et ce choix
+s’applique partout, QR compris.** La restriction du QR à un seul
+appareil a été écartée : voir « Un dispositif proportionné » plus bas.
+Pas d’avertissement à l’écran quand le parent choisit plusieurs
+appareils — le choix se suffit à lui-même.
 
-Fanny a noté que le mécanisme de demande d'accès pour un tiers rend le
-choix « plusieurs appareils » beaucoup moins nécessaire : le cas des
-trois maîtresses trouve sa réponse là plutôt qu'ici. **Rester à un seul
-appareil partout reste une option ouverte.**
+Les deux mécanismes coexistent : **le nombre d’appareils pour ce que le
+parent a prévu, la demande d’accès pour ce qu’il n’avait pas prévu.**
+
+## Un dispositif proportionné, pas une forteresse (27/08/2026)
+
+> **Ne pas proposer de durcissement sans dire d'abord ce qu'il empêche
+> concrètement, et ce qu'il coûte à la personne qui doit s'en servir.**
+
+Chaque mesure de sécurité se pèse à ce qu'elle coûte à l'usage réel.
+Une application trop rigide sera contournée, et **le contournement fait
+perdre bien plus que ce que la mesure protégeait**.
+
+Ce qui existe — verrou, durée choisie, révocation, traçabilité,
+minimisation — est solide et suffit. Le défaut à éviter n'est plus
+l'insuffisance, c'est l'accumulation.
+
+**L'exemple qui a fixé la règle.** J'avais proposé de restreindre les
+liens affichés en QR code à un seul appareil, contre le scénario du QR
+photographié par-dessus l'épaule. Fanny l'a écarté, et son raisonnement
+tient mieux que le mien :
+
+- le parent voit qui est en face de lui, et une fois son téléphone
+  rangé plus personne ne scanne quoi que ce soit ;
+- une maîtresse bloquée fera une **capture d'écran de la fiche** et
+  l'enverra par messagerie. À ce moment-là il n'y a plus ni verrou, ni
+  révocation, ni journal : la donnée est sortie de l'application pour
+  de bon.
+
+La mesure aurait empêché un risque théorique et créé un risque réel.
+
+**La question à se poser avant toute proposition** : qu'est-ce que
+cette mesure empêche exactement, à qui, et que fera la personne qu'elle
+gêne ? Si la réponse est « elle trouvera un autre chemin », la mesure
+est mauvaise.
 
 ## Consigne permanente pour la suite de l'audit
 
