@@ -45,6 +45,30 @@ class ShareLinkService {
         .eq('id', id);
   }
 
+  /// Change l'échéance d'un partage en cours, dans les deux sens :
+  /// prolonger, ou raccourcir.
+  ///
+  /// Existe depuis le 27/08/2026. L'écran de création disait jusque-là
+  /// « Il ne peut pas être prolongé : il faudra en créer un nouveau » —
+  /// ce qui obligeait le parent à révoquer et à retransmettre un
+  /// nouveau lien pour gagner un jour.
+  ///
+  /// [dateExpiration] et [permanent] vont toujours ensemble : la base
+  /// impose « soit une date, soit permanent, jamais les deux ni
+  /// aucun ». Passer une date rend le lien non permanent, et
+  /// inversement.
+  Future<void> updateExpiration({
+    required String id,
+    required DateTime? dateExpiration,
+    bool permanent = false,
+  }) async {
+    await _client.from('partages').update({
+      'date_expiration':
+          permanent ? null : dateExpiration?.toUtc().toIso8601String(),
+      'permanent': permanent,
+    }).eq('id', id);
+  }
+
   /// Crée un lien de partage et renvoie son adresse complète.
   ///
   /// L'insertion était faite depuis l'écran `CreateShareLinkPage`

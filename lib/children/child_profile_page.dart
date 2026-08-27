@@ -588,12 +588,84 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
     );
   }
 
+  /// Prolonge ou raccourcit un partage en cours.
+  ///
+  /// Les deux sens comptent autant : prolonger évite de révoquer et de
+  /// retransmettre un lien pour gagner un jour ; raccourcir permet de
+  /// couper court sans tout arrêter, quand la garde s'est terminée plus
+  /// tôt que prévu.
+  ///
+  /// Un lien permanent auquel on donne une date cesse d'être permanent.
+  /// C'est le seul moyen d'en sortir sans le révoquer, et la base
+  /// l'impose : soit une date, soit permanent, jamais les deux.
+  Future<void> _changerEcheance(
+    BuildContext context,
+    ShareLinkData link,
+  ) async {
+    final maintenant = DateTime.now();
+
+    final choisie = await showDatePicker(
+      context: context,
+      initialDate: link.dateExpiration ??
+          maintenant.add(const Duration(days: 7)),
+      firstDate: maintenant,
+      lastDate: DateTime(maintenant.year + 5),
+      helpText: 'Jusqu’à quand ce lien doit-il fonctionner ?',
+      cancelText: 'Annuler',
+      confirmText: 'Valider',
+    );
+
+    if (choisie == null) {
+      return;
+    }
+
+    // Jusqu'à la fin du jour retenu : un parent qui choisit le 12
+    // s'attend à ce que le lien marche encore le 12 au soir.
+    final echeance = DateTime(
+      choisie.year,
+      choisie.month,
+      choisie.day,
+      23,
+      59,
+    );
+
+    try {
+      await ShareLinkService.instance.updateExpiration(
+        id: link.id,
+        dateExpiration: echeance,
+      );
+    } catch (error) {
+      if (context.mounted) {
+        _showTemporaryMessage(
+          context: context,
+          message: 'Impossible de modifier la date pour le moment. '
+              'Vérifiez la connexion.',
+        );
+      }
+
+      return;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
+
+    _showTemporaryMessage(
+      context: context,
+      message: 'Ce lien fonctionnera jusqu’au '
+          '${formatShortDate(echeance)}.',
+    );
+
+    _loadPartages();
+  }
+
   Widget _partageCard({
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onRevoke,
     VoidCallback? onSecondaryAction,
+    VoidCallback? onChangerDate,
   }) {
     return Card(
       child: ListTile(
@@ -610,6 +682,12 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (onChangerDate != null)
+              IconButton(
+                icon: const Icon(Icons.event_repeat),
+                tooltip: 'Modifier la date de fin',
+                onPressed: onChangerDate,
+              ),
             if (onSecondaryAction != null)
               IconButton(
                 icon: const Icon(Icons.tune),
@@ -707,6 +785,8 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                     title: _shareLinkTitle(link),
                     subtitle: _shareLinkStatusLabel(link),
                     onRevoke: () => _revokeShareLink(context, link),
+                    onChangerDate: () =>
+                        _changerEcheance(context, link),
                   ),
                   const SizedBox(height: 8),
                 ],

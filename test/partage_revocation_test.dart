@@ -425,4 +425,62 @@ void main() {
       expect(service, contains("'permanent': permanent,"));
     });
   });
+
+  group('Prolonger ou raccourcir un partage en cours', () {
+    String source(String chemin) => File(chemin).readAsStringSync();
+
+    test('Le service expose la modification d’échéance', () {
+      final service = source('lib/sharing/share_link_service.dart');
+
+      expect(service, contains('Future<void> updateExpiration('));
+      expect(service, contains("'date_expiration':"));
+      expect(service, contains("'permanent': permanent,"));
+    });
+
+    test('Date et drapeau partent toujours ensemble', () {
+      // La base impose « soit une date, soit permanent, jamais les
+      // deux ni aucun ». Écrire l'un sans l'autre ferait échouer la
+      // contrainte, avec un message que le parent ne comprendrait pas.
+      final service = source('lib/sharing/share_link_service.dart');
+      final debut = service.indexOf('Future<void> updateExpiration(');
+      final fin = service.indexOf('/// Crée un lien de partage');
+      final methode = service.substring(debut, fin);
+
+      expect(methode, contains('permanent ? null :'));
+      expect(methode, contains("'permanent': permanent,"));
+    });
+
+    test('Le geste est proposé sur les partages actifs', () {
+      final ecran = source('lib/children/child_profile_page.dart');
+
+      expect(ecran, contains('onChangerDate:'));
+      expect(ecran, contains("tooltip: 'Modifier la date de fin'"));
+      expect(ecran, contains('_changerEcheance('));
+    });
+
+    test('Jamais sur un partage terminé', () {
+      // Il n'y a plus rien à prolonger : le lien est révoqué ou
+      // expiré, et le parent doit en créer un nouveau.
+      final ecran = source('lib/children/child_profile_page.dart');
+      final debut = ecran.indexOf('Widget _partageTermineCard(');
+      final fin = ecran.indexOf('Widget _partageCard(');
+
+      expect(
+        ecran.substring(debut, fin),
+        isNot(contains('onChangerDate')),
+      );
+    });
+
+    test('La date choisie vaut jusqu’à la fin du jour', () {
+      // Même règle qu'à la création : un parent qui choisit le 12
+      // s'attend à ce que le lien marche encore le 12 au soir.
+      final ecran = source('lib/children/child_profile_page.dart');
+      final debut = ecran.indexOf('Future<void> _changerEcheance(');
+      final fin = ecran.indexOf('Widget _partageCard(');
+      final methode = ecran.substring(debut, fin);
+
+      expect(methode, contains('23,'));
+      expect(methode, contains('59,'));
+    });
+  });
 }
