@@ -451,6 +451,30 @@ Le raisonnement à reproduire pour un mail nouveau : *de quoi ce
 message a-t-il besoin pour que le parent sache quoi faire ?* Ce qui
 dépasse cette réponse ne part pas.
 
+## Les durées de partage ne sont pas des choix d'ergonomie (27/08/2026)
+
+> **Ne pas modifier la liste des durées proposées sans demander à
+> Fanny.**
+
+Chaque entrée correspond à un **usage réel côté parent**, pas à une
+progression régulière qu'on pourrait « simplifier ».
+
+Liste arrêtée : **24 heures · 3 jours · 7 jours · 1 mois · 1 an**, plus
+une date au calendrier et l'option sans date de fin.
+
+L'erreur commise, et corrigée le jour même : « 3 jours » a été retiré
+au motif que c'était « le seul intermédiaire d'une échelle qui
+s'arrêtait à une semaine ». C'était raisonner sur l'échelle et non sur
+l'usage. **« 3 jours » couvre le week-end chez un proche** — le parent
+prépare le lien le vendredi, l'accès couvre vendredi, samedi et
+dimanche. Le remplacer par « 7 jours » laisserait l'accès ouvert quatre
+jours de plus sans aucune utilité, contre le principe de limitation
+appliqué partout ailleurs.
+
+La règle est aussi écrite en tête de `_ShareDuration`, dans
+[`create_share_link_page.dart`](../../lib/sharing/create_share_link_page.dart),
+et un test vérifie que la mention y reste.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base

@@ -56,8 +56,21 @@ const Map<ShareFicheType, String> _descriptionsFiche = {
 ///
 /// [duration] est nulle pour les deux choix qui ne se calculent pas :
 /// une date choisie au calendrier, et le lien permanent.
+///
+/// **Ne pas modifier cette liste sans demander a Fanny** (27/08/2026).
+/// Ce ne sont pas des choix d'ergonomie : chaque duree correspond a un
+/// usage reel cote parent. « 3 jours » a ete retire une fois par
+/// commodite d'echelle, et remis aussitot — il couvre le week-end
+/// chez un proche, qui est le cas le plus frequent.
 enum _ShareDuration {
   jour1('24 heures', Duration(hours: 24)),
+
+  // Le week-end chez un proche, cas le plus courant : le parent
+  // prepare le lien le vendredi, et « 3 jours » couvre exactement
+  // vendredi, samedi et dimanche. « 7 jours » a la place laisserait
+  // l'acces ouvert quatre jours de plus sans aucune utilite.
+  jours3('3 jours', Duration(days: 3)),
+
   jours7('7 jours', Duration(days: 7)),
   mois1('1 mois', Duration(days: 30)),
   an1('1 an', Duration(days: 365)),

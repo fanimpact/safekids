@@ -347,9 +347,14 @@ void main() {
 
     final ecran = source('lib/sharing/create_share_link_page.dart');
 
-    test('Les quatre raccourcis sont proposés', () {
+    test('Les cinq raccourcis sont proposés', () {
+      // Chacun correspond a un usage reel cote parent, pas a une
+      // commodite d'echelle : « 3 jours » couvre le week-end chez un
+      // proche, qui est le cas le plus frequent. Ne pas modifier cette
+      // liste sans demander a Fanny.
       for (final libelle in [
         "'24 heures'",
+        "'3 jours'",
         "'7 jours'",
         "'1 mois'",
         "'1 an'",
@@ -363,11 +368,17 @@ void main() {
     });
 
     test('Le plafond de 7 jours a sauté', () {
-      // « 3 jours » était le seul intermédiaire d'une échelle qui
-      // s'arrêtait à une semaine. L'échelle va maintenant à l'année.
-      expect(ecran, isNot(contains("jours3('3 jours'")));
+      // L'echelle s'arretait a une semaine. Elle va maintenant a
+      // l'annee, et au-dela avec le calendrier et le permanent.
       expect(ecran, contains("mois1('1 mois'"));
       expect(ecran, contains("an1('1 an'"));
+    });
+
+    test('« 3 jours » est protégé contre un retrait par commodité', () {
+      // Retire une fois par commodite d'echelle, remis aussitot : la
+      // liste repond a des usages, pas a une progression reguliere.
+      expect(ecran, contains("jours3('3 jours'"));
+      expect(ecran, contains('Ne pas modifier cette liste'));
     });
 
     test('La date libre et le permanent sont proposés', () {
