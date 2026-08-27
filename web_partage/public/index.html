@@ -133,17 +133,21 @@
   <div id="estado-chargement">Chargement des informations…</div>
 
   <div id="estado-erreur">
-    <h1>Ce lien a expiré ou n’est plus valide.</h1>
-    <p>Demandez un nouveau lien à la personne qui vous l’a envoyé.</p>
+    <h1 id="titre-erreur"></h1>
+    <p id="texte-erreur"></p>
   </div>
 
   <div id="estado-verrouille">
-    <h1>Ce lien est déjà utilisé.</h1>
-    <p id="texte-verrouille"></p>
+    <h1>Ce lien est déjà utilisé par quelqu’un d’autre</h1>
+    <p>
+      Un lien de partage ne fonctionne que sur le premier appareil qui
+      l’ouvre. C’est ce qui protège les informations de l’enfant si le
+      lien est transmis.
+    </p>
     <p class="note-verrouille">
-      Un lien de partage ne fonctionne que sur l’appareil qui l’a
-      ouvert en premier. C’est ce qui protège les informations de
-      l’enfant si le lien est transmis à quelqu’un d’autre.
+      <strong>Ce n’est pas la peine de demander qu’on vous le
+      renvoie</strong> : un nouveau lien ne changerait rien.
+      Rapprochez-vous du parent : il pourra vous donner accès.
     </p>
   </div>
 
@@ -425,25 +429,44 @@
     document.getElementById('contenu').style.display = 'block';
   }
 
-  function afficherVerrouille(message) {
+  function afficherVerrouille() {
     document.getElementById('estado-chargement').style.display = 'none';
-
-    var bloc = document.getElementById('estado-verrouille');
-    var texte = document.getElementById('texte-verrouille');
-
-    if (texte && message) {
-      texte.textContent = message;
-    }
-
-    if (bloc) {
-      bloc.style.display = 'block';
-    } else {
-      afficherErreur();
-    }
+    document.getElementById('estado-verrouille').style.display = 'block';
   }
 
-  function afficherErreur() {
+  // Quatre situations, quatre messages. La page les confondait toutes
+  // sous « Ce lien a expire ou n'est plus valide » : le professionnel
+  // refuse par le verrou reclamait alors un nouveau lien, ce qui ne
+  // pouvait rien resoudre.
+  var MESSAGES = {
+    adresse: [
+      'Il manque quelque chose dans cette adresse',
+      'Ouvrez le lien complet, tel qu’il vous a été envoyé. Si vous ' +
+        'l’avez retrouvé dans l’historique de votre navigateur ou ' +
+        'dans vos favoris, il est probablement incomplet — revenez ' +
+        'au message d’origine.',
+    ],
+    // Expire et revoque partagent le meme texte : rien ne doit
+    // laisser deviner que le parent a coupe l'acces. Les deux causes
+    // sont nommees sans que l'on dise laquelle.
+    fini: [
+      'Ce lien ne fonctionne plus',
+      'Il a atteint sa date de fin, ou le parent y a mis un terme. ' +
+        'Demandez-lui un nouveau lien si vous en avez encore besoin.',
+    ],
+    panne: [
+      'Impossible d’afficher cette fiche',
+      'Vérifiez votre connexion et réessayez. Si le problème ' +
+        'persiste, prévenez la personne qui vous a envoyé ce lien.',
+    ],
+  };
+
+  function afficherErreur(cas) {
+    var message = MESSAGES[cas] || MESSAGES.panne;
+
     document.getElementById('estado-chargement').style.display = 'none';
+    document.getElementById('titre-erreur').textContent = message[0];
+    document.getElementById('texte-erreur').textContent = message[1];
     document.getElementById('estado-erreur').style.display = 'block';
   }
 
@@ -454,7 +477,7 @@
   ).get('jeton');
 
   if (!token) {
-    afficherErreur();
+    afficherErreur('adresse');
     return;
   }
 
@@ -484,17 +507,23 @@
 
   fetch(urlFonction)
     .then(function (reponse) {
+      // 423 : le lien est pris par un autre appareil.
       if (reponse.status === 423) {
-        return reponse.json().then(function (data) {
-          throw { verrouille: true, message: data.error };
-        });
+        throw { cas: 'verrou' };
       }
 
-      if (!reponse.ok) throw new Error('reponse non ok');
+      // 404 et 410 : jeton inconnu, lien expire ou revoque. Le
+      // serveur ne les distingue pas non plus dans sa reponse.
+      if (reponse.status === 404 || reponse.status === 410) {
+        throw { cas: 'fini' };
+      }
+
+      if (!reponse.ok) throw { cas: 'panne' };
+
       return reponse.json();
     })
     .then(function (data) {
-      if (data.error) throw new Error(data.error);
+      if (data.error) throw { cas: 'fini' };
 
       if (data.secret) {
         try {
@@ -508,12 +537,15 @@
       afficherFiche(data);
     })
     .catch(function (erreur) {
-      if (erreur && erreur.verrouille) {
-        afficherVerrouille(erreur.message);
+      if (erreur && erreur.cas === 'verrou') {
+        afficherVerrouille();
         return;
       }
 
-      afficherErreur();
+      // Sans cas connu, l'echec vient du reseau : la requete a
+      // echoue avant d'avoir vu une reponse. Ce n'est pas un lien
+      // mort, et le dire serait faux.
+      afficherErreur(erreur && erreur.cas);
     });
 })();
 </script>

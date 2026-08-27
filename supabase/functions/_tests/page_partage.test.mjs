@@ -29,11 +29,18 @@ function element() {
 /// Exécute la page avec la fiche donnée et rend les éléments obtenus.
 /// `fiche` à `null` simule une réponse en erreur de l'API.
 async function rendre(fiche, options = {}) {
-  const { token = 'token-1', reponseOk = true } = options;
+  const {
+    token = 'token-1',
+    reponseOk = true,
+    statut = reponseOk ? 200 : 500,
+  } = options;
 
   const elements = {
     'estado-chargement': element(),
     'estado-erreur': element(),
+    'titre-erreur': element(),
+    'texte-erreur': element(),
+    'estado-verrouille': element(),
     contenu: element(),
     'nom-enfant': element(),
     'details-identite': element(),
@@ -85,6 +92,7 @@ async function rendre(fiche, options = {}) {
 
       return Promise.resolve({
         ok: reponseOk,
+        status: statut,
         json: () => Promise.resolve(fiche ?? { error: 'Lien expiré ou invalide.' }),
       });
     },
@@ -165,22 +173,77 @@ describe('Adresse interrogée', () => {
     );
   });
 
-  test('Sans token, aucun appel n’est fait et l’erreur s’affiche', async () => {
-    const { elements, appelsFetch } = await rendre(null, {
-      token: '',
+  test('Sans jeton, aucun appel n’est fait et l’adresse est mise en cause',
+    async () => {
+      // Le cas rencontre le 27/08/2026 : une adresse ouverte depuis
+      // l'historique, sans le fragment. Dire « ce lien a expire »
+      // envoyait reclamer un nouveau lien pour rien.
+      const { elements, appelsFetch } = await rendre(null, {
+        token: '',
+      });
+
+      assert.equal(appelsFetch.length, 0);
+      assert.equal(elements['estado-erreur'].style.display, 'block');
+      assert.equal(elements['estado-chargement'].style.display, 'none');
+      assert.match(
+        elements['titre-erreur'].textContent,
+        /Il manque quelque chose dans cette adresse/,
+      );
     });
 
-    assert.equal(appelsFetch.length, 0);
-    assert.equal(elements['estado-erreur'].style.display, 'block');
-    assert.equal(elements['estado-chargement'].style.display, 'none');
-  });
+  test('Un lien expiré et un lien révoqué disent la même chose',
+    async () => {
+      // Decision de Fanny : rien ne doit laisser deviner que le parent
+      // a coupe l'acces. Le serveur repond 410 dans les deux cas.
+      const expire = await rendre(null, { reponseOk: false, statut: 410 });
+      const inconnu = await rendre(null, { reponseOk: false, statut: 404 });
 
-  test('Une réponse en erreur affiche le message unique', async () => {
-    const { elements } = await rendre(null, { reponseOk: false });
+      assert.equal(
+        expire.elements['titre-erreur'].textContent,
+        'Ce lien ne fonctionne plus',
+      );
+      assert.equal(
+        inconnu.elements['titre-erreur'].textContent,
+        expire.elements['titre-erreur'].textContent,
+      );
+      assert.match(
+        expire.elements['texte-erreur'].textContent,
+        /ou le parent y a mis un terme/,
+      );
+    });
 
-    assert.equal(elements['estado-erreur'].style.display, 'block');
-    assert.equal(elements.contenu.style.display, '');
-  });
+  test('Un refus du verrou n’envoie pas réclamer un nouveau lien',
+    async () => {
+      // C'est le message qui porte tout le mecanisme de demande
+      // d'acces : le professionnel doit comprendre qu'un nouveau lien
+      // ne changerait rien.
+      const { elements } = await rendre(null, {
+        reponseOk: false,
+        statut: 423,
+      });
+
+      assert.equal(elements['estado-verrouille'].style.display, 'block');
+      assert.equal(elements['estado-erreur'].style.display, '');
+
+      const page = construirePage();
+
+      assert.match(page, /pas la peine de demander qu’on vous le/);
+      assert.match(page, /Rapprochez-vous du parent/);
+    });
+
+  test('Une panne de réseau ne se fait pas passer pour un lien mort',
+    async () => {
+      const { elements } = await rendre(null, {
+        reponseOk: false,
+        statut: 500,
+      });
+
+      assert.equal(
+        elements['titre-erreur'].textContent,
+        'Impossible d’afficher cette fiche',
+      );
+      assert.equal(elements.contenu.style.display, '');
+    });
 });
 
 describe('Identité', () => {
