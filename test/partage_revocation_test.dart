@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kidsrelay/models/share_link_data.dart';
+import 'package:kidsrelay/models/tentative_partage_data.dart';
 
 // La révocation sans effacement (27/08/2026).
 //
@@ -481,6 +482,147 @@ void main() {
 
       expect(methode, contains('23,'));
       expect(methode, contains('59,'));
+    });
+  });
+
+  group('Les ouvertures depuis un autre appareil', () {
+    TentativePartageData tentative({bool toleree = false}) {
+      return TentativePartageData(
+        id: 'tentative-1',
+        partageId: 'partage-1',
+        tenteeLe: DateTime(2026, 8, 27, 14),
+        toleree: toleree,
+      );
+    }
+
+    test('Rien à dire quand rien ne s’est passé', () {
+      expect(libelleTentatives([]), isNull);
+    });
+
+    test('Un refus se dit au singulier', () {
+      expect(
+        libelleTentatives([tentative()]),
+        'Une ouverture a été refusée depuis un autre appareil.',
+      );
+    });
+
+    test('Plusieurs refus se comptent', () {
+      expect(
+        libelleTentatives([tentative(), tentative(), tentative()]),
+        contains('3 ouvertures'),
+      );
+    });
+
+    test('Une reprise tolérée se dit autrement qu’un refus', () {
+      // Correction de Fanny : la fenêtre de quinze minutes ne doit pas
+      // être un trou invisible. Le parent la voit, mais comme une
+      // information et non comme un refus.
+      final libelle = libelleTentatives([tentative(toleree: true)]);
+
+      expect(libelle, isNotNull);
+      expect(libelle, isNot(contains('refusée')));
+      expect(libelle, contains('rouvert'));
+    });
+
+    test('Un refus prime sur une tolérance', () {
+      // C'est lui qui demande une décision au parent.
+      expect(
+        libelleTentatives([
+          tentative(toleree: true),
+          tentative(),
+        ]),
+        contains('refusée'),
+      );
+    });
+
+    test('La ligne rendue par la base se relit', () {
+      final lue = TentativePartageData.fromRow({
+        'id': 'tentative-1',
+        'partage_id': 'partage-1',
+        'tentee_le': '2026-08-27T14:00:00Z',
+        'toleree': true,
+      });
+
+      expect(lue.partageId, 'partage-1');
+      expect(lue.toleree, isTrue);
+    });
+  });
+
+  group('Le verrouillage, côté application', () {
+    String source(String chemin) => File(chemin).readAsStringSync();
+
+    test('Le parent peut autoriser un nouvel appareil', () {
+      // Sans ce geste, un destinataire légitime verrouillé dehors
+      // n'aurait aucun recours, et le parent devrait révoquer puis
+      // tout retransmettre — pour un lien qui n'a jamais fuité.
+      final service = source('lib/sharing/share_link_service.dart');
+
+      expect(service, contains('Future<void> libererVerrou('));
+      expect(service, contains("'verrou_empreinte': null"));
+      expect(service, contains("'verrou_pose_le': null"));
+    });
+
+    test('L’écran propose le geste et dit quoi faire', () {
+      final ecran = source('lib/children/child_profile_page.dart');
+
+      expect(ecran, contains('Autoriser ce nouvel appareil'));
+      expect(ecran, contains('Sinon, révoquez le '));
+      expect(ecran, contains('_libererVerrou('));
+    });
+
+    test('Le serveur ne stocke jamais le secret en clair', () {
+      // C'est l'empreinte qui est stockée : une fuite de la table ne
+      // donnerait à personne de quoi rouvrir un lien.
+      final logique = source(
+        'supabase/functions/_logique/partage_consultation.mts',
+      );
+
+      expect(logique, contains('await empreinteDuSecret(nouveauSecret)'));
+    });
+
+    test('Un appareil refusé n’a rien à lire', () {
+      // Le refus tombe avant la lecture de l'enfant et des profils.
+      final logique = source(
+        'supabase/functions/_logique/partage_consultation.mts',
+      );
+
+      expect(
+        logique.indexOf("statut: 'lienVerrouille'"),
+        lessThan(logique.indexOf('depot.enfant(')),
+      );
+    });
+
+    test('Le refus a son propre message, pas celui d’un lien invalide',
+        () {
+      // « Lien invalide » aurait laissé croire à une panne, et la
+      // personne aurait réessayé au lieu de rappeler le parent.
+      final logique = source(
+        'supabase/functions/_logique/partage_consultation.mts',
+      );
+
+      expect(logique, contains('LIEN_VERROUILLE'));
+      expect(logique, contains('Demandez un nouveau lien au parent.'));
+    });
+
+    test('La page range le secret par lien, pas globalement', () {
+      // Deux liens différents ne doivent pas se marcher dessus.
+      final page = source(
+        'supabase/functions/_logique/page_partage.mts',
+      );
+
+      expect(page, contains("'kidsrelay_partage_' + token"));
+      expect(page, contains('localStorage'));
+    });
+
+    test('Un stockage refusé n’empêche pas la page de s’ouvrir', () {
+      // Navigation privée stricte, cookies bloqués : on ouvre sans
+      // secret, et le serveur décide.
+      final page = source(
+        'supabase/functions/_logique/page_partage.mts',
+      );
+
+      expect(page, contains('catch (e)'));
+      expect(page, contains('afficherVerrouille('));
     });
   });
 }

@@ -20,7 +20,8 @@ export function depotPartagesSupabase(
         .from('partages')
         .select(
           'id, enfant_id, type_fiche, date_expiration, contenu_fige, ' +
-            'destinataire, revoque_le, permanent',
+            'destinataire, revoque_le, permanent, verrou_empreinte, ' +
+            'verrou_pose_le',
         )
         .eq('token', token)
         .maybeSingle();
@@ -88,6 +89,39 @@ export function depotPartagesSupabase(
           origine: 'lien_partage',
           user_id: null,
           consulte_le: entree.ouvertLe,
+        });
+
+      if (error) {
+        console.error(error);
+      }
+    },
+
+    async poserVerrou(partageId, empreinte, poseLe) {
+      const { error } = await service
+        .from('partages')
+        .update({
+          verrou_empreinte: empreinte,
+          verrou_pose_le: poseLe,
+        })
+        .eq('id', partageId);
+
+      if (error) {
+        console.error(error);
+      }
+
+      return { erreur: error };
+    },
+
+    async journaliserTentative(entree) {
+      // Aucune adresse IP, aucun en-tete, aucune empreinte de
+      // navigateur : on enregistre qu'une tentative a eu lieu, jamais
+      // qui l'a faite. Meme regle que le journal des ouvertures.
+      const { error } = await service
+        .from('tentatives_partage_refusees')
+        .insert({
+          partage_id: entree.partageId,
+          tentee_le: entree.tenteeLe,
+          toleree: entree.toleree,
         });
 
       if (error) {

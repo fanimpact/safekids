@@ -35,6 +35,7 @@ import { depotPartagesSupabase } from '../_enveloppe/depot_partages.mts';
 
 import {
   LIEN_INVALIDE,
+  LIEN_VERROUILLE,
   consulterPartage,
 } from '../_logique/partage_consultation.mts';
 
@@ -48,9 +49,17 @@ Deno.serve(async (req) => {
   }
 
   let token: string | null;
+  let secretPresente: string | null = null;
 
   try {
-    token = new URL(req.url).searchParams.get('token');
+    const parametres = new URL(req.url).searchParams;
+
+    token = parametres.get('token');
+
+    // Le secret que l'appareil a garde de sa premiere ouverture. Nul
+    // la premiere fois, et nul aussi pour quelqu'un a qui le lien a
+    // ete transfere.
+    secretPresente = parametres.get('secret');
   } catch {
     return erreur(400);
   }
@@ -72,11 +81,20 @@ Deno.serve(async (req) => {
     depotPartagesSupabase(clientServiceRole(base)),
     token,
     new Date(),
+    { secretPresente },
   );
 
   switch (resultat.statut) {
     case 'ok':
-      return reponseJson(resultat.fiche, 200);
+      // `secret` n'accompagne la fiche qu'a la pose ou a la reprise du
+      // verrou. La page le range et le represente aux ouvertures
+      // suivantes.
+      return reponseJson(
+        resultat.secret
+          ? { ...resultat.fiche, secret: resultat.secret }
+          : resultat.fiche,
+        200,
+      );
 
     // Token inconnu : même message que "expiré", pour ne pas
     // laisser deviner si un token a existé ou non.
@@ -95,6 +113,13 @@ Deno.serve(async (req) => {
     // dans sa liste.
     case 'lienRevoque':
       return erreur(410);
+
+    // Message a part, et non le message generique : celui qui tient le
+    // lien doit comprendre qu'il n'a rien fait de mal et qu'il faut en
+    // demander un nouveau. Un « lien invalide » l'aurait laisse croire
+    // a une panne.
+    case 'lienVerrouille':
+      return reponseJson({ error: LIEN_VERROUILLE }, 423);
 
     case 'enfantIntrouvable':
       return erreur(404);

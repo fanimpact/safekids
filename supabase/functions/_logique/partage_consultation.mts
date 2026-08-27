@@ -21,6 +21,11 @@
 //     la base sans nécessité.
 
 import {
+  decisionVerrou,
+  empreinteDuSecret,
+} from './verrou_partage.mts';
+
+import {
   TYPE_RECOMMANDATIONS,
   enfantPourFiche,
   profilActivitesPourFiche,
@@ -28,6 +33,16 @@ import {
 } from './fiche_partagee.mts';
 
 export const LIEN_INVALIDE = 'Lien expiré ou invalide.';
+
+/// Message du lien deja pris par un autre appareil.
+///
+/// Volontairement distinct de LIEN_INVALIDE : celui qui tient le lien
+/// n'a rien fait de mal, et doit comprendre quoi faire. « Lien
+/// invalide » l'aurait laisse croire a une panne, et il aurait
+/// reessaye au lieu de rappeler le parent.
+export const LIEN_VERROUILLE =
+  'Ce lien a déjà été ouvert depuis un autre appareil et ne peut plus ' +
+  'servir ailleurs. Demandez un nouveau lien au parent.';
 
 export { TYPE_RECOMMANDATIONS };
 
@@ -48,6 +63,12 @@ export interface Partage {
 
   /// Lien sans date de fin. Seule la revocation l'arrete.
   permanent: boolean;
+
+  /// Hachage du secret depose sur l'appareil qui a ouvert le lien le
+  /// premier. Nul tant que personne ne l'a ouvert.
+  verrou_empreinte: string | null;
+
+  verrou_pose_le: string | null;
 }
 
 /// Ce dont la logique a besoin de la base, et rien de plus.
@@ -68,6 +89,23 @@ export interface DepotPartages {
     partageId: string,
     horodatage: string,
   ): Promise<{ erreur: unknown }>;
+
+  /// Pose ou reprend le verrou. L'empreinte remplace la precedente :
+  /// un seul appareil a la fois.
+  poserVerrou(
+    partageId: string,
+    empreinte: string,
+    poseLe: string,
+  ): Promise<{ erreur: unknown }>;
+
+  /// Une ouverture depuis un autre appareil. `toleree` distingue la
+  /// reprise dans la fenetre des quinze minutes d'un vrai refus : le
+  /// parent voit les deux, mais pas de la meme facon.
+  journaliserTentative(entree: {
+    partageId: string;
+    tenteeLe: string;
+    toleree: boolean;
+  }): Promise<void>;
 
   /// Une ligne par ouverture, jamais ecrasee — a la difference de
   /// [marquerConsulte], qui ne garde que la derniere.
@@ -92,11 +130,12 @@ export interface FichePartagee {
 }
 
 export type ResultatConsultation =
-  | { statut: 'ok'; fiche: FichePartagee }
+  | { statut: 'ok'; fiche: FichePartagee; secret?: string }
   | { statut: 'tokenAbsent' }
   | { statut: 'tokenInconnu' }
   | { statut: 'lienExpire' }
   | { statut: 'lienRevoque' }
+  | { statut: 'lienVerrouille' }
   | { statut: 'enfantIntrouvable' }
   | { statut: 'erreurBase' };
 
@@ -110,6 +149,7 @@ export async function consulterPartage(
   depot: DepotPartages,
   token: string | null,
   maintenant: Date,
+  verrou: OptionsVerrou = {},
 ): Promise<ResultatConsultation> {
   if (!token) {
     return { statut: 'tokenAbsent' };
@@ -140,6 +180,59 @@ export async function consulterPartage(
     )
   ) {
     return { statut: 'lienExpire' };
+  }
+
+  // Le verrou, apres la validite et avant toute lecture de donnees :
+  // un appareil refuse ne doit charger aucune fiche.
+  const secretPresente = verrou.secretPresente ?? null;
+
+  const action = decisionVerrou({
+    empreinteStockee: partage.verrou_empreinte,
+    verrouPoseLe: partage.verrou_pose_le,
+    empreintePresentee: secretPresente
+      ? await empreinteDuSecret(secretPresente)
+      : null,
+    maintenant,
+    toleranceMinutes: verrou.toleranceMinutes,
+  });
+
+  if (action === 'refuser') {
+    await depot.journaliserTentative({
+      partageId: partage.id,
+      tenteeLe: maintenant.toISOString(),
+      toleree: false,
+    });
+
+    return { statut: 'lienVerrouille' };
+  }
+
+  let secretADonner: string | undefined;
+
+  if (action === 'poser' || action === 'reprendre') {
+    const nouveauSecret = (verrou.genererSecret ?? genererSecretParDefaut)();
+
+    const { erreur: erreurVerrou } = await depot.poserVerrou(
+      partage.id,
+      await empreinteDuSecret(nouveauSecret),
+      maintenant.toISOString(),
+    );
+
+    if (erreurVerrou) {
+      return { statut: 'erreurBase' };
+    }
+
+    secretADonner = nouveauSecret;
+
+    // La reprise est enregistree elle aussi : sans elle, la fenetre de
+    // quinze minutes serait un trou invisible pour le parent. Elle est
+    // marquee toleree — information, pas refus.
+    if (action === 'reprendre') {
+      await depot.journaliserTentative({
+        partageId: partage.id,
+        tenteeLe: maintenant.toISOString(),
+        toleree: true,
+      });
+    }
   }
 
   const { enfant, erreur: erreurEnfant } = await depot.enfant(
@@ -192,7 +285,34 @@ export async function consulterPartage(
       profil_activites: profilActivitesPourFiche(),
       contenu_fige: partage.contenu_fige ?? null,
     },
+    secret: secretADonner,
   };
+}
+
+/// Les entrees du verrou, groupees pour ne pas allonger la signature
+/// de `consulterPartage` a chaque ajout.
+export interface OptionsVerrou {
+  /// Ce que l'appareil a presente, lu dans sa memoire locale.
+  secretPresente?: string | null;
+
+  /// Injectee pour les tests. En production, un alea du navigateur.
+  genererSecret?: () => string;
+
+  toleranceMinutes?: number;
+}
+
+/// Un alea de 256 bits, en hexadecimal.
+///
+/// `crypto.randomUUID` ne suffirait pas : 122 bits d'aleatoire, et un
+/// format devinable. Ici le secret n'a aucune structure.
+function genererSecretParDefaut(): string {
+  const octets = new Uint8Array(32);
+
+  crypto.getRandomValues(octets);
+
+  return Array.from(octets)
+    .map((octet) => octet.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /// Une date d'expiration illisible vaut expirée : un lien dont on ne

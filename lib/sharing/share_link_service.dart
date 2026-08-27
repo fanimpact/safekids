@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/supabase_config.dart';
 import '../models/share_link_data.dart';
+import '../models/tentative_partage_data.dart';
 import '../usage/compteur_usage.dart';
 
 /// Côté parent : lister et révoquer les liens de partage ponctuels
@@ -66,6 +67,47 @@ class ShareLinkService {
       'date_expiration':
           permanent ? null : dateExpiration?.toUtc().toIso8601String(),
       'permanent': permanent,
+    }).eq('id', id);
+  }
+
+  /// Les ouvertures refusées ou tolérées sur les liens d'un enfant.
+  ///
+  /// Lecture seule, garantie par le RLS : le parent voit celles qui
+  /// concernent ses enfants, personne n'écrit depuis un compte — seule
+  /// la clé de service le fait, hors RLS, puisque celui qui tente
+  /// d'ouvrir n'est pas authentifié.
+  Future<List<TentativePartageData>> tentativesForChild(
+    String childId,
+  ) async {
+    final rows = await _client
+        .from('tentatives_partage_refusees')
+        .select('*, partages!inner(enfant_id)')
+        .eq('partages.enfant_id', childId)
+        .order('tentee_le', ascending: false);
+
+    return (rows as List<dynamic>)
+        .map(
+          (row) => TentativePartageData.fromRow(
+            row as Map<String, dynamic>,
+          ),
+        )
+        .toList();
+  }
+
+  /// Rend le lien réouvrable depuis n'importe quel appareil, une fois.
+  ///
+  /// C'est l'amortisseur du verrouillage. Sans lui, un destinataire
+  /// légitime qui a ouvert le lien depuis le navigateur intégré de sa
+  /// messagerie, puis l'a rouvert dans son navigateur habituel plus de
+  /// quinze minutes après, resterait dehors sans recours — et le
+  /// parent n'aurait d'autre choix que de révoquer et de tout
+  /// retransmettre.
+  ///
+  /// Le prochain appareil qui ouvre le lien reprend le verrou.
+  Future<void> libererVerrou(String id) async {
+    await _client.from('partages').update({
+      'verrou_empreinte': null,
+      'verrou_pose_le': null,
     }).eq('id', id);
   }
 

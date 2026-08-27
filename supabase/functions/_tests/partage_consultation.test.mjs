@@ -7,6 +7,8 @@ import {
   lienEncoreValide,
 } from '../_logique/partage_consultation.mts';
 
+import { empreinteDuSecret } from '../_logique/verrou_partage.mts';
+
 // Le lien de partage est la seule porte ouverte sans authentification
 // sur des données de santé d'enfant. Ce qui est vérifié ici : qu'un
 // token ne donne accès qu'à SON enfant, qu'un lien périmé ne s'ouvre
@@ -23,6 +25,8 @@ const PARTAGE = {
   destinataire: 'structure_accueil',
   revoque_le: null,
   permanent: false,
+  verrou_empreinte: null,
+  verrou_pose_le: null,
 };
 
 const ENFANT = {
@@ -78,6 +82,15 @@ function fauxDepot(etat = {}) {
 
     async journaliserOuverture(entree) {
       lectures.push({ nom: 'journaliserOuverture', ...entree });
+    },
+
+    async poserVerrou(partageId, empreinte, poseLe) {
+      lectures.push({ nom: 'poserVerrou', partageId, empreinte, poseLe });
+      return { erreur: null };
+    },
+
+    async journaliserTentative(entree) {
+      lectures.push({ nom: 'journaliserTentative', ...entree });
     },
   };
 }
@@ -245,6 +258,153 @@ describe('Refus', () => {
     );
 
     assert.deepEqual(resultat, { statut: 'lienExpire' });
+  });
+
+  // --- Le verrou a la premiere ouverture (27/08/2026) ----------------
+  //
+  // C'est lui qui a permis de liberer les durees. Ce qui compte ici :
+  // un appareil refuse ne doit charger AUCUNE donnee d'enfant.
+
+  test('La première ouverture pose le verrou et rend le secret', async () => {
+    const depot = fauxDepot({ partage: { ...PARTAGE } });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+      { genererSecret: () => 'secret-neuf' },
+    );
+
+    assert.equal(resultat.statut, 'ok');
+    assert.equal(resultat.secret, 'secret-neuf');
+
+    const pose = depot.lectures.find((l) => l.nom === 'poserVerrou');
+
+    assert.ok(pose, 'le verrou doit être posé');
+    assert.notEqual(
+      pose.empreinte,
+      'secret-neuf',
+      'c’est l’empreinte qui est stockée, jamais le secret',
+    );
+  });
+
+  test('Le même appareil repasse sans nouveau secret', async () => {
+    const empreinte = await empreinteDuSecret('secret-connu');
+
+    const depot = fauxDepot({
+      partage: {
+        ...PARTAGE,
+        verrou_empreinte: empreinte,
+        verrou_pose_le: '2026-08-23T09:00:00.000Z',
+      },
+    });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+      { secretPresente: 'secret-connu' },
+    );
+
+    assert.equal(resultat.statut, 'ok');
+    assert.equal(resultat.secret, undefined);
+    assert.equal(
+      depot.lectures.some((l) => l.nom === 'poserVerrou'),
+      false,
+    );
+  });
+
+  test('Un autre appareil est refusé et ne charge aucune donnée', async () => {
+    // Le point qui compte : le refus tombe AVANT la lecture de
+    // l'enfant, du profil de santé et du profil d'activités.
+    const depot = fauxDepot({
+      partage: {
+        ...PARTAGE,
+        verrou_empreinte: await empreinteDuSecret('celui-du-premier'),
+        verrou_pose_le: '2026-08-23T09:00:00.000Z',
+      },
+    });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+      { secretPresente: 'un-autre' },
+    );
+
+    assert.deepEqual(resultat, { statut: 'lienVerrouille' });
+    assert.deepEqual(depot.lectures.map((l) => l.nom), [
+      'partageParToken',
+      'journaliserTentative',
+    ]);
+  });
+
+  test('La tentative refusée est enregistrée, non tolérée', async () => {
+    const depot = fauxDepot({
+      partage: {
+        ...PARTAGE,
+        verrou_empreinte: await empreinteDuSecret('celui-du-premier'),
+        verrou_pose_le: '2026-08-23T09:00:00.000Z',
+      },
+    });
+
+    await consulterPartage(depot, 'token-1', MAINTENANT, {
+      secretPresente: null,
+    });
+
+    const tentative = depot.lectures.find(
+      (l) => l.nom === 'journaliserTentative',
+    );
+
+    assert.equal(tentative.toleree, false);
+    assert.equal(tentative.partageId, 'partage-1');
+    assert.equal(tentative.tenteeLe, MAINTENANT.toISOString());
+  });
+
+  test('Dans la fenêtre, le second appareil reprend et le parent est prévenu',
+    async () => {
+      // Correction de Fanny : ne rien dire pendant quinze minutes
+      // créerait un trou invisible. La ligne est écrite quand même,
+      // marquée tolérée — information, pas refus.
+      const depot = fauxDepot({
+        partage: {
+          ...PARTAGE,
+          verrou_empreinte: await empreinteDuSecret('celui-du-premier'),
+          verrou_pose_le: new Date(
+            MAINTENANT.getTime() - 60000,
+          ).toISOString(),
+        },
+      });
+
+      const resultat = await consulterPartage(
+        depot,
+        'token-1',
+        MAINTENANT,
+        { secretPresente: null, genererSecret: () => 'secret-repris' },
+      );
+
+      assert.equal(resultat.statut, 'ok');
+      assert.equal(resultat.secret, 'secret-repris');
+
+      const tentative = depot.lectures.find(
+        (l) => l.nom === 'journaliserTentative',
+      );
+
+      assert.equal(tentative.toleree, true);
+    });
+
+  test('Un lien révoqué est refusé avant même le verrou', async () => {
+    // L'ordre compte : inutile de poser un verrou sur un lien mort.
+    const depot = fauxDepot({
+      partage: { ...PARTAGE, revoque_le: '2026-08-24T09:00:00.000Z' },
+    });
+
+    const resultat = await consulterPartage(depot, 'token-1', MAINTENANT);
+
+    assert.deepEqual(resultat, { statut: 'lienRevoque' });
+    assert.deepEqual(depot.lectures.map((l) => l.nom), [
+      'partageParToken',
+    ]);
   });
 
   test('Une panne de base ne se fait pas passer pour un lien invalide', async () => {

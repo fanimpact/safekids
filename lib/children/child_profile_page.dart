@@ -18,6 +18,7 @@ import '../models/enfant_confiance_data.dart';
 import '../models/enfant_etablissement_data.dart';
 import '../models/note_enfant_data.dart';
 import '../models/share_link_data.dart';
+import '../models/tentative_partage_data.dart';
 import '../questionnaire_recap/activity_questionnaire_recap_page.dart';
 import '../questionnaire_recap/medical_questionnaire_recap_page.dart';
 import '../repositories/child_repository.dart';
@@ -52,6 +53,11 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
   Future<List<EnfantEtablissementData>>? _attachmentsFuture;
   Future<List<EnfantConfianceData>>? _trustedPeopleFuture;
   Future<List<NoteEnfantData>>? _notesFuture;
+
+  /// Les ouvertures refusees ou tolerees sur les liens de cet enfant.
+  /// Vide tant qu'elles ne sont pas chargees : mieux vaut ne rien
+  /// annoncer que d'annoncer a tort.
+  List<TentativePartageData> _tentatives = [];
 
   // Copie résolue de _trustedPeopleFuture, utilisée pour savoir tout
   // de suite (sans reconstruire tout un FutureBuilder) si la personne
@@ -136,6 +142,8 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
         .trustedPeopleForChild(childId);
     final notesFuture =
         NotesEnfantService.instance.notesForChild(childId);
+    final tentativesFuture =
+        ShareLinkService.instance.tentativesForChild(childId);
 
     // `.ignore()` marque immédiatement ces futures comme "gérées" pour
     // Dart, en plus du traitement normal fait juste après par les
@@ -146,6 +154,21 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
     attachmentsFuture.ignore();
     trustedPeopleFuture.ignore();
     notesFuture.ignore();
+    tentativesFuture.ignore();
+
+    tentativesFuture.then((tentatives) {
+      if (mounted) {
+        setState(() {
+          _tentatives = tentatives;
+        });
+      }
+    }).catchError((error) {
+      if (mounted) {
+        setState(() {
+          _tentatives = [];
+        });
+      }
+    });
 
     trustedPeopleFuture.then((people) {
       if (mounted) {
@@ -659,6 +682,109 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
     _loadPartages();
   }
 
+  /// Ce que le parent voit quand un autre appareil a tenté d'ouvrir le
+  /// lien — refusé, ou toléré dans les quinze premières minutes.
+  ///
+  /// En ambre et non en rouge : ce n'est pas forcément un incident.
+  /// Le cas le plus fréquent est le destinataire légitime qui a ouvert
+  /// le lien depuis sa messagerie puis dans son navigateur.
+  Widget _bandeauTentatives(
+    BuildContext context,
+    ShareLinkData link,
+  ) {
+    final tentatives = _tentatives
+        .where((tentative) => tentative.partageId == link.id)
+        .toList();
+
+    final libelle = libelleTentatives(tentatives);
+
+    if (libelle == null) {
+      return const SizedBox.shrink();
+    }
+
+    final refuse = tentatives.any((tentative) => !tentative.toleree);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Material(
+        color: KidsRelayColors.ambreFond,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: KidsRelayColors.ambreBordure),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                libelle,
+                style: const TextStyle(fontSize: 14),
+              ),
+
+              if (refuse) ...[
+                const SizedBox(height: 4),
+
+                const Text(
+                  'Si c’est la personne à qui vous avez donné le lien, '
+                  'autorisez son nouvel appareil. Sinon, révoquez le '
+                  'lien.',
+                  style: TextStyle(fontSize: 13),
+                ),
+
+                const SizedBox(height: 4),
+
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () => _libererVerrou(context, link),
+                    child: const Text('Autoriser ce nouvel appareil'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Rend le lien réouvrable une fois, depuis n'importe quel appareil.
+  ///
+  /// Sans ce geste, un destinataire légitime verrouillé dehors n'aurait
+  /// aucun recours, et le parent devrait révoquer puis tout
+  /// retransmettre — pour un lien qui n'a jamais fuité.
+  Future<void> _libererVerrou(
+    BuildContext context,
+    ShareLinkData link,
+  ) async {
+    try {
+      await ShareLinkService.instance.libererVerrou(link.id);
+    } catch (error) {
+      if (context.mounted) {
+        _showTemporaryMessage(
+          context: context,
+          message: 'Impossible d’autoriser ce nouvel appareil pour le '
+              'moment.',
+        );
+      }
+
+      return;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
+
+    _showTemporaryMessage(
+      context: context,
+      message: 'Le prochain appareil qui ouvrira ce lien pourra le '
+          'consulter.',
+    );
+
+    _loadPartages();
+  }
+
   Widget _partageCard({
     required IconData icon,
     required String title,
@@ -788,6 +914,9 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                     onChangerDate: () =>
                         _changerEcheance(context, link),
                   ),
+
+                  _bandeauTentatives(context, link),
+
                   const SizedBox(height: 8),
                 ],
 

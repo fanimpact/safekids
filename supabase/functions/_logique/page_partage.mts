@@ -66,18 +66,30 @@ export function construirePage(
   }
 
   #estado-chargement,
-  #estado-erreur {
+  #estado-erreur,
+  #estado-verrouille {
     text-align: center;
     padding: 60px 20px;
   }
 
-  #estado-erreur {
+  #estado-erreur,
+  #estado-verrouille {
     display: none;
   }
 
-  #estado-erreur h1 {
+  #estado-erreur h1,
+  #estado-verrouille h1 {
     font-size: 22px;
     margin-bottom: 8px;
+  }
+
+  #estado-verrouille p {
+    color: var(--muted);
+  }
+
+  .note-verrouille {
+    margin-top: 20px;
+    font-size: 14px;
   }
 
   #estado-erreur p {
@@ -150,6 +162,16 @@ export function construirePage(
   <div id="estado-erreur">
     <h1>Ce lien a expiré ou n’est plus valide.</h1>
     <p>Demandez un nouveau lien à la personne qui vous l’a envoyé.</p>
+  </div>
+
+  <div id="estado-verrouille">
+    <h1>Ce lien est déjà utilisé.</h1>
+    <p id="texte-verrouille"></p>
+    <p class="note-verrouille">
+      Un lien de partage ne fonctionne que sur l’appareil qui l’a
+      ouvert en premier. C’est ce qui protège les informations de
+      l’enfant si le lien est transmis à quelqu’un d’autre.
+    </p>
   </div>
 
   <div id="contenu">
@@ -430,6 +452,23 @@ export function construirePage(
     document.getElementById('contenu').style.display = 'block';
   }
 
+  function afficherVerrouille(message) {
+    document.getElementById('estado-chargement').style.display = 'none';
+
+    var bloc = document.getElementById('estado-verrouille');
+    var texte = document.getElementById('texte-verrouille');
+
+    if (texte && message) {
+      texte.textContent = message;
+    }
+
+    if (bloc) {
+      bloc.style.display = 'block';
+    } else {
+      afficherErreur();
+    }
+  }
+
   function afficherErreur() {
     document.getElementById('estado-chargement').style.display = 'none';
     document.getElementById('estado-erreur').style.display = 'block';
@@ -442,19 +481,61 @@ export function construirePage(
     return;
   }
 
+  // Le secret que cet appareil a recu a sa premiere ouverture. Ce
+  // n'est pas une empreinte : c'est une valeur que le serveur a
+  // fabriquee et deposee ici, sans signification et sans rapport avec
+  // l'appareil. Rien n'est lu sur le navigateur.
+  //
+  // Range par token : deux liens differents ne se marchent pas dessus.
+  var cleSecret = 'kidsrelay_partage_' + token;
+  var secret = null;
+
+  try {
+    secret = window.localStorage.getItem(cleSecret);
+  } catch (e) {
+    // Stockage refuse (navigation privee stricte, cookies bloques) :
+    // on ouvre sans secret. Le serveur decidera.
+    secret = null;
+  }
+
   var urlFonction =
     window.location.origin + '${cheminApi}?token=' + encodeURIComponent(token);
 
+  if (secret) {
+    urlFonction += '&secret=' + encodeURIComponent(secret);
+  }
+
   fetch(urlFonction)
     .then(function (reponse) {
+      if (reponse.status === 423) {
+        return reponse.json().then(function (data) {
+          throw { verrouille: true, message: data.error };
+        });
+      }
+
       if (!reponse.ok) throw new Error('reponse non ok');
       return reponse.json();
     })
     .then(function (data) {
       if (data.error) throw new Error(data.error);
+
+      if (data.secret) {
+        try {
+          window.localStorage.setItem(cleSecret, data.secret);
+        } catch (e) {
+          // Sans stockage, la prochaine ouverture repartira sans
+          // secret. Rien a faire de plus : la fiche s'affiche.
+        }
+      }
+
       afficherFiche(data);
     })
-    .catch(function () {
+    .catch(function (erreur) {
+      if (erreur && erreur.verrouille) {
+        afficherVerrouille(erreur.message);
+        return;
+      }
+
       afficherErreur();
     });
 })();
