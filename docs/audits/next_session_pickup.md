@@ -395,6 +395,53 @@ Ce qui reste sur ce sujet est **uniquement** la vérification à l'œil du
 point 62 : l'effacement réel au passage de la tâche de 4 h, sur un
 compte de test, jamais sur Théo ou Noé.
 
+**Compteurs de familles actives par mois et par fonctionnalité — fait
+le 24/08/2026.**
+
+Trois tables, vérifiées présentes en production le 27/08/2026 :
+`marqueurs_usage` (mois, fonctionnalité, empreinte), `sels_usage`
+(mois, sel), `compteurs_usage` (mois, fonctionnalité,
+`nombre_familles`, `consolide_le`). Deux fonctions,
+`enregistrer_usage` et `consolider_compteurs_usage`. Tâche
+`consolider-compteurs-usage` (jobid 5, `30 4 1 * *`) **active**.
+
+Quatre fonctionnalités comptées, liste fermée côté base :
+`activite_preparee`, `fiche_secours_generee`, `mode_urgence_ouvert`,
+`lien_partage_cree` — voir
+[`lib/usage/compteur_usage.dart`](../../lib/usage/compteur_usage.dart).
+
+**Jamais quoi ni pour qui** : aucun identifiant d'enfant, aucun
+contenu. La consolidation ne garde qu'un entier par mois et par
+fonctionnalité, puis supprime les empreintes et le sel. 9 tests.
+
+*Réserve déjà actée, à redire telle quelle :* le **mois en cours est
+pseudonyme, pas anonyme** — compter des familles distinctes l'impose.
+C'est la consolidation qui rend l'historique anonyme.
+
+**Adresse email de secours — faite le 24/08/2026.**
+
+Colonne `comptes_parents.email_secours`, vérifiée présente en
+production. Validation pure dans
+[`lib/settings/email_secours.dart`](../../lib/settings/email_secours.dart),
+section dédiée dans les réglages, 22 tests. Volontairement permissive :
+nous n'envoyons rien à cette adresse, donc refuser une adresse valide
+mais inhabituelle serait plus gênant qu'accepter une faute de frappe.
+
+*Réserve, toujours vraie :* l'adresse est stockée, mais **aucune
+procédure ne dit comment on s'en sert** quand un parent perd son accès.
+Le champ est un prérequis, pas une fonctionnalité complète. Noté dans
+`corrections_a_faire.md`.
+
+**Pas fait, et pas faisable en l'état — conservation 3 mois après fin
+d'abonnement.** Constaté le 27/08/2026 : `comptes_parents` porte un
+`abonnement_actif boolean not null default false`, **sans date de début
+ni de fin**, qu'aucun code n'écrit — la policy réserve son passage à
+`true` à « un futur backend de facturation » qui n'existe pas. Aucune
+tâche planifiée ne le regarde. En production : 2 comptes, 0 abonné.
+Une règle « 3 mois après la fin » n'a rien sur quoi se déclencher tant
+qu'une date de fin n'existe pas. **Décision préalable requise**, pas un
+chantier à lancer.
+
 ### Ce qui reste, au soir du 26/08/2026
 
 Par ordre de ce qui bloque le plus la suite.
