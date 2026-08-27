@@ -347,6 +347,54 @@ passer les 11 fichiers restants à 2. Écarté pour l'instant :
 expose les données d'un autre enfant, et sans test d'intégration contre
 une vraie base. À rouvrir seulement si une migration est décidée.
 
+### Déjà fait — à ne pas redemander
+
+Deux chantiers ont été redemandés en session alors qu'ils étaient
+faits. Vérifier ici avant de coder.
+
+**Consentement à l'enregistrement des données de santé — fait le
+24/08/2026.**
+
+Écran dédié [`consentement_sante_page.dart`](../../lib/consentement/consentement_sante_page.dart),
+posé sur les **deux** chemins de création d'enfant, jamais affiché en
+modification. Case décochée par défaut, bouton désactivé tant qu'elle
+n'est pas cochée, ligne grise en dessous. La date du geste part dans
+`enfants.consentement_sante_le` (`timestamptz`, nullable) — et rien
+d'autre : ni adresse IP, ni identifiant d'appareil. Migration
+[`schema_conformite_rgpd.sql:41`](../../supabase/schema_conformite_rgpd.sql),
+**appliquée en production**. Les fiches antérieures ont la colonne à
+`null` et fonctionnent normalement. 12 tests.
+
+*Décision tenue, et renforcée depuis :* la case est **avant** le
+questionnaire et non sur le dernier écran. Un consentement doit être un
+acte distinct — et depuis le chantier du brouillon, les réponses sont
+écrites sur l'appareil dès le premier écran validé. La placer à la fin
+reviendrait à stocker six écrans de données de santé, puis à demander
+l'autorisation de les stocker. Proposition de déplacement examinée puis
+écartée le 27/08/2026, par Fanny.
+
+**Délai de grâce de 7 jours à la suppression du compte — fait le
+24/08/2026.**
+
+- `demander_suppression_compte()` pose `suppression_demandee_le = now()`
+  et `suppression_effective_le = now() + interval '7 days'` ;
+- `annuler_suppression_compte()` rend l'accès immédiatement ;
+- `suppression_en_cours()` laisse le parent bloqué lire **cette
+  date-là et rien d'autre** ;
+- le blocage tient **par le RLS** (`compte_en_suppression()` dans les
+  policies), pas seulement dans l'application ;
+- la tâche `effacer-comptes-supprimes` (jobid 4, `0 4 * * *`) est
+  **active en production** — vérifié le 27/08/2026.
+
+Côté application : [`lib/suppression/`](../../lib/suppression/) —
+garde, service, section des réglages, écran d'attente, et
+`joursRestants` compté en **jours entamés** (à 23 h de l'échéance il
+reste « 1 jour », jamais « 0 »). 27 tests.
+
+Ce qui reste sur ce sujet est **uniquement** la vérification à l'œil du
+point 62 : l'effacement réel au passage de la tâche de 4 h, sur un
+compte de test, jamais sur Théo ou Noé.
+
 ### Ce qui reste, au soir du 26/08/2026
 
 Par ordre de ce qui bloque le plus la suite.
