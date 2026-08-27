@@ -31,8 +31,18 @@ class ShareLinkService {
         .toList();
   }
 
+  /// Révoque par marquage, jamais par suppression (27/08/2026).
+  ///
+  /// Le `delete` d'avant coupait bien l'accès, mais il emportait avec
+  /// lui l'historique de ce que le parent avait partagé et la preuve
+  /// que la révocation avait eu lieu. Le lien cesse de fonctionner
+  /// aussi immédiatement : c'est le serveur qui refuse, en voyant
+  /// `revoque_le` renseigné.
   Future<void> revokeLink(String id) async {
-    await _client.from('partages').delete().eq('id', id);
+    await _client
+        .from('partages')
+        .update({'revoque_le': DateTime.now().toUtc().toIso8601String()})
+        .eq('id', id);
   }
 
   /// Crée un lien de partage et renvoie son adresse complète.

@@ -19,7 +19,8 @@ export function depotPartagesSupabase(
       const { data, error } = await service
         .from('partages')
         .select(
-          'id, enfant_id, type_fiche, date_expiration, contenu_fige, destinataire',
+          'id, enfant_id, type_fiche, date_expiration, contenu_fige, ' +
+            'destinataire, revoque_le, permanent',
         )
         .eq('token', token)
         .maybeSingle();

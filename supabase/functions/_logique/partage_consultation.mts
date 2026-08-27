@@ -35,9 +35,19 @@ export interface Partage {
   id: string;
   enfant_id: string;
   type_fiche: string;
-  date_expiration: string;
+
+  /// Nulle si et seulement si le lien est permanent.
+  date_expiration: string | null;
+
   contenu_fige: unknown;
   destinataire: string | null;
+
+  /// Renseignee = le parent a revoque. L'acces est coupe, meme si la
+  /// date d'expiration n'est pas atteinte.
+  revoque_le: string | null;
+
+  /// Lien sans date de fin. Seule la revocation l'arrete.
+  permanent: boolean;
 }
 
 /// Ce dont la logique a besoin de la base, et rien de plus.
@@ -86,6 +96,7 @@ export type ResultatConsultation =
   | { statut: 'tokenAbsent' }
   | { statut: 'tokenInconnu' }
   | { statut: 'lienExpire' }
+  | { statut: 'lienRevoque' }
   | { statut: 'enfantIntrouvable' }
   | { statut: 'erreurBase' };
 
@@ -114,7 +125,20 @@ export async function consulterPartage(
     return { statut: 'tokenInconnu' };
   }
 
-  if (!lienEncoreValide(partage.date_expiration, maintenant)) {
+  // La revocation passe avant tout : un lien revoque ne s'ouvre pas,
+  // meme si sa date d'expiration est encore loin, meme s'il est
+  // permanent.
+  if (partage.revoque_le) {
+    return { statut: 'lienRevoque' };
+  }
+
+  if (
+    !lienEncoreValide(
+      partage.date_expiration,
+      maintenant,
+      partage.permanent,
+    )
+  ) {
     return { statut: 'lienExpire' };
   }
 
@@ -173,10 +197,26 @@ export async function consulterPartage(
 
 /// Une date d'expiration illisible vaut expirée : un lien dont on ne
 /// sait pas dire s'il est encore valable ne doit pas s'ouvrir.
+///
+/// Un lien **permanent** n'a pas de date et ne se compare a rien : il
+/// est valide tant qu'il n'est pas revoque, ce qui est verifie avant.
+/// Sans ce cas, une date nulle serait lue comme illisible et tous les
+/// liens permanents seraient refuses.
 export function lienEncoreValide(
-  dateExpiration: string,
+  dateExpiration: string | null,
   maintenant: Date,
+  permanent = false,
 ): boolean {
+  if (permanent) {
+    return true;
+  }
+
+  if (dateExpiration === null) {
+    // Pas permanent et sans date : la contrainte en base l'interdit.
+    // Si cela arrive quand meme, on refuse.
+    return false;
+  }
+
   const expiration = new Date(dateExpiration);
 
   if (Number.isNaN(expiration.getTime())) {

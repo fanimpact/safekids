@@ -52,9 +52,17 @@ enum ShareDestinataire {
   }
 }
 
-/// Un lien de partage ponctuel (fiche secours ou "ce qu'il faut savoir"),
-/// vu côté parent : pas de statut de révocation en base — supprimer la
-/// ligne EST la révocation, elle coupe l'accès immédiatement.
+/// Un lien de partage, vu côté parent.
+///
+/// **La révocation ne supprime plus la ligne** (27/08/2026). Elle pose
+/// `revoqueLe` : le parent garde l'historique de ce qu'il a partagé, et
+/// la preuve que la révocation a eu lieu. L'accès, lui, est coupé aussi
+/// immédiatement qu'avant — c'est le serveur qui refuse.
+///
+/// **Un lien permanent n'a pas de date d'expiration**, et c'est pour
+/// cela que [dateExpiration] est nulle : plutôt qu'une date lointaine
+/// posée en douce, la base impose « soit une date, soit permanent,
+/// jamais les deux ni aucun ».
 class ShareLinkData {
   final String id;
   final String token;
@@ -62,8 +70,19 @@ class ShareLinkData {
   final ShareFicheType ficheType;
   final ShareDestinataire destinataire;
   final DateTime dateCreation;
-  final DateTime dateExpiration;
+
+  /// Nulle si et seulement si [permanent].
+  final DateTime? dateExpiration;
+
   final DateTime? dateDerniereConsultation;
+
+  /// Saisi librement par le parent : « Aurélie, animatrice piscine ».
+  /// Sans rapport avec [destinataire], qui porte le choix
+  /// particulier / structure d'accueil.
+  final String? nomDestinataire;
+
+  final bool permanent;
+  final DateTime? revoqueLe;
 
   const ShareLinkData({
     required this.id,
@@ -74,13 +93,34 @@ class ShareLinkData {
     required this.dateCreation,
     required this.dateExpiration,
     required this.dateDerniereConsultation,
+    this.nomDestinataire,
+    this.permanent = false,
+    this.revoqueLe,
   });
 
-  bool get estExpire => dateExpiration.isBefore(DateTime.now());
+  bool get estRevoque => revoqueLe != null;
+
+  /// Un lien permanent n'expire jamais. Seule la révocation l'arrête.
+  bool get estExpire {
+    final expiration = dateExpiration;
+
+    if (permanent || expiration == null) {
+      return false;
+    }
+
+    return expiration.isBefore(DateTime.now());
+  }
+
+  /// Ce que le parent voit dans « Partages en cours ». Tout le reste
+  /// va dans « Partages terminés » — jamais mêlé, pour qu'un coup
+  /// d'œil suffise à savoir qui a accès aujourd'hui.
+  bool get estActif => !estRevoque && !estExpire;
 
   factory ShareLinkData.fromRow(Map<String, dynamic> row) {
     final dateDerniereConsultation =
         row['date_derniere_consultation'] as String?;
+    final dateExpiration = row['date_expiration'] as String?;
+    final revoqueLe = row['revoque_le'] as String?;
 
     return ShareLinkData(
       id: row['id'] as String,
@@ -95,12 +135,16 @@ class ShareLinkData {
       dateCreation: DateTime.parse(
         row['date_creation'] as String,
       ),
-      dateExpiration: DateTime.parse(
-        row['date_expiration'] as String,
-      ),
+      dateExpiration: dateExpiration == null
+          ? null
+          : DateTime.parse(dateExpiration),
       dateDerniereConsultation: dateDerniereConsultation == null
           ? null
           : DateTime.parse(dateDerniereConsultation),
+      nomDestinataire: row['nom_destinataire'] as String?,
+      permanent: row['permanent'] as bool? ?? false,
+      revoqueLe:
+          revoqueLe == null ? null : DateTime.parse(revoqueLe),
     );
   }
 }

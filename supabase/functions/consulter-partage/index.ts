@@ -89,6 +89,13 @@ Deno.serve(async (req) => {
     case 'lienExpire':
       return erreur(410);
 
+    // Meme message et meme code qu'un lien expire : dire « revoque »
+    // apprendrait a qui detient le lien que le parent a coupe l'acces
+    // volontairement, ce qui ne le regarde pas. Le parent, lui, le voit
+    // dans sa liste.
+    case 'lienRevoque':
+      return erreur(410);
+
     case 'enfantIntrouvable':
       return erreur(404);
 

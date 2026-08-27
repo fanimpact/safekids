@@ -510,16 +510,55 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
     }
   }
 
-  String _shareLinkStatusLabel(ShareLinkData link) {
-    final expiration =
-        'Expire le ${formatShortDate(link.dateExpiration)}';
+  /// Ce que le parent lit en premier sur une carte de partage.
+  ///
+  /// Le nom qu'il a saisi passe avant le type de fiche : « Aurélie,
+  /// animatrice piscine » lui dit à qui il a donné l'accès, ce que
+  /// « Informations pour les secours » ne dit pas. Le type de fiche
+  /// reste lisible juste en dessous.
+  String _shareLinkTitle(ShareLinkData link) {
+    final nom = link.nomDestinataire?.trim();
 
-    if (link.dateDerniereConsultation == null) {
-      return '$expiration — jamais consulté';
+    if (nom == null || nom.isEmpty) {
+      return link.ficheType.label;
     }
 
-    return '$expiration — consulté le '
+    return '$nom — ${link.ficheType.label}';
+  }
+
+  String _shareLinkStatusLabel(ShareLinkData link) {
+    final quand = _shareLinkEcheanceLabel(link);
+
+    if (link.dateDerniereConsultation == null) {
+      return '$quand — jamais consulté';
+    }
+
+    return '$quand — consulté le '
         '${formatShortDate(link.dateDerniereConsultation!)}';
+  }
+
+  /// Ce qui remplace « Expire le… » selon l'état du lien.
+  ///
+  /// Un lien révoqué dit d'abord qu'il l'est : c'est l'information qui
+  /// compte, et sa date d'échéance d'origine n'a plus d'intérêt.
+  String _shareLinkEcheanceLabel(ShareLinkData link) {
+    final revoqueLe = link.revoqueLe;
+
+    if (revoqueLe != null) {
+      return 'Révoqué le ${formatShortDate(revoqueLe)}';
+    }
+
+    if (link.permanent) {
+      return 'Sans date de fin';
+    }
+
+    final expiration = link.dateExpiration;
+
+    if (expiration == null) {
+      return 'Sans échéance connue';
+    }
+
+    return 'Expire le ${formatShortDate(expiration)}';
   }
 
   String _attachmentStatusLabel(EnfantEtablissementData attachment) {
@@ -529,6 +568,24 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
     return 'Rattaché — expire le '
         '${formatShortDate(attachment.dateExpiration)}';
+  }
+
+  /// Un partage terminé — révoqué ou expiré.
+  ///
+  /// Volontairement sans bouton : il n'y a plus rien à révoquer, et
+  /// proposer un geste inutile ferait douter de ce que l'écran dit.
+  Widget _partageTermineCard(ShareLinkData link) {
+    return Card(
+      color: KidsRelayColors.lin,
+      child: ListTile(
+        leading: const CircleAvatar(
+          backgroundColor: KidsRelayColors.bordure,
+          child: Icon(Icons.link_off),
+        ),
+        title: Text(_shareLinkTitle(link)),
+        subtitle: Text(_shareLinkStatusLabel(link)),
+      ),
+    );
   }
 
   Widget _partageCard({
@@ -604,9 +661,15 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
               );
             }
 
-            final activeLinks = (shareLinksSnapshot.data ?? [])
-                .where((link) => !link.estExpire)
-                .toList();
+            final tousLesLiens = shareLinksSnapshot.data ?? [];
+
+            final activeLinks =
+                tousLesLiens.where((link) => link.estActif).toList();
+
+            // Révoqués et expirés, jamais mêlés aux actifs : un coup
+            // d'œil doit suffire à savoir qui a accès aujourd'hui.
+            final liensTermines =
+                tousLesLiens.where((link) => !link.estActif).toList();
 
             final activeAttachments = (attachmentsSnapshot.data ?? [])
                 .where(
@@ -641,7 +704,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                 for (final link in activeLinks) ...[
                   _partageCard(
                     icon: Icons.link,
-                    title: link.ficheType.label,
+                    title: _shareLinkTitle(link),
                     subtitle: _shareLinkStatusLabel(link),
                     onRevoke: () => _revokeShareLink(context, link),
                   ),
@@ -667,6 +730,45 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                   icon: const Icon(Icons.add_link),
                   label: const Text('Créer un lien de partage'),
                 ),
+
+                // Repliée par défaut : l'historique compte, mais il ne
+                // doit pas noyer ce qui est actif. Depuis le
+                // 27/08/2026, révoquer ne supprime plus la ligne — sans
+                // cette section, le parent ne reverrait jamais ce qu'il
+                // a partagé.
+                if (liensTermines.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Theme(
+                    // Retire les traits de séparation par défaut de
+                    // l'ExpansionTile, qui coupent la section en deux.
+                    data: Theme.of(context).copyWith(
+                      dividerColor: Colors.transparent,
+                    ),
+                    child: ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: EdgeInsets.zero,
+                      title: Text(
+                        'Partages terminés (${liensTermines.length})',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: KidsRelayColors.ardoiseDouce,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        'Révoqués ou arrivés à échéance. Conservés '
+                        '12 mois.',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                      children: [
+                        for (final link in liensTermines) ...[
+                          _partageTermineCard(link),
+                          const SizedBox(height: 8),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
               ],
             );
           },

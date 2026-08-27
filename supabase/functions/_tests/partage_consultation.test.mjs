@@ -21,6 +21,8 @@ const PARTAGE = {
   date_expiration: '2026-08-30T12:00:00.000Z',
   contenu_fige: null,
   destinataire: 'structure_accueil',
+  revoque_le: null,
+  permanent: false,
 };
 
 const ENFANT = {
@@ -156,6 +158,93 @@ describe('Refus', () => {
     assert.deepEqual(depot.lectures.map((l) => l.nom), [
       'partageParToken',
     ]);
+  });
+
+  // Revocation par marquage (27/08/2026). Avant, revoquer supprimait la
+  // ligne : le lien tombait en « tokenInconnu ». Desormais la ligne
+  // reste, et c'est ce test qui garantit que l'acces est coupe quand
+  // meme.
+  test('Un lien révoqué ne s’ouvre pas, même avant son échéance', async () => {
+    const depot = fauxDepot({
+      partage: {
+        ...PARTAGE,
+        date_expiration: '2026-08-30T12:00:00.000Z',
+        revoque_le: '2026-08-24T09:00:00.000Z',
+      },
+    });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+    );
+
+    assert.deepEqual(resultat, { statut: 'lienRevoque' });
+    assert.deepEqual(depot.lectures.map((l) => l.nom), [
+      'partageParToken',
+    ]);
+  });
+
+  test('Un lien permanent révoqué ne s’ouvre pas non plus', async () => {
+    // La revocation passe avant tout : c'est le seul moyen d'arreter un
+    // lien qui n'expire jamais.
+    const depot = fauxDepot({
+      partage: {
+        ...PARTAGE,
+        date_expiration: null,
+        permanent: true,
+        revoque_le: '2026-08-24T09:00:00.000Z',
+      },
+    });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+    );
+
+    assert.deepEqual(resultat, { statut: 'lienRevoque' });
+  });
+
+  test('Un lien permanent s’ouvre malgré son absence de date', async () => {
+    // Sans le cas « permanent », une date nulle serait lue comme
+    // illisible et tous les liens permanents seraient refuses.
+    const depot = fauxDepot({
+      partage: {
+        ...PARTAGE,
+        date_expiration: null,
+        permanent: true,
+      },
+    });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+    );
+
+    assert.equal(resultat.statut, 'ok');
+  });
+
+  test('Sans date et sans être permanent, le lien est refusé', async () => {
+    // La contrainte en base l'interdit. Si cela arrive quand meme —
+    // migration a moitie appliquee, ecriture directe — on refuse plutot
+    // que d'ouvrir un lien dont personne ne sait dire s'il est valable.
+    const depot = fauxDepot({
+      partage: {
+        ...PARTAGE,
+        date_expiration: null,
+        permanent: false,
+      },
+    });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+    );
+
+    assert.deepEqual(resultat, { statut: 'lienExpire' });
   });
 
   test('Une panne de base ne se fait pas passer pour un lien invalide', async () => {
