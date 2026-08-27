@@ -56,17 +56,22 @@ que 21 tests protègent. Le fichier déposé en est le rendu.
 ## Hébergement
 
 Hébergement mutualisé OVH, offre Perso, serveurs en France, associé à
-`kidsrelay.fr`. Sous-domaine `fiche.kidsrelay.fr` à créer via l'onglet
+`kidsrelay.fr`. Sous-domaine `fiche.kidsrelay.fr` créé via l'onglet
 **Multisite**, dossier racine `fiche`, certificat Let's Encrypt.
 
-Les fichiers vont dans `www/fiche/`.
+**Les fichiers vont dans `/home/izfeflh/fiche/`**, et non dans
+`www/fiche/` comme cette page l'annonçait d'abord. Le champ « dossier
+racine » de Multisite est relatif à la racine du compte, pas à `www` :
+`fiche` donne donc un dossier **à côté** de `www`, qui est lui-même
+`/home/izfeflh/www`. Corrigé le 27/08/2026 après le dépôt réel — le
+précédent chemin était faux.
 
 ## Déposer une nouvelle version
 
 1. `node web_partage/generer.mjs`
 2. SFTP (FileZilla, port 22), identifiants de l'onglet **FTP-SSH**.
 3. Type de transfert **binaire**.
-4. Remplacer les deux fichiers dans `www/fiche/`.
+4. Remplacer les deux fichiers dans `/home/izfeflh/fiche/`.
 5. Vérifier (ci-dessous).
 
 ## Vérifier
