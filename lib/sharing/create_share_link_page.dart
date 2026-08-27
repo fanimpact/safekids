@@ -44,15 +44,30 @@ const Map<ShareFicheType, String> _descriptionsFiche = {
       'pas.',
 };
 
+/// Les choix de duree proposes au parent.
+///
+/// Le plafond de 7 jours a saute le 27/08/2026. Il partait d'un bon
+/// principe — un lien de partage est un jeton porteur, donc plus il vit
+/// moins le parent le maitrise — mais la reponse etait mauvaise : le
+/// rattachement a un etablissement propose deja un calendrier libre.
+/// La regle retenue est **acces anonyme = risque a compenser, pas duree
+/// a plafonner**, et la compensation est le verrouillage a la premiere
+/// ouverture.
+///
+/// [duration] est nulle pour les deux choix qui ne se calculent pas :
+/// une date choisie au calendrier, et le lien permanent.
 enum _ShareDuration {
   jour1('24 heures', Duration(hours: 24)),
-  jours3('3 jours', Duration(days: 3)),
-  jours7('7 jours', Duration(days: 7));
+  jours7('7 jours', Duration(days: 7)),
+  mois1('1 mois', Duration(days: 30)),
+  an1('1 an', Duration(days: 365)),
+  dateChoisie('Choisir une date', null),
+  permanent('Sans date de fin', null);
 
   const _ShareDuration(this.label, this.duration);
 
   final String label;
-  final Duration duration;
+  final Duration? duration;
 }
 
 class CreateShareLinkPage extends StatefulWidget {
@@ -76,6 +91,11 @@ class _CreateShareLinkPageState
   ShareDestinataire _selectedDestinataire =
       ShareDestinataire.particulier;
   _ShareDuration _selectedDuration = _ShareDuration.jour1;
+
+  /// Renseignee seulement quand le parent a choisi « Choisir une
+  /// date » : sans elle, ce choix ne vaut rien et la generation est
+  /// refusee.
+  DateTime? _dateChoisie;
 
   bool _isGenerating = false;
   String? _generatedLink;
@@ -264,9 +284,22 @@ class _CreateShareLinkPageState
       _expirationGeneree = null;
     });
 
-    final dateExpiration = DateTime.now().toUtc().add(
-      _selectedDuration.duration,
-    );
+    final permanent = _selectedDuration == _ShareDuration.permanent;
+    final dateExpiration = permanent ? null : _echeanceChoisie();
+
+    if (!permanent && dateExpiration == null) {
+      setState(() {
+        _isGenerating = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Choisissez la date de fin du lien.'),
+        ),
+      );
+
+      return;
+    }
 
     try {
       final link = await ShareLinkService.instance.createLink(
@@ -276,13 +309,14 @@ class _CreateShareLinkPageState
         destinataire: _selectedDestinataire.value,
         nomDestinataire: nomDestinataire,
         dateExpiration: dateExpiration,
+        permanent: permanent,
         contenuFige: contenuFige,
         activiteId: _selectedActivity?.id,
       );
 
       setState(() {
         _generatedLink = link;
-        _expirationGeneree = dateExpiration.toLocal();
+        _expirationGeneree = dateExpiration?.toLocal();
       });
     } catch (error) {
       if (!mounted) {
@@ -311,6 +345,83 @@ class _CreateShareLinkPageState
   ///
   /// `trim` d'abord : un nom fait uniquement d'espaces ne nomme rien,
   /// et passerait un simple test de champ vide.
+  /// L'échéance du lien à créer, ou `null` si elle n'est pas
+  /// déterminable — « Choisir une date » sans date choisie.
+  ///
+  /// Les raccourcis se calculent depuis maintenant ; la date choisie au
+  /// calendrier vaut jusqu'à la **fin** du jour retenu, parce qu'un
+  /// parent qui choisit le 12 s'attend à ce que le lien marche encore
+  /// le 12 au soir.
+  /// Ce que le parent lit sous le choix de durée.
+  ///
+  /// La phrase « Il ne peut pas être prolongé » a été retirée le
+  /// 27/08/2026 : elle est devenue fausse, le parent peut désormais
+  /// modifier l'échéance d'un partage en cours.
+  String _phraseEcheance() {
+    if (_selectedDuration == _ShareDuration.permanent) {
+      return 'Ce lien n’a pas de date de fin. Il fonctionnera tant '
+          'que vous ne l’aurez pas révoqué. Tous les 6 mois, un '
+          'rappel vous listera vos liens sans date de fin.';
+    }
+
+    final echeance = _echeanceChoisie();
+
+    if (echeance == null) {
+      return 'Choisissez la date à laquelle ce lien cessera de '
+          'fonctionner.';
+    }
+
+    return 'Le lien cessera de fonctionner le '
+        '${formatShortDateTime(echeance.toLocal())}. Vous pourrez '
+        'modifier cette date, ou le révoquer avant.';
+  }
+
+  DateTime? _echeanceChoisie() {
+    final raccourci = _selectedDuration.duration;
+
+    if (raccourci != null) {
+      return DateTime.now().toUtc().add(raccourci);
+    }
+
+    final choisie = _dateChoisie;
+
+    if (choisie == null) {
+      return null;
+    }
+
+    return DateTime(
+      choisie.year,
+      choisie.month,
+      choisie.day,
+      23,
+      59,
+    ).toUtc();
+  }
+
+  Future<void> _ouvrirCalendrier() async {
+    final maintenant = DateTime.now();
+
+    final choisie = await showDatePicker(
+      context: context,
+      initialDate: _dateChoisie ?? maintenant.add(const Duration(days: 7)),
+      firstDate: maintenant,
+      lastDate: DateTime(maintenant.year + 5),
+      helpText: 'Jusqu’à quand ce lien doit-il fonctionner ?',
+      cancelText: 'Annuler',
+      confirmText: 'Valider',
+    );
+
+    if (choisie == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _dateChoisie = choisie;
+      _generatedLink = null;
+      _expirationGeneree = null;
+    });
+  }
+
   String? _nomDestinataireSaisi() {
     final saisie = _nomDestinataireController.text.trim();
 
@@ -683,6 +794,20 @@ class _CreateShareLinkPageState
               ),
             ),
 
+            if (_selectedDuration == _ShareDuration.dateChoisie) ...[
+              const SizedBox(height: 8),
+
+              OutlinedButton.icon(
+                onPressed: _ouvrirCalendrier,
+                icon: const Icon(Icons.calendar_month),
+                label: Text(
+                  _dateChoisie == null
+                      ? 'Choisir la date de fin'
+                      : 'Fin le ${formatShortDate(_dateChoisie!)}',
+                ),
+              ),
+            ],
+
             // La duree ne dit rien tant qu'elle n'est pas rapportee a une
             // date : "24 heures" a partir de quand ? Le parent doit
             // pouvoir la lire, et la redire a la personne qui recoit le
@@ -690,10 +815,7 @@ class _CreateShareLinkPageState
             const SizedBox(height: 8),
 
             Text(
-              'Le lien cessera de fonctionner le '
-              '${formatShortDateTime(DateTime.now().add(_selectedDuration.duration))}. '
-              'Il ne peut pas être prolongé : il faudra en créer un '
-              'nouveau.',
+              _phraseEcheance(),
               style: const TextStyle(
                 fontSize: 14,
                 color: KidsRelayColors.ardoiseDouce,
@@ -763,11 +885,25 @@ class _CreateShareLinkPageState
 
               const SizedBox(height: 12),
 
+              // Un lien permanent n'a pas d'échéance à afficher, mais
+              // le silence serait pire : c'est le seul cas où le
+              // parent doit savoir que rien ne l'arrêtera tout seul.
+              // Le choix de durée est fiable ici, puisqu'en changer
+              // efface le lien affiché.
               if (_expirationGeneree != null)
                 Text(
                   'Valable jusqu’au ${formatShortDateTime(_expirationGeneree!)}. '
                   'Passé cette date, le lien n’affiche plus rien.',
                   style: const TextStyle(
+                    fontSize: 14,
+                    color: KidsRelayColors.ardoiseDouce,
+                  ),
+                )
+              else if (_selectedDuration == _ShareDuration.permanent)
+                const Text(
+                  'Ce lien n’a pas de date de fin. Il fonctionnera '
+                  'tant que vous ne l’aurez pas révoqué.',
+                  style: TextStyle(
                     fontSize: 14,
                     color: KidsRelayColors.ardoiseDouce,
                   ),

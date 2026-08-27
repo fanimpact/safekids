@@ -35,6 +35,20 @@ ShareLinkData _lien({
   );
 }
 
+/// Le code d'un fichier Dart, sans ses commentaires.
+///
+/// Une assertion « cette phrase a disparu » posee sur le fichier
+/// entier se heurte au commentaire qui explique le retrait, et cite
+/// donc la phrase retiree. Deja rencontre le 26/08/2026 sur les
+/// scripts SQL : meme piege, meme parade.
+String _codeSansCommentaires(String chemin) {
+  return File(chemin)
+      .readAsStringSync()
+      .split('\n')
+      .where((ligne) => !ligne.trimLeft().startsWith('//'))
+      .join('\n');
+}
+
 DateTime get _demain => DateTime.now().add(const Duration(days: 1));
 DateTime get _hier => DateTime.now().subtract(const Duration(days: 1));
 
@@ -325,6 +339,79 @@ void main() {
         contains('link.ficheType.label'),
         reason: 'Un lien sans nom reste identifiable par sa fiche',
       );
+    });
+  });
+
+  group('Les durées, libérées du plafond de 7 jours', () {
+    String source(String chemin) => File(chemin).readAsStringSync();
+
+    final ecran = source('lib/sharing/create_share_link_page.dart');
+
+    test('Les quatre raccourcis sont proposés', () {
+      for (final libelle in [
+        "'24 heures'",
+        "'7 jours'",
+        "'1 mois'",
+        "'1 an'",
+      ]) {
+        expect(
+          ecran,
+          contains(libelle),
+          reason: '$libelle manque dans les raccourcis',
+        );
+      }
+    });
+
+    test('Le plafond de 7 jours a sauté', () {
+      // « 3 jours » était le seul intermédiaire d'une échelle qui
+      // s'arrêtait à une semaine. L'échelle va maintenant à l'année.
+      expect(ecran, isNot(contains("jours3('3 jours'")));
+      expect(ecran, contains("mois1('1 mois'"));
+      expect(ecran, contains("an1('1 an'"));
+    });
+
+    test('La date libre et le permanent sont proposés', () {
+      expect(ecran, contains("dateChoisie('Choisir une date'"));
+      expect(ecran, contains("permanent('Sans date de fin'"));
+      expect(ecran, contains('showDatePicker('));
+    });
+
+    test('La phrase qui disait qu’on ne peut pas prolonger a disparu',
+        () {
+      // Elle est devenue fausse : le parent peut désormais modifier
+      // l'échéance d'un partage en cours.
+      final code = _codeSansCommentaires(
+        'lib/sharing/create_share_link_page.dart',
+      );
+
+      expect(code, isNot(contains('ne peut pas être prolongé')));
+      expect(code, contains('Vous pourrez '));
+    });
+
+    test('« Choisir une date » sans date choisie est refusé', () {
+      // Le choix ne vaut rien tant qu'aucune date n'est retenue : sans
+      // ce refus, la génération partirait sans échéance.
+      expect(ecran, contains('Choisissez la date de fin du lien.'));
+      expect(
+        ecran.indexOf('Choisissez la date de fin du lien.'),
+        lessThan(ecran.indexOf('createLink(')),
+      );
+    });
+
+    test('Le lien permanent annonce le rappel semestriel', () {
+      // Un lien qui n'expire jamais demande que le parent garde la
+      // main dessus. Le lui dire à la création vaut mieux que de le
+      // découvrir six mois plus tard.
+      expect(ecran, contains('n’a pas de date de fin'));
+      expect(ecran, contains('Tous les 6 mois'));
+    });
+
+    test('Le service accepte une échéance nulle et le drapeau', () {
+      final service = source('lib/sharing/share_link_service.dart');
+
+      expect(service, contains('required DateTime? dateExpiration'));
+      expect(service, contains('bool permanent = false'));
+      expect(service, contains("'permanent': permanent,"));
     });
   });
 }

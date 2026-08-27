@@ -55,10 +55,13 @@ class ShareLinkService {
     required String childId,
     required String typeFiche,
     required String destinataire,
-    required DateTime dateExpiration,
+    /// Nulle si et seulement si [permanent]. La base impose « soit une
+    /// date, soit permanent, jamais les deux ni aucun ».
+    required DateTime? dateExpiration,
     Map<String, dynamic>? contenuFige,
     String? activiteId,
     String? nomDestinataire,
+    bool permanent = false,
   }) async {
     compteurUsage.marquer(FonctionnaliteUsage.lienPartageCree);
 
@@ -68,7 +71,8 @@ class ShareLinkService {
           'enfant_id': childId,
           'type_fiche': typeFiche,
           'date_expiration':
-              dateExpiration.toUtc().toIso8601String(),
+              dateExpiration?.toUtc().toIso8601String(),
+          'permanent': permanent,
           'destinataire': destinataire,
           // Distinct de `destinataire`, qui porte le choix particulier /
           // structure d'accueil. Vide plutot que chaine vide : le
