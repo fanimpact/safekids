@@ -512,6 +512,63 @@ reportée faute d'outil ou de temps, elle doit entrer dans
 `a_verifier_sur_mobile.md`, qui est relu, et pas seulement dans le
 document du chantier, qui ne l'est plus une fois le chantier clos.
 
+## Verrou des liens de partage — ce qui reste ouvert (27/08/2026)
+
+Le chantier est clos et **vérifié en vrai** : sur un appareil non
+autorisé, la page affiche « Ce lien est déjà utilisé par quelqu'un
+d'autre » ; sans jeton dans l'adresse, « Il manque quelque chose dans
+cette adresse ». Trois points restent à traiter.
+
+### 1. La fenêtre de tolérance glisse — défaut confirmé
+
+`poserVerrou` est appelée pour **poser** comme pour **reprendre**, et
+elle réécrit `verrou_pose_le` à chaque fois. Le compteur repart donc de
+zéro à chaque reprise : un appareil qui reprend le verrou rouvre
+quinze minutes, puis un troisième, indéfiniment. La « tolérance de
+15 minutes » n'est pas quinze minutes après la première ouverture,
+elle est **renouvelable sans fin**.
+
+Constaté en base pendant le test : `verrou_pose_le` valait l'heure de
+l'iPhone, pas celle du PC qui avait ouvert le premier.
+
+**Ce qu'il faut** : ancrer la fenêtre à la **première** ouverture. Une
+reprise remplace l'empreinte sans toucher à la date de pose. Le plus
+simple est de ne réécrire `verrou_pose_le` que lorsqu'il est nul.
+
+À corriger **quelle que soit** la décision sur le nombre d'appareils.
+
+### 2. Le texte définitif du message de refus
+
+Le message affiché est une **version d'attente**, choisie par Fanny
+pour ne pas promettre un bouton qui n'existe pas :
+
+> Rapprochez-vous du parent : il pourra vous donner accès.
+
+Le texte définitif, à poser quand la demande d'accès pour un tiers sera
+construite :
+
+> Si vous avez besoin de ces informations, demandez au parent de vous
+> autoriser — c'est lui qui décide, et l'accès vous sera envoyé
+> directement.
+
+**La phrase à ne jamais retirer**, dans les deux versions : « Ce n'est
+pas la peine de demander qu'on vous le renvoie : un nouveau lien ne
+changerait rien. » C'est elle qui évite l'appel au parent pour un
+renvoi inutile, et tout le mécanisme de demande d'accès en dépend.
+
+### 3. Le nombre d'appareils — décision non prise
+
+Proposé et non tranché : **1 / 2 / 5 au choix** pour un lien envoyé par
+message, **1 imposé** pour un lien affiché en QR, et **tolérance à zéro**
+pour le QR — un scan ne passe jamais par la séquence messagerie →
+navigateur, et la fenêtre y serait une faille pendant les cinq minutes
+d'affichage du code.
+
+Fanny a noté que le mécanisme de demande d'accès pour un tiers rend le
+choix « plusieurs appareils » beaucoup moins nécessaire : le cas des
+trois maîtresses trouve sa réponse là plutôt qu'ici. **Rester à un seul
+appareil partout reste une option ouverte.**
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base
