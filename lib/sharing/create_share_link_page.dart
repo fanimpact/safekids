@@ -216,6 +216,20 @@ class _CreateShareLinkPageState
   }
 
   Future<void> _generateLink() async {
+    // TRACE TEMPORAIRE (27/08/2026) — a retirer une fois la cause du
+    // bouton inerte identifiee. Affiche l'etat reel au moment du clic,
+    // sans passer par ce que l'ecran laisse croire.
+    debugPrint(
+      'KIDSRELAY TRACE clic Generer : '
+      'ficheType=$_selectedFicheType '
+      'enfant=${_selectedChild?.childId} '
+      'nom="${_nomDestinataireController.text}" '
+      'nomRetenu=${_nomDestinataireSaisi()} '
+      'duree=$_selectedDuration '
+      'dateChoisie=$_dateChoisie '
+      'enCours=$_isGenerating',
+    );
+
     final child = _selectedChild;
 
     if (child == null || child.childId == null) {
@@ -256,7 +270,8 @@ class _CreateShareLinkPageState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Choisissez la fiche a partager avant de generer le lien.',
+            'Choisissez d’abord la fiche à partager, en haut de cet '
+            'écran.',
           ),
         ),
       );
@@ -868,11 +883,15 @@ class _CreateShareLinkPageState
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                // Inactif tant qu'aucune fiche n'est choisie : le geste
-                // doit etre delibere, pas un appui par defaut.
-                onPressed: _isGenerating || _selectedFicheType == null
-                    ? null
-                    : _generateLink,
+                // Desactive pendant la generation seulement, jamais
+                // pour cause de champ manquant (27/08/2026).
+                //
+                // Il l'etait tant qu'aucune fiche n'etait choisie. Le
+                // garde-fou tenait, mais l'ecran ne disait pas ce qui
+                // manquait : le parent appuyait, rien ne bougeait, et le
+                // message de refus prevu pour ce cas etait inatteignable
+                // — du code mort qui donnait l'illusion d'un cas traite.
+                onPressed: _isGenerating ? null : _generateLink,
                 child: Text(
                   _isGenerating
                       ? 'Génération en cours...'
