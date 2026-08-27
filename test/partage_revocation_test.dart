@@ -225,7 +225,10 @@ void main() {
   group('Le nom du destinataire', () {
     String source(String chemin) => File(chemin).readAsStringSync();
 
-    test('Le champ est proposé à la création, et facultatif', () {
+    test('Le champ est proposé à la création, et obligatoire', () {
+      // Obligatoire depuis le 27/08/2026 : sans nom, la liste devient
+      // une suite de lignes indistinctes, et un parent qui ne sait
+      // plus a quoi correspond un lien ne le revoquera jamais.
       final code = source('lib/sharing/create_share_link_page.dart');
 
       expect(code, contains('À qui donnez-vous ce lien ?'));
@@ -233,8 +236,42 @@ void main() {
       expect(code, contains('Aurélie, animatrice piscine'));
       expect(
         code,
-        contains('Facultatif'),
-        reason: 'Le parent n’est pas obligé de nommer qui que ce soit',
+        isNot(contains('Facultatif')),
+        reason: 'Le champ n’est plus facultatif depuis le 27/08/2026',
+      );
+    });
+
+    test('La génération est refusée si le champ est vide', () {
+      final code = source('lib/sharing/create_share_link_page.dart');
+
+      expect(code, contains('if (nomDestinataire == null)'));
+      expect(
+        code,
+        contains('Indiquez à qui vous donnez ce lien.'),
+      );
+
+      // Le refus doit tomber AVANT l'ecriture, jamais apres.
+      expect(
+        code.indexOf('if (nomDestinataire == null)'),
+        lessThan(code.indexOf('createLink(')),
+      );
+    });
+
+    test('La base refuse aussi, elle ne fait pas confiance à l’écran',
+        () {
+      final sql =
+          source('supabase/schema_partages_refonte.sql');
+
+      expect(
+        sql,
+        contains('alter column nom_destinataire set not null'),
+      );
+      expect(
+        sql,
+        contains('check (length(trim(nom_destinataire)) > 0)'),
+        reason:
+            'Un nom fait uniquement d’espaces passe « not null » sans '
+            'rien nommer',
       );
     });
 

@@ -80,9 +80,10 @@ class _CreateShareLinkPageState
   bool _isGenerating = false;
   String? _generatedLink;
 
-  /// « Aurelie, animatrice piscine ». Facultatif : le parent n'est pas
-  /// oblige de nommer qui que ce soit, et un lien sans nom reste
-  /// identifiable par son type de fiche.
+  /// « Aurelie, animatrice piscine ». **Obligatoire** depuis le
+  /// 27/08/2026 : le parent met ce qu'il veut, mais il met quelque
+  /// chose. La base le refuse aussi, `not null` et non vide apres
+  /// `trim`.
   final _nomDestinataireController = TextEditingController();
   DateTime? _expirationGeneree;
 
@@ -196,6 +197,24 @@ class _CreateShareLinkPageState
       return;
     }
 
+    // Obligatoire (27/08/2026) : sans nom, la liste des partages
+    // devient une suite de lignes indistinctes, et un parent qui ne
+    // sait plus a quoi correspond un lien ne le revoquera jamais.
+    final nomDestinataire = _nomDestinataireSaisi();
+
+    if (nomDestinataire == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Indiquez à qui vous donnez ce lien. Ce nom vous servira '
+            'à le reconnaître dans votre liste.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     Map<String, dynamic>? contenuFige;
 
     final typeFiche = _selectedFicheType;
@@ -255,7 +274,7 @@ class _CreateShareLinkPageState
         childId: child.childId!,
         typeFiche: typeFiche.value,
         destinataire: _selectedDestinataire.value,
-        nomDestinataire: _nomDestinataireSaisi(),
+        nomDestinataire: nomDestinataire,
         dateExpiration: dateExpiration,
         contenuFige: contenuFige,
         activiteId: _selectedActivity?.id,
@@ -287,11 +306,11 @@ class _CreateShareLinkPageState
     }
   }
 
-  /// Le nom saisi, ou `null` si le parent n'a rien mis.
+  /// Le nom saisi, ou `null` si le parent n'a rien mis — auquel cas
+  /// la generation est refusee.
   ///
-  /// Jamais une chaîne vide : une colonne qui contient `''` se lit
-  /// comme « nommé, mais sans nom », et l'écran afficherait un tiret
-  /// suivi de rien.
+  /// `trim` d'abord : un nom fait uniquement d'espaces ne nomme rien,
+  /// et passerait un simple test de champ vide.
   String? _nomDestinataireSaisi() {
     final saisie = _nomDestinataireController.text.trim();
 
@@ -543,9 +562,8 @@ class _CreateShareLinkPageState
             // l'application, il n'apparaît sur aucune fiche partagée et
             // la personne qui ouvre le lien ne le voit pas.
             const Text(
-              'Facultatif, et pour vous seul : ce nom vous aidera à '
-              'reconnaître ce lien dans votre liste. Il n’apparaît '
-              'nulle part sur la fiche partagée.',
+              'Ce nom sert à reconnaître ce lien dans votre liste. '
+              'Il n’apparaît pas sur la fiche partagée.',
               style: TextStyle(
                 fontSize: 14,
                 color: KidsRelayColors.ardoiseDouce,
@@ -562,6 +580,16 @@ class _CreateShareLinkPageState
                 hintText: 'Aurélie, animatrice piscine',
                 border: OutlineInputBorder(),
               ),
+              onChanged: (_) {
+                // Le lien deja genere ne porte pas ce nom-la : le
+                // laisser affiche laisserait croire le contraire.
+                if (_generatedLink != null) {
+                  setState(() {
+                    _generatedLink = null;
+                    _expirationGeneree = null;
+                  });
+                }
+              },
             ),
 
             const SizedBox(height: 20),

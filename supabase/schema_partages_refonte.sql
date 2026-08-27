@@ -256,3 +256,35 @@ select cron.schedule(
   '0 5 * * *',
   $$ select public.preparer_rappels_partages_permanents(); $$
 );
+
+-- =======================================================================
+-- 5. Le nom du destinataire devient obligatoire — 27/08/2026
+-- =======================================================================
+--
+-- Decision de Fanny, apres coup : le champ ne doit pas etre facultatif.
+--
+-- Sans nom, la liste des partages devient une suite de lignes
+-- indistinctes — « Informations pour les secours », trois fois — et un
+-- parent qui ne sait plus a quoi correspond un lien ne le revoquera
+-- jamais. Le nom sert exactement a ca.
+--
+-- La contrainte est posee en base et pas seulement a l'ecran : c'est le
+-- seul endroit qui tienne si un jour une autre voie d'ecriture
+-- apparait.
+--
+-- `trim` dans la contrainte : un nom fait uniquement d'espaces passe
+-- `not null` sans rien nommer.
+--
+-- Applicable sans precaution : la table etait **vide** au moment de
+-- l'appliquer — verifie le 27/08/2026, zero ligne. Les liens creees
+-- pendant les audits avaient deja ete nettoyes.
+
+alter table public.partages
+  alter column nom_destinataire set not null;
+
+alter table public.partages
+  drop constraint if exists nom_destinataire_non_vide;
+
+alter table public.partages
+  add constraint nom_destinataire_non_vide
+  check (length(trim(nom_destinataire)) > 0);
