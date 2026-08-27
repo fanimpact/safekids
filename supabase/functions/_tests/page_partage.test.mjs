@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 
 import {
-  CHEMIN_API_PAR_DEFAUT,
+  ADRESSE_API_PAR_DEFAUT,
   construirePage,
 } from '../_logique/page_partage.mts';
 
@@ -60,7 +60,16 @@ async function rendre(fiche, options = {}) {
     window: {
       location: {
         origin: 'https://exemple.test',
-        search: token ? `?token=${token}` : '',
+        // Le jeton vit dans le fragment : il n'est pas transmis au
+        // serveur qui sert la page, donc pas dans ses journaux.
+        hash: token ? `#jeton=${token}` : '',
+        search: '',
+      },
+      localStorage: {
+        getItem() {
+          return null;
+        },
+        setItem() {},
       },
     },
     URLSearchParams,
@@ -117,27 +126,42 @@ function ficheSecours(profilSante, surcharges = {}) {
 }
 
 describe('Adresse interrogée', () => {
-  test('Par défaut, celle imposée par Supabase aujourd’hui', async () => {
+  test('Par défaut, l’adresse absolue de la fonction', async () => {
+    // Absolue et non un chemin : la page est servie par
+    // fiche.kidsrelay.fr, la fonction par Supabase.
     const { appelsFetch } = await rendre(ficheSecours({}));
 
     assert.equal(
       appelsFetch[0],
-      'https://exemple.test/functions/v1/consulter-partage?token=token-1',
+      ADRESSE_API_PAR_DEFAUT + '?token=token-1',
     );
-    assert.equal(
-      CHEMIN_API_PAR_DEFAUT,
-      '/functions/v1/consulter-partage',
-    );
+    assert.match(ADRESSE_API_PAR_DEFAUT, /^https:\/\//);
   });
 
-  test('Un autre chemin suffit à servir la page ailleurs', async () => {
+  test('Le jeton est lu dans le fragment, jamais dans la requête',
+    async () => {
+      // Le fragment n'est pas transmis au serveur : le jeton
+      // n'apparait dans aucun journal d'acces de l'hebergeur.
+      const page = construirePage();
+
+      assert.match(page, /window.location.hash/);
+      assert.equal(
+        page.includes('window.location.search'),
+        false,
+      );
+    });
+
+  test('Une autre adresse suffit à servir la page ailleurs', async () => {
+    // L'adresse est desormais absolue : la page ne prefixe plus rien
+    // avec l'origine du navigateur, puisqu'elle n'est plus servie par
+    // le meme domaine que la fonction.
     const { appelsFetch } = await rendre(ficheSecours({}), {
-      cheminApi: '/api/partage',
+      cheminApi: 'https://ailleurs.test/api/partage',
     });
 
     assert.equal(
       appelsFetch[0],
-      'https://exemple.test/api/partage?token=token-1',
+      'https://ailleurs.test/api/partage?token=token-1',
     );
   });
 

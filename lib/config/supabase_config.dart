@@ -8,6 +8,19 @@ class SupabaseConfig {
   static const String url =
       'https://xcugfdjaifdibwowlrpi.supabase.co';
 
+
+  /// Adresse publique de la page qui affiche une fiche partagée.
+  ///
+  /// Servie par OVH et non par Supabase : la passerelle des Edge
+  /// Functions réécrit toute réponse HTML en `text/plain` avec un CSP
+  /// `sandbox`, et le navigateur affichait le code source au lieu de la
+  /// page. Constaté le 27/08/2026.
+  ///
+  /// **Ne plus changer.** Des liens sont envoyés à des accompagnants
+  /// et vivent parfois un an : une adresse qui bouge casse des liens
+  /// déjà distribués.
+  static const String adressePagePartage = 'https://fiche.kidsrelay.fr';
+
   static const String publishableKey =
       'sb_publishable_3j5-ynSda2sUBJD6my4KEQ_-_gICd11';
 

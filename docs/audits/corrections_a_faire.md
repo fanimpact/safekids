@@ -475,6 +475,43 @@ La règle est aussi écrite en tête de `_ShareDuration`, dans
 [`create_share_link_page.dart`](../../lib/sharing/create_share_link_page.dart),
 et un test vérifie que la mention y reste.
 
+## Une page destinée à l'extérieur doit être ouverte en vrai (27/08/2026)
+
+**Le constat.** La page publique d'un lien de partage — celle que voit
+l'accompagnant à qui un parent envoie une fiche — **n'avait jamais été
+ouverte dans un navigateur réel**. Elle était couverte par 19 tests en
+isolation, et ces tests passaient.
+
+Elle ne s'affichait pas. La passerelle des Edge Functions Supabase
+réécrit toute réponse HTML en `text/plain` avec un CSP `sandbox` : le
+navigateur montrait le **code source** au lieu de la page. C'est ce
+qu'aurait vu la première enseignante à qui Fanny aurait envoyé un lien.
+
+**Ce qui est troublant** : le défaut était noté comme non couvert, dans
+le document de vérification du 25/08/2026 lui-même —
+
+> « Le rendu de la page publique… La page est testée en isolation
+> (19 tests), mais elle n'a pas été ouverte dans un navigateur sur ces
+> trois liens. »
+
+La limite était écrite, et personne n'y est revenu. L'écrire n'a pas
+suffi.
+
+> **Règle : toute page destinée à un utilisateur extérieur doit être
+> ouverte en vrai, dans un navigateur, avant d'être considérée comme
+> faite.** Les tests en isolation vérifient ce que la page contient,
+> jamais ce que le navigateur en fait — ni les en-têtes, ni le CSP, ni
+> le rendu.
+
+S'applique à la page de partage, à `auth.kidsrelay.fr`, et à la page
+intermédiaire du rappel semestriel quand elle existera.
+
+**Corollaire pour les vérifications reportées** : une limite notée dans
+un document n'est pas une limite traitée. Quand une vérification est
+reportée faute d'outil ou de temps, elle doit entrer dans
+`a_verifier_sur_mobile.md`, qui est relu, et pas seulement dans le
+document du chantier, qui ne l'est plus une fois le chantier clos.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base

@@ -152,7 +152,9 @@ class ShareLinkService {
 
     final token = response['token'] as String;
 
-    return '${SupabaseConfig.url}/functions/v1/voir-partage'
-        '?token=$token';
+    // Le jeton passe apres le `#` : le fragment n'est pas transmis au
+    // serveur, donc il n'apparait dans aucun journal d'acces de
+    // l'hebergeur. Meme choix que pour auth.kidsrelay.fr.
+    return '${SupabaseConfig.adressePagePartage}/#jeton=$token';
   }
 }

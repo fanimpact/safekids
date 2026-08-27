@@ -1,42 +1,4 @@
-// Page publique d'un lien de partage : le document HTML complet, servi
-// tel quel a un accompagnant qui n'a pas l'application installee.
-//
-// Sortie de l'Edge Function pour vivre ici : la page n'est que du HTML
-// et du JavaScript de navigateur, elle ne depend d'aucun hebergeur.
-// Sauf un point, et c'est le seul : l'adresse a laquelle le navigateur
-// va chercher les donnees. D'ou le parametre `cheminApi`, qui vaut par
-// defaut ce que Supabase impose aujourd'hui.
-//
-// La page est en lecture seule : aucun formulaire, aucune ecriture.
-// Elle echappe systematiquement ce qu'elle affiche (voir `echapper`) —
-// un prenom, un nom de traitement ou une reaction allergique sont
-// saisis par un parent et ne doivent jamais pouvoir devenir du HTML.
-//
-// **Le jeton passe par le fragment** (`#jeton=...`), jamais par la
-// chaine de requete : le fragment n'est pas transmis au serveur, donc
-// le jeton n'apparait dans aucun journal d'acces de l'hebergeur. Meme
-// choix que pour `auth.kidsrelay.fr`.
-//
-// **Cette page n'est plus servie par Supabase.** La passerelle des Edge
-// Functions reecrit toute reponse HTML en `text/plain`, y ajoute
-// `nosniff` et un CSP `sandbox` : le navigateur affichait le code
-// source au lieu de la page. Constate le 27/08/2026 en interrogeant
-// les deux fonctions — le JSON de `consulter-partage` passe intact, le
-// HTML de `voir-partage` est reecrit. La page est donc deposee sur
-// `fiche.kidsrelay.fr`, chez OVH, comme la page d'authentification.
-
-/// Adresse par defaut de la fonction qui rend les donnees.
-///
-/// Absolue, et non un chemin : la page est servie par un autre domaine
-/// que la fonction. `consulter-partage` autorise deja toutes les
-/// origines.
-export const ADRESSE_API_PAR_DEFAUT =
-  'https://xcugfdjaifdibwowlrpi.supabase.co/functions/v1/consulter-partage';
-
-export function construirePage(
-  cheminApi: string = ADRESSE_API_PAR_DEFAUT,
-): string {
-  return `<!doctype html>
+<!doctype html>
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
@@ -514,7 +476,7 @@ export function construirePage(
   }
 
   var urlFonction =
-    '${cheminApi}?token=' + encodeURIComponent(token);
+    'https://xcugfdjaifdibwowlrpi.supabase.co/functions/v1/consulter-partage?token=' + encodeURIComponent(token);
 
   if (secret) {
     urlFonction += '&secret=' + encodeURIComponent(secret);
@@ -557,5 +519,3 @@ export function construirePage(
 </script>
 </body>
 </html>
-`;
-}
