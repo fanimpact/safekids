@@ -13,6 +13,11 @@
 // le texte d'une note. Les tests de `_tests/emails.test.mjs` la
 // verifient message par message.
 
+import {
+  piedConsigneHtml,
+  piedConsigneTexte,
+} from './consigne_domaine_jeune.mts';
+
 export interface Message {
   destinataire: string;
   sujet: string;
@@ -52,7 +57,22 @@ export function messageCodeVerification(
       `<strong style="font-size:20px">${code}</strong></p>` +
       `<p>Ce code est valable ${validiteMinutes} minutes. ` +
       `Si vous n’êtes pas à l’origine de cette ` +
-      `connexion, ignorez cet email.</p>`,
+      `connexion, ignorez cet email.</p>` +
+      // Le domaine est jeune : ce mail est celui que le plus de
+      // gens attendent vraiment, c'est donc le bon endroit pour
+      // dire quoi faire s'il manque. Voir
+      // `consigne_domaine_jeune.mts`.
+      piedConsigneHtml(),
+    // Un message qui n'existe qu'en HTML est un signal de
+    // courrier indesirable pour une partie des filtres — et
+    // c'est precisement le probleme qu'on traite ici.
+    texte:
+      `Nouvel appareil détecté sur votre compte KidsRelay.\n\n` +
+      `Votre code de vérification : ${code}\n\n` +
+      `Ce code est valable ${validiteMinutes} minutes. ` +
+      `Si vous n’êtes pas à l’origine de cette connexion, ` +
+      `ignorez cet email.` +
+      piedConsigneTexte(),
   };
 }
 

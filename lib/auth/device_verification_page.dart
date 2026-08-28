@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../textes/consigne_domaine_jeune.dart';
+import '../theme/kidsrelay_theme.dart';
+
 import '../home/home_page.dart';
 import '../suppression/garde_suppression.dart';
 import '../repositories/child_repository.dart';
@@ -194,6 +197,33 @@ class _DeviceVerificationPageState
                     : 'Renvoyer le code',
               ),
             ),
+
+            // Le seul moment ou l'on peut atteindre la personne
+            // autrement que par un mail qu'elle ne voit pas :
+            // elle est devant cet ecran, en train d'attendre.
+            //
+            // Temporaire — voir `consigne_domaine_jeune.dart`.
+            if (consigneDomaineJeuneActive) ...[
+              const SizedBox(height: 24),
+
+              const Text(
+                titreConsigneDomaineJeune,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              const Text(
+                consigneDomaineJeuneEcran,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: KidsRelayColors.ardoiseDouce,
+                ),
+              ),
+            ],
           ],
         ),
       ),

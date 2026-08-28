@@ -920,6 +920,52 @@ qui porte l'alignement DMARC.
 échouer, c'est la première chose à regarder.** Il suffirait alors
 d'ajouter l'inclusion de Brevo au SPF.
 
+
+## La consigne « courriers indésirables » — à retirer un jour (28/08/2026)
+
+Le premier mail réel de KidsRelay est arrivé **dans les indésirables**
+d'une boîte Hotmail. Diagnostic mené jusqu'au bout, et fermé :
+
+| | Verdict |
+|---|---|
+| Authentification | `spf=pass`, `dkim=pass`, `dmarc=pass`, `compauth=pass reason=100` — le plus élevé que Microsoft attribue |
+| IP d'envoi (`77.32.148.28`) | sur aucune liste noire — Spamhaus et SpamCop vérifiés |
+| Réputation du domaine | inexistante |
+
+**Il ne faut donc toucher à rien dans la zone DNS.** Tout y est juste,
+et une modification ne pourrait que casser ce qui marche. Une IP
+dédiée chez Brevo serait contre-productive : avec ces volumes elle ne
+se réchaufferait jamais.
+
+En attendant que la réputation se construise, une consigne prévient
+les parents, **aux deux endroits** : à l'écran pendant l'attente du
+code, et en pied du mail. L'écran compte plus que le mail — si la
+consigne n'était que dans le message, personne ne la lirait, puisque
+le message est justement dans les indésirables.
+
+### Comment la retirer
+
+Passer le drapeau à `false` aux **deux** endroits :
+
+- `lib/textes/consigne_domaine_jeune.dart`
+- `supabase/functions/_logique/consigne_domaine_jeune.mts`
+
+Un test refuse que les deux diffèrent : impossible d'en éteindre un et
+d'oublier l'autre.
+
+### À quoi reconnaître le moment
+
+**Un mail de test envoyé à une boîte Hotmail neuve arrive en boîte de
+réception sans que personne ait rien marqué.** Tant que ce n'est pas
+le cas, la consigne reste.
+
+### Ce qui reste vrai quoi qu'on fasse
+
+Pour un message annonçant qu'un enfant part avec les pompiers,
+**l'email ne sera jamais une garantie** : le classement appartient au
+fournisseur du destinataire. La vraie réponse est la notification sur
+écran verrouillé, déjà inscrite comme chantier suivant.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base
