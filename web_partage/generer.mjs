@@ -9,7 +9,7 @@
 //
 // Puis déposer `web_partage/public/` dans `www/fiche/` (voir README).
 
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -20,7 +20,24 @@ const dossier = join(ici, 'public');
 
 mkdirSync(dossier, { recursive: true });
 
-const page = construirePage();
+// La bibliotheque de QR, inlinee telle quelle : aucun CDN, aucune
+// requete vers un tiers, et le code se calcule hors ligne.
+//
+// La source lisible plutot que la version minifiee : 57 Ko contre
+// 20 Ko, sur une page chargee une fois. Ce que cela achete, c'est de
+// pouvoir relire ce qu'on depose chez un hebergeur — un blob minifie
+// ne s'audite pas.
+const bibliothequeQr = readFileSync(
+  join(ici, 'vendor', 'qrcode.js'),
+  'utf8',
+);
+
+const page = construirePage(
+  undefined,
+  undefined,
+  undefined,
+  bibliothequeQr,
+);
 
 writeFileSync(join(dossier, 'index.html'), page, 'utf8');
 

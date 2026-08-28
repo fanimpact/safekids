@@ -45,6 +45,22 @@ export function construirePage(
   cheminApi: string = ADRESSE_API_PAR_DEFAUT,
   adresseDeclenchement: string = ADRESSE_DECLENCHEMENT_PAR_DEFAUT,
   adressePage: string = ADRESSE_PAGE_PAR_DEFAUT,
+  /// La source de `qrcode.js` (Kazuhiko Arase, MIT), inlinée telle
+  /// quelle par `web_partage/generer.mjs`.
+  ///
+  /// Passée en paramètre plutôt qu'importée : cette couche reste
+  /// sans dépendance ni accès disque, et la bibliothèque ne vit
+  /// qu'à un seul endroit, `web_partage/vendor/qrcode.js`.
+  ///
+  /// Aucun CDN : la page ne fait aucune requête vers un tiers, et
+  /// le QR se calcule hors ligne. Dans un couloir d'école mal
+  /// couvert, un code qui dépendrait du réseau serait inutilisable
+  /// au moment précis où il sert.
+  ///
+  /// Vide, la page fonctionne sans QR : l'adresse en clair reste
+  /// affichée. C'est le cas de `voir-partage`, dont le HTML est de
+  /// toute façon réécrit par la passerelle Supabase.
+  bibliothequeQr: string = '',
 ): string {
   return `<!doctype html>
 <html lang="fr">
@@ -236,6 +252,30 @@ export function construirePage(
     margin-top: 28px;
   }
 
+  /* Cadre blanc et marge autour du code : un lecteur a besoin de
+     la zone calme, et un fond sombre le rendrait illisible. */
+  .qr-secours {
+    max-width: 320px;
+    margin: 24px auto 0;
+    padding: 12px;
+    background: #ffffff;
+    border: 1px solid var(--bordure, #d9d5ce);
+    border-radius: 8px;
+  }
+
+  .qr-secours svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  #bloc-transmission {
+    display: none;
+    margin: 28px 0 8px;
+    padding-top: 24px;
+    border-top: 1px solid var(--bordure, #d9d5ce);
+  }
+
   .adresse-secours {
     margin-top: 24px;
     padding: 14px;
@@ -287,6 +327,17 @@ export function construirePage(
       </button>
     </div>
 
+    <div id="bloc-transmission">
+      <strong>Vous passez le relais ?</strong>
+      <p>
+        Faites scanner ce code à la personne qui prend l’enfant en
+        charge après vous. Elle gardera la fiche sur son propre
+        téléphone et pourra la rouvrir sans vous.
+      </p>
+      <div class="qr-secours" id="qr-transmission"></div>
+      <p class="adresse-secours" id="adresse-transmission"></p>
+    </div>
+
     <footer>Fiche en lecture seule — générée par KidsRelay.</footer>
   </div>
 
@@ -325,9 +376,14 @@ export function construirePage(
       l’enfant : chacune gardera la fiche sur son propre téléphone et
       pourra la rouvrir sans vous.
     </p>
+    <div class="qr-secours" id="qr-secours"></div>
     <p class="adresse-secours" id="adresse-secours"></p>
   </div>
 </main>
+
+<script>
+${bibliothequeQr}
+</script>
 
 <script>
 (function () {
@@ -549,6 +605,118 @@ export function construirePage(
     }
   }
 
+  // Le code a scanner. Niveau de correction M : pour notre adresse de
+  // 82 caracteres, il donne exactement la meme grille que L (37x37)
+  // tout en tolerant deux fois plus de reflets et de traces de doigts.
+  // Q et H la densifieraient (45x45 et 49x49), ce qui nuit plus qu'il
+  // n'aide sur un ecran tenu a bout de bras.
+  function dessinerQr(idConteneur, adresse) {
+    var conteneur = document.getElementById(idConteneur);
+
+    if (!conteneur) {
+      return false;
+    }
+
+    conteneur.innerHTML = '';
+
+    // Sans la bibliotheque, l'adresse en clair reste affichee : elle
+    // est le repli, pas un pis-aller.
+    if (typeof qrcode !== 'function') {
+      conteneur.style.display = 'none';
+      return false;
+    }
+
+    try {
+      var qr = qrcode(0, 'M');
+
+      qr.addData(adresse);
+      qr.make();
+
+      conteneur.innerHTML = qr.createSvgTag({
+        cellSize: 8,
+        margin: 4,
+        scalable: true,
+        title: 'Code a scanner pour ouvrir la fiche secours',
+      });
+
+      conteneur.style.display = 'block';
+      return true;
+    } catch (e) {
+      conteneur.style.display = 'none';
+      return false;
+    }
+  }
+
+  function adresseDeLaFiche(jeton) {
+    return '${adressePage}/#jeton=' + jeton;
+  }
+
+  // On retient l'acces ouvert depuis CE navigateur, pour que la
+  // personne qui ferme l'ecran ou dont le telephone se verrouille
+  // retrouve son code sans rien redemander au serveur.
+  //
+  // Volontairement sans verification au reaffichage : la validite se
+  // controle au scan, par le serveur, seul endroit qui la connaisse.
+  // Un aller-retour reseau ici echouerait dans un couloir mal couvert,
+  // au moment precis ou le code sert.
+  // Une fonction et non une variable : le jeton est lu plus bas dans
+  // le script, et une constante calculee ici vaudrait undefined.
+  function cleAccesOuvert() {
+    return 'kidsrelay_secours_' + token;
+  }
+
+  function memoriserAcces(jeton, expireLe) {
+    try {
+      window.localStorage.setItem(
+        cleAccesOuvert(),
+        JSON.stringify({ jeton: jeton, expire: expireLe }),
+      );
+    } catch (e) {
+      // Sans stockage, le bouton restera celui du declenchement — qui
+      // retrouve l'acces existant cote serveur. Rien n'est perdu.
+    }
+  }
+
+  function accesMemorise() {
+    try {
+      var brut = window.localStorage.getItem(cleAccesOuvert());
+
+      if (!brut) {
+        return null;
+      }
+
+      var garde = JSON.parse(brut);
+
+      if (!garde || !garde.jeton) {
+        return null;
+      }
+
+      if (garde.expire && new Date(garde.expire) < new Date()) {
+        window.localStorage.removeItem(cleAccesOuvert());
+        return null;
+      }
+
+      return garde;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function montrerResultat(jeton, expireLe) {
+    document.getElementById('fin-acces-secours').textContent =
+      quandFinit(expireLe);
+
+    var adresse = adresseDeLaFiche(jeton);
+
+    dessinerQr('qr-secours', adresse);
+
+    // L'adresse en clair sous le code : tout le monde ne sait pas
+    // scanner, et c'est le repli quand le QR ne prend pas.
+    document.getElementById('adresse-secours').textContent = adresse;
+
+    afficherEcran('resultat-secours');
+  }
+
   function preparerAccesSecours(data) {
     // La fiche EST un acces secours : bandeau d'explication, et pas de
     // bouton — un acces secours n'en ouvre pas un autre.
@@ -569,6 +737,20 @@ export function construirePage(
         '. Le parent en a été informé.';
 
       bandeau.style.display = 'block';
+
+      // Le relais. Sans ce code, chaque nouveau soignant devrait
+      // rappeler la personne restee a l'ecole — ce qui ne se
+      // produira pas dans la realite (decision du 28/08/2026).
+      var adressePropre = adresseDeLaFiche(token);
+
+      dessinerQr('qr-transmission', adressePropre);
+
+      document.getElementById('adresse-transmission').textContent =
+        adressePropre;
+
+      document.getElementById('bloc-transmission').style.display =
+        'block';
+
       return;
     }
 
@@ -578,9 +760,24 @@ export function construirePage(
 
     document.getElementById('bloc-secours').style.display = 'block';
 
-    document.getElementById('bouton-secours').onclick = function () {
-      afficherEcran('confirmation-secours');
-    };
+    var deja = accesMemorise();
+    var bouton = document.getElementById('bouton-secours');
+
+    // Un acces est deja ouvert depuis cet appareil : le bouton doit
+    // le dire. « L'enfant part avec les secours » une seconde fois
+    // ferait croire qu'on en ouvre un autre — alors que le serveur
+    // rendrait le meme.
+    if (deja) {
+      bouton.textContent = 'Revoir le code de l’accès secours';
+
+      bouton.onclick = function () {
+        montrerResultat(deja.jeton, deja.expire);
+      };
+    } else {
+      bouton.onclick = function () {
+        afficherEcran('confirmation-secours');
+      };
+    }
 
     document.getElementById('annuler-secours').onclick = function () {
       afficherEcran('contenu');
@@ -633,15 +830,8 @@ export function construirePage(
         });
       })
       .then(function (data) {
-        document.getElementById('fin-acces-secours').textContent =
-          quandFinit(data.expire_le);
-
-        // L'adresse en clair, le temps que le QR existe. Elle reste
-        // utile ensuite : tout le monde ne sait pas scanner.
-        document.getElementById('adresse-secours').textContent =
-          '${adressePage}/#jeton=' + data.token;
-
-        afficherEcran('resultat-secours');
+        memoriserAcces(data.token, data.expire_le);
+        montrerResultat(data.token, data.expire_le);
       })
       .catch(function (erreur) {
         bouton.disabled = false;
@@ -746,6 +936,14 @@ export function construirePage(
     document.getElementById('sections').innerHTML = blocs.join('');
     document.getElementById('estado-chargement').style.display = 'none';
     document.getElementById('contenu').style.display = 'block';
+
+    // Sans cette ligne, ni le bouton ni le bandeau n'apparaissaient
+    // sur une fiche secours : l'appel n'existait que dans le rendu
+    // des recommandations d'activite, seul type de fiche ou un acces
+    // secours n'a aucun sens. Trouve le 28/08/2026 en exercant la
+    // page pour de vrai, apres trois assertions de lecture de source
+    // qui ne voyaient que le texte du script.
+    preparerAccesSecours(data);
   }
 
   function afficherVerrouille() {

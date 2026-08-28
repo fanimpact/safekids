@@ -40,8 +40,18 @@ Même choix que pour `auth.kidsrelay.fr`.
 
 | Fichier | Rôle |
 |---|---|
-| `index.html` | la page entière — styles et script compris |
+| `index.html` | la page entière — styles, script et bibliothèque QR compris |
 | `robots.txt` | interdit l'indexation, en plus de la balise `robots` de la page |
+
+`vendor/qrcode.js` **n'est pas déposé** : le générateur l'inline
+dans `index.html`. C'est ce qui fait passer la page de 24 Ko à
+86 Ko, et c'est voulu — aucun CDN, aucune requête vers un tiers,
+et le code QR se calcule hors ligne. Dans un couloir d'école mal
+couvert, un code qui dépendrait du réseau serait inutilisable au
+moment précis où il sert.
+
+La source lisible plutôt que la version minifiée (57 Ko contre
+20 Ko) : ce qu'on dépose chez un hébergeur doit pouvoir se relire.
 
 Ces deux fichiers sont **générés**, jamais écrits à la main :
 

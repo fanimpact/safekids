@@ -22,6 +22,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../services/service_exception.dart';
 import '../theme/kidsrelay_theme.dart';
+import 'code_qr.dart';
 import 'service_acces_secours.dart';
 
 /// Le bloc posé en pied de la fiche secours.
@@ -382,6 +383,14 @@ class _EcranAccesSecoursOuvertState
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 24),
+
+            // Le code, puis l'adresse en clair sous lui : tout le
+            // monde ne sait pas scanner, et c'est le repli quand le
+            // QR ne prend pas.
+            Center(child: CodeQr(donnees: adresse)),
+
+            const SizedBox(height: 16),
+
             Card(
               color: KidsRelayColors.lin,
               child: Padding(

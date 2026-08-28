@@ -47,6 +47,7 @@ dependencies:
   share_plus: ^13.3.0
   path_provider: ^2.1.6
   local_auth: ^3.0.2
+  qr: ^3.0.2
 
 # Generation des icones a partir de assets/icone/ : voir le
 # LISEZ-MOI de ce dossier pour le format attendu. Outil de

@@ -669,6 +669,60 @@ Si la formulation ne convient pas, elle se change en un seul endroit :
   n'invente rien — mais cela vaut d'inviter les équipes à renseigner
   leur fonction.
 
+
+## Le QR de l'accès secours — construit le 28/08/2026
+
+Le code que chaque soignant scanne pour garder la fiche sur son propre
+téléphone, aux deux endroits où un accès secours peut être ouvert : la
+page publique et l'application.
+
+**Ce qui a été retenu.** Niveau de correction **M**. Ce n'est pas un
+défaut de bibliothèque : mesuré, pour notre adresse de 82 caractères,
+M donne exactement la même grille que L — 37 × 37 — tout en tolérant
+deux fois plus de reflets et de traces de doigts. Q et H la
+densifieraient (45 × 45 et 49 × 49), ce qui nuit plus qu'il n'aide sur
+un écran tenu à bout de bras. **Le changer coûte sans rien apporter.**
+
+**Le QR figure aussi sur la fiche qu'ouvre le soignant** (décision de
+Fanny) : sans lui, chaque nouveau soignant devrait rappeler la
+personne restée à l'école — ce qui ne se produira pas dans la réalité.
+La chaîne de prise en charge est précisément ce que le mécanisme doit
+couvrir.
+
+**L'adresse en clair reste sous le code**, des deux côtés. Tout le
+monde ne sait pas scanner, et c'est le repli quand le QR ne prend pas.
+
+### Aucune dépendance nouvelle
+
+Côté application, `qr_flutter` a été écarté : sa dernière version date
+de trois ans et elle épingle une version ancienne de `qr`. Seul
+l'encodeur `qr` est utilisé, avec un `CustomPainter` à nous — et il
+était **déjà dans l'arbre**, via `pdf` puis `barcode`. La contrainte
+reste `^3.0.2` : `barcode` interdit la 4.
+
+Côté page publique, `qrcode.js` (Kazuhiko Arase, MIT) est déposé dans
+`web_partage/vendor/` et inliné par le générateur.
+
+### Le défaut trouvé au passage, et ce qu'il enseigne
+
+En exerçant la page pour de vrai, les nouveaux tests ont montré que
+**`preparerAccesSecours` n'était jamais appelé sur une fiche
+secours**. L'appel n'existait que dans le rendu des recommandations
+d'activité — le seul type de fiche où un accès secours n'a aucun sens.
+
+Autrement dit : sur la page publique, ni le bouton « L'enfant part
+avec les secours », ni le bandeau de l'accès secours n'apparaissaient
+jamais. Le mécanisme entier était inerte.
+
+Trois assertions le disaient présent. Elles lisaient le **texte du
+script**, pas son exécution — le même mode d'échec que les trois fois
+déjà notées dans ce fichier. Corrigé, et deux tests de comportement
+montent désormais la garde.
+
+**La règle à en tirer :** une assertion de lecture de sources prouve
+qu'un code est écrit, jamais qu'il est atteint. Pour tout ce qui a un
+chemin d'exécution, exercer le chemin.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base

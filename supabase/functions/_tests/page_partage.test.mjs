@@ -1,6 +1,25 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// La vraie bibliotheque, celle qui sera inlinee dans la page.
+// Les tests du QR l'executent telle quelle : ce qui est verifie est
+// exactement ce qui sera servi.
+const BIBLIOTHEQUE_QR = readFileSync(
+  join(
+    dirname(fileURLToPath(import.meta.url)),
+    '..',
+    '..',
+    '..',
+    'web_partage',
+    'vendor',
+    'qrcode.js',
+  ),
+  'utf8',
+);
 
 import {
   ADRESSE_API_PAR_DEFAUT,
@@ -53,12 +72,17 @@ async function rendre(fiche, options = {}) {
     'resultat-secours': element(),
     'fin-acces-secours': element(),
     'adresse-secours': element(),
+    'qr-secours': element(),
+    'bloc-transmission': element(),
+    'qr-transmission': element(),
+    'adresse-transmission': element(),
     'nom-enfant': element(),
     'details-identite': element(),
     sections: element(),
   };
 
   const appelsFetch = [];
+  const stockage = { ...(options.stockage ?? {}) };
 
   // `new Date()` sans argument doit rendre une date fixe : le calcul de
   // l'âge en dépend, et un test ne doit pas changer de résultat avec le
@@ -84,10 +108,17 @@ async function rendre(fiche, options = {}) {
         search: '',
       },
       localStorage: {
-        getItem() {
-          return null;
+        getItem(cle) {
+          return Object.prototype.hasOwnProperty.call(stockage, cle)
+            ? stockage[cle]
+            : null;
         },
-        setItem() {},
+        setItem(cle, valeur) {
+          stockage[cle] = String(valeur);
+        },
+        removeItem(cle) {
+          delete stockage[cle];
+        },
       },
     },
     URLSearchParams,
@@ -101,26 +132,51 @@ async function rendre(fiche, options = {}) {
     fetch(url) {
       appelsFetch.push(url);
 
+      // Le declenchement de l'acces secours ne rend pas une fiche
+      // mais le jeton du nouvel acces : deux reponses differentes,
+      // sur deux adresses differentes.
+      const estDeclenchement = String(url).includes('declencher');
+
+      const corps = estDeclenchement
+        ? (options.reponseDeclenchement ?? { error: 'Refusé' })
+        : (fiche ?? { error: 'Lien expiré ou invalide.' });
+
       return Promise.resolve({
-        ok: reponseOk,
+        ok: estDeclenchement ? !corps.error : reponseOk,
         status: statut,
-        json: () => Promise.resolve(fiche ?? { error: 'Lien expiré ou invalide.' }),
+        json: () => Promise.resolve(corps),
       });
     },
   };
 
-  const page = construirePage(options.cheminApi);
-  const script = page.slice(
-    page.indexOf('<script>') + '<script>'.length,
-    page.indexOf('</script>'),
+  // La page porte deux scripts depuis le QR : la bibliotheque, puis
+  // le script de la page. On prend le dernier — celui qu'on teste.
+  const page = construirePage(
+    options.cheminApi,
+    undefined,
+    undefined,
+    options.avecQr ? BIBLIOTHEQUE_QR : '',
   );
 
-  vm.runInNewContext(script, bacASable);
+  const script = page.slice(
+    page.lastIndexOf('<script>') + '<script>'.length,
+    page.lastIndexOf('</script>'),
+  );
+
+  // Le meme contexte pour les deux, comme dans un navigateur : le
+  // script de la page doit voir le `qrcode` global du premier.
+  const contexte = vm.createContext(bacASable);
+
+  if (options.avecQr) {
+    vm.runInContext(BIBLIOTHEQUE_QR, contexte);
+  }
+
+  vm.runInContext(script, contexte);
 
   // Laisse la chaîne de promesses du script se dérouler.
   await new Promise((resoudre) => setImmediate(resoudre));
 
-  return { elements, appelsFetch };
+  return { elements, appelsFetch, stockage };
 }
 
 const ENFANT = {
@@ -576,7 +632,7 @@ describe('Accès secours, sur la page publique', () => {
     () => {
       const page = construirePage();
 
-      assert.match(page, /#jeton=' \+ data\.token/);
+      assert.match(page, /#jeton=' \+ jeton/);
     });
 
   test('Les deux adresses sont des paramètres', () => {
@@ -589,5 +645,224 @@ describe('Accès secours, sur la page publique', () => {
 
     assert.match(page, /https:\/\/ailleurs\.test\/declencher/);
     assert.match(page, /https:\/\/ailleurs\.test\/#jeton=/);
+  });
+});
+
+// Le QR de l'accès secours (28/08/2026).
+//
+// Ce que ces tests protègent tient en une phrase : le code doit se
+// calculer sur le téléphone, sans réseau et sans tiers. Un QR qui
+// dépendrait d'un CDN serait inutilisable dans un couloir d'école mal
+// couvert — au moment précis où il sert.
+describe('Le QR de l’accès secours', () => {
+  const FICHE_SECOURS_OUVERT = ficheSecours(
+    {},
+    {
+      est_acces_secours: true,
+      expire_le: '2026-08-24T12:00:00.000Z',
+    },
+  );
+
+  const FICHE_AVEC_BOUTON = ficheSecours(
+    {},
+    { acces_secours_disponible: true },
+  );
+
+  test('Aucun CDN, aucune requête vers un tiers', () => {
+    // La règle de la page publique, qui ne bouge pas : rien n'est
+    // chargé depuis l'extérieur.
+    const page = construirePage(undefined, undefined, undefined, 'FAUX');
+
+    assert.ok(!page.includes('<script src='));
+    assert.ok(!page.includes('cdn'));
+    assert.ok(page.includes('FAUX'));
+  });
+
+  test('Sans la bibliothèque, la page reste servable', () => {
+    // `voir-partage` la construit sans QR : son HTML est de toute
+    // façon réécrit par la passerelle Supabase.
+    const page = construirePage();
+
+    assert.ok(page.includes('id="qr-secours"'));
+    assert.ok(page.includes('typeof qrcode !== '));
+  });
+
+  test('Le code est calculé sur place, jamais demandé au serveur',
+    async () => {
+      const { elements, appelsFetch } = await rendre(FICHE_SECOURS_OUVERT, {
+        avecQr: true,
+      });
+
+      assert.ok(elements['qr-transmission'].innerHTML.includes('<svg'));
+
+      // Un seul appel : celui qui a servi la fiche.
+      assert.equal(appelsFetch.length, 1);
+    });
+
+  test('La fiche du soignant porte le code, pour passer le relais',
+    async () => {
+      // Décision du 28/08/2026 : sans lui, chaque nouveau soignant
+      // devrait rappeler la personne restée à l'école.
+      const { elements } = await rendre(FICHE_SECOURS_OUVERT, {
+        avecQr: true,
+      });
+
+      assert.equal(elements['bloc-transmission'].style.display, 'block');
+
+      assert.equal(
+        elements['adresse-transmission'].textContent,
+        'https://fiche.kidsrelay.fr/#jeton=token-1',
+      );
+    });
+
+  test('L’adresse en clair reste sous le code', async () => {
+    // Tout le monde ne sait pas scanner, et c'est le repli quand le
+    // QR ne prend pas.
+    const page = construirePage();
+
+    assert.ok(
+      page.indexOf('id="qr-secours"') <
+        page.indexOf('id="adresse-secours"'),
+    );
+
+    assert.ok(
+      page.indexOf('id="qr-transmission"') <
+        page.indexOf('id="adresse-transmission"'),
+    );
+  });
+
+  test('Sans la bibliothèque, l’adresse s’affiche quand même',
+    async () => {
+      const { elements } = await rendre(FICHE_SECOURS_OUVERT);
+
+      assert.equal(elements['qr-transmission'].innerHTML, '');
+
+      assert.equal(
+        elements['adresse-transmission'].textContent,
+        'https://fiche.kidsrelay.fr/#jeton=token-1',
+      );
+    });
+
+  test('Niveau de correction M', () => {
+    // Pour notre adresse de 82 caractères, M donne exactement la même
+    // grille que L (37x37) en tolérant deux fois plus de reflets. Q et
+    // H la densifieraient (45x45 et 49x49), ce qui nuit plus qu'il
+    // n'aide sur un écran tenu à bout de bras.
+    const page = construirePage();
+
+    assert.match(page, /qrcode\(0, 'M'\)/);
+  });
+
+  test('Un accès déjà ouvert se réaffiche sans rien redemander',
+    async () => {
+      // Quelqu'un qui ferme l'écran ou dont le téléphone se verrouille
+      // doit retrouver son code. La validité se contrôle au scan, par
+      // le serveur : un aller-retour ici échouerait hors couverture.
+      const { elements, appelsFetch } = await rendre(FICHE_AVEC_BOUTON, {
+        avecQr: true,
+        stockage: {
+          'kidsrelay_secours_token-1': JSON.stringify({
+            jeton: 'jeton-secours',
+            expire: '2026-08-24T12:00:00.000Z',
+          }),
+        },
+      });
+
+      assert.equal(
+        elements['bouton-secours'].textContent,
+        'Revoir le code de l’accès secours',
+      );
+
+      elements['bouton-secours'].onclick();
+
+      assert.equal(
+        elements['adresse-secours'].textContent,
+        'https://fiche.kidsrelay.fr/#jeton=jeton-secours',
+      );
+
+      assert.ok(elements['qr-secours'].innerHTML.includes('<svg'));
+
+      // Toujours un seul appel : celui de la fiche.
+      assert.equal(appelsFetch.length, 1);
+    });
+
+  test('Un accès mémorisé mais expiré ne se propose plus', async () => {
+    const { elements } = await rendre(FICHE_AVEC_BOUTON, {
+      stockage: {
+        'kidsrelay_secours_token-1': JSON.stringify({
+          jeton: 'vieux-jeton',
+          expire: '2026-08-22T12:00:00.000Z',
+        }),
+      },
+    });
+
+    // Le libelle n'a pas ete remplace, et le bouton mene toujours a
+    // la confirmation : rien ne laisse croire qu'un acces est ouvert.
+    assert.equal(elements['bouton-secours'].textContent, '');
+
+    elements['bouton-secours'].onclick();
+
+    assert.equal(
+      elements['confirmation-secours'].style.display,
+      'block',
+    );
+  });
+
+  test('Le déclenchement mémorise l’accès pour le réafficher',
+    async () => {
+      const { elements, stockage } = await rendre(FICHE_AVEC_BOUTON, {
+        avecQr: true,
+        reponseDeclenchement: {
+          token: 'jeton-neuf',
+          expire_le: '2026-08-24T12:00:00.000Z',
+        },
+      });
+
+      elements['confirmer-secours'].onclick();
+
+      await new Promise((resoudre) => setImmediate(resoudre));
+
+      assert.ok(stockage['kidsrelay_secours_token-1']);
+
+      assert.match(
+        stockage['kidsrelay_secours_token-1'],
+        /jeton-neuf/,
+      );
+    });
+});
+
+// Le défaut du 28/08/2026, et son garde-fou.
+//
+// `preparerAccesSecours` n'était appelé que depuis le rendu des
+// recommandations d'activité — le seul type de fiche où un accès
+// secours n'a aucun sens. Sur une fiche secours, ni le bouton ni le
+// bandeau n'apparaissaient donc jamais.
+//
+// Trois assertions de lecture de source le disaient présent : elles
+// voyaient le texte du script, pas son exécution. Ces deux-ci
+// exercent la page.
+describe('Le geste secours atteint bien la fiche secours', () => {
+  test('Le bouton apparaît sur une fiche secours', async () => {
+    const { elements } = await rendre(
+      ficheSecours({}, { acces_secours_disponible: true }),
+    );
+
+    assert.equal(elements['bloc-secours'].style.display, 'block');
+  });
+
+  test('Le bandeau apparaît sur un accès secours', async () => {
+    const { elements } = await rendre(
+      ficheSecours({}, {
+        est_acces_secours: true,
+        expire_le: '2026-08-24T12:00:00.000Z',
+      }),
+    );
+
+    assert.equal(elements['bandeau-secours'].style.display, 'block');
+
+    assert.match(
+      elements['titre-bandeau-secours'].textContent,
+      /Accès secours/,
+    );
   });
 });
