@@ -597,6 +597,46 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
   ///
   /// Volontairement sans bouton : il n'y a plus rien à révoquer, et
   /// proposer un geste inutile ferait douter de ce que l'écran dit.
+  /// Un accès qui descend d'un autre — aujourd'hui, un accès secours.
+  ///
+  /// Indenté sous sa souche et non posé à côté : le parent doit voir
+  /// d'où il vient. En ambre, parce qu'il a été ouvert sans qu'on le
+  /// lui demande — il doit sauter aux yeux dans la liste.
+  Widget _carteDerivee(BuildContext context, ShareLinkData derive) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 24, top: 4),
+      child: Card(
+        color: KidsRelayColors.ambreFond,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: KidsRelayColors.ambreBordure),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ListTile(
+          leading: const CircleAvatar(
+            backgroundColor: KidsRelayColors.ambreBordure,
+            child: Icon(Icons.local_hospital_outlined),
+          ),
+          title: Text(
+            derive.declencheEnSecours
+                ? 'Accès secours'
+                : _shareLinkTitle(derive),
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(
+            derive.declencheEnSecours
+                ? 'Ouvert sans votre réponse, comme vous l’aviez '
+                    'autorisé. ${_shareLinkStatusLabel(derive)}'
+                : _shareLinkStatusLabel(derive),
+          ),
+          trailing: TextButton(
+            onPressed: () => _revokeShareLink(context, derive),
+            child: const Text('Révoquer'),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _partageTermineCard(ShareLinkData link) {
     return Card(
       color: KidsRelayColors.lin,
@@ -867,8 +907,15 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
             final tousLesLiens = shareLinksSnapshot.data ?? [];
 
-            final activeLinks =
+            final actifs =
                 tousLesLiens.where((link) => link.estActif).toList();
+
+            // Les souches seulement : un accès secours s'affiche sous
+            // celui dont il dérive, jamais à côté. Sinon la liste ne
+            // dit plus d'où vient chaque accès.
+            final activeLinks = actifs
+                .where((link) => link.partageOrigineId == null)
+                .toList();
 
             // Révoqués et expirés, jamais mêlés aux actifs : un coup
             // d'œil doit suffire à savoir qui a accès aujourd'hui.
@@ -916,6 +963,11 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                   ),
 
                   _bandeauTentatives(context, link),
+
+                  for (final derive in actifs.where(
+                    (autre) => autre.partageOrigineId == link.id,
+                  ))
+                    _carteDerivee(context, derive),
 
                   const SizedBox(height: 8),
                 ],

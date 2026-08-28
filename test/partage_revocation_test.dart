@@ -743,4 +743,112 @@ void main() {
       );
     });
   });
+
+  group('La préautorisation de l’accès secours', () {
+    String source(String chemin) => File(chemin).readAsStringSync();
+
+    final ecran = source('lib/sharing/create_share_link_page.dart');
+
+    test('Jamais cochée d’avance', () {
+      // C'est la seule autorisation de l'application qui laisse
+      // quelqu'un d'autre ouvrir un accès aux données de santé sans
+      // que le parent réponde. Elle doit être un geste, pas un
+      // réglage par défaut.
+      expect(ecran, contains('bool _accesSecours = false;'));
+    });
+
+    test('Le texte dit les trois choses qui engagent le parent', () {
+      // Ce que la personne pourra faire, que c'est sans attendre sa
+      // réponse, et qu'il peut y mettre fin.
+      expect(ecran, contains('sans attendre votre réponse'));
+      expect(ecran, contains('prévenu immédiatement'));
+      expect(ecran, contains('y mettre fin à tout moment'));
+    });
+
+    test('Il dit aussi ce que l’accès ne donne pas', () {
+      expect(
+        ecran,
+        contains('que les informations pour '),
+      );
+      expect(ecran, contains('dure 24 heures'));
+    });
+
+    test('Le choix part jusqu’à la base', () {
+      expect(ecran, contains('accesSecoursAutorise: _accesSecours'));
+
+      final service = source('lib/sharing/share_link_service.dart');
+
+      expect(service, contains('bool accesSecoursAutorise = false'));
+      expect(
+        service,
+        contains("'acces_secours_autorise': accesSecoursAutorise,"),
+      );
+    });
+
+    test('Le modèle relit les trois colonnes', () {
+      final derive = ShareLinkData.fromRow({
+        'id': 'secours-1',
+        'token': 'jeton',
+        'enfant_id': 'enfant-1',
+        'type_fiche': 'secours',
+        'destinataire': 'particulier',
+        'date_creation': '2026-08-28T14:00:00Z',
+        'date_expiration': '2026-08-29T14:00:00Z',
+        'date_derniere_consultation': null,
+        'acces_secours_autorise': false,
+        'declenche_en_secours': true,
+        'partage_origine_id': 'partage-1',
+      });
+
+      expect(derive.declencheEnSecours, isTrue);
+      expect(derive.partageOrigineId, 'partage-1');
+
+      final souche = ShareLinkData.fromRow({
+        'id': 'partage-1',
+        'token': 'jeton',
+        'enfant_id': 'enfant-1',
+        'type_fiche': 'secours',
+        'destinataire': 'particulier',
+        'date_creation': '2026-08-28T10:00:00Z',
+        'date_expiration': '2026-08-29T10:00:00Z',
+        'date_derniere_consultation': null,
+        'acces_secours_autorise': true,
+      });
+
+      expect(souche.accesSecoursAutorise, isTrue);
+      expect(souche.declencheEnSecours, isFalse);
+      expect(souche.partageOrigineId, isNull);
+    });
+  });
+
+  group('L’accès dérivé s’affiche sous sa souche', () {
+    String source(String chemin) => File(chemin).readAsStringSync();
+
+    final ecran = source('lib/children/child_profile_page.dart');
+
+    test('Il n’apparaît pas comme un partage de premier niveau', () {
+      // Sinon la liste ne dit plus d'où vient chaque accès.
+      expect(ecran, contains('link.partageOrigineId == null'));
+    });
+
+    test('Il est indenté sous celui dont il dérive', () {
+      expect(ecran, contains('autre.partageOrigineId == link.id'));
+      expect(ecran, contains('_carteDerivee('));
+    });
+
+    test('Il dit qu’il a été ouvert sans réponse du parent', () {
+      expect(ecran, contains('Ouvert sans votre réponse'));
+      expect(ecran, contains('comme vous l’aviez '));
+    });
+
+    test('Il reste révocable', () {
+      final debut = ecran.indexOf('Widget _carteDerivee(');
+      final fin = ecran.indexOf('Widget _partageTermineCard(');
+
+      expect(
+        ecran.substring(debut, fin),
+        contains('_revokeShareLink(context, derive)'),
+      );
+    });
+  });
 }

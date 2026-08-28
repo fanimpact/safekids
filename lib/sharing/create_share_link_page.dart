@@ -138,6 +138,12 @@ class _CreateShareLinkPageState
 
   _NombreAppareils _appareils = _NombreAppareils.un;
 
+  /// **Jamais cochée d'avance.** C'est la seule autorisation de
+  /// l'application qui laisse quelqu'un d'autre ouvrir un accès aux
+  /// données de santé sans que le parent réponde : elle doit être un
+  /// geste, pas un réglage par défaut.
+  bool _accesSecours = false;
+
   bool _isGenerating = false;
   String? _generatedLink;
 
@@ -367,6 +373,7 @@ class _CreateShareLinkPageState
         dateExpiration: dateExpiration,
         permanent: permanent,
         appareilsMax: _appareils.nombre,
+        accesSecoursAutorise: _accesSecours,
         contenuFige: contenuFige,
         activiteId: _selectedActivity?.id,
       );
@@ -929,6 +936,86 @@ class _CreateShareLinkPageState
               style: const TextStyle(
                 fontSize: 14,
                 color: KidsRelayColors.ardoiseDouce,
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              'Accès secours',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // Material et non Container : une CheckboxListTile peint
+            // son fond et ses effets tactiles sur le Material le plus
+            // proche. Posee sur une simple boite coloree, la case ne
+            // montrerait rien quand on la touche.
+            Material(
+              color: KidsRelayColors.lin,
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(
+                  color: KidsRelayColors.bordure,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CheckboxListTile(
+                      value: _accesSecours,
+                      onChanged: (valeur) {
+                        setState(() {
+                          _accesSecours = valeur ?? false;
+                          _generatedLink = null;
+                          _expirationGeneree = null;
+                        });
+                      },
+                      controlAffinity:
+                          ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text(
+                        'Autoriser cette personne à ouvrir un accès '
+                        'secours si mon enfant part avec les secours.',
+                        style: TextStyle(fontSize: 16, height: 1.45),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    const Text(
+                      'Elle pourra alors montrer les informations pour '
+                      'les secours aux soignants qui prennent l’enfant '
+                      'en charge, et transmettre l’accès à la personne '
+                      'qui l’accompagne — sans attendre votre réponse. '
+                      'Vous êtes prévenu immédiatement, et vous pouvez '
+                      'y mettre fin à tout moment.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.45,
+                        color: KidsRelayColors.ardoiseDouce,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    const Text(
+                      'Cet accès ne donne que les informations pour '
+                      'les secours, et dure 24 heures.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.45,
+                        color: KidsRelayColors.ardoiseDouce,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 

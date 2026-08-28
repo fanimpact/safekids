@@ -89,6 +89,16 @@ class ShareLinkData {
   /// QR compris.
   final int appareilsMax;
 
+  /// Préautorisation donnée à froid par le parent : sans elle, aucun
+  /// accès secours ne peut être déclenché depuis ce partage.
+  final bool accesSecoursAutorise;
+
+  /// Ce partage EST un accès secours, dérivé d'un autre.
+  final bool declencheEnSecours;
+
+  /// Le partage dont celui-ci descend. Rend l'arbre lisible.
+  final String? partageOrigineId;
+
   const ShareLinkData({
     required this.id,
     required this.token,
@@ -102,6 +112,9 @@ class ShareLinkData {
     this.permanent = false,
     this.revoqueLe,
     this.appareilsMax = 1,
+    this.accesSecoursAutorise = false,
+    this.declencheEnSecours = false,
+    this.partageOrigineId,
   });
 
   bool get estRevoque => revoqueLe != null;
@@ -150,6 +163,11 @@ class ShareLinkData {
       nomDestinataire: row['nom_destinataire'] as String?,
       permanent: row['permanent'] as bool? ?? false,
       appareilsMax: (row['appareils_max'] as num?)?.toInt() ?? 1,
+      accesSecoursAutorise:
+          row['acces_secours_autorise'] as bool? ?? false,
+      declencheEnSecours:
+          row['declenche_en_secours'] as bool? ?? false,
+      partageOrigineId: row['partage_origine_id'] as String?,
       revoqueLe:
           revoqueLe == null ? null : DateTime.parse(revoqueLe),
     );
