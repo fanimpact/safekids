@@ -815,6 +815,16 @@ void main() {
       expect(methode, isNot(contains('Êtes-vous sûr')));
     });
 
+    test('Il dit aussi ce que le refus laisse, et ce qu’il coûte',
+        () {
+      // Au conditionnel, et AVANT que le parent choisisse : il doit
+      // le lire pour décider, pas le découvrir après.
+      expect(ecran, contains('Si vous refusez et que '));
+      expect(ecran, contains('la fiche resterait sur le téléphone '));
+      expect(ecran, contains('camion n’aurait rien'));
+      expect(ecran, contains('Vous seul pourriez leur donner '));
+    });
+
     test('Le texte dit les trois choses qui engagent le parent', () {
       expect(ecran, contains('sans attendre votre réponse'));
       expect(ecran, contains('prévenu immédiatement'));
@@ -895,9 +905,20 @@ void main() {
       // Un parent a pu passer vite sur l'écran du questionnaire sans
       // mesurer ce qu'il refusait. Il ne doit pas le découvrir le jour
       // de l'accident.
-      expect(ecran, contains('ne pourra pas '));
-      expect(ecran, contains('Si vous n’êtes '));
-      expect(ecran, contains('personne n’y aura '));
+      expect(ecran, contains('la fiche restera '));
+      expect(ecran, contains('celle qui monte dans le camion '));
+      expect(ecran, contains('Vous seul pourrez leur donner '));
+    });
+
+    test('Il ne dit plus qu’on ne peut rien transmettre', () {
+      // C'était faux, et corrigé le 28/08/2026 : rien n'interdit de
+      // montrer son écran ou de lire la fiche à voix haute à un
+      // soignant. Ce que le refus empêche, c'est de DONNER un accès
+      // durable à quelqu'un d'autre.
+      expect(
+        ecran,
+        isNot(contains('ne pourra pas transmettre les informations ')),
+      );
     });
 
     test('Le refus n’est pas peint en ambre', () {

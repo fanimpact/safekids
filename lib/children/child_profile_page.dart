@@ -909,10 +909,17 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
             'l’accompagne pourra montrer les informations pour les '
             'secours aux soignants et leur transmettre l’accès, sans '
             'attendre votre réponse. Vous serez prévenu immédiatement.'
-        : 'Si $_displayName part avec les secours, la personne qui '
-            'l’accompagne ne pourra pas transmettre les informations '
-            'aux soignants sans attendre votre réponse. Si vous n’êtes '
-            'pas joignable à ce moment-là, personne n’y aura accès.';
+        // Ce que le refus empeche vraiment (28/08/2026) : rien
+        // n'interdit de montrer son ecran ou de lire la fiche a voix
+        // haute a un soignant. Ce qui est empeche, c'est de DONNER un
+        // acces durable a quelqu'un d'autre. La phrase precedente
+        // disait le contraire, et elle etait fausse.
+        : 'Si $_displayName part avec les secours, la fiche restera '
+            'sur le téléphone de la personne à qui vous l’avez '
+            'partagée. Si ce n’est pas elle qui accompagne '
+            '$_displayName, celle qui monte dans le camion n’aura '
+            'rien. Vous seul pourrez leur donner l’accès, si vous '
+            'êtes joignable à ce moment-là.';
 
     return Material(
       color: KidsRelayColors.lin,

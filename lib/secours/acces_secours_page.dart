@@ -185,6 +185,23 @@ class _AccesSecoursPageState extends State<AccesSecoursPage> {
 
               const SizedBox(height: 20),
 
+              // Ce que le refus empeche vraiment, au conditionnel :
+              // le parent doit le lire AVANT de choisir, pas le
+              // decouvrir apres. Montrer son ecran reste toujours
+              // possible ; ce qui manque, c'est de pouvoir donner
+              // l'acces a la personne qui accompagne vraiment.
+              Text(
+                'Si vous refusez et que $prenom part avec les '
+                'secours, la fiche resterait sur le téléphone de la '
+                'personne à qui vous l’avez partagée. Si ce n’est pas '
+                'elle qui accompagne $prenom, celle qui monte dans le '
+                'camion n’aurait rien. Vous seul pourriez leur donner '
+                'l’accès, à condition d’être joignable à ce moment-là.',
+                style: const TextStyle(fontSize: 15, height: 1.5),
+              ),
+
+              const SizedBox(height: 20),
+
               const Text(
                 'Vous êtes prévenu immédiatement, et vous pouvez y '
                 'mettre fin à tout moment. Cet accès ne donne que les '
