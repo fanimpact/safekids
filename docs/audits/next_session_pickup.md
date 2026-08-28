@@ -455,10 +455,15 @@ des écrans. Fanny prévoit d'acheter un appareil d'occasion. Le
 document dit en tête ce qu'il faut préparer à l'avance. **Rien d'autre
 n'est bloqué par ce point, mais rien ne le remplace non plus.**
 
-**2. SPF / DKIM / DMARC de `kidsrelay.fr` dans Brevo.** Configuration
-DNS, à faire côté Fanny. Tant que ce n'est pas fait, personne ne sait
-si les emails arrivent en boîte de réception ou en spam — ce qui rend
-la notification de note et la récupération de mot de passe théoriques.
+**2. SPF / DKIM / DMARC de `kidsrelay.fr` dans Brevo — FAIT.**
+Vérifié le 28/08/2026 directement dans le DNS public : DKIM en
+place (deux clés Brevo, `brevo1` et `brevo2._domainkey`, signature
+sur `kidsrelay.fr`), DMARC présent, domaine et expéditeur
+`contact@kidsrelay.fr` authentifiés côté Brevo. **Ce point est
+clos.** Deux remarques sans urgence sont notées dans
+`corrections_a_faire.md` : la politique DMARC est `p=none`, et le
+SPF du domaine n'inclut pas Brevo — ce qui ne gêne pas l'envoi,
+l'alignement passant par DKIM.
 
 **3. Les deux modèles d'email Supabase.** À coller dans le tableau de
 bord pour que les liens pointent vers `auth.kidsrelay.fr`. Contenu
@@ -497,11 +502,6 @@ voir [`../migration/notifications_non_parties.md`](../migration/notifications_no
 
 ### Reste ouvert depuis les sessions précédentes
 
-- **SPF / DKIM / DMARC de `kidsrelay.fr` dans Brevo** — les Edge
-  Functions ont été redéployées avec `contact@kidsrelay.fr`, mais rien
-  ne confirme que les emails arrivent en boîte de réception plutôt
-  qu'en spam. Indépendant de tout choix d'hébergeur : c'est de la
-  configuration DNS du domaine, à faire côté Fanny.
 - **Modèles d'email Supabase** — à coller dans le tableau de bord pour
   que les liens pointent vers `auth.kidsrelay.fr` (contenu exact fourni
   en session, non encore appliqué au 23/08/2026).

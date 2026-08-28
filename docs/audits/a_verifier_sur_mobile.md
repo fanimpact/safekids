@@ -87,9 +87,6 @@ pour cela que l'Android d'occasion sert.
 
 ## F. Ce qui n'est pas encore en place
 
-- **SPF / DKIM / DMARC sur `kidsrelay.fr`** : sans eux, les emails
-  partiront en indésirables et les points 2, 30 et 39 seront faussés.
-  À faire avant la session si possible.
 - **`index.html` d'`auth.kidsrelay.fr` chez OVH** : sans dépôt, le
   point 44 ne peut pas être fait.
 

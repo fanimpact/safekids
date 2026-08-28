@@ -153,7 +153,3 @@ une **table** nouvelle, elle, doit être ajoutée à `SourceExport`.
 - **La durée de conservation** des comptes inactifs. Rien n'expire
   aujourd'hui hors des partages et du journal de consultations.
 - **La procédure d'usage de l'adresse de secours**, ci-dessus.
-- **SPF / DKIM / DMARC sur `kidsrelay.fr`**, toujours à faire. Sans
-  cela, l'email de demande de suppression peut tomber en indésirables —
-  et c'est le seul endroit où la date d'effacement sort de
-  l'application.

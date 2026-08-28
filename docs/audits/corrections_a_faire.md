@@ -878,6 +878,48 @@ Il compte, et il est maintenant à quatre :
 La reprise ne prend que la place du refus. Une place libre passe avant
 elle : personne ne doit être évincé pour rien.
 
+
+## Authentification des emails — close le 28/08/2026
+
+`kidsrelay.fr` est authentifié chez Brevo : domaine « Authentifié » et
+« Avec marque », expéditeur `contact@kidsrelay.fr` vérifié, conforme
+aux exigences Google, Yahoo et Microsoft.
+
+Vérifié de mon côté directement dans le DNS public, sans me fier aux
+voyants :
+
+| | État |
+|---|---|
+| DKIM | deux clés Brevo, `brevo1` et `brevo2._domainkey`, signature sur `kidsrelay.fr` |
+| DMARC | présent, `p=none`, rapports vers Brevo |
+| SPF | `v=spf1 include:mx.ovh.com -all` |
+
+**Le point d'audit « SPF / DKIM / DMARC à faire » est périmé et a été
+retiré des quatre documents qui le portaient.**
+
+### Deux remarques, sans urgence, à ne pas confondre avec un blocage
+
+**1. La politique DMARC est `p=none`.** Elle satisfait les exigences
+des grands fournisseurs, et c'est pour cela que Brevo l'annonce comme
+configurée. Mais `p=none` ne demande rien : elle observe et rapporte.
+Quelqu'un qui enverrait un message en se faisant passer pour
+`kidsrelay.fr` ne serait ni rejeté ni mis en quarantaine.
+
+Passer à `p=quarantine` protégerait le domaine, **mais pas
+maintenant** : tant qu'on n'est pas certain que tout ce qui part
+légitimement est bien signé, durcir la politique reviendrait à faire
+tomber son propre courrier. À reprendre quand la chaîne d'envoi aura
+tourné quelques semaines.
+
+**2. Le SPF du domaine n'inclut pas Brevo**, seulement OVH, et il se
+termine par `-all` — un refus net de tout le reste. Cela ne gêne pas
+les envois : Brevo utilise sa propre adresse de retour, et c'est DKIM
+qui porte l'alignement DMARC.
+
+À savoir tout de même : **si un jour des mails Brevo commencent à
+échouer, c'est la première chose à regarder.** Il suffirait alors
+d'ajouter l'inclusion de Brevo au SPF.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base

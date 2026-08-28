@@ -276,10 +276,9 @@ Ce dont il a besoin :
 - une clé API valide, dans `BREVO_API_KEY` ;
 - une adresse expéditeur **vérifiée** dans Brevo, dans
   `BREVO_SENDER_EMAIL` ;
-- **SPF, DKIM et DMARC configurés sur `kidsrelay.fr`** — toujours à
-  faire. Sans cela, les emails partent mais tombent en indésirables
-  chez une partie des destinataires. Indépendant de tout choix
-  d'hébergeur : c'est de la configuration DNS du domaine.
+- **SPF, DKIM et DMARC configurés sur `kidsrelay.fr`** — **fait**,
+  vérifié dans le DNS public le 28/08/2026. DKIM par deux clés Brevo,
+  DMARC présent, expéditeur authentifié.
 
 Contrainte de contenu tenue par les deux messages, et vérifiée par les
 tests : jamais de donnée de santé, jamais de nom de famille d'enfant,
