@@ -26,6 +26,8 @@ const PARTAGE = {
   revoque_le: null,
   permanent: false,
   appareils_max: 1,
+  acces_secours_autorise: false,
+  declenche_en_secours: false,
 };
 
 const ENFANT = {

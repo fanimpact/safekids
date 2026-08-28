@@ -20,7 +20,8 @@ export function depotPartagesSupabase(
         .from('partages')
         .select(
           'id, enfant_id, type_fiche, date_expiration, contenu_fige, ' +
-            'destinataire, revoque_le, permanent, appareils_max',
+            'destinataire, revoque_le, permanent, appareils_max, ' +
+            'acces_secours_autorise, declenche_en_secours',
         )
         .eq('token', token)
         .maybeSingle();
@@ -138,6 +139,64 @@ export function depotPartagesSupabase(
       }
 
       return { erreur: error };
+    },
+
+    async creerAccesSecours(partageId) {
+      // Les regles de contenu et de duree sont dans la fonction en
+      // base, pas ici : elles doivent tenir meme si un autre appelant
+      // s'adresse un jour a la meme table.
+      const { data, error } = await service.rpc(
+        'declencher_acces_secours',
+        { p_partage_id: partageId },
+      );
+
+      if (error) {
+        console.error(error);
+        return { acces: null, erreur: error };
+      }
+
+      const ligne = Array.isArray(data) ? data[0] : data;
+
+      if (!ligne) {
+        return { acces: null, erreur: new Error('Aucun acces cree.') };
+      }
+
+      return {
+        acces: {
+          token: ligne.secours_token,
+          expireLe: ligne.secours_expire_le,
+        },
+        erreur: null,
+      };
+    },
+
+    async notifierParent(partageId, enfantId) {
+      // Le parent est prevenu, jamais consulte. Un echec d'ecriture ne
+      // remet pas l'acces en cause : c'est une urgence, elle passe
+      // avant la notification.
+      const { data: enfant, error: erreurEnfant } = await service
+        .from('enfants')
+        .select('parent_id')
+        .eq('id', enfantId)
+        .maybeSingle();
+
+      if (erreurEnfant || !enfant?.parent_id) {
+        console.error(erreurEnfant);
+        return;
+      }
+
+      const { error } = await service
+        .from('evenements_notification_parent')
+        .insert({
+          parent_id: enfant.parent_id,
+          enfant_id: enfantId,
+          type_evenement: 'acces_secours_declenche',
+          donnees: { partageId },
+        });
+
+      if (error) {
+        console.error(error);
+      }
     },
 
     async journaliserTentative(entree) {
