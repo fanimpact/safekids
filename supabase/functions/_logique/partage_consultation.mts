@@ -122,6 +122,11 @@ export interface DepotPartages {
     toleree: boolean;
   }): Promise<void>;
 
+  /// La preautorisation de l'acces secours, portee par l'enfant.
+  accesSecoursAutorise(
+    enfantId: string,
+  ): Promise<{ autorise: boolean; erreur: unknown }>;
+
   /// Une ligne par ouverture, jamais ecrasee — a la difference de
   /// [marquerConsulte], qui ne garde que la derniere.
   ///
@@ -142,6 +147,19 @@ export interface FichePartagee {
   profil_sante: unknown | null;
   profil_activites: unknown | null;
   contenu_fige: unknown | null;
+
+  /// Vrai si le detenteur peut ouvrir un acces secours depuis cette
+  /// fiche. La page s'en sert pour montrer le bouton ou le taire :
+  /// afficher un geste qui sera refuse ne sert personne, et en
+  /// situation d'urgence c'est pire qu'inutile.
+  acces_secours_disponible: boolean;
+
+  /// Vrai si cette fiche EST un acces secours. La page affiche alors
+  /// son bandeau d'explication.
+  est_acces_secours: boolean;
+
+  /// Quand cet acces prend fin. Nul pour un partage permanent.
+  expire_le: string | null;
 }
 
 export type ResultatConsultation =
@@ -302,6 +320,11 @@ export async function consulterPartage(
     // Volontairement avale.
   }
 
+  // Lue ici et non plus haut : inutile d'interroger la base pour
+  // quelqu'un que le verrou va refuser.
+  const { autorise: accesSecoursAutorise } =
+    await depot.accesSecoursAutorise(partage.enfant_id);
+
   return {
     statut: 'ok',
     fiche: {
@@ -311,6 +334,12 @@ export async function consulterPartage(
       profil_sante: profilSante,
       profil_activites: profilActivitesPourFiche(),
       contenu_fige: partage.contenu_fige ?? null,
+      // Un acces secours n'en ouvre pas un autre : le bouton ne doit
+      // pas apparaitre sur une fiche qui en est deja un.
+      acces_secours_disponible:
+        accesSecoursAutorise && !partage.declenche_en_secours,
+      est_acces_secours: partage.declenche_en_secours,
+      expire_le: partage.date_expiration,
     },
     secret: secretADonner,
   };

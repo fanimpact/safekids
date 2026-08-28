@@ -49,6 +49,7 @@ function fauxDepot(etat = {}) {
     profilSante = { pathologies: [] },
     profilActivites = { transport: {} },
     places = [],
+    accesSecoursAutorise = false,
   } = etat;
 
   const lectures = [];
@@ -102,6 +103,11 @@ function fauxDepot(etat = {}) {
 
     async journaliserTentative(entree) {
       lectures.push({ nom: 'journaliserTentative', ...entree });
+    },
+
+    async accesSecoursAutorise(enfantId) {
+      lectures.push({ nom: 'accesSecoursAutorise', enfantId });
+      return { autorise: accesSecoursAutorise, erreur: null };
     },
   };
 }

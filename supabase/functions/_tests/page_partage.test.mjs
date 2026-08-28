@@ -42,6 +42,17 @@ async function rendre(fiche, options = {}) {
     'texte-erreur': element(),
     'estado-verrouille': element(),
     contenu: element(),
+    'bandeau-secours': element(),
+    'titre-bandeau-secours': element(),
+    'texte-bandeau-secours': element(),
+    'bloc-secours': element(),
+    'bouton-secours': element(),
+    'confirmation-secours': element(),
+    'annuler-secours': element(),
+    'confirmer-secours': element(),
+    'resultat-secours': element(),
+    'fin-acces-secours': element(),
+    'adresse-secours': element(),
     'nom-enfant': element(),
     'details-identite': element(),
     sections: element(),
@@ -482,5 +493,101 @@ describe('Sections vides', () => {
     );
 
     assert.ok(!elements.sections.innerHTML.includes('Pathologies'));
+  });
+});
+
+describe('Accès secours, sur la page publique', () => {
+  test('Le bouton n’apparaît pas si le parent n’a rien autorisé', () => {
+    // Afficher un geste qui sera refusé ne sert personne, et en
+    // situation d'urgence c'est pire qu'inutile.
+    const page = construirePage();
+
+    assert.match(page, /L’enfant part avec les secours/);
+    assert.match(page, /if \(!data\.acces_secours_disponible\)/);
+  });
+
+  test('Le bouton est en bas de la fiche, pas dans un menu', () => {
+    // Tout le dispositif repose sur un geste a faire en dix secondes
+    // sous stress : le bouton doit etre visible sans defilement ni
+    // menu, dans le bloc de la fiche elle-meme.
+    const page = construirePage();
+    const contenu = page.indexOf('id="contenu"');
+    const bloc = page.indexOf('id="bloc-secours"');
+    const finContenu = page.indexOf('id="confirmation-secours"');
+
+    assert.ok(bloc > contenu);
+    assert.ok(bloc < finContenu);
+  });
+
+  test('La confirmation met « Annuler » avant la validation', () => {
+    // Le geste sur devant le geste irreversible, comme partout
+    // ailleurs dans l'application.
+    const page = construirePage();
+
+    assert.ok(
+      page.indexOf('id="annuler-secours"') <
+        page.indexOf('id="confirmer-secours"'),
+    );
+  });
+
+  test('La confirmation annonce que le parent sera informé', () => {
+    const page = construirePage();
+
+    assert.match(page, /Le parent en sera informé immédiatement/);
+  });
+
+  test('Le résultat dit à qui l’accès est destiné', () => {
+    // Le cadre est pose par le texte : on ne demandera jamais son
+    // diplome a un pompier.
+    const page = construirePage();
+
+    assert.match(
+      page,
+      /destiné aux soignants qui prennent l’enfant en\s+charge/,
+    );
+  });
+
+  test('Le résultat dit de le faire scanner à chaque personne', () => {
+    // Aux urgences, les informations ne se transmettent pas d'un
+    // soignant a l'autre : la fiche doit etre remontree a chacun.
+    const page = construirePage();
+
+    assert.match(page, /à chaque nouvelle personne/);
+  });
+
+  test('Un accès secours n’affiche pas le bouton, mais son bandeau',
+    () => {
+      // Un acces secours n'en ouvre pas un autre.
+      const page = construirePage();
+
+      assert.match(page, /if \(data\.est_acces_secours\)/);
+      assert.match(page, /titre-bandeau-secours/);
+    });
+
+  test('Le message du serveur est affiché tel quel', () => {
+    // Il distingue « le parent n'a pas active » de « ce lien ne le
+    // permet pas », et cette difference dit quoi faire.
+    const page = construirePage();
+
+    assert.match(page, /erreur && erreur\.message/);
+  });
+
+  test('L’adresse est composée avec le jeton rendu par le serveur',
+    () => {
+      const page = construirePage();
+
+      assert.match(page, /#jeton=' \+ data\.token/);
+    });
+
+  test('Les deux adresses sont des paramètres', () => {
+    // Servir la page ailleurs ne doit pas demander de la reecrire.
+    const page = construirePage(
+      'https://ailleurs.test/api',
+      'https://ailleurs.test/declencher',
+      'https://ailleurs.test',
+    );
+
+    assert.match(page, /https:\/\/ailleurs\.test\/declencher/);
+    assert.match(page, /https:\/\/ailleurs\.test\/#jeton=/);
   });
 });

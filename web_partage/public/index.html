@@ -126,6 +126,78 @@
     font-size: 13px;
     margin-top: 32px;
   }
+  /* --- Accès secours ------------------------------------------- */
+
+  #bandeau-secours,
+  #bloc-secours,
+  #confirmation-secours,
+  #resultat-secours {
+    display: none;
+  }
+
+  /* Compact, et au-dessus de la fiche sans la repousser hors de
+     l'écran : un secouriste en intervention doit voir les
+     informations, pas une page d'accueil. */
+  #bandeau-secours {
+    background: var(--alerte-fond, #fbf1df);
+    border: 1px solid var(--alerte-bordure, #e8c98a);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+
+  #bandeau-secours p {
+    margin: 6px 0 0;
+  }
+
+  #bloc-secours {
+    margin: 28px 0 8px;
+  }
+
+  #bouton-secours,
+  #confirmer-secours,
+  #annuler-secours {
+    width: 100%;
+    padding: 16px 18px;
+    font-size: 17px;
+    font-family: inherit;
+    border-radius: 8px;
+    border: 1px solid var(--accent, #1f4a3f);
+    background: var(--accent, #1f4a3f);
+    color: var(--accent-texte, #ffffff);
+    cursor: pointer;
+  }
+
+  #annuler-secours,
+  .secondaire {
+    background: transparent;
+    color: var(--texte, #26302c);
+    border-color: var(--bordure, #d9d5ce);
+  }
+
+  #confirmation-secours,
+  #resultat-secours {
+    padding: 40px 20px;
+  }
+
+  .paire-boutons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .adresse-secours {
+    margin-top: 24px;
+    padding: 14px;
+    background: var(--carte, #ffffff);
+    border: 1px solid var(--bordure, #d9d5ce);
+    border-radius: 8px;
+    font-size: 15px;
+    word-break: break-all;
+  }
+
 </style>
 </head>
 <body>
@@ -152,10 +224,60 @@
   </div>
 
   <div id="contenu">
+    <div id="bandeau-secours">
+      <strong id="titre-bandeau-secours"></strong>
+      <p id="texte-bandeau-secours"></p>
+    </div>
+
     <h1 class="nom-enfant" id="nom-enfant"></h1>
     <div class="details-identite" id="details-identite"></div>
     <div id="sections"></div>
+
+    <div id="bloc-secours">
+      <button id="bouton-secours" type="button">
+        L’enfant part avec les secours
+      </button>
+    </div>
+
     <footer>Fiche en lecture seule — générée par KidsRelay.</footer>
+  </div>
+
+  <div id="confirmation-secours">
+    <h1>L’enfant part avec les secours ?</h1>
+    <p>
+      Vous allez pouvoir montrer ces informations aux soignants qui le
+      prennent en charge, et les transmettre à la personne qui
+      l’accompagne.
+    </p>
+    <p><strong>Le parent en sera informé immédiatement.</strong></p>
+
+    <div class="paire-boutons">
+      <button id="annuler-secours" type="button" class="secondaire">
+        Annuler
+      </button>
+      <button id="confirmer-secours" type="button">
+        Oui, l’enfant part avec les secours
+      </button>
+    </div>
+  </div>
+
+  <div id="resultat-secours">
+    <h1>Accès secours ouvert</h1>
+    <p>
+      Cet accès donne <strong>les informations pour les secours, et
+      rien d’autre</strong>. Il prend fin
+      <strong id="fin-acces-secours"></strong>.
+    </p>
+    <p>
+      <strong>Il est destiné aux soignants qui prennent l’enfant en
+      charge, et à la personne qui l’accompagne.</strong>
+    </p>
+    <p>
+      Faites-le scanner à chaque nouvelle personne qui s’occupe de
+      l’enfant : chacune gardera la fiche sur son propre téléphone et
+      pourra la rouvrir sans vous.
+    </p>
+    <p class="adresse-secours" id="adresse-secours"></p>
   </div>
 </main>
 
@@ -352,6 +474,155 @@
     document.getElementById('sections').innerHTML = blocs.join('');
     document.getElementById('estado-chargement').style.display = 'none';
     document.getElementById('contenu').style.display = 'block';
+
+    preparerAccesSecours(data);
+  }
+
+  // --- Accès secours ---------------------------------------------
+  //
+  // Trois écrans : le bouton en bas de la fiche, la confirmation, et
+  // le résultat. Le bouton est en bas de la fiche elle-meme, visible
+  // sans menu : tout le dispositif repose sur un geste a faire en dix
+  // secondes sous stress.
+
+  function afficherEcran(id) {
+    var ecrans = [
+      'contenu',
+      'confirmation-secours',
+      'resultat-secours',
+    ];
+
+    for (var i = 0; i < ecrans.length; i++) {
+      var bloc = document.getElementById(ecrans[i]);
+
+      if (bloc) {
+        bloc.style.display = ecrans[i] === id ? 'block' : 'none';
+      }
+    }
+  }
+
+  function preparerAccesSecours(data) {
+    // La fiche EST un acces secours : bandeau d'explication, et pas de
+    // bouton — un acces secours n'en ouvre pas un autre.
+    if (data.est_acces_secours) {
+      var bandeau = document.getElementById('bandeau-secours');
+      var titre = document.getElementById('titre-bandeau-secours');
+      var texte = document.getElementById('texte-bandeau-secours');
+
+      var prenom = (data.enfant && data.enfant.prenom) || 'l’enfant';
+
+      titre.textContent = 'Accès secours — ' + prenom;
+
+      texte.textContent =
+        'Ces informations vous sont transmises parce que l’enfant est ' +
+        'pris en charge par les secours. Elles ne contiennent que les ' +
+        'informations pour les secours. Cet accès prend fin ' +
+        quandFinit(data.expire_le) +
+        '. Le parent en a été informé.';
+
+      bandeau.style.display = 'block';
+      return;
+    }
+
+    if (!data.acces_secours_disponible) {
+      return;
+    }
+
+    document.getElementById('bloc-secours').style.display = 'block';
+
+    document.getElementById('bouton-secours').onclick = function () {
+      afficherEcran('confirmation-secours');
+    };
+
+    document.getElementById('annuler-secours').onclick = function () {
+      afficherEcran('contenu');
+    };
+
+    document.getElementById('confirmer-secours').onclick = function () {
+      declencherSecours();
+    };
+  }
+
+  function quandFinit(iso) {
+    if (!iso) {
+      return 'plus tard';
+    }
+
+    var fin = new Date(iso);
+
+    if (isNaN(fin.getTime())) {
+      return 'plus tard';
+    }
+
+    var heures = ('0' + fin.getHours()).slice(-2);
+    var minutes = ('0' + fin.getMinutes()).slice(-2);
+    var jour = ('0' + fin.getDate()).slice(-2);
+    var mois = ('0' + (fin.getMonth() + 1)).slice(-2);
+
+    return 'le ' + jour + '/' + mois + ' à ' + heures + 'h' + minutes;
+  }
+
+  function declencherSecours() {
+    var bouton = document.getElementById('confirmer-secours');
+
+    bouton.disabled = true;
+    bouton.textContent = 'Ouverture…';
+
+    var url = 'https://xcugfdjaifdibwowlrpi.supabase.co/functions/v1/declencher-acces-secours?token=' + encodeURIComponent(token);
+
+    if (secret) {
+      url += '&secret=' + encodeURIComponent(secret);
+    }
+
+    fetch(url, { method: 'POST' })
+      .then(function (reponse) {
+        return reponse.json().then(function (data) {
+          if (!reponse.ok) {
+            throw new Error(data.error || 'Refusé');
+          }
+
+          return data;
+        });
+      })
+      .then(function (data) {
+        document.getElementById('fin-acces-secours').textContent =
+          quandFinit(data.expire_le);
+
+        // L'adresse en clair, le temps que le QR existe. Elle reste
+        // utile ensuite : tout le monde ne sait pas scanner.
+        document.getElementById('adresse-secours').textContent =
+          'https://fiche.kidsrelay.fr/#jeton=' + data.token;
+
+        afficherEcran('resultat-secours');
+      })
+      .catch(function (erreur) {
+        bouton.disabled = false;
+        bouton.textContent = 'Oui, l’enfant part avec les secours';
+
+        // Le message du serveur, tel quel : il distingue « le parent
+        // n'a pas activé » de « ce lien ne le permet pas », et cette
+        // différence compte pour savoir quoi faire.
+        alerterSecours(
+          (erreur && erreur.message) ||
+            'L’accès secours n’a pas pu être ouvert.',
+        );
+      });
+  }
+
+  function alerterSecours(message) {
+    var bloc = document.getElementById('confirmation-secours');
+    var deja = document.getElementById('erreur-secours');
+
+    if (deja) {
+      deja.textContent = message;
+      return;
+    }
+
+    var p = document.createElement('p');
+
+    p.id = 'erreur-secours';
+    p.textContent = message;
+    bloc.appendChild(p);
   }
 
   function afficherFiche(data) {
