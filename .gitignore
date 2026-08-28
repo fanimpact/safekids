@@ -59,3 +59,8 @@ app.*.map.json
 
 # Dependances Node de web_auth (aucune aujourd hui, mais au cas ou)
 node_modules/
+
+# La tache planifiee OVH porte la cle du planificateur en clair.
+# Seul son exemple est versionne.
+hebergement_ovh/tache_notifications.php
+hebergement_ovh/dernier_passage.txt

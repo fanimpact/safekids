@@ -1,0 +1,83 @@
+<?php
+// Le filet des notifications parent — tâche planifiée OVH.
+//
+// POURQUOI CE FICHIER EXISTE
+//
+// La fonction serveur `envoyer-notifications-parent` envoie les
+// notifications qui attendent en base. Il faut quelqu'un pour
+// l'appeler régulièrement. Ce fichier est ce quelqu'un.
+//
+// Ce n'est PAS le canal normal : les fonctions qui créent un événement
+// envoient dans la foulée. Ce passage rattrape ce qui serait tombé —
+// Brevo indisponible, une coupure réseau au mauvais moment.
+//
+// POURQUOI CHEZ OVH ET PAS AILLEURS
+//
+// Décision de Fanny (28/08/2026). Le planificateur de Supabase
+// reposerait sur deux extensions Postgres et une clé rangée dans le
+// coffre de la base, ce qui pèse sur son dossier d'hébergement de
+// données de santé. Un service de cron gratuit serait un
+// sous-traitant de plus à déclarer au RGPD, détenant l'adresse et la
+// clé. Ici, rien ne sort de chez elle et rien n'entre dans la base.
+//
+// UNE FOIS PAR HEURE, ET C'EST UNE LIMITE D'OVH
+//
+// Les tâches planifiées du mutualisé ne descendent pas en dessous de
+// l'heure — on ne peut même pas régler les minutes. Acceptable ici :
+// ce passage ne sert qu'au rattrapage.
+//
+// LA CLÉ
+//
+// `CLE_PLANIFICATEUR` n'est PAS la clé de service de la base. Si ce
+// serveur était compromis, ce qui fuiterait ne donnerait accès à
+// aucune donnée — seulement le droit de faire partir des messages
+// déjà préparés.
+//
+// À DÉPOSER HORS DE TOUT SITE WEB, par exemple dans
+// /home/izfeflh/taches/. Dans un dossier servi par un site, l'adresse
+// deviendrait publique et n'importe qui pourrait déclencher un
+// passage.
+//
+// CE FICHIER EST UN EXEMPLE. Remplacez la clé ci-dessous, renommez-le
+// en `tache_notifications.php`, et ne le remettez jamais dans git.
+
+$adresse = 'https://xcugfdjaifdibwowlrpi.supabase.co'
+    . '/functions/v1/envoyer-notifications-parent';
+
+$cle = 'REMPLACER_PAR_LA_CLE_PLANIFICATEUR';
+
+$appel = curl_init($adresse);
+
+curl_setopt($appel, CURLOPT_POST, true);
+curl_setopt($appel, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($appel, CURLOPT_HTTPHEADER, [
+    'x-cle-planificateur: ' . $cle,
+]);
+
+// Une minute : au-delà, c'est que quelque chose ne va pas, et le
+// passage suivant reprendra le travail de toute façon.
+curl_setopt($appel, CURLOPT_TIMEOUT, 60);
+
+$reponse = curl_exec($appel);
+$code = curl_getinfo($appel, CURLINFO_HTTP_CODE);
+$erreur = curl_error($appel);
+
+curl_close($appel);
+
+// Le journal tient sur une ligne et s'écrase à chaque passage.
+//
+// Un fichier qui grossit sans fin sur un hébergement mutualisé finit
+// par poser problème, et l'historique n'apprendrait rien de plus : ce
+// qui compte est de savoir si le dernier passage s'est bien passé.
+//
+// Il ne contient que des compteurs. Aucun prénom, aucune adresse,
+// aucune donnée d'enfant — la fonction serveur n'en rend pas.
+$journal = sprintf(
+    "%s | code %d | %s%s\n",
+    date('Y-m-d H:i:s'),
+    $code,
+    $reponse === false ? 'echec' : $reponse,
+    $erreur === '' ? '' : ' | ' . $erreur
+);
+
+file_put_contents(__DIR__ . '/dernier_passage.txt', $journal);
