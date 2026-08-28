@@ -545,6 +545,68 @@ Et jamais `\x{...}` au-dessus de 255 dans un remplacement perl : cela
 force la sémantique caractère et double-encode les fichiers UTF-8.
 Erreur commise deux fois, réparée deux fois par `git checkout --`.
 
+
+## Chantier notifications — où il en est au 28/08/2026, 23h50
+
+La chaîne d'envoi **existe et fonctionne**. Vérifiée de bout en bout :
+une notification écrite en base part par Brevo et arrive.
+
+### Ce qui est en place et déployé
+
+| | |
+|---|---|
+| `envoyer-notifications-parent` | le filet, appelé par OVH toutes les heures |
+| `envoyer-notifications-maintenant` | l'envoi immédiat demandé par l'application |
+| `envoyer-code-verification` | redéployée, porte la consigne « domaine jeune » |
+| Tâche OVH | `taches/tache_notifications.php`, `18 * * * *`, PHP 8.2, active |
+| SPF / DKIM / DMARC | corrects, **ne pas y toucher** |
+
+### Ce qui reste à faire
+
+**1. Le vrai test de délivrabilité.** Celui de ce soir ne prouve
+rien : Fanny avait marqué l'expéditeur comme légitime, le message ne
+pouvait qu'arriver. Il faut **créer une adresse neuve, de préférence
+Gmail**, qui n'a jamais rien reçu de `kidsrelay.fr`, et y envoyer un
+message. Google est le fournisseur le plus répandu chez les parents et
+se comporte autrement que Microsoft.
+
+**2. Vérifier que la tâche OVH tourne.** Le fichier
+`/home/izfeflh/taches/dernier_passage.txt` doit exister et porter une
+ligne du type `code 200 | {"traites":0,...}`. Il n'avait pas encore
+été créé à 22h37 — la tâche venait d'être posée, le passage de 22h18
+était déjà passé. **Premier passage attendu : 23h18.**
+
+**3. Retirer la consigne « domaine jeune »**, le jour venu. Deux
+drapeaux à passer à `false` — `lib/textes/consigne_domaine_jeune.dart`
+et `supabase/functions/_logique/consigne_domaine_jeune.mts`. Un test
+refuse qu'ils diffèrent.
+
+**Le critère, écrit pour ne pas avoir à le redécider** : un mail de
+test vers une boîte neuve arrive en boîte de réception **sans que
+personne ait rien marqué**. C'est le même test qu'au point 1.
+
+**4. Le nom d'expéditeur** s'affiche « Kidsrelay » au lieu de
+« KidsRelay ». Sans effet sur la délivrabilité, mais c'est la première
+chose que lit un parent. Une ligne à corriger dans les secrets
+Supabase : `BREVO_SENDER_NAME`.
+
+**5. Les notifications sur écran verrouillé.** Le vrai sujet, et il
+est entier. **Pour un message annonçant qu'un enfant part avec les
+pompiers, l'email ne sera jamais une garantie** : le classement
+appartient au fournisseur du destinataire, pas à nous. Les colonnes de
+push existent déjà en base, prêtes.
+
+### Ce qui reste à déployer d'autres chantiers
+
+`consulter-partage` n'est **pas** à jour : le QR de partage (fenêtre
+de cinq minutes) et l'écran de reprise attendent son déploiement, ainsi
+que le dépôt de `index.html` chez OVH.
+
+**Attention à l'ordre** : Fanny a décidé le 28/08 que la reprise
+explicite **disparaît** au profit du blocage au quatrième appareil.
+Déployer maintenant mettrait en ligne un écran qu'on va retirer. Voir
+la section correspondante de `corrections_a_faire.md`.
+
 ## État du dépôt au 26/08/2026
 
 | | |

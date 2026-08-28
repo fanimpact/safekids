@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   composer,
   dateLisible,
+  dejaTermine,
   envoyerNotificationsEnAttente,
   messageAccesSecours,
 } from '../_logique/notifications_en_attente.mts';
@@ -81,6 +82,7 @@ describe('Ce que le mail d’accès secours a le droit de dire', () => {
     'parent@exemple.test',
     'Théo',
     '2026-08-29T10:30:00.000Z',
+    MAINTENANT,
   );
 
   test('Le prénom est dans l’objet', () => {
@@ -122,7 +124,7 @@ describe('Ce que le mail d’accès secours a le droit de dire', () => {
   });
 
   test('Une échéance illisible ne produit pas une date fausse', () => {
-    const sansDate = messageAccesSecours('a@b.test', 'Noé', null);
+    const sansDate = messageAccesSecours('a@b.test', 'Noé', null, MAINTENANT);
 
     assert.match(sansDate.html, /dans l’application/);
     assert.ok(!sansDate.html.includes('NaN'));
@@ -161,7 +163,7 @@ describe('Composer un message', () => {
   test('Un accès secours devient un mail', async () => {
     const depot = fauxDepot();
 
-    const message = await composer(depot, EVENEMENT);
+    const message = await composer(depot, EVENEMENT, MAINTENANT);
 
     assert.ok(message);
     assert.equal(message.destinataire, 'parent@exemple.test');
@@ -170,14 +172,14 @@ describe('Composer un message', () => {
   test('Sans adresse parent, rien n’est composé', async () => {
     const depot = fauxDepot({ email: null });
 
-    assert.equal(await composer(depot, EVENEMENT), null);
+    assert.equal(await composer(depot, EVENEMENT, MAINTENANT), null);
   });
 
   test('Sans prénom, rien n’est composé', async () => {
     // Un mail vague sur un enfant est pire que pas de mail du tout.
     const depot = fauxDepot({ prenom: null });
 
-    assert.equal(await composer(depot, EVENEMENT), null);
+    assert.equal(await composer(depot, EVENEMENT, MAINTENANT), null);
   });
 
   test('Un type inconnu n’invente pas de texte', async () => {
@@ -186,7 +188,7 @@ describe('Composer un message', () => {
     const message = await composer(depot, {
       ...EVENEMENT,
       typeEvenement: 'type_qui_n_existe_pas',
-    });
+    }, MAINTENANT);
 
     assert.equal(message, null);
   });
@@ -196,7 +198,7 @@ describe('Composer un message', () => {
     // le déclenchement et le passage du filet.
     const depot = fauxDepot({ acces: null });
 
-    const message = await composer(depot, EVENEMENT);
+    const message = await composer(depot, EVENEMENT, MAINTENANT);
 
     assert.ok(message);
     assert.match(message.html, /dans l’application/);
@@ -335,5 +337,68 @@ describe('Le passage qui envoie ce qui attend', () => {
     );
 
     assert.equal(lecture.limite, 10);
+  });
+});
+
+// L'accès déjà terminé au moment de l'envoi (28/08/2026).
+//
+// Repéré par Fanny sur un mail de test. Le cas ne survient que si
+// l'envoi immédiat a échoué ET que le filet horaire a échoué à son
+// tour pendant plus de vingt-quatre heures — vingt-quatre échecs
+// consécutifs. Rare, mais le message annoncerait une date passée sur
+// le sujet le plus sensible du produit.
+describe('Un accès déjà terminé se dit autrement', () => {
+  const TERMINE = '2026-08-28T10:00:00.000Z';
+  const EN_COURS = '2026-08-29T10:00:00.000Z';
+
+  test('Il annonce la fin, pas une date passée', () => {
+    const message = messageAccesSecours(
+      'a@b.test',
+      'Théo',
+      TERMINE,
+      MAINTENANT,
+    );
+
+    assert.match(message.html, /maintenant terminé/);
+    assert.ok(!message.html.includes('jusqu’au'));
+    assert.ok(!message.texte.includes('jusqu’au'));
+  });
+
+  test('Le prénom reste dans l’objet', () => {
+    // Le parent doit toujours savoir de quel enfant on parle.
+    const message = messageAccesSecours(
+      'a@b.test',
+      'Théo',
+      TERMINE,
+      MAINTENANT,
+    );
+
+    assert.match(message.sujet, /Théo/);
+  });
+
+  test('Un accès en cours garde sa date', () => {
+    const message = messageAccesSecours(
+      'a@b.test',
+      'Théo',
+      EN_COURS,
+      MAINTENANT,
+    );
+
+    assert.match(message.html, /jusqu’au 29\/08/);
+    assert.ok(!message.html.includes('terminé'));
+  });
+
+  test('Une échéance inconnue n’est pas déclarée terminée', () => {
+    // On ne déclare pas fini ce qu'on ne sait pas situer dans le
+    // temps : le parent irait vérifier pour rien.
+    assert.equal(dejaTermine(null, MAINTENANT), false);
+    assert.equal(dejaTermine('pas-une-date', MAINTENANT), false);
+  });
+
+  test('L’instant exact de la fin compte comme terminé', () => {
+    assert.equal(
+      dejaTermine(MAINTENANT.toISOString(), MAINTENANT),
+      true,
+    );
   });
 });

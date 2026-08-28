@@ -124,6 +124,27 @@ export function dateLisible(iso: string | null): string | null {
     `${valeur('hour')}h${valeur('minute')}`;
 }
 
+/// L'accès est-il déjà terminé au moment où l'on écrit ?
+///
+/// Une échéance illisible ou absente rend `false` : on ne déclare
+/// pas terminé ce qu'on ne sait pas situer dans le temps.
+export function dejaTermine(
+  expireLe: string | null,
+  maintenant: Date,
+): boolean {
+  if (!expireLe) {
+    return false;
+  }
+
+  const fin = new Date(expireLe);
+
+  if (Number.isNaN(fin.getTime())) {
+    return false;
+  }
+
+  return fin.getTime() <= maintenant.getTime();
+}
+
 /// L'accès secours vient d'être ouvert.
 ///
 /// Le prénom seul dans l'objet, décision de Fanny du 28/08/2026 : sans
@@ -134,12 +155,24 @@ export function dateLisible(iso: string | null): string | null {
 /// parent ouvre l'application pour le reste — c'est ce qui garantit
 /// qu'une information sur son enfant ne traîne pas dans une boîte
 /// mail.
+///
+/// [maintenant] sert à une seule chose : savoir si l'accès est
+/// **déjà terminé** au moment de l'envoi. Ce cas n'arrive que si
+/// l'envoi immédiat a échoué et que le filet horaire a échoué à son
+/// tour pendant plus de vingt-quatre heures — vingt-quatre échecs
+/// consécutifs. Rare, mais le message annoncerait alors une date
+/// passée sur le sujet le plus sensible du produit.
+///
+/// Repéré le 28/08/2026 par Fanny, sur un mail de test dont la date
+/// était effectivement dépassée.
 export function messageAccesSecours(
   destinataire: string,
   prenomEnfant: string,
   expireLe: string | null,
+  maintenant: Date,
 ): Message {
   const fin = dateLisible(expireLe);
+  const termine = dejaTermine(expireLe, maintenant);
 
   const echeance = fin
     ? `jusqu’au ${fin}`
@@ -151,8 +184,12 @@ export function messageAccesSecours(
     html:
       `<p>L’accès secours vient d’être ouvert pour ` +
       `<strong>${prenomEnfant}</strong>.</p>` +
-      `<p>Les informations pour les secours — et rien d’autre — ` +
-      `peuvent être consultées ${echeance}.</p>` +
+      (termine
+        ? `<p>Cet accès est <strong>maintenant terminé</strong> : ` +
+          `les informations pour les secours ne sont plus ` +
+          `consultables.</p>`
+        : `<p>Les informations pour les secours — et rien ` +
+          `d’autre — peuvent être consultées ${echeance}.</p>`) +
       `<p>Ouvrez KidsRelay pour voir d’où vient cet accès, ` +
       `et le couper si vous le souhaitez.</p>`,
     // Un message qui n'existe qu'en HTML est un signal de courrier
@@ -160,8 +197,11 @@ export function messageAccesSecours(
     // simple ne coûte rien et enlève ce reproche.
     texte:
       `L’accès secours vient d’être ouvert pour ${prenomEnfant}.\n\n` +
-      `Les informations pour les secours — et rien d’autre — ` +
-      `peuvent être consultées ${echeance}.\n\n` +
+      (termine
+        ? `Cet accès est maintenant terminé : les informations ` +
+          `pour les secours ne sont plus consultables.\n\n`
+        : `Les informations pour les secours — et rien d’autre — ` +
+          `peuvent être consultées ${echeance}.\n\n`) +
       `Ouvrez KidsRelay pour voir d’où vient cet accès, ` +
       `et le couper si vous le souhaitez.`,
   };
@@ -174,6 +214,7 @@ export function messageAccesSecours(
 export async function composer(
   depot: DepotNotifications,
   evenement: EvenementEnAttente,
+  maintenant: Date,
 ): Promise<Message | null> {
   const destinataire = await depot.emailParent(evenement.parentId);
 
@@ -199,6 +240,7 @@ export async function composer(
       destinataire,
       prenom,
       contexte?.expireLe ?? null,
+      maintenant,
     );
   }
 
@@ -237,7 +279,7 @@ export async function envoyerNotificationsEnAttente(
   for (const evenement of evenements) {
     bilan.traites++;
 
-    const message = await composer(depot, evenement);
+    const message = await composer(depot, evenement, maintenant);
 
     if (!message) {
       bilan.ignores++;
