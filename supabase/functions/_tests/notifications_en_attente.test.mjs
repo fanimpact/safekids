@@ -128,8 +128,32 @@ describe('Ce que le mail d’accès secours a le droit de dire', () => {
     assert.ok(!sansDate.html.includes('NaN'));
   });
 
-  test('Une date invalide non plus', () => {
-    assert.match(dateLisible('pas-une-date'), /dans l’application/);
+  test('Une date invalide ne rend rien plutot qu une date fausse', () => {
+    assert.equal(dateLisible('pas-une-date'), null);
+    assert.equal(dateLisible(null), null);
+  });
+
+  test('L’heure est celle de Paris, pas celle du serveur', () => {
+    // Constate le 28/08/2026 sur le premier mail reel : une echeance
+    // a 22h30 heure francaise s'affichait « 20h30 ». Sur un message
+    // d'acces secours, un parent qui lit une heure fausse est un
+    // defaut grave.
+    assert.equal(dateLisible('2026-08-28T20:30:00.000Z'), '28/08 à 22h30');
+  });
+
+  test('La phrase dit « jusqu’au », pas « jusqu’le »', () => {
+    // Le mail annoncait « jusqu'le 28/08 » tant que la date portait
+    // son propre article.
+    assert.ok(message.html.includes('jusqu’au 29/08'));
+    assert.ok(!message.html.includes('jusqu’le'));
+  });
+
+  test('Il existe aussi en texte simple', () => {
+    // Un message qui n'existe qu'en HTML est un signal de courrier
+    // indesirable pour une partie des filtres.
+    assert.ok(message.texte);
+    assert.match(message.texte, /Théo/);
+    assert.ok(!message.texte.includes('<p>'));
   });
 });
 

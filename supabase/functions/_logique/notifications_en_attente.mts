@@ -76,29 +76,52 @@ export interface BilanEnvoi {
   ignores: number;
 }
 
-/// La date telle qu'un parent la lit, en heure locale du serveur.
+/// Le fuseau dans lequel les dates sont écrites aux parents.
 ///
-/// Pas d'`Intl` : le fuseau d'une fonction serveur n'est pas celui du
-/// parent, et une bibliothèque de formatage ne changerait rien à ce
-/// problème. On écrit une date simple, et l'application reste la
-/// référence pour l'heure exacte.
-export function dateLisible(iso: string | null): string {
+/// **Fixé, et pas celui du serveur.** Une fonction serveur tourne en
+/// UTC : une échéance à 22h30 heure française s'affichait « 20h30 »
+/// dans le mail. Sur un message d'accès secours, un parent qui lit une
+/// heure fausse est un défaut grave — c'est exactement l'information
+/// dont il a besoin pour savoir jusqu'à quand la fiche circule.
+///
+/// Constaté le 28/08/2026 sur le premier mail réel.
+///
+/// C'est une hypothèse assumée : KidsRelay s'adresse à des familles en
+/// France. Un parent à l'étranger lirait l'heure française, ce qui
+/// reste plus juste que l'heure UTC, et l'application affiche de toute
+/// façon l'heure de son téléphone.
+export const FUSEAU_PARENTS = 'Europe/Paris';
+
+/// La date telle qu'un parent la lit, ou `null` si on ne sait pas.
+///
+/// Rendue **sans article** : c'est la phrase qui l'accueille qui
+/// décide de dire « le » ou « au ». Le mail annonçait « jusqu'le
+/// 28/08 » tant que cette fonction portait son propre « le ».
+export function dateLisible(iso: string | null): string | null {
   if (!iso) {
-    return 'une date que vous retrouverez dans l’application';
+    return null;
   }
 
   const date = new Date(iso);
 
   if (Number.isNaN(date.getTime())) {
-    return 'une date que vous retrouverez dans l’application';
+    return null;
   }
 
-  const jour = String(date.getUTCDate()).padStart(2, '0');
-  const mois = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const heure = String(date.getUTCHours()).padStart(2, '0');
-  const minute = String(date.getUTCMinutes()).padStart(2, '0');
+  const parties = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: FUSEAU_PARENTS,
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
 
-  return `le ${jour}/${mois} à ${heure}h${minute}`;
+  const valeur = (type: string) =>
+    parties.find((partie) => partie.type === type)?.value ?? '';
+
+  return `${valeur('day')}/${valeur('month')} à ` +
+    `${valeur('hour')}h${valeur('minute')}`;
 }
 
 /// L'accès secours vient d'être ouvert.
@@ -116,6 +139,12 @@ export function messageAccesSecours(
   prenomEnfant: string,
   expireLe: string | null,
 ): Message {
+  const fin = dateLisible(expireLe);
+
+  const echeance = fin
+    ? `jusqu’au ${fin}`
+    : 'jusqu’à une échéance que vous retrouverez dans l’application';
+
   return {
     destinataire,
     sujet: `Accès secours ouvert pour ${prenomEnfant}`,
@@ -123,9 +152,18 @@ export function messageAccesSecours(
       `<p>L’accès secours vient d’être ouvert pour ` +
       `<strong>${prenomEnfant}</strong>.</p>` +
       `<p>Les informations pour les secours — et rien d’autre — ` +
-      `peuvent être consultées jusqu’${dateLisible(expireLe)}.</p>` +
+      `peuvent être consultées ${echeance}.</p>` +
       `<p>Ouvrez KidsRelay pour voir d’où vient cet accès, ` +
       `et le couper si vous le souhaitez.</p>`,
+    // Un message qui n'existe qu'en HTML est un signal de courrier
+    // indésirable pour une partie des filtres. Le doubler en texte
+    // simple ne coûte rien et enlève ce reproche.
+    texte:
+      `L’accès secours vient d’être ouvert pour ${prenomEnfant}.\n\n` +
+      `Les informations pour les secours — et rien d’autre — ` +
+      `peuvent être consultées ${echeance}.\n\n` +
+      `Ouvrez KidsRelay pour voir d’où vient cet accès, ` +
+      `et le couper si vous le souhaitez.`,
   };
 }
 

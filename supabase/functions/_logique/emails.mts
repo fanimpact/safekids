@@ -17,6 +17,14 @@ export interface Message {
   destinataire: string;
   sujet: string;
   html: string;
+
+  /// La même chose en texte simple, quand elle existe.
+  ///
+  /// Un message qui n'existe qu'en HTML est un signal de courrier
+  /// indésirable pour une partie des filtres. Facultative pour ne
+  /// pas réécrire les messages qui existaient avant le 28/08/2026,
+  /// mais à fournir pour tout nouveau message.
+  texte?: string;
 }
 
 export interface ExpediteurEmail {
@@ -97,6 +105,8 @@ export async function envoyerParBrevo(
       to: [{ email: message.destinataire }],
       subject: message.sujet,
       htmlContent: message.html,
+      // Omis quand il n'y en a pas : Brevo refuse une valeur vide.
+      ...(message.texte ? { textContent: message.texte } : {}),
     }),
   });
 
