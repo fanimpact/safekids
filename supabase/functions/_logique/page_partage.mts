@@ -221,7 +221,8 @@ export function construirePage(
 
   #bouton-secours,
   #confirmer-secours,
-  #annuler-secours {
+  #annuler-secours,
+  #reprendre-acces {
     width: 100%;
     padding: 16px 18px;
     font-size: 17px;
@@ -298,13 +299,23 @@ export function construirePage(
   </div>
 
   <div id="estado-verrouille">
-    <h1>Ce lien est déjà utilisé par quelqu’un d’autre</h1>
+    <h1>Cette fiche a déjà été ouverte sur un autre appareil</h1>
     <p>
-      Un lien de partage ne fonctionne que sur le premier appareil qui
-      l’ouvre. C’est ce qui protège les informations de l’enfant si le
-      lien est transmis.
+      <strong>Si c’est vous</strong> — par exemple parce que vous
+      l’aviez ouverte en scannant un code, et que vous l’ouvrez
+      maintenant depuis votre navigateur — reprenez l’accès ici.
     </p>
+    <p>
+      Le parent en sera informé immédiatement, et pourra couper
+      l’accès s’il ne l’avait pas voulu.
+    </p>
+
+    <button id="reprendre-acces" type="button">
+      C’est moi, reprendre l’accès
+    </button>
+
     <p class="note-verrouille">
+      Si ce n’est pas vous, n’appuyez pas.
       <strong>Ce n’est pas la peine de demander qu’on vous le
       renvoie</strong> : un nouveau lien ne changerait rien.
       Rapprochez-vous du parent : il pourra vous donner accès.
@@ -1024,14 +1035,22 @@ ${bibliothequeQr}
     secret = null;
   }
 
-  var urlFonction =
-    '${cheminApi}?token=' + encodeURIComponent(token);
+  // Rejouable : la reprise refait exactement la meme demande, avec
+  // un drapeau en plus. Une seule chaine de traitement pour les deux
+  // cas, donc un seul endroit ou elle peut se tromper.
+  function ouvrirFiche(reprise) {
+    var urlFonction =
+      '${cheminApi}?token=' + encodeURIComponent(token);
 
-  if (secret) {
-    urlFonction += '&secret=' + encodeURIComponent(secret);
-  }
+    if (secret) {
+      urlFonction += '&secret=' + encodeURIComponent(secret);
+    }
 
-  fetch(urlFonction)
+    if (reprise) {
+      urlFonction += '&reprise=1';
+    }
+
+    return fetch(urlFonction)
     .then(function (reponse) {
       // 423 : le lien est pris par un autre appareil.
       if (reponse.status === 423) {
@@ -1079,17 +1098,42 @@ ${bibliothequeQr}
 
       afficherFiche(data);
     })
-    .catch(function (erreur) {
-      if (erreur && erreur.cas === 'verrou') {
-        afficherVerrouille();
-        return;
-      }
+      .catch(function (erreur) {
+        if (erreur && erreur.cas === 'verrou') {
+          afficherVerrouille();
+          return;
+        }
 
-      // Sans cas connu, l'echec vient du reseau : la requete a
-      // echoue avant d'avoir vu une reponse. Ce n'est pas un lien
-      // mort, et le dire serait faux.
-      afficherErreur(erreur && erreur.cas);
-    });
+        // Sans cas connu, l'echec vient du reseau : la requete a
+        // echoue avant d'avoir vu une reponse. Ce n'est pas un lien
+        // mort, et le dire serait faux.
+        afficherErreur(erreur && erreur.cas);
+      });
+  }
+
+  var boutonReprise = document.getElementById('reprendre-acces');
+
+  if (boutonReprise) {
+    boutonReprise.onclick = function () {
+      boutonReprise.disabled = true;
+      boutonReprise.textContent = 'Reprise…';
+
+      document.getElementById('estado-verrouille').style.display =
+        'none';
+      document.getElementById('estado-chargement').style.display =
+        'block';
+
+      ouvrirFiche(true).then(function () {
+        // Rendu utilisable quoi qu'il arrive : si la reprise a
+        // echoue, l'ecran de refus revient et le bouton doit
+        // pouvoir servir encore.
+        boutonReprise.disabled = false;
+        boutonReprise.textContent = 'C’est moi, reprendre l’accès';
+      });
+    };
+  }
+
+  ouvrirFiche(false);
 })();
 </script>
 </body>

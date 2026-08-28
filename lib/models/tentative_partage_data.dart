@@ -16,17 +16,26 @@
 ///    sinon la fenêtre serait un trou de quinze minutes invisible ;
 ///  - **refusée** : quelqu'un a tenté d'ouvrir le lien depuis un autre
 ///    appareil, et n'a rien vu.
+///
+/// [reprise] est le troisième cas, ajouté le 28/08/2026 : quelqu'un a
+/// été refusé, **a dit que c'était lui**, et a repris l'accès. Ce
+/// n'est ni un refus ni une tolérance silencieuse — c'est un geste
+/// délibéré, et le parent doit le lire comme tel.
 class TentativePartageData {
   final String id;
   final String partageId;
   final DateTime tenteeLe;
   final bool toleree;
 
+  /// Quelqu'un a demandé à reprendre l'accès après un refus.
+  final bool reprise;
+
   const TentativePartageData({
     required this.id,
     required this.partageId,
     required this.tenteeLe,
     required this.toleree,
+    this.reprise = false,
   });
 
   factory TentativePartageData.fromRow(Map<String, dynamic> row) {
@@ -35,6 +44,7 @@ class TentativePartageData {
       partageId: row['partage_id'] as String,
       tenteeLe: DateTime.parse(row['tentee_le'] as String).toLocal(),
       toleree: row['toleree'] as bool? ?? false,
+      reprise: row['reprise'] as bool? ?? false,
     );
   }
 }
@@ -56,6 +66,17 @@ String? libelleTentatives(List<TentativePartageData> tentatives) {
         ? 'Une ouverture a été refusée depuis un autre appareil.'
         : '$refus ouvertures ont été refusées depuis d’autres '
             'appareils.';
+  }
+
+  // La reprise passe avant la tolérance silencieuse : c'est un
+  // geste que quelqu'un a posé, et le parent doit pouvoir décider.
+  final reprises = tentatives.where((t) => t.reprise).length;
+
+  if (reprises > 0) {
+    return reprises == 1
+        ? 'Quelqu’un a repris l’accès depuis un autre appareil, en '
+            'indiquant que c’était bien lui.'
+        : '$reprises reprises d’accès depuis d’autres appareils.';
   }
 
   return 'Ce lien a été rouvert depuis un autre appareil peu après '

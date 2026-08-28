@@ -138,7 +138,23 @@ export interface DepotPartages {
     partageId: string;
     tenteeLe: string;
     toleree: boolean;
+
+    /// La personne a demandé à reprendre l'accès. Le parent ne lit
+    /// pas la même chose selon qu'un lien a été rouvert tout seul
+    /// dans le quart d'heure ou que quelqu'un a repris la main des
+    /// heures après.
+    reprise?: boolean;
   }): Promise<void>;
+
+  /// Prévient le parent qu'un autre appareil a repris l'accès.
+  ///
+  /// C'est elle qui rend la reprise acceptable : sans notification,
+  /// ce serait un affaiblissement muet. Le parent reste maître — il
+  /// coupe d'un geste depuis sa liste.
+  notifierRepriseAcces(
+    partageId: string,
+    enfantId: string,
+  ): Promise<void>;
 
   /// La preautorisation de l'acces secours, portee par l'enfant.
   accesSecoursAutorise(
@@ -268,6 +284,7 @@ export async function consulterPartage(
       : null,
     maintenant,
     toleranceMinutes: verrou.toleranceMinutes,
+    repriseDemandee: verrou.repriseDemandee,
   });
 
   if (decision.action === 'refuser') {
@@ -309,7 +326,15 @@ export async function consulterPartage(
         partageId: partage.id,
         tenteeLe: maintenant.toISOString(),
         toleree: true,
+        reprise: decision.reprise === true,
       });
+
+      // Apres la reprise, jamais avant : un parent prevenu d'une
+      // reprise qui a echoue chercherait dans sa liste quelque
+      // chose d'introuvable.
+      if (decision.reprise) {
+        await depot.notifierRepriseAcces(partage.id, partage.enfant_id);
+      }
     }
   }
 
@@ -388,6 +413,13 @@ export interface OptionsVerrou {
   genererSecret?: () => string;
 
   toleranceMinutes?: number;
+
+  /// La personne a appuye sur « c'est moi, reprendre l'acces ».
+  ///
+  /// Jamais deduit : c'est un geste explicite, demande par la page
+  /// apres un refus. Sans cela, un simple rechargement suffirait a
+  /// prendre la place de quelqu'un d'autre sans que personne le veuille.
+  repriseDemandee?: boolean;
 }
 
 /// Un alea de 256 bits, en hexadecimal.

@@ -147,11 +147,24 @@ class ShareLinkService {
   /// retransmettre.
   ///
   /// Le prochain appareil qui ouvre le lien reprend le verrou.
+  /// Libère la place la plus récemment prise, pour qu'un nouvel
+  /// appareil puisse ouvrir le lien.
+  ///
+  /// **Cette méthode ne faisait rien jusqu'au 28/08/2026.** Elle
+  /// remettait à zéro `verrou_empreinte` et `verrou_pose_le`, deux
+  /// colonnes que plus personne ne lit depuis que la décision se
+  /// prend sur `appareils_partage`. Le bouton affichait pourtant
+  /// « Le prochain appareil qui ouvrira ce lien pourra le
+  /// consulter » : une personne refusée n'avait aucune issue, ni
+  /// par elle-même, ni par le parent.
+  ///
+  /// Une place, pas toutes : libérer tout évincerait des lecteurs
+  /// légitimes que le parent n'a pas visés.
   Future<void> libererVerrou(String id) async {
-    await _client.from('partages').update({
-      'verrou_empreinte': null,
-      'verrou_pose_le': null,
-    }).eq('id', id);
+    await _client.rpc(
+      'liberer_place_partage',
+      params: {'p_partage_id': id},
+    );
   }
 
   /// Crée un lien de partage et renvoie son adresse complète.

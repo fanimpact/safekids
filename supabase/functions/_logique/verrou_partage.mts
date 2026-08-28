@@ -69,7 +69,11 @@ export type ActionVerrou =
   | { action: 'accepter' }
   /// Un autre appareil, dans la fenêtre : il remplace cette place-là
   /// au lieu d'en consommer une nouvelle.
-  | { action: 'remplacer'; placeId: string }
+  ///
+  /// [reprise] distingue le remplacement **demandé** de celui qui se
+  /// fait tout seul dans le quart d'heure : le premier doit prévenir
+  /// le parent, le second est une commodité silencieuse.
+  | { action: 'remplacer'; placeId: string; reprise?: true }
   /// Une place est libre : il la prend.
   | { action: 'prendre' }
   /// Toutes les places sont prises, hors fenêtre.
@@ -91,6 +95,11 @@ export function decisionVerrou(entree: {
   empreintePresentee: string | null;
   maintenant: Date;
   toleranceMinutes?: number;
+
+  /// La personne a appuyé sur « c'est moi ». Elle ne change rien
+  /// aux trois premières règles : la reprise n'intervient qu'à la
+  /// place du refus, jamais avant.
+  repriseDemandee?: boolean;
 }): ActionVerrou {
   const { places, appareilsMax, empreintePresentee, maintenant } = entree;
 
@@ -122,6 +131,25 @@ export function decisionVerrou(entree: {
   // 3. Une place libre.
   if (places.length < appareilsMax) {
     return { action: 'prendre' };
+  }
+
+  // 4. La reprise demandée, à la place du refus (28/08/2026).
+  //
+  // Le secret vit dans le `localStorage` du navigateur qui a ouvert
+  // la fiche, et ce cloisonnement n'est pas le nôtre : c'est celui
+  // du système. Un lecteur de QR qui ouvre la page dans son propre
+  // navigateur intégré y range le secret, et la même personne se
+  // présente ensuite comme une inconnue depuis Safari.
+  //
+  // Elle ne peut pas le deviner, et le moment où elle le découvre
+  // est le pire : une maîtresse qui rouvre la fiche parce qu'il se
+  // passe quelque chose avec l'enfant.
+  //
+  // Ce n'est pas un affaiblissement en trompe-l'oeil : la règle 2
+  // permet **déjà** cette reprise dans les quinze minutes, et en
+  // silence. Ce qui change ici, c'est que le parent est prévenu.
+  if (entree.repriseDemandee && derniere) {
+    return { action: 'remplacer', placeId: derniere.id, reprise: true };
   }
 
   return { action: 'refuser' };

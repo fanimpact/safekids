@@ -793,13 +793,90 @@ faire tourner couperait le destinataire, qui n'a rien demandé.
 
 ### Ce qui reste ouvert
 
-**Le verrou et les lecteurs de QR.** Beaucoup de lecteurs ouvrent la
-page dans leur **propre navigateur intégré**. Le secret du verrou se
-range alors dans ce navigateur-là, et si le destinataire rouvre plus
-tard depuis Safari ou Chrome, il sera refusé comme un inconnu. Le
-défaut existe déjà pour un lien envoyé par SMS, mais le scan le rend
-beaucoup plus probable. **À vérifier sur téléphone réel** — et si ça se
-confirme, c'est un chantier à part entière.
+**Le verrou et les lecteurs de QR : traité le jour même**, voir la
+section suivante. Le défaut était réel et touchait aussi les liens
+envoyés par SMS, donc l'accès secours.
+
+
+## La reprise d'accès, et un garde-fou qui ne gardait rien (28/08/2026)
+
+### Le défaut de fond
+
+Le secret du verrou vit dans le `localStorage` du navigateur qui a
+ouvert la fiche. **Ce cloisonnement n'est pas le nôtre : c'est celui du
+système.** Un lecteur de QR ou une messagerie qui ouvre la page dans
+son propre navigateur intégré y range le secret, et la même personne se
+présente ensuite comme une inconnue depuis Safari.
+
+Elle ne peut pas le deviner, et le moment où elle le découvre est le
+pire possible : une maîtresse rouvre la fiche parce qu'il se passe
+quelque chose avec l'enfant.
+
+Le point d'entrée n'est pas prévisible, même sur un iPhone : l'appareil
+photo ouvre Safari, mais le lecteur du centre de contrôle ouvre un
+navigateur intégré. **On ne peut pas parier sur le chemin qu'empruntera
+la personne** — d'où la règle de Fanny : ça doit marcher sur tous les
+téléphones, quel que soit le lecteur.
+
+### Le second défaut, trouvé en vérifiant
+
+**Le bouton « autoriser son nouvel appareil » ne faisait rien.**
+`libererVerrou` remettait à zéro `verrou_empreinte` et `verrou_pose_le`,
+deux colonnes que plus personne ne lit depuis la refonte du 27/08 : la
+décision se prend sur `appareils_partage`. Le message « Le prochain
+appareil qui ouvrira ce lien pourra le consulter » était donc faux.
+
+Une personne refusée n'avait **aucune issue** : ni par elle-même, ni
+par le parent.
+
+Un test gardait cette méthode — et vérifiait qu'elle écrivait bien dans
+les deux colonnes mortes. **Troisième occurrence du même mode d'échec**
+en deux jours : une assertion qui lit le texte du code sans exercer son
+effet. Le test a été retourné : il interdit désormais ces colonnes.
+
+### Ce qui a été retenu, et les options écartées
+
+Cinq options ont été pesées. Les quatre écartées, avec leur raison :
+
+| Option | Écartée parce que |
+|---|---|
+| Élargir la fenêtre de tolérance | ancrée sur la première prise de place, il faudrait la porter à plusieurs jours — le verrou ne dirait plus « un appareil » mais « le dernier qui ouvre gagne », en silence |
+| Un code de reprise à noter | garde un vrai mur, mais demande de noter quelque chose au moment où personne n'a de raison de s'en soucier. Le jour venu, retour au point de départ |
+| Le secret dans le lien | le lien redevient un jeton porteur — exactement ce que le verrou compense, et ce qui a permis de libérer les durées |
+| Une clé d'accès (passkey) | la seule identité vraiment inter-navigateurs, mais **les navigateurs intégrés ne savent souvent pas en créer** : elle échouerait là où le problème naît |
+
+**Retenu : la reprise explicite, plus la réparation du bouton.**
+
+Au lieu d'un refus sec, la page propose de reprendre l'accès en
+prévenant que le parent sera informé. Le parent reçoit la notification
+et coupe d'un geste s'il ne l'avait pas voulu.
+
+Raison de Fanny : « ça marche sur tous les téléphones, sans rien
+demander à la personne, et ça remplace un mur qui se contourne déjà en
+silence par un passage qui laisse une trace ».
+
+Ce n'est pas un affaiblissement en trompe-l'œil : **la fenêtre de
+quinze minutes permettait déjà cette reprise, et sans rien dire à
+personne.**
+
+### Ce qui n'a délibérément pas été ajouté
+
+**Aucun compteur de reprises, aucun délai minimum entre deux.**
+Décision explicite : « la notification et la révocation suffisent ».
+Un test interdit l'apparition d'un tel compteur.
+
+### L'ordre des règles du verrou
+
+Il compte, et il est maintenant à quatre :
+
+1. le même appareil repasse — accepté ;
+2. la fenêtre de quinze minutes — remplacement silencieux ;
+3. une place libre — prise ;
+4. **la reprise demandée** — remplacement, avec notification ;
+5. sinon, refus.
+
+La reprise ne prend que la place du refus. Une place libre passe avant
+elle : personne ne doit être évincé pour rien.
 
 ## Consigne permanente pour la suite de l'audit
 

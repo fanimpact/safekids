@@ -51,6 +51,7 @@ Deno.serve(async (req) => {
 
   let token: string | null;
   let secretPresente: string | null = null;
+  let repriseDemandee = false;
 
   try {
     const parametres = new URL(req.url).searchParams;
@@ -61,6 +62,11 @@ Deno.serve(async (req) => {
     // la premiere fois, et nul aussi pour quelqu'un a qui le lien a
     // ete transfere.
     secretPresente = parametres.get('secret');
+
+    // La personne a appuye sur « c'est moi » apres un refus. Jamais
+    // deduit : sans ce geste explicite, un simple rechargement
+    // prendrait la place de quelqu'un d'autre.
+    repriseDemandee = parametres.get('reprise') === '1';
   } catch {
     return erreur(400);
   }
@@ -82,7 +88,7 @@ Deno.serve(async (req) => {
     depotPartagesSupabase(clientServiceRole(base)),
     token,
     new Date(),
-    { secretPresente },
+    { secretPresente, repriseDemandee },
   );
 
   switch (resultat.statut) {

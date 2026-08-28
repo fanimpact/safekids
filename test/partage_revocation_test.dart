@@ -560,9 +560,19 @@ void main() {
       // tout retransmettre — pour un lien qui n'a jamais fuité.
       final service = source('lib/sharing/share_link_service.dart');
 
+      // Ce test gardait la MAUVAISE chose jusqu'au 28/08/2026 : il
+      // verifiait que la methode remettait a zero `verrou_empreinte`
+      // et `verrou_pose_le` — deux colonnes que plus personne ne lit
+      // depuis que la decision se prend sur `appareils_partage`. Le
+      // bouton ne faisait donc rien, et le test le confirmait.
       expect(service, contains('Future<void> libererVerrou('));
-      expect(service, contains("'verrou_empreinte': null"));
-      expect(service, contains("'verrou_pose_le': null"));
+      expect(service, contains("'liberer_place_partage'"));
+
+      expect(
+        service,
+        isNot(contains("'verrou_empreinte': null")),
+        reason: 'ces colonnes ne sont plus lues par personne',
+      );
     });
 
     test('L’écran propose le geste et dit quoi faire', () {

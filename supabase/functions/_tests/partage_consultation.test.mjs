@@ -105,6 +105,10 @@ function fauxDepot(etat = {}) {
       lectures.push({ nom: 'journaliserTentative', ...entree });
     },
 
+    async notifierRepriseAcces(partageId, enfantId) {
+      lectures.push({ nom: 'notifierRepriseAcces', partageId, enfantId });
+    },
+
     async accesSecoursAutorise(enfantId) {
       lectures.push({ nom: 'accesSecoursAutorise', enfantId });
       return { autorise: accesSecoursAutorise, erreur: null };
@@ -833,5 +837,200 @@ describe('Le code à scanner et sa fenêtre de cinq minutes', () => {
     );
 
     assert.deepEqual(resultat, { statut: 'lienRevoque' });
+  });
+});
+
+// La reprise d'accès (28/08/2026).
+//
+// Le secret du verrou vit dans le `localStorage` du navigateur qui a
+// ouvert la fiche, et ce cloisonnement n'est pas le nôtre : c'est
+// celui du système. Un lecteur de QR qui ouvre la page dans son propre
+// navigateur intégré y range le secret, et la même personne se
+// présente ensuite comme une inconnue depuis Safari.
+//
+// Elle ne peut pas le deviner, et le moment où elle le découvre est le
+// pire : une maîtresse qui rouvre la fiche parce qu'il se passe
+// quelque chose avec l'enfant.
+describe('La reprise explicite d’un accès refusé', () => {
+  const ANCIENNE = {
+    id: 'place-1',
+    empreinte: 'empreinte-du-navigateur-integre',
+    pris_le: '2026-08-23T06:00:00.000Z',
+  };
+
+  test('Sans la demander, le refus reste un refus', async () => {
+    // Un simple rechargement ne doit pas prendre la place de
+    // quelqu'un d'autre : la reprise est un geste, pas un effet de
+    // bord.
+    const depot = fauxDepot({ places: [ANCIENNE] });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+    );
+
+    assert.deepEqual(resultat, { statut: 'lienVerrouille' });
+  });
+
+  test('Demandée, elle rend la fiche et un secret neuf', async () => {
+    const depot = fauxDepot({ places: [ANCIENNE] });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+      { repriseDemandee: true, genererSecret: () => 'secret-neuf' },
+    );
+
+    assert.equal(resultat.statut, 'ok');
+    assert.equal(resultat.secret, 'secret-neuf');
+  });
+
+  test('Elle remplace la place, elle n’en consomme pas une autre',
+    async () => {
+      // Sinon le plafond d'appareils se viderait à chaque changement
+      // de navigateur, et le parent verrait son lien s'user tout seul.
+      const depot = fauxDepot({ places: [ANCIENNE] });
+
+      await consulterPartage(depot, 'token-1', MAINTENANT, {
+        repriseDemandee: true,
+      });
+
+      const remplacements = depot.lectures.filter(
+        (l) => l.nom === 'remplacerPlace',
+      );
+
+      assert.equal(remplacements.length, 1);
+      assert.equal(remplacements[0].placeId, 'place-1');
+
+      assert.equal(
+        depot.lectures.some((l) => l.nom === 'prendrePlace'),
+        false,
+      );
+    });
+
+  test('Le parent en est informé', async () => {
+    // C'est elle qui rend la reprise acceptable : sans notification,
+    // ce serait un affaiblissement muet.
+    const depot = fauxDepot({ places: [ANCIENNE] });
+
+    await consulterPartage(depot, 'token-1', MAINTENANT, {
+      repriseDemandee: true,
+    });
+
+    const notification = depot.lectures.find(
+      (l) => l.nom === 'notifierRepriseAcces',
+    );
+
+    assert.ok(notification);
+    assert.equal(notification.partageId, 'partage-1');
+    assert.equal(notification.enfantId, 'enfant-1');
+  });
+
+  test('Elle laisse une trace distincte d’une tolérance', async () => {
+    const depot = fauxDepot({ places: [ANCIENNE] });
+
+    await consulterPartage(depot, 'token-1', MAINTENANT, {
+      repriseDemandee: true,
+    });
+
+    const trace = depot.lectures.find(
+      (l) => l.nom === 'journaliserTentative',
+    );
+
+    assert.equal(trace.toleree, true);
+    assert.equal(trace.reprise, true);
+  });
+
+  test('Une reprise dans la fenêtre ne notifie pas', async () => {
+    // La règle 2 passe avant : dans le quart d'heure, c'est une
+    // commodité silencieuse, pas une reprise.
+    const depot = fauxDepot({
+      places: [
+        {
+          ...ANCIENNE,
+          pris_le: '2026-08-23T11:50:00.000Z',
+        },
+      ],
+    });
+
+    await consulterPartage(depot, 'token-1', MAINTENANT, {
+      repriseDemandee: true,
+    });
+
+    assert.equal(
+      depot.lectures.some((l) => l.nom === 'notifierRepriseAcces'),
+      false,
+    );
+
+    const trace = depot.lectures.find(
+      (l) => l.nom === 'journaliserTentative',
+    );
+
+    assert.equal(trace.reprise, false);
+  });
+
+  test('Une place libre passe avant la reprise', async () => {
+    // Rien à reprendre quand il reste de la place : personne ne doit
+    // être évincé pour rien.
+    const depot = fauxDepot({
+      partage: { ...PARTAGE, appareils_max: 2 },
+      places: [ANCIENNE],
+    });
+
+    await consulterPartage(depot, 'token-1', MAINTENANT, {
+      repriseDemandee: true,
+    });
+
+    assert.equal(
+      depot.lectures.some((l) => l.nom === 'prendrePlace'),
+      true,
+    );
+
+    assert.equal(
+      depot.lectures.some((l) => l.nom === 'notifierRepriseAcces'),
+      false,
+    );
+  });
+
+  test('Un lien révoqué ne se reprend pas', async () => {
+    // La révocation passe avant tout : c'est le seul geste par lequel
+    // le parent coupe, et il ne se contourne pas.
+    const depot = fauxDepot({
+      partage: {
+        ...PARTAGE,
+        revoque_le: '2026-08-23T11:00:00.000Z',
+      },
+      places: [ANCIENNE],
+    });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+      { repriseDemandee: true },
+    );
+
+    assert.deepEqual(resultat, { statut: 'lienRevoque' });
+  });
+
+  test('Un lien expiré ne se reprend pas non plus', async () => {
+    const depot = fauxDepot({
+      partage: {
+        ...PARTAGE,
+        date_expiration: '2026-08-22T12:00:00.000Z',
+      },
+      places: [ANCIENNE],
+    });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+      { repriseDemandee: true },
+    );
+
+    assert.deepEqual(resultat, { statut: 'lienExpire' });
   });
 });

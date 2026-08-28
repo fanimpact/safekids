@@ -191,6 +191,39 @@ export function depotPartagesSupabase(
       };
     },
 
+    async notifierRepriseAcces(partageId, enfantId) {
+      // C'est elle qui rend la reprise acceptable : sans notification,
+      // ce serait un affaiblissement muet. Le parent reste maitre — il
+      // coupe d'un geste depuis sa liste.
+      //
+      // Un echec d'ecriture ne remet pas l'acces en cause : la
+      // personne est deja devant la fiche, et la reprise figure de
+      // toute facon au journal des tentatives.
+      const { data: enfant, error: erreurEnfant } = await service
+        .from('enfants')
+        .select('parent_id')
+        .eq('id', enfantId)
+        .maybeSingle();
+
+      if (erreurEnfant || !enfant?.parent_id) {
+        console.error(erreurEnfant);
+        return;
+      }
+
+      const { error } = await service
+        .from('evenements_notification_parent')
+        .insert({
+          parent_id: enfant.parent_id,
+          enfant_id: enfantId,
+          type_evenement: 'acces_repris',
+          donnees: { partageId },
+        });
+
+      if (error) {
+        console.error(error);
+      }
+    },
+
     async notifierParent(partageId, enfantId) {
       // Le parent est prevenu, jamais consulte. Un echec d'ecriture ne
       // remet pas l'acces en cause : c'est une urgence, elle passe
@@ -230,6 +263,7 @@ export function depotPartagesSupabase(
           partage_id: entree.partageId,
           tentee_le: entree.tenteeLe,
           toleree: entree.toleree,
+          reprise: entree.reprise === true,
         });
 
       if (error) {
