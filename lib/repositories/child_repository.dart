@@ -278,6 +278,29 @@ class ChildRepository extends ChangeNotifier {
     await _saveToLocalCache();
   }
 
+  /// Change la préautorisation de l'accès secours d'un enfant.
+  ///
+  /// Un écrivain dédié plutôt qu'un `replaceChild` complet : ce choix
+  /// se modifie depuis le profil, où rien d'autre n'est en cours
+  /// d'édition. Réécrire tout le profil pour un booléen ferait courir
+  /// le risque d'écraser une modification faite ailleurs.
+  Future<void> setAccesSecours({
+    required String childId,
+    required bool autorise,
+  }) async {
+    await _client
+        .from('enfants')
+        .update({'acces_secours_autorise': autorise})
+        .eq('id', childId);
+
+    final existant = findByChildId(childId);
+
+    if (existant != null) {
+      existant.essentialInformation.accesSecoursAutorise = autorise;
+      notifyListeners();
+    }
+  }
+
   Future<void> replaceChild(
     ChildProfileData child,
   ) async {

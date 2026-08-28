@@ -21,7 +21,7 @@ export function depotPartagesSupabase(
         .select(
           'id, enfant_id, type_fiche, date_expiration, contenu_fige, ' +
             'destinataire, revoque_le, permanent, appareils_max, ' +
-            'acces_secours_autorise, declenche_en_secours',
+            'declenche_en_secours',
         )
         .eq('token', token)
         .maybeSingle();
@@ -139,6 +139,23 @@ export function depotPartagesSupabase(
       }
 
       return { erreur: error };
+    },
+
+    async accesSecoursAutorise(enfantId) {
+      const { data, error } = await service
+        .from('enfants')
+        .select('acces_secours_autorise')
+        .eq('id', enfantId)
+        .maybeSingle();
+
+      if (error) {
+        console.error(error);
+      }
+
+      return {
+        autorise: data?.acces_secours_autorise === true,
+        erreur: error,
+      };
     },
 
     async creerAccesSecours(partageId) {

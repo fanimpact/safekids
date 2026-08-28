@@ -747,14 +747,21 @@ void main() {
   group('La préautorisation de l’accès secours', () {
     String source(String chemin) => File(chemin).readAsStringSync();
 
-    final ecran = source('lib/sharing/create_share_link_page.dart');
+    final ecran = source('lib/secours/acces_secours_page.dart');
+
+    test('Elle se décide par enfant, pas par partage', () {
+      // Elle était d'abord à la création de chaque partage. Le parent
+      // aurait dû y penser à chaque fois — et le jour où il oublie
+      // serait le jour de l'accident. Décision du 28/08/2026.
+      final creation =
+          source('lib/sharing/create_share_link_page.dart');
+
+      expect(creation, isNot(contains('Accès secours')));
+      expect(creation, isNot(contains('accesSecoursAutorise')));
+    });
 
     test('Jamais cochée d’avance', () {
-      // C'est la seule autorisation de l'application qui laisse
-      // quelqu'un d'autre ouvrir un accès aux données de santé sans
-      // que le parent réponde. Elle doit être un geste, pas un
-      // réglage par défaut.
-      expect(ecran, contains('bool _accesSecours = false;'));
+      expect(ecran, contains('this.valeurInitiale = false'));
     });
 
     test('Le texte dit les trois choses qui engagent le parent', () {
@@ -762,62 +769,87 @@ void main() {
       // réponse, et qu'il peut y mettre fin.
       expect(ecran, contains('sans attendre votre réponse'));
       expect(ecran, contains('prévenu immédiatement'));
-      expect(ecran, contains('y mettre fin à tout moment'));
+      expect(ecran, contains('mettre fin à tout moment'));
     });
 
-    test('Il dit aussi ce que l’accès ne donne pas', () {
+    test('Il dit aussi ce que l’accès ne donne pas, et sa durée', () {
+      // La phrase est coupee en deux lignes dans la source : on
+      // verifie les deux moities telles qu'elles y sont ecrites.
+      expect(ecran, contains('ne donne que les '));
       expect(
         ecran,
-        contains('que les informations pour '),
+        contains('informations pour les secours, et dure 24 heures.'),
       );
-      expect(ecran, contains('dure 24 heures'));
     });
 
-    test('Le choix part jusqu’à la base', () {
-      expect(ecran, contains('accesSecoursAutorise: _accesSecours'));
+    test('Il dit où revenir sur ce choix', () {
+      expect(ecran, contains('le profil de '));
+    });
 
-      final service = source('lib/sharing/share_link_service.dart');
+    test('Le bouton reste actif même sans cocher', () {
+      // Contrairement au consentement de santé : refuser ici n'empêche
+      // rien, et ne rien cocher est déjà une réponse.
+      expect(ecran, contains('onPressed: _enCours ? null : _valider'));
+    });
 
-      expect(service, contains('bool accesSecoursAutorise = false'));
+    test('Elle est demandée après le questionnaire, avant la base', () {
+      // Le parent vient de voir ce que la fiche contient, et le choix
+      // part en base avec le reste, sans seconde écriture.
+      final contacts =
+          source('lib/transmission_pages/contacts_page.dart');
+
+      expect(contacts, contains('AccesSecoursPage('));
       expect(
-        service,
-        contains("'acces_secours_autorise': accesSecoursAutorise,"),
+        contacts.indexOf('AccesSecoursPage('),
+        lessThan(contacts.indexOf('TransitionToActivitiesPage(')),
       );
     });
 
-    test('Le modèle relit les trois colonnes', () {
-      final derive = ShareLinkData.fromRow({
-        'id': 'secours-1',
-        'token': 'jeton',
-        'enfant_id': 'enfant-1',
-        'type_fiche': 'secours',
-        'destinataire': 'particulier',
-        'date_creation': '2026-08-28T14:00:00Z',
-        'date_expiration': '2026-08-29T14:00:00Z',
-        'date_derniere_consultation': null,
-        'acces_secours_autorise': false,
-        'declenche_en_secours': true,
-        'partage_origine_id': 'partage-1',
-      });
+    test('Le modèle de l’enfant la porte', () {
+      final codec =
+          source('lib/repositories/child_profile_codec.dart');
 
-      expect(derive.declencheEnSecours, isTrue);
-      expect(derive.partageOrigineId, 'partage-1');
+      expect(codec, contains("'acces_secours_autorise'"));
+    });
+  });
 
-      final souche = ShareLinkData.fromRow({
-        'id': 'partage-1',
-        'token': 'jeton',
-        'enfant_id': 'enfant-1',
-        'type_fiche': 'secours',
-        'destinataire': 'particulier',
-        'date_creation': '2026-08-28T10:00:00Z',
-        'date_expiration': '2026-08-29T10:00:00Z',
-        'date_derniere_consultation': null,
-        'acces_secours_autorise': true,
-      });
+  group('La ligne dans le profil de l’enfant', () {
+    String source(String chemin) => File(chemin).readAsStringSync();
 
-      expect(souche.accesSecoursAutorise, isTrue);
-      expect(souche.declencheEnSecours, isFalse);
-      expect(souche.partageOrigineId, isNull);
+    final ecran = source('lib/children/child_profile_page.dart');
+
+    test('Elle est en tête de la section Partages', () {
+      // Elle gouverne TOUS les partages de cet enfant.
+      expect(
+        ecran.indexOf('_ligneAccesSecours(context)'),
+        lessThan(ecran.indexOf('_buildPartagesSection(context)')),
+      );
+    });
+
+    test('Le refus dit sa conséquence, pas seulement son statut', () {
+      // Un parent a pu passer vite sur l'écran du questionnaire sans
+      // mesurer ce qu'il refusait. Il ne doit pas le découvrir le jour
+      // de l'accident.
+      expect(ecran, contains('ne pourra pas '));
+      expect(ecran, contains('Si vous n’êtes pas '));
+      expect(ecran, contains('personne n’y aura '));
+    });
+
+    test('Le bouton dit ce qu’il fait, dans les deux états', () {
+      expect(ecran, contains('Autoriser l’accès secours'));
+      expect(ecran, contains("'Modifier'"));
+    });
+
+    test('Le refus n’est pas peint en ambre', () {
+      // L'ambre signale ailleurs une action attendue. L'employer ici
+      // transformerait un choix légitime en anomalie à corriger.
+      final debut = ecran.indexOf('Widget _ligneAccesSecours(');
+      final fin = ecran.indexOf('Future<void> _modifierAccesSecours(');
+
+      expect(
+        ecran.substring(debut, fin),
+        isNot(contains('ambreFond')),
+      );
     });
   });
 

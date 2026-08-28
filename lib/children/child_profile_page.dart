@@ -27,6 +27,7 @@ import '../sharing/create_share_link_page.dart';
 import '../sharing/enfant_confiance_service.dart';
 import '../sharing/establishment_attachment_service.dart';
 import '../sharing/notes_enfant_service.dart';
+import '../secours/acces_secours_page.dart';
 import '../sharing/share_link_service.dart';
 import '../transmission_pages/identity_page.dart';
 import '../utils/age_utils.dart';
@@ -868,6 +869,106 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
         ),
       ),
     );
+  }
+
+  /// L'accès secours, en tête de « Partages » parce qu'il gouverne
+  /// **tous** les partages de cet enfant.
+  ///
+  /// Les deux états disent la conséquence, pas seulement le statut. Un
+  /// parent a pu passer vite sur l'écran qui suit le questionnaire
+  /// sans mesurer ce qu'il refusait — il ne doit pas le découvrir le
+  /// jour de l'accident.
+  ///
+  /// **Pas d'ambre sur le refus**, délibérément : l'ambre signale
+  /// ailleurs une action attendue, et l'employer ici transformerait un
+  /// choix légitime en anomalie à corriger. Ce qui rattrape le parent,
+  /// c'est le texte, pas la couleur.
+  Widget _ligneAccesSecours(BuildContext context) {
+    final autorise =
+        child.essentialInformation.accesSecoursAutorise;
+
+    return Material(
+      color: KidsRelayColors.lin,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: KidsRelayColors.bordure),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              autorise
+                  ? 'Accès secours : autorisé'
+                  : 'Accès secours : non autorisé',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              autorise
+                  ? 'Si $_displayName part avec les secours, la '
+                      'personne qui l’accompagne pourra montrer les '
+                      'informations pour les secours aux soignants et '
+                      'leur transmettre l’accès, sans attendre votre '
+                      'réponse. Vous serez prévenu immédiatement.'
+                  : 'Si $_displayName part avec les secours, la '
+                      'personne qui l’accompagne ne pourra pas '
+                      'transmettre les informations aux soignants sans '
+                      'attendre votre réponse. Si vous n’êtes pas '
+                      'joignable à ce moment-là, personne n’y aura '
+                      'accès.',
+              style: const TextStyle(fontSize: 14, height: 1.45),
+            ),
+
+            const SizedBox(height: 8),
+
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => _modifierAccesSecours(context),
+                child: Text(
+                  autorise
+                      ? 'Modifier'
+                      : 'Autoriser l’accès secours',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _modifierAccesSecours(BuildContext context) async {
+    final childId = child.childId;
+
+    if (childId == null) {
+      return;
+    }
+
+    await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AccesSecoursPage(
+          prenom: _displayName,
+          valeurInitiale:
+              child.essentialInformation.accesSecoursAutorise,
+          libelleBouton: 'Enregistrer',
+          onValider: (autorise) => ChildRepository.instance
+              .setAccesSecours(childId: childId, autorise: autorise),
+        ),
+      ),
+    );
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Widget _buildPartagesSection(BuildContext context) {
@@ -1783,6 +1884,10 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
               _sectionTitle(
                 'Partages',
               ),
+
+              _ligneAccesSecours(context),
+
+              const SizedBox(height: 12),
 
               _buildPartagesSection(context),
 

@@ -69,10 +69,6 @@ export interface Partage {
   /// Nombre d'appareils autorises : 1, 2 ou 5, choisi par le parent.
   appareils_max: number;
 
-  /// Preautorisation donnee a froid par le parent : sans elle, aucun
-  /// acces secours ne peut etre declenche depuis ce partage.
-  acces_secours_autorise: boolean;
-
   /// Cette ligne EST un acces secours derive. Elle n'en declenche pas
   /// un autre.
   declenche_en_secours: boolean;

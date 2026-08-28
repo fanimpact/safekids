@@ -21,6 +21,9 @@ class ChildProfileDraft {
   /// Renseignee par l'ecran de consentement, avant le questionnaire.
   /// Voir `ChildProfileData.consentementSanteLe`.
   DateTime? consentementSanteLe;
+
+  /// Voir `ChildProfileData.accesSecoursAutorise`.
+  bool accesSecoursAutorise;
   String childId;
 
   final IdentityData identity;
@@ -59,6 +62,7 @@ class ChildProfileDraft {
   ChildProfileDraft({
     this.userId,
     this.consentementSanteLe,
+    this.accesSecoursAutorise = false,
     String? childId,
     IdentityData? identity,
     this.hasPathologies,
@@ -110,6 +114,7 @@ class ChildProfileDraft {
       userId: data.userId,
       childId: data.childId,
       consentementSanteLe: data.consentementSanteLe,
+      accesSecoursAutorise: data.accesSecoursAutorise,
       hasPathologies: data.hasPathologies,
       hasAllergies: data.hasAllergies,
       hasDailyTreatments: data.hasDailyTreatments,

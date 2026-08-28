@@ -6,6 +6,7 @@ import '../brouillons/enregistrement_brouillon.dart';
 
 import '../children/child_profile_page.dart';
 import '../controllers/transmission_controller.dart';
+import '../secours/acces_secours_page.dart';
 import '../models/contact_data.dart';
 import '../repositories/child_repository.dart';
 import '../utils/text_controller_cache.dart';
@@ -147,6 +148,36 @@ class _ContactsPageState extends State<ContactsPage> {
         widget.transmissionController.formData,
       ),
     );
+
+    // L'acces secours se demande ICI, apres le questionnaire et avant
+    // l'enregistrement : le parent vient de voir ce que la fiche
+    // contient, et le choix part en base avec le reste, sans seconde
+    // ecriture.
+    final decide = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AccesSecoursPage(
+          prenom: widget.transmissionController.formData.identity
+                  .firstName
+                  ?.trim() ??
+              'votre enfant',
+          onValider: (autorise) async {
+            widget.transmissionController.formData
+                .accesSecoursAutorise = autorise;
+          },
+        ),
+      ),
+    );
+
+    // Revenu en arriere sans repondre : on ne va pas plus loin, le
+    // profil n'est pas encore enregistre.
+    if (decide == null || !mounted) {
+      return;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
 
     Navigator.push(
       context,

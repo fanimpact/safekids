@@ -18,7 +18,6 @@ const SOURCE = {
   date_expiration: '2026-08-29T14:00:00.000Z',
   permanent: false,
   revoque_le: null,
-  acces_secours_autorise: true,
   declenche_en_secours: false,
 };
 
@@ -28,6 +27,7 @@ function fauxDepot(etat = {}) {
     erreurPartage = null,
     places = [],
     erreurCreation = null,
+    autorise = true,
   } = etat;
 
   const appels = [];
@@ -43,6 +43,11 @@ function fauxDepot(etat = {}) {
     async placesDuPartage(partageId) {
       appels.push({ nom: 'placesDuPartage', partageId });
       return { places, erreur: null };
+    },
+
+    async accesSecoursAutorise(enfantId) {
+      appels.push({ nom: 'accesSecoursAutorise', enfantId });
+      return { autorise, erreur: null };
     },
 
     async creerAccesSecours(partageId) {
@@ -140,8 +145,11 @@ describe('Qui peut déclencher', () => {
 
 describe('Ce qui n’autorise pas le déclenchement', () => {
   test('Sans la préautorisation du parent', async () => {
+    // Elle est portee par l'ENFANT depuis le 28/08/2026 : le parent la
+    // donne une fois, apres le questionnaire sante, et elle vaut pour
+    // tous ses partages.
     const depot = fauxDepot({
-      partage: { ...SOURCE, acces_secours_autorise: false },
+      autorise: false,
       places: [await placeDe('le-mien')],
     });
 

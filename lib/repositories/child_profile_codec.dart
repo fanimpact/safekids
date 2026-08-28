@@ -58,6 +58,7 @@ class ChildProfileCodec {
           identity.hasDiagnosedPathologies,
       'consentement_sante_le':
           child.consentementSanteLe?.toIso8601String(),
+      'acces_secours_autorise': child.accesSecoursAutorise,
     };
   }
 
@@ -128,6 +129,8 @@ class ChildProfileCodec {
     return ChildProfileData(
       childId: childId,
       userId: enfant['parent_id'] as String?,
+      accesSecoursAutorise:
+          enfant['acces_secours_autorise'] as bool? ?? false,
       consentementSanteLe: DateTime.tryParse(
         enfant['consentement_sante_le'] as String? ?? '',
       ),

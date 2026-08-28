@@ -29,7 +29,6 @@ export interface PartageSource {
   date_expiration: string | null;
   permanent: boolean;
   revoque_le: string | null;
-  acces_secours_autorise: boolean;
   declenche_en_secours: boolean;
 }
 
@@ -47,6 +46,15 @@ export interface DepotAccesSecours {
   placesDuPartage(
     partageId: string,
   ): Promise<{ places: PlacePartage[]; erreur: unknown }>;
+
+  /// La preautorisation, portee par l'ENFANT et non par le partage :
+  /// le parent la donne une fois, apres le questionnaire sante, et
+  /// elle vaut pour tous les partages de cet enfant. Sur chaque
+  /// partage, il aurait fallu y penser a chaque fois — et le jour de
+  /// l'oubli serait le jour de l'accident.
+  accesSecoursAutorise(
+    enfantId: string,
+  ): Promise<{ autorise: boolean; erreur: unknown }>;
 
   /// Crée l'accès dérivé. Les règles de contenu et de durée sont en
   /// base, pas ici.
@@ -119,7 +127,18 @@ export async function declencherAccesSecours(
   // Un accès secours n'en déclenche pas un autre. La base le refuse
   // aussi ; on le dit ici pour rendre le refus lisible plutôt que de
   // laisser remonter une exception.
-  if (partage.declenche_en_secours || !partage.acces_secours_autorise) {
+  if (partage.declenche_en_secours) {
+    return { statut: 'nonAutorise' };
+  }
+
+  const { autorise, erreur: erreurAutorisation } =
+    await depot.accesSecoursAutorise(partage.enfant_id);
+
+  if (erreurAutorisation) {
+    return { statut: 'erreurBase' };
+  }
+
+  if (!autorise) {
     return { statut: 'nonAutorise' };
   }
 

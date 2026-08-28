@@ -25,6 +25,17 @@ class ChildProfileData {
   /// demande. Seule la creation d'une nouvelle fiche l'exige.
   final DateTime? consentementSanteLe;
 
+  /// Préautorisation de l'accès secours, donnée une fois par le parent
+  /// après le questionnaire santé et modifiable depuis le profil.
+  ///
+  /// Portée par l'enfant et non par chaque partage : le parent devrait
+  /// sinon y penser à chaque fois, et le jour où il oublie serait le
+  /// jour de l'accident.
+  /// Non final : le parent revient dessus depuis le profil de
+  /// l'enfant, et la copie en memoire doit suivre sans recharger tout
+  /// le profil.
+  bool accesSecoursAutorise;
+
   final IdentityData identity;
 
   final bool? hasPathologies;
@@ -59,6 +70,7 @@ class ChildProfileData {
     this.userId,
     this.childId,
     this.consentementSanteLe,
+    this.accesSecoursAutorise = false,
     required this.identity,
     this.hasPathologies,
     this.hasAllergies,
@@ -86,6 +98,7 @@ class ChildProfileData {
       userId: draft.userId,
       childId: draft.childId,
       consentementSanteLe: draft.consentementSanteLe,
+      accesSecoursAutorise: draft.accesSecoursAutorise,
       hasPathologies: draft.hasPathologies,
       hasAllergies: draft.hasAllergies,
       hasDailyTreatments: draft.hasDailyTreatments,
