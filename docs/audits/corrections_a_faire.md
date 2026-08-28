@@ -723,6 +723,84 @@ montent désormais la garde.
 qu'un code est écrit, jamais qu'il est atteint. Pour tout ce qui a un
 chemin d'exécution, exercer le chemin.
 
+
+## Le QR de partage — construit le 28/08/2026
+
+Distinct du QR de l'accès secours. Celui-ci sert au parent à partager
+la fiche **en présentiel** : il affiche un code, la personne en face le
+scanne avec son appareil photo, et repart avec l'accès. Aucune
+application à installer de son côté.
+
+### Ce n'est pas un second mécanisme
+
+Un code à scanner est **la même ligne `partages` qu'un lien** : même
+jeton, même page publique, même verrou, mêmes places, même révocation
+par marquage, même ligne dans la liste du parent, même journal. Même
+écran de création, même liste de durées, même service.
+
+Une seule chose s'ajoute : la colonne `utilisable_jusqu_a`, la fenêtre
+pendant laquelle le jeton peut être réclamé **pour la première fois**.
+
+### Les deux durées ne se mélangent jamais
+
+Elles ne sont pas dans la même colonne, et c'est ce qui garantit
+qu'elles ne se marcheront pas dessus :
+
+| | Colonne | Ce qu'elle dit |
+|---|---|---|
+| Cinq minutes | `utilisable_jusqu_a` | le temps que le code reste scannable |
+| La durée choisie | `date_expiration` / `permanent` | le temps que dure l'accès |
+
+**Dès qu'une place est prise, la fenêtre ne compte plus.** Sans ce
+« et personne n'a scanné », le destinataire perdrait sa fiche cinq
+minutes après l'avoir reçue. C'est le test qui compte le plus de ce
+chantier.
+
+Une fenêtre nulle vaut ouverte : les lignes créées avant ce jour n'en
+ont pas, et les traiter comme fermées aurait coupé tous les partages
+existants.
+
+### Le jeton tourne à chaque rafraîchissement
+
+Se contenter de repousser la fenêtre laisserait le même jeton, et
+**une photo du code précédent redeviendrait valable** — ce qui viderait
+la règle des cinq minutes de son sens. Le jeton est donc remplacé à
+chaque fois, et seulement tant que rien n'a été scanné : après, le
+faire tourner couperait le destinataire, qui n'a rien demandé.
+
+### Les décisions de Fanny
+
+1. **Aucune protection contre la capture d'écran, nulle part.** Pas de
+   `FLAG_SECURE` Android non plus : « le même comportement sur les deux
+   systèmes, pas une protection à deux vitesses ». Les boutons
+   imprimer, partager, copier et enregistrer restent absents. Ce qui
+   protège, ce sont les cinq minutes et le verrou du nombre
+   d'appareils — une photo ne vaut rien passé le délai, et si le
+   destinataire a scanné entre-temps, la place est prise.
+2. **L'adresse en clair figure sous le code**, exactement comme sur
+   l'écran de l'accès secours. « Recopier une adresse à la main ne
+   donne rien de plus que photographier le code, et les deux cessent de
+   fonctionner au bout de 5 minutes. En revanche, si le scan ne prend
+   pas, l'adresse dépanne immédiatement. Je veux une seule logique dans
+   toute l'application. »
+3. **Un code jamais scanné** : « En attente de scan » dans les partages
+   en cours pendant la fenêtre, puis bascule automatique dans les
+   partages terminés avec « Code non scanné ». Rien n'est effacé.
+4. **Le décompte repart à cinq minutes chaque fois que le parent
+   revient sur l'écran.** « Le code n'est visible que sur son propre
+   téléphone, rien n'a été transmis tant que personne n'a scanné, et il
+   n'y a donc rien à protéger contre lui-même. »
+
+### Ce qui reste ouvert
+
+**Le verrou et les lecteurs de QR.** Beaucoup de lecteurs ouvrent la
+page dans leur **propre navigateur intégré**. Le secret du verrou se
+range alors dans ce navigateur-là, et si le destinataire rouvre plus
+tard depuis Safari ou Chrome, il sera refusé comme un inconnu. Le
+défaut existe déjà pour un lien envoyé par SMS, mais le scan le rend
+beaucoup plus probable. **À vérifier sur téléphone réel** — et si ça se
+confirme, c'est un chantier à part entière.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base

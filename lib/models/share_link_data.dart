@@ -100,6 +100,14 @@ class ShareLinkData {
   /// depuis un lien. Exclusif de [partageOrigineId].
   final String? rattachementOrigineId;
 
+  /// Jusqu'a quand ce code peut etre scanne pour la PREMIERE fois.
+  ///
+  /// Nulle pour un lien ordinaire. Sans rapport avec
+  /// [dateExpiration], qui porte la duree de l'acces une fois
+  /// accorde : les deux durees ne se melangent jamais, parce
+  /// qu'elles ne sont pas dans la meme colonne.
+  final DateTime? utilisableJusquA;
+
   /// La fonction declaree de la personne qui a declenche, figee a cet
   /// instant : « ATSEM », « Direction ».
   ///
@@ -124,8 +132,38 @@ class ShareLinkData {
     this.declencheEnSecours = false,
     this.partageOrigineId,
     this.rattachementOrigineId,
+    this.utilisableJusquA,
     this.declencheParFonction,
   });
+
+  /// Ce partage se remet en présentiel, par un code affiché à l'écran.
+  bool get estCodeAScanner => utilisableJusquA != null;
+
+  /// Personne ne l'a encore ouvert.
+  ///
+  /// La consultation et la prise de place vont ensemble : le verrou
+  /// occupe une place à la première ouverture réussie, et c'est la
+  /// même qui date la consultation.
+  bool get jamaisScanne => dateDerniereConsultation == null;
+
+  /// Le code est affiché et attend son scan.
+  bool get codeEnAttente {
+    final fin = utilisableJusquA;
+
+    return fin != null && jamaisScanne && fin.isAfter(DateTime.now());
+  }
+
+  /// Les cinq minutes sont passées et personne n'a scanné.
+  ///
+  /// Ce n'est pas un accès : personne ne l'a jamais eu. La ligne
+  /// bascule donc dans les partages terminés — elle n'est pas effacée,
+  /// conformément à la règle du 27/08/2026, mais elle ne se fait pas
+  /// passer pour un accès en cours.
+  bool get codeNonScanne {
+    final fin = utilisableJusquA;
+
+    return fin != null && jamaisScanne && !fin.isAfter(DateTime.now());
+  }
 
   bool get estRevoque => revoqueLe != null;
 
@@ -143,13 +181,14 @@ class ShareLinkData {
   /// Ce que le parent voit dans « Partages en cours ». Tout le reste
   /// va dans « Partages terminés » — jamais mêlé, pour qu'un coup
   /// d'œil suffise à savoir qui a accès aujourd'hui.
-  bool get estActif => !estRevoque && !estExpire;
+  bool get estActif => !estRevoque && !estExpire && !codeNonScanne;
 
   factory ShareLinkData.fromRow(Map<String, dynamic> row) {
     final dateDerniereConsultation =
         row['date_derniere_consultation'] as String?;
     final dateExpiration = row['date_expiration'] as String?;
     final revoqueLe = row['revoque_le'] as String?;
+    final utilisableJusquA = row['utilisable_jusqu_a'] as String?;
 
     return ShareLinkData(
       id: row['id'] as String,
@@ -178,6 +217,9 @@ class ShareLinkData {
       partageOrigineId: row['partage_origine_id'] as String?,
       rattachementOrigineId:
           row['rattachement_origine_id'] as String?,
+      utilisableJusquA: utilisableJusquA == null
+          ? null
+          : DateTime.parse(utilisableJusquA),
       declencheParFonction:
           row['declenche_par_fonction'] as String?,
       revoqueLe:

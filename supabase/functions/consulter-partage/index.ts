@@ -35,6 +35,7 @@ import { depotPartagesSupabase } from '../_enveloppe/depot_partages.mts';
 
 import {
   LIEN_INVALIDE,
+  CODE_EXPIRE,
   LIEN_VERROUILLE,
   consulterPartage,
 } from '../_logique/partage_consultation.mts';
@@ -120,6 +121,22 @@ Deno.serve(async (req) => {
     // a une panne.
     case 'lienVerrouille':
       return reponseJson({ error: LIEN_VERROUILLE }, 423);
+
+    // Meme raison : celui qui vient de scanner n'a rien fait de mal,
+    // et le parent est a cote de lui. Lui dire d'en demander un
+    // nouveau lui epargne de croire a une panne.
+    //
+    // 410 comme un lien expire : c'est bien une ressource qui a
+    // cesse d'exister, pas un refus d'acces.
+    case 'codeExpire':
+      // `code` en plus du texte : la page ne peut pas deviner, a
+      // partir d'un 410, si elle doit dire « demandez un nouveau
+      // lien » ou « demandez un nouveau code ». Un champ lisible
+      // par la machine vaut mieux qu'un code HTTP detourne.
+      return reponseJson(
+        { error: CODE_EXPIRE, code: 'code_expire' },
+        410,
+      );
 
     case 'enfantIntrouvable':
       return erreur(404);

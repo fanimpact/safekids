@@ -866,3 +866,53 @@ describe('Le geste secours atteint bien la fiche secours', () => {
     );
   });
 });
+
+// Le refus d'un code à scanner périmé (28/08/2026).
+//
+// Il ne se dit pas comme un lien fini : le parent est à côté de la
+// personne, il lui suffit d'en afficher un nouveau. « Demandez-lui un
+// nouveau lien » l'enverrait chercher un SMS qui n'existe pas.
+describe('Un code à scanner périmé a son propre message', () => {
+  test('La page le distingue d’un lien fini', async () => {
+    const { elements } = await rendre(
+      { error: 'Ce code…', code: 'code_expire' },
+      { reponseOk: false, statut: 410 },
+    );
+
+    assert.equal(
+      elements['titre-erreur'].textContent,
+      'Ce code n’est plus valable',
+    );
+
+    assert.match(
+      elements['texte-erreur'].textContent,
+      /qui est à côté de vous/,
+    );
+  });
+
+  test('Un lien fini garde le sien', async () => {
+    const { elements } = await rendre(
+      { error: 'Lien expiré ou invalide.' },
+      { reponseOk: false, statut: 410 },
+    );
+
+    assert.equal(
+      elements['titre-erreur'].textContent,
+      'Ce lien ne fonctionne plus',
+    );
+  });
+
+  test('Un corps illisible retombe sur le cas général', async () => {
+    // Une panne de sérialisation ne doit pas produire un message qui
+    // parle d'un code que personne n'a affiché.
+    const { elements } = await rendre(null, {
+      reponseOk: false,
+      statut: 404,
+    });
+
+    assert.equal(
+      elements['titre-erreur'].textContent,
+      'Ce lien ne fonctionne plus',
+    );
+  });
+});

@@ -552,6 +552,18 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
   }
 
   String _shareLinkStatusLabel(ShareLinkData link) {
+    // Un code à scanner qui attend n'est pas encore un accès :
+    // personne ne l'a. Le dire « jamais consulté » à côté d'une
+    // échéance laisserait croire que quelqu'un peut lire la fiche.
+    if (link.codeEnAttente) {
+      return 'En attente de scan — le code est affiché sur votre '
+          'téléphone';
+    }
+
+    if (link.codeNonScanne) {
+      return 'Code non scanné — personne n’a eu accès à la fiche';
+    }
+
     final quand = _shareLinkEcheanceLabel(link);
 
     if (link.dateDerniereConsultation == null) {

@@ -3204,6 +3204,15 @@ var qrcode = function() {
       'Il a atteint sa date de fin, ou le parent y a mis un terme. ' +
         'Demandez-lui un nouveau lien si vous en avez encore besoin.',
     ],
+    // Un code a scanner perime ne se dit pas comme un lien fini :
+    // le parent est a cote de la personne, il lui suffit d'en
+    // afficher un nouveau. « Demandez-lui un nouveau lien »
+    // l'enverrait chercher un SMS qui n'existe pas.
+    code: [
+      'Ce code n’est plus valable',
+      'Un code à scanner vaut cinq minutes. Demandez au parent, ' +
+        'qui est à côté de vous, d’en afficher un nouveau.',
+    ],
     panne: [
       'Impossible d’afficher cette fiche',
       'Vérifiez votre connexion et réessayez. Si le problème ' +
@@ -3264,8 +3273,25 @@ var qrcode = function() {
 
       // 404 et 410 : jeton inconnu, lien expire ou revoque. Le
       // serveur ne les distingue pas non plus dans sa reponse.
+      //
+      // Sauf un : un code a scanner perime porte un marqueur, et
+      // merite son propre message. On lit donc le corps avant de
+      // conclure — et s'il n'est pas lisible, on retombe sur le
+      // cas general plutot que sur une panne.
       if (reponse.status === 404 || reponse.status === 410) {
-        throw { cas: 'fini' };
+        return reponse.json().then(
+          function (data) {
+            throw {
+              cas:
+                data && data.code === 'code_expire'
+                  ? 'code'
+                  : 'fini',
+            };
+          },
+          function () {
+            throw { cas: 'fini' };
+          },
+        );
       }
 
       if (!reponse.ok) throw { cas: 'panne' };

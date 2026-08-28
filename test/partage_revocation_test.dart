@@ -175,7 +175,10 @@ void main() {
     test('revokeLink marque au lieu d’effacer', () {
       final code = source('lib/sharing/share_link_service.dart');
       final debut = code.indexOf('Future<void> revokeLink');
-      final fin = code.indexOf('Future<String> createLink');
+      // Ancre sur le nom seul : le type de retour a change le
+      // 28/08/2026 (createLink rend desormais l'identifiant en plus
+      // du jeton), et l'ancre precedente ne trouvait plus rien.
+      final fin = code.indexOf('createLink(');
       final methode = code.substring(debut, fin);
 
       expect(methode, contains("update({'revoque_le'"));

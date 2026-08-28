@@ -2,8 +2,51 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/supabase_config.dart';
 import '../models/share_link_data.dart';
+import '../services/service_exception.dart';
 import '../models/tentative_partage_data.dart';
 import '../usage/compteur_usage.dart';
+
+/// Ce qu'un partage tout juste créé rend à l'écran qui l'a demandé.
+///
+/// L'identifiant en plus du jeton : un code à scanner doit pouvoir se
+/// rafraîchir, et le rafraîchissement s'adresse à la ligne, pas au
+/// jeton — qui change justement à chaque fois.
+class PartageCree {
+  final String id;
+  final String token;
+
+  const PartageCree({required this.id, required this.token});
+
+  /// L'adresse de la page publique. Le jeton passe après le `#` : le
+  /// fragment n'est pas transmis au serveur, donc il n'apparaît dans
+  /// aucun journal d'accès de l'hébergeur.
+  String get url =>
+      '${SupabaseConfig.adressePagePartage}/#jeton=$token';
+}
+
+/// L'état d'un code à scanner, tel que le serveur le rend.
+class CodePartage {
+  final String token;
+
+  /// Jusqu'à quand ce code peut être scanné pour la **première** fois.
+  /// Sans rapport avec la durée de l'accès, choisie par le parent
+  /// avant d'afficher le code.
+  final DateTime utilisableJusquA;
+
+  /// Quelqu'un a déjà scanné. Le code a servi : il ne se rafraîchit
+  /// plus, et le parent doit le savoir plutôt que de continuer à
+  /// tendre son téléphone.
+  final bool dejaScanne;
+
+  const CodePartage({
+    required this.token,
+    required this.utilisableJusquA,
+    required this.dejaScanne,
+  });
+
+  String get url =>
+      '${SupabaseConfig.adressePagePartage}/#jeton=$token';
+}
 
 /// Côté parent : lister et révoquer les liens de partage ponctuels
 /// (`partages`) d'un enfant. Il n'existe pas de statut "révoqué" en
@@ -117,7 +160,7 @@ class ShareLinkService {
   /// (23/08/2026) : c'était le seul écran de l'app à écrire en base.
   /// [contenuFige] est la "photo" des recommandations au moment du
   /// partage, quand la fiche partagée est celle d'une activité.
-  Future<String> createLink({
+  Future<PartageCree> createLink({
     required String childId,
     required String typeFiche,
     required String destinataire,
@@ -149,14 +192,50 @@ class ShareLinkService {
           'contenu_fige': contenuFige,
           'activite_id': activiteId,
         })
-        .select('token')
+        .select('id, token')
         .single();
-
-    final token = response['token'] as String;
 
     // Le jeton passe apres le `#` : le fragment n'est pas transmis au
     // serveur, donc il n'apparait dans aucun journal d'acces de
     // l'hebergeur. Meme choix que pour auth.kidsrelay.fr.
-    return '${SupabaseConfig.adressePagePartage}/#jeton=$token';
+    return PartageCree(
+      id: response['id'] as String,
+      token: response['token'] as String,
+    );
+  }
+
+  /// Ouvre — ou rouvre — la fenêtre de cinq minutes d'un code à
+  /// scanner, et rend le jeton à afficher.
+  ///
+  /// **Le jeton tourne à chaque appel**, tant que personne n'a
+  /// scanné. Se contenter de repousser la fenêtre laisserait le même
+  /// jeton, et une photo du code précédent redeviendrait valable —
+  /// ce qui viderait la règle des cinq minutes de son sens.
+  ///
+  /// La durée vit en base, pas ici : l'écran compte à rebours sur la
+  /// date rendue plutôt que d'avoir sa propre idée de cinq minutes.
+  Future<CodePartage> rafraichirCode(String partageId) async {
+    final reponse = await _client.rpc(
+      'rafraichir_code_partage',
+      params: {'p_partage_id': partageId},
+    );
+
+    final lignes = (reponse as List?) ?? const [];
+
+    if (lignes.isEmpty) {
+      throw const ServiceException(
+        'Le code n’a pas pu être affiché. Réessayez.',
+      );
+    }
+
+    final ligne = Map<String, dynamic>.from(lignes.first as Map);
+
+    return CodePartage(
+      token: ligne['code_token'] as String,
+      utilisableJusquA: DateTime.parse(
+        ligne['code_utilisable_jusqu_a'] as String,
+      ),
+      dejaScanne: ligne['code_deja_scanne'] as bool? ?? false,
+    );
   }
 }

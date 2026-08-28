@@ -46,6 +46,16 @@ export const LIEN_VERROUILLE =
   'Ce lien a déjà été ouvert depuis un autre appareil et ne peut plus ' +
   'servir ailleurs. Demandez un nouveau lien au parent.';
 
+/// Un code à scanner vaut cinq minutes. Passé ce délai sans avoir
+/// servi, il ne mène plus nulle part.
+///
+/// Distinct du lien expiré : là, c'est l'accès lui-même qui a pris
+/// fin et il n'y a rien à demander. Ici le parent est à côté, il
+/// lui suffit de rafficher un code — et le dire évite un appel.
+export const CODE_EXPIRE =
+  'Ce code à scanner n’est plus valable. Demandez au parent, qui ' +
+  'est à côté de vous, d’en afficher un nouveau.';
+
 export { TYPE_RECOMMANDATIONS };
 
 export interface Partage {
@@ -72,6 +82,14 @@ export interface Partage {
   /// Cette ligne EST un acces secours derive. Elle n'en declenche pas
   /// un autre.
   declenche_en_secours: boolean;
+
+  /// Jusqu'a quand ce code peut etre scanne pour la PREMIERE fois.
+  ///
+  /// Nulle pour un lien ordinaire, qui n'a pas de fenetre. Sans
+  /// rapport avec `date_expiration`, qui porte la duree de l'acces
+  /// une fois accorde : les deux durees ne se melangent jamais,
+  /// parce qu'elles ne sont pas dans la meme colonne.
+  utilisable_jusqu_a: string | null;
 }
 
 /// Ce dont la logique a besoin de la base, et rien de plus.
@@ -169,6 +187,7 @@ export type ResultatConsultation =
   | { statut: 'lienExpire' }
   | { statut: 'lienRevoque' }
   | { statut: 'lienVerrouille' }
+  | { statut: 'codeExpire' }
   | { statut: 'enfantIntrouvable' }
   | { statut: 'erreurBase' };
 
@@ -225,6 +244,20 @@ export async function consulterPartage(
 
   if (erreurPlaces) {
     return { statut: 'erreurBase' };
+  }
+
+  // La fenetre du code a scanner, apres les places et avant le
+  // verrou : elle ne vaut que tant que PERSONNE n'a scanne.
+  //
+  // Des qu'une place est prise, elle ne compte plus — l'acces vit
+  // sur sa propre echeance, celle que le parent a choisie. Sans ce
+  // « et personne n'a scanne », le destinataire perdrait son acces
+  // cinq minutes apres l'avoir recu.
+  if (
+    places.length === 0 &&
+    !fenetreEncoreOuverte(partage.utilisable_jusqu_a, maintenant)
+  ) {
+    return { statut: 'codeExpire' };
   }
 
   const decision = decisionVerrou({
@@ -374,6 +407,28 @@ function genererSecretParDefaut(): string {
 /// Une date d'expiration illisible vaut expirée : un lien dont on ne
 /// sait pas dire s'il est encore valable ne doit pas s'ouvrir.
 ///
+/// La fenêtre d'un code à scanner est-elle encore ouverte ?
+///
+/// **Nulle vaut ouverte.** Un lien ordinaire n'a pas de fenêtre, et
+/// les lignes créées avant le 28/08/2026 non plus : les traiter comme
+/// fermées couperait tous les partages existants.
+export function fenetreEncoreOuverte(
+  utilisableJusquA: string | null,
+  maintenant: Date,
+): boolean {
+  if (!utilisableJusquA) {
+    return true;
+  }
+
+  const fin = new Date(utilisableJusquA);
+
+  if (isNaN(fin.getTime())) {
+    return true;
+  }
+
+  return fin.getTime() > maintenant.getTime();
+}
+
 /// Un lien **permanent** n'a pas de date et ne se compare a rien : il
 /// est valide tant qu'il n'est pas revoque, ce qui est verifie avant.
 /// Sans ce cas, une date nulle serait lue comme illisible et tous les

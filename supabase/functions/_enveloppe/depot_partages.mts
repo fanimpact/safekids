@@ -21,7 +21,7 @@ export function depotPartagesSupabase(
         .select(
           'id, enfant_id, type_fiche, date_expiration, contenu_fige, ' +
             'destinataire, revoque_le, permanent, appareils_max, ' +
-            'declenche_en_secours',
+            'declenche_en_secours, utilisable_jusqu_a',
         )
         .eq('token', token)
         .maybeSingle();

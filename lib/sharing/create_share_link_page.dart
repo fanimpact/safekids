@@ -11,6 +11,7 @@ import '../repositories/child_repository.dart';
 import '../theme/kidsrelay_theme.dart';
 import '../utils/date_format_utils.dart';
 import 'activity_recommendation_snapshot.dart';
+import 'ecran_code_partage.dart';
 import 'share_link_service.dart';
 
 const _selectableFicheTypes = [
@@ -243,7 +244,27 @@ class _CreateShareLinkPageState
     return name.isEmpty ? 'Enfant' : name;
   }
 
-  Future<void> _generateLink() async {
+  /// Ce que dure l'accès une fois le code scanné, dit en une phrase.
+  ///
+  /// À ne pas confondre avec les cinq minutes du code : celles-ci ne
+  /// concernent que le temps pendant lequel il reste scannable. Les
+  /// deux durées se lisent sur le même écran, alors elles doivent se
+  /// distinguer sans effort.
+  String _texteDureeAcces(DateTime? dateExpiration) {
+    if (_selectedDuration == _ShareDuration.permanent) {
+      return 'L’accès n’aura pas de date de fin. Il durera tant que '
+          'vous ne l’aurez pas révoqué.';
+    }
+
+    if (dateExpiration == null) {
+      return 'L’accès durera le temps que vous avez choisi.';
+    }
+
+    return 'L’accès durera jusqu’au '
+        '${formatShortDateTime(dateExpiration.toLocal())}.';
+  }
+
+  Future<void> _generateLink({bool codeAScanner = false}) async {
     // TRACE TEMPORAIRE (27/08/2026) — a retirer une fois la cause du
     // bouton inerte identifiee. Affiche l'etat reel au moment du clic,
     // sans passer par ce que l'ecran laisse croire.
@@ -372,8 +393,34 @@ class _CreateShareLinkPageState
       );
 
       setState(() {
-        _generatedLink = link;
         _expirationGeneree = dateExpiration?.toLocal();
+      });
+
+      if (!mounted) {
+        return;
+      }
+
+      // Le partage vient d'être créé de la même façon dans les deux
+      // cas — mêmes champs, mêmes validations, même ligne. Seule
+      // change la manière de le remettre : une adresse à envoyer,
+      // ou un code à faire scanner devant soi.
+      if (codeAScanner) {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EcranCodePartage(
+              partageId: link.id,
+              nomDestinataire: nomDestinataire,
+              texteDuree: _texteDureeAcces(dateExpiration),
+            ),
+          ),
+        );
+
+        return;
+      }
+
+      setState(() {
+        _generatedLink = link.url;
       });
     } catch (error) {
       if (!mounted) {
@@ -979,6 +1026,34 @@ class _CreateShareLinkPageState
                       ? 'Génération en cours...'
                       : 'Générer le lien',
                 ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Le partage en présentiel : mêmes choix, même ligne,
+            // même liste. Seule la remise change — un code montré à
+            // l'écran plutôt qu'une adresse à envoyer.
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _isGenerating
+                    ? null
+                    : () => _generateLink(codeAScanner: true),
+                icon: const Icon(Icons.qr_code_2),
+                label: const Text('Montrer un code à scanner'),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            const Text(
+              'Le code s’affiche sur votre téléphone et reste '
+              'valable cinq minutes. La personne le scanne avec son '
+              'appareil photo, sans installer quoi que ce soit.',
+              style: TextStyle(
+                fontSize: 14,
+                color: KidsRelayColors.ardoiseDouce,
               ),
             ),
 

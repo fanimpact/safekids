@@ -704,3 +704,134 @@ describe('Fiche renvoyée', () => {
     },
   );
 });
+
+// La fenêtre d'un code à scanner (28/08/2026).
+//
+// Un code de partage est la même ligne `partages` qu'un lien : même
+// jeton, même page, même verrou. Seule s'y ajoute une fenêtre de cinq
+// minutes pendant laquelle le jeton peut être réclamé pour la première
+// fois.
+//
+// Les deux durées ne se mélangent jamais, et c'est ce que ce bloc
+// protège : si la fenêtre débordait sur l'accès, le destinataire
+// perdrait sa fiche cinq minutes après l'avoir reçue.
+describe('Le code à scanner et sa fenêtre de cinq minutes', () => {
+  const codeDe = (utilisableJusquA) => ({
+    ...PARTAGE,
+    utilisable_jusqu_a: utilisableJusquA,
+  });
+
+  const OUVERTE = '2026-08-23T12:04:00.000Z';
+  const FERMEE = '2026-08-23T11:55:00.000Z';
+
+  test('Fenêtre ouverte et personne n’a scanné : la fiche s’ouvre',
+    async () => {
+      const depot = fauxDepot({ partage: codeDe(OUVERTE) });
+
+      const resultat = await consulterPartage(
+        depot,
+        'token-1',
+        MAINTENANT,
+      );
+
+      assert.equal(resultat.statut, 'ok');
+    });
+
+  test('Fenêtre fermée et personne n’a scanné : refusé', async () => {
+    const depot = fauxDepot({ partage: codeDe(FERMEE) });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+    );
+
+    assert.deepEqual(resultat, { statut: 'codeExpire' });
+  });
+
+  test('Le refus ne charge aucune donnée d’enfant', async () => {
+    // Comme pour un lien expiré : rien ne se lit avant que le droit
+    // d'entrer soit établi.
+    const depot = fauxDepot({ partage: codeDe(FERMEE) });
+
+    await consulterPartage(depot, 'token-1', MAINTENANT);
+
+    assert.equal(
+      depot.lectures.some((l) => l.nom === 'enfant'),
+      false,
+    );
+  });
+
+  test('Une fois scanné, la fenêtre ne compte plus', async () => {
+    // LE test de ce chantier. Sans lui, le destinataire perdrait son
+    // accès cinq minutes après l'avoir reçu, alors que le parent lui
+    // a donné des jours.
+    const secret = 'le-mien';
+
+    const depot = fauxDepot({
+      partage: codeDe(FERMEE),
+      places: [
+        {
+          id: 'place-1',
+          empreinte: await empreinteDuSecret(secret),
+          pris_le: '2026-08-23T11:50:00.000Z',
+        },
+      ],
+    });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+      { secretPresente: secret },
+    );
+
+    assert.equal(resultat.statut, 'ok');
+  });
+
+  test('Une fenêtre nulle vaut ouverte', async () => {
+    // Un lien ordinaire n'en a pas, et les lignes créées avant le
+    // 28/08/2026 non plus : les traiter comme fermées couperait tous
+    // les partages existants.
+    const depot = fauxDepot({ partage: codeDe(null) });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+    );
+
+    assert.equal(resultat.statut, 'ok');
+  });
+
+  test('Une date illisible ne coupe pas l’accès', async () => {
+    // Une donnée abîmée ne doit pas fermer une porte que le parent a
+    // ouverte. Le reste des contrôles tient toujours.
+    const depot = fauxDepot({ partage: codeDe('pas-une-date') });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+    );
+
+    assert.equal(resultat.statut, 'ok');
+  });
+
+  test('La révocation passe avant la fenêtre', async () => {
+    const depot = fauxDepot({
+      partage: {
+        ...codeDe(OUVERTE),
+        revoque_le: '2026-08-23T11:00:00.000Z',
+      },
+    });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+    );
+
+    assert.deepEqual(resultat, { statut: 'lienRevoque' });
+  });
+});
