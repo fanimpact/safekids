@@ -13,7 +13,7 @@ Aucun n'est retiré avant que Fanny confirme elle-même l'avoir vérifié.
 résultat attendu pour chaque point, en vue d'une session unique sur un
 appareil Android.
 
-- **71 points** au total.
+- **72 points** au total.
 - **Priorité haute : 14** — à faire en premier, ce sont ceux dont
   l'échec aurait des conséquences réelles.
 - **Priorité moyenne : 33**.
@@ -770,6 +770,46 @@ serait bloqué. C'est le risque principal de cette fonctionnalité.
 **Prérequis** : les fonctions `consulter-partage` et `voir-partage`
 doivent avoir été redéployées. Sans cela, aucun verrou n'est posé et
 tout s'ouvre partout.
+
+## 72. Le verrou de l'appareil, et son repli
+*Connexion, 28/08/2026 · priorité haute · non testable en développement*
+
+Le déverrouillage biométrique **ne se simule pas** sur un poste de
+développement : rien de ce qui suit n'a été vu fonctionner, seulement
+testé en logique pure.
+
+**Le principe** : l'application est protégée par le déverrouillage du
+téléphone — empreinte, visage, ou code — **jamais par le mot de passe
+du compte**. C'est exactement celui qu'un parent ne retrouve pas au
+moment où il en a besoin.
+
+**À vérifier, dans cet ordre :**
+
+1. Ouvrir l'application alors qu'elle n'a pas été ouverte depuis plus
+   de 15 minutes. **Attendu** : la demande de déverrouillage.
+2. Déverrouiller, fermer l'application, la rouvrir **dans la minute**.
+   **Attendu** : elle s'ouvre **directement**, sans rien demander.
+   Pendant une urgence on l'ouvre et la referme sans arrêt.
+3. La laisser en arrière-plan plus de 15 minutes, puis y revenir.
+   **Attendu** : la demande revient — c'est le retour au premier plan,
+   pas seulement le démarrage à froid.
+4. **Faire échouer la biométrie** (doigt mouillé, mauvais doigt).
+   **Attendu** : le système propose le **code du téléphone**. C'est le
+   point le plus important de la liste : si l'application demandait le
+   mot de passe du compte, tout le raisonnement s'effondrerait.
+5. Annuler la demande. **Attendu** : un écran « Déverrouillez pour
+   continuer » avec **Réessayer** et **Se déconnecter**, et rien
+   d'autre. Personne ne doit rester enfermé.
+6. Sur un téléphone **sans aucun verrou** configuré : l'application
+   doit s'ouvrir **sans rien demander**.
+
+**Deux réglages de plateforme à confirmer au passage**, faits le
+28/08/2026 mais jamais exécutés :
+
+- Android : `MainActivity` étend désormais `FlutterFragmentActivity`.
+  Avec `FlutterActivity`, la demande échoue silencieusement.
+- iOS : `NSFaceIDUsageDescription` ajouté à `Info.plist`. Sans lui, iOS
+  refuse Face ID sans explication.
 
 ---
 

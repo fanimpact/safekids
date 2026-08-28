@@ -81,5 +81,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>KidsRelay utilise Face ID pour protéger les informations de santé de vos enfants.</string>
 </dict>
 </plist>

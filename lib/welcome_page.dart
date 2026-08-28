@@ -11,6 +11,7 @@ import 'professional/establishment_service.dart';
 import 'profile_choice_page.dart';
 import 'repositories/child_repository.dart';
 import 'suppression/garde_suppression.dart';
+import 'verrou/garde_verrou.dart';
 
 /// Le premier écran, et celui qui décide où l'on va.
 ///
@@ -118,16 +119,21 @@ class _WelcomePageState extends State<WelcomePage> {
 
   Widget _ecran(DestinationDemarrage destination) {
     switch (destination) {
+      // Les trois destinations d'une session ouverte passent par le
+      // verrou de l'appareil. Celle du parcours d'entree, non : il n'y
+      // a rien a proteger avant la connexion.
       case DestinationDemarrage.accueilParent:
-        // Le garde reste : un compte en cours de suppression ne doit
-        // pas atterrir sur ses enfants.
-        return const GardeSuppression(enfant: HomePage());
+        // Le garde de suppression reste : un compte en cours de
+        // suppression ne doit pas atterrir sur ses enfants.
+        return const GardeVerrou(
+          enfant: GardeSuppression(enfant: HomePage()),
+        );
 
       case DestinationDemarrage.accueilProfessionnel:
-        return const EstablishmentHomePage();
+        return const GardeVerrou(enfant: EstablishmentHomePage());
 
       case DestinationDemarrage.choixEspace:
-        return const ProfileChoicePage();
+        return const GardeVerrou(enfant: ProfileChoicePage());
 
       case DestinationDemarrage.concept:
         return const ConceptPage();
