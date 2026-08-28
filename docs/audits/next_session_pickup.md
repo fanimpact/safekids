@@ -570,11 +570,41 @@ Gmail**, qui n'a jamais rien reçu de `kidsrelay.fr`, et y envoyer un
 message. Google est le fournisseur le plus répandu chez les parents et
 se comporte autrement que Microsoft.
 
-**2. Vérifier que la tâche OVH tourne.** Le fichier
-`/home/izfeflh/taches/dernier_passage.txt` doit exister et porter une
-ligne du type `code 200 | {"traites":0,...}`. Il n'avait pas encore
-été créé à 22h37 — la tâche venait d'être posée, le passage de 22h18
-était déjà passé. **Premier passage attendu : 23h18.**
+**2. LA TÂCHE OVH N'A PAS ÉCRIT SON JOURNAL — à reprendre en premier.**
+
+Constat à **23h55** le 28/08 : `/home/izfeflh/taches/` ne contient que
+`tache_notifications.php`. Pas de `dernier_passage.txt`, alors que le
+passage de 23h18 aurait dû avoir lieu.
+
+Deux possibilités : la tâche n'a pas tourné, ou elle a tourné sans
+écrire.
+
+**Et elle est muette, par ma faute.** J'ai fait décocher l'email de
+compte-rendu pour ne pas noyer Fanny sous 24 messages par jour. C'était
+juste sur le principe, mais ça prive du seul canal qui dirait pourquoi
+ça échoue.
+
+*Les pistes, de la plus probable à la moins probable :*
+
+1. **La tâche n'était pas encore active.** OVH met parfois un certain
+   temps à prendre en compte une tâche nouvellement créée. **Vérifier
+   d'abord si le fichier est apparu depuis** — si oui, il n'y a rien à
+   faire.
+2. **Le chemin n'est pas celui qu'OVH attend.** `taches/tache_notifications.php`
+   part de la racine de l'espace de stockage. Si OVH le résout à partir
+   de `www/`, il ne trouve rien et échoue en silence.
+3. **Réactiver temporairement l'email de compte-rendu**, laisser passer
+   une heure, lire l'erreur, puis le redécocher. C'est le moyen le plus
+   direct d'avoir la réponse.
+4. Regarder dans l'espace client OVH si la tâche affiche une **date de
+   dernière exécution** et un état.
+5. `curl` absent ou désactivé dans le PHP du mutualisé — peu probable,
+   mais ça se voit tout de suite avec le compte-rendu.
+
+**Ce que ça bloque, et ce que ça ne bloque pas** : rien d'urgent. Le
+filet ne sert qu'au rattrapage, et l'envoi immédiat fonctionne. Un
+parent est prévenu en quelques secondes même si cette tâche ne tourne
+pas. Ce qui serait perdu, c'est le rattrapage d'un envoi échoué.
 
 **3. Retirer la consigne « domaine jeune »**, le jour venu. Deux
 drapeaux à passer à `false` — `lib/textes/consigne_domaine_jeune.dart`
@@ -606,6 +636,63 @@ que le dépôt de `index.html` chez OVH.
 explicite **disparaît** au profit du blocage au quatrième appareil.
 Déployer maintenant mettrait en ligne un écran qu'on va retirer. Voir
 la section correspondante de `corrections_a_faire.md`.
+
+
+## Ce qui est déployé, et ce qui ne l'est pas — 28/08/2026, minuit
+
+### Fonctions serveur
+
+| Fonction | Déployée | À jour |
+|---|---|---|
+| `envoyer-code-verification` | oui | **oui** |
+| `envoyer-notifications-parent` | oui | **non** — il lui manque `7fe3725` |
+| `envoyer-notifications-maintenant` | oui | **non** — il lui manque `7fe3725` |
+| `consulter-partage` | oui, version ancienne | **non**, et **à ne pas déployer** |
+| `declencher-acces-secours` | **jamais déployée** | — |
+| `notifier-note-ajoutee` | oui | oui, inchangée |
+| `verifier-code`, `confirmer-suppression-compte` | oui | oui, inchangées |
+
+**Les deux commandes à lancer en reprenant :**
+
+```
+supabase functions deploy envoyer-notifications-parent --no-verify-jwt
+supabase functions deploy envoyer-notifications-maintenant
+```
+
+Sans elles, un accès secours dont l'échéance est déjà passée
+annoncerait encore une date au lieu de dire qu'il est terminé.
+
+### Ce qu'il ne faut PAS déployer, et pourquoi
+
+`consulter-partage` et `index.html` chez OVH portent l'écran
+« C'est moi, reprendre l'accès ». Fanny a décidé le 28/08 que cette
+reprise **disparaît**, au profit du blocage au quatrième appareil avec
+demande au parent. Les déployer maintenant mettrait en ligne un écran
+qu'on va retirer.
+
+**Conséquence à connaître** : le QR de partage et sa fenêtre de cinq
+minutes ne fonctionnent pas encore en production, puisqu'ils
+attendent le même déploiement.
+
+`declencher-acces-secours` n'a jamais été déployée : **l'accès secours
+depuis un lien de partage ne fonctionne donc pas en production.**
+Celui depuis l'application, lui, passe par la base et fonctionne.
+
+### Base de données
+
+Tous les scripts SQL sont **appliqués et vérifiés** en production, y
+compris `schema_code_partage.sql` et `schema_reprise_acces.sql`. La
+table `evenements_notification_parent` est vide — les deux lignes de
+test de la soirée ont été supprimées.
+
+### Chez OVH
+
+| | |
+|---|---|
+| `taches/tache_notifications.php` | déposé, 3 080 octets |
+| Tâche planifiée | créée, `18 * * * *`, PHP 8.2, active, sans compte-rendu |
+| `fiche/index.html` | version ancienne — **à ne pas remplacer** pour l'instant |
+| Zone DNS | correcte, **ne pas y toucher** |
 
 ## État du dépôt au 26/08/2026
 
