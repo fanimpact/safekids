@@ -119,7 +119,10 @@ class _ProfessionalRegisterPageState
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              autofillHints: const [],
+              // Le trousseau propose, il n'impose pas : la personne
+              // choisit dans une liste. Reactive le 28/08/2026.
+              autofillHints: const [AutofillHints.email],
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
                 labelText: 'Adresse e-mail professionnelle',
                 border: OutlineInputBorder(),
@@ -132,6 +135,11 @@ class _ProfessionalRegisterPageState
               controller: _passwordController,
               label: 'Mot de passe',
               helperText: '8 caractères minimum.',
+              // `newPassword` et non `password` : sur une
+              // creation, l'OS doit proposer d'en generer un, pas
+              // de remplir l'ancien.
+              autofillHints: const [AutofillHints.newPassword],
+              textInputAction: TextInputAction.next,
             ),
 
             const SizedBox(height: 20),
@@ -139,6 +147,12 @@ class _ProfessionalRegisterPageState
             SkPasswordField(
               controller: _confirmPasswordController,
               label: 'Confirmer le mot de passe',
+              autofillHints: const [AutofillHints.newPassword],
+              onSubmitted: () {
+                if (!_isSubmitting) {
+                  _submit();
+                }
+              },
             ),
 
             const SizedBox(height: 30),

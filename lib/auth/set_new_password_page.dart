@@ -118,6 +118,11 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
               controller: _passwordController,
               label: 'Nouveau mot de passe',
               helperText: '8 caractères minimum.',
+              // `newPassword` : l'OS doit proposer d'en generer
+              // un, et surtout pas remplir l'ancien — c'est
+              // precisement celui qu'on remplace.
+              autofillHints: const [AutofillHints.newPassword],
+              textInputAction: TextInputAction.next,
             ),
 
             const SizedBox(height: 20),
@@ -125,6 +130,12 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
             SkPasswordField(
               controller: _confirmPasswordController,
               label: 'Confirmer le mot de passe',
+              autofillHints: const [AutofillHints.newPassword],
+              onSubmitted: () {
+                if (!_isSubmitting) {
+                  _submit();
+                }
+              },
             ),
 
             const SizedBox(height: 30),

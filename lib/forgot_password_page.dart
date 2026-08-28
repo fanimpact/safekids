@@ -78,7 +78,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              autofillHints: const [],
+              // Le trousseau propose, il n'impose pas : la personne
+              // choisit dans une liste. Reactive le 28/08/2026.
+              autofillHints: const [AutofillHints.email],
+              // Seul champ de l'ecran : la touche valide.
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) {
+                if (!_isSubmitting) {
+                  _submit();
+                }
+              },
               enabled: !_linkSent,
               decoration: const InputDecoration(
                 labelText: 'Adresse e-mail',

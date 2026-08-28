@@ -153,6 +153,16 @@ class _DeviceVerificationPageState
               controller: _codeController,
               keyboardType: TextInputType.number,
               maxLength: 6,
+              // `oneTimeCode` : sur iOS, le code arrive au-dessus
+              // du clavier sans que la personne ait a basculer
+              // vers sa boite mail pour le recopier.
+              autofillHints: const [AutofillHints.oneTimeCode],
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) {
+                if (!_isVerifying) {
+                  _verify();
+                }
+              },
               decoration: const InputDecoration(
                 labelText: 'Code reçu par email',
                 border: OutlineInputBorder(),

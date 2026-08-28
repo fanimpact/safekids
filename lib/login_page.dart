@@ -119,7 +119,10 @@ class _LoginPageState extends State<LoginPage> {
               // automatique du téléphone de substituer l'email d'un
               // autre compte (parent/professionnel) enregistré dans
               // l'app — désactivé sur tous les champs de connexion.
-              autofillHints: const [],
+              // Le trousseau propose, il n'impose pas : la personne
+              // choisit dans une liste. Reactive le 28/08/2026.
+              autofillHints: const [AutofillHints.email],
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
                 labelText: 'Adresse e-mail',
                 border: OutlineInputBorder(),
@@ -131,6 +134,13 @@ class _LoginPageState extends State<LoginPage> {
             SkPasswordField(
               controller: _passwordController,
               label: 'Mot de passe',
+              // Dernier champ : la touche valide au lieu de
+              // passer au suivant.
+              onSubmitted: () {
+                if (!_isSubmitting) {
+                  _submit();
+                }
+              },
             ),
 
             const SizedBox(height: 30),
