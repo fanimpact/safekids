@@ -2,6 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../theme/kidsrelay_theme.dart';
 
+/// Ce que le parent a répondu, ou n'a pas répondu.
+///
+/// **Trois valeurs et non un booléen**, parce qu'une case non cochée ne
+/// prouve rien : on ne peut pas distinguer un parent qui a refusé d'un
+/// parent qui a lu en travers. Or la base légale est l'intérêt vital
+/// **renforcé par une préautorisation donnée à froid** — c'est elle qui
+/// doit pouvoir être démontrée, et un silence ne se démontre pas.
+enum ReponseAccesSecours {
+  accepte,
+  refuse,
+
+  /// Le parent a poursuivi sans répondre. La question reste ouverte, et
+  /// se repose depuis le profil de l'enfant.
+  plusTard,
+}
+
 /// La préautorisation de l'accès secours, donnée une fois par enfant.
 ///
 /// **Pourquoi ici et pas à la création de chaque partage.** Elle y
@@ -15,31 +31,28 @@ import '../theme/kidsrelay_theme.dart';
 /// urgence ? » — il ne peut pas être posé avant que le parent ait vu ce
 /// que la fiche contient.
 ///
-/// **Pourquoi un écran à lui.** Une autorisation qui laisse quelqu'un
-/// d'autre ouvrir un accès sans réponse du parent ne se coche pas en
-/// passant, au milieu d'un formulaire.
+/// **Pourquoi deux boutons et non une case.** Voir
+/// [ReponseAccesSecours]. Les deux ont strictement le même poids
+/// visuel : si « J'accepte » était plus visible que « Je refuse », le
+/// refus ne serait plus libre, et l'intérêt juridique de la démarche
+/// disparaîtrait avec lui.
 class AccesSecoursPage extends StatefulWidget {
   final String prenom;
 
-  /// Valeur de départ. Nulle à la création — la case n'est jamais
-  /// cochée d'avance —, renseignée quand on revient dessus depuis le
-  /// profil de l'enfant.
-  final bool valeurInitiale;
+  /// Ce qui avait été répondu, s'il y a lieu. Nul quand la question
+  /// n'a jamais été posée.
+  final bool? valeurInitiale;
 
-  /// Rend la décision. L'appelant décide quoi en faire : l'écrire dans
-  /// le brouillon à la création, ou en base depuis le profil.
-  final Future<void> Function(bool autorise) onValider;
-
-  /// Ce que porte le bouton. « Continuer » dans le parcours de
-  /// création, « Enregistrer » quand on revient dessus.
-  final String libelleBouton;
+  /// Enregistre la décision. L'appelant décide quoi en faire : l'écrire
+  /// dans le brouillon à la création, ou en base depuis le profil.
+  /// N'est pas appelée quand le parent poursuit sans répondre.
+  final Future<void> Function(bool autorise) onRepondre;
 
   const AccesSecoursPage({
     super.key,
     required this.prenom,
-    required this.onValider,
-    this.valeurInitiale = false,
-    this.libelleBouton = 'Continuer',
+    required this.onRepondre,
+    this.valeurInitiale,
   });
 
   @override
@@ -47,16 +60,15 @@ class AccesSecoursPage extends StatefulWidget {
 }
 
 class _AccesSecoursPageState extends State<AccesSecoursPage> {
-  late bool _autorise = widget.valeurInitiale;
   bool _enCours = false;
 
-  Future<void> _valider() async {
+  Future<void> _repondre(bool autorise) async {
     setState(() {
       _enCours = true;
     });
 
     try {
-      await widget.onValider(_autorise);
+      await widget.onRepondre(autorise);
     } catch (erreur) {
       if (mounted) {
         setState(() {
@@ -77,7 +89,12 @@ class _AccesSecoursPageState extends State<AccesSecoursPage> {
     }
 
     if (mounted) {
-      Navigator.pop(context, _autorise);
+      Navigator.pop(
+        context,
+        autorise
+            ? ReponseAccesSecours.accepte
+            : ReponseAccesSecours.refuse,
+      );
     }
   }
 
@@ -128,58 +145,41 @@ class _AccesSecoursPageState extends State<AccesSecoursPage> {
 
               const SizedBox(height: 24),
 
-              // Material et non Container : une CheckboxListTile peint
-              // son fond et ses effets tactiles sur le Material le plus
-              // proche. Posee sur une simple boite coloree, la case ne
-              // montrerait rien quand on la touche.
-              Material(
-                color: KidsRelayColors.lin,
-                shape: RoundedRectangleBorder(
-                  side: const BorderSide(
+              Container(
+                decoration: BoxDecoration(
+                  color: KidsRelayColors.lin,
+                  border: Border.all(
                     color: KidsRelayColors.bordure,
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CheckboxListTile(
-                        value: _autorise,
-                        onChanged: (valeur) {
-                          setState(() {
-                            _autorise = valeur ?? false;
-                          });
-                        },
-                        controlAffinity:
-                            ListTileControlAffinity.leading,
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          'Autoriser l’accès secours pour $prenom.',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            height: 1.45,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Autorisez-vous l’accès secours pour $prenom ?',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        height: 1.45,
+                        fontWeight: FontWeight.bold,
                       ),
+                    ),
 
-                      const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
-                      Text(
-                        'Toute personne à qui vous partagez sa fiche '
-                        'pourra, si $prenom part avec les secours, '
-                        'montrer les informations pour les secours aux '
-                        'soignants et transmettre l’accès à celle qui '
-                        'l’accompagne — sans attendre votre réponse.',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          height: 1.45,
-                        ),
+                    Text(
+                      'Toute personne à qui vous partagez sa fiche '
+                      'pourra, si $prenom part avec les secours, '
+                      'montrer les informations pour les secours aux '
+                      'soignants et transmettre l’accès à celle qui '
+                      'l’accompagne — sans attendre votre réponse.',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        height: 1.45,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -208,23 +208,51 @@ class _AccesSecoursPageState extends State<AccesSecoursPage> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
 
-              FilledButton(
-                // Actif dans les deux cas, contrairement au
-                // consentement de santé : refuser ici n'empêche rien.
-                // Ne rien cocher est déjà une réponse, et elle se
-                // change.
-                onPressed: _enCours ? null : _valider,
-                child: _enCours
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : Text(widget.libelleBouton),
+              // Les deux réponses, à poids strictement égal : même
+              // widget, même largeur, aucune couleur d'accent, aucune
+              // pré-sélection. Un « J'accepte » plus visible que « Je
+              // refuse » rendrait le refus moins libre, et la
+              // préautorisation perdrait la valeur qu'on lui cherche.
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          _enCours ? null : () => _repondre(true),
+                      child: const Text('J’accepte'),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          _enCours ? null : () => _repondre(false),
+                      child: const Text('Je refuse'),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // Poursuivre sans répondre reste possible : l'absence de
+              // réponse ne doit pas bloquer la création du profil. En
+              // lien discret, parce que ce n'est pas l'une des deux
+              // réponses — c'est l'absence de réponse.
+              Center(
+                child: TextButton(
+                  onPressed: _enCours
+                      ? null
+                      : () => Navigator.pop(
+                            context,
+                            ReponseAccesSecours.plusTard,
+                          ),
+                  child: const Text('Répondre plus tard'),
+                ),
               ),
             ],
           ),

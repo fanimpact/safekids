@@ -31,10 +31,16 @@ class ChildProfileData {
   /// Portée par l'enfant et non par chaque partage : le parent devrait
   /// sinon y penser à chaque fois, et le jour où il oublie serait le
   /// jour de l'accident.
+  ///
+  /// **Trois etats** : `true` accepte, `false` refuse explicitement,
+  /// `null` pas encore repondu. Les deux derniers interdisent l'acces
+  /// secours, mais n'ont pas la meme valeur : seul un refus est une
+  /// decision demontrable, et c'est ce que la base legale exige.
+  ///
   /// Non final : le parent revient dessus depuis le profil de
   /// l'enfant, et la copie en memoire doit suivre sans recharger tout
   /// le profil.
-  bool accesSecoursAutorise;
+  bool? accesSecoursAutorise;
 
   final IdentityData identity;
 
@@ -70,7 +76,7 @@ class ChildProfileData {
     this.userId,
     this.childId,
     this.consentementSanteLe,
-    this.accesSecoursAutorise = false,
+    this.accesSecoursAutorise,
     required this.identity,
     this.hasPathologies,
     this.hasAllergies,

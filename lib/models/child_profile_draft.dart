@@ -22,8 +22,8 @@ class ChildProfileDraft {
   /// Voir `ChildProfileData.consentementSanteLe`.
   DateTime? consentementSanteLe;
 
-  /// Voir `ChildProfileData.accesSecoursAutorise`.
-  bool accesSecoursAutorise;
+  /// Voir `ChildProfileData.accesSecoursAutorise`. Trois etats.
+  bool? accesSecoursAutorise;
   String childId;
 
   final IdentityData identity;
@@ -62,7 +62,7 @@ class ChildProfileDraft {
   ChildProfileDraft({
     this.userId,
     this.consentementSanteLe,
-    this.accesSecoursAutorise = false,
+    this.accesSecoursAutorise,
     String? childId,
     IdentityData? identity,
     this.hasPathologies,

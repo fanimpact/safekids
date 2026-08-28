@@ -153,7 +153,7 @@ class _ContactsPageState extends State<ContactsPage> {
     // l'enregistrement : le parent vient de voir ce que la fiche
     // contient, et le choix part en base avec le reste, sans seconde
     // ecriture.
-    final decide = await Navigator.push<bool>(
+    final reponse = await Navigator.push<ReponseAccesSecours>(
       context,
       MaterialPageRoute(
         builder: (context) => AccesSecoursPage(
@@ -161,7 +161,7 @@ class _ContactsPageState extends State<ContactsPage> {
                   .firstName
                   ?.trim() ??
               'votre enfant',
-          onValider: (autorise) async {
+          onRepondre: (autorise) async {
             widget.transmissionController.formData
                 .accesSecoursAutorise = autorise;
           },
@@ -169,9 +169,11 @@ class _ContactsPageState extends State<ContactsPage> {
       ),
     );
 
-    // Revenu en arriere sans repondre : on ne va pas plus loin, le
-    // profil n'est pas encore enregistre.
-    if (decide == null || !mounted) {
+    // Revenu en arriere par la fleche : on ne va pas plus loin, le
+    // profil n'est pas encore enregistre. « Repondre plus tard », en
+    // revanche, poursuit — l'absence de reponse ne bloque pas la
+    // creation du profil.
+    if (reponse == null || !mounted) {
       return;
     }
 

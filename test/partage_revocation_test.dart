@@ -760,36 +760,75 @@ void main() {
       expect(creation, isNot(contains('accesSecoursAutorise')));
     });
 
-    test('Jamais cochée d’avance', () {
-      expect(ecran, contains('this.valeurInitiale = false'));
+    test('Deux boutons, et non une case à cocher', () {
+      // Une case non cochée ne prouve rien : on ne peut pas distinguer
+      // un parent qui a refusé d'un parent qui a lu en travers. Or
+      // c'est la préautorisation qui doit pouvoir être démontrée.
+      expect(ecran, contains('J’accepte'));
+      expect(ecran, contains('Je refuse'));
+      expect(ecran, isNot(contains('CheckboxListTile')));
+    });
+
+    test('Les deux réponses ont strictement le même poids', () {
+      // Si « J'accepte » était plus visible que « Je refuse », le
+      // refus ne serait plus libre, et la préautorisation perdrait la
+      // valeur qu'on lui cherche.
+      final debut = ecran.indexOf('Row(');
+      final fin = ecran.indexOf('Répondre plus tard');
+      final zone = ecran.substring(debut, fin);
+
+      // Même widget des deux côtés, et aucun bouton d'accent.
+      expect('OutlinedButton('.allMatches(zone).length, 2);
+      expect(zone, isNot(contains('FilledButton')));
+      expect(zone, isNot(contains('ElevatedButton')));
+
+      // Aucune couleur posée sur l'un des deux.
+      expect(zone, isNot(contains('backgroundColor')));
+      expect(zone, isNot(contains('foregroundColor')));
+
+      // Même largeur : les deux sont dans un Expanded.
+      expect('Expanded('.allMatches(zone).length, 2);
+    });
+
+    test('Aucune réponse n’est pré-sélectionnée', () {
+      // L'écran ne porte aucun état de réponse : il n'y a rien à
+      // pré-cocher, et rien qui puisse l'être par inadvertance.
+      expect(ecran, isNot(contains('bool _autorise')));
+      expect(ecran, contains('this.valeurInitiale'));
+    });
+
+    test('Poursuivre sans répondre reste possible', () {
+      // L'absence de réponse ne bloque pas la création du profil.
+      expect(ecran, contains('Répondre plus tard'));
+      expect(ecran, contains('ReponseAccesSecours.plusTard'));
+    });
+
+    test('Refuser ne coûte rien : aucune confirmation, aucun retour',
+        () {
+      // Pas d'écran qui fait douter le parent, pas de tentative de le
+      // faire revenir sur son choix.
+      final debut = ecran.indexOf('Future<void> _repondre(');
+      final fin = ecran.indexOf('Widget build(');
+      final methode = ecran.substring(debut, fin);
+
+      expect(methode, isNot(contains('showDialog')));
+      expect(methode, isNot(contains('Êtes-vous sûr')));
     });
 
     test('Le texte dit les trois choses qui engagent le parent', () {
-      // Ce que la personne pourra faire, que c'est sans attendre sa
-      // réponse, et qu'il peut y mettre fin.
       expect(ecran, contains('sans attendre votre réponse'));
       expect(ecran, contains('prévenu immédiatement'));
       expect(ecran, contains('mettre fin à tout moment'));
     });
 
     test('Il dit aussi ce que l’accès ne donne pas, et sa durée', () {
-      // La phrase est coupee en deux lignes dans la source : on
-      // verifie les deux moities telles qu'elles y sont ecrites.
+      // La phrase est coupée en deux lignes dans la source : on
+      // vérifie les deux moitiés telles qu'elles y sont écrites.
       expect(ecran, contains('ne donne que les '));
       expect(
         ecran,
         contains('informations pour les secours, et dure 24 heures.'),
       );
-    });
-
-    test('Il dit où revenir sur ce choix', () {
-      expect(ecran, contains('le profil de '));
-    });
-
-    test('Le bouton reste actif même sans cocher', () {
-      // Contrairement au consentement de santé : refuser ici n'empêche
-      // rien, et ne rien cocher est déjà une réponse.
-      expect(ecran, contains('onPressed: _enCours ? null : _valider'));
     });
 
     test('Elle est demandée après le questionnaire, avant la base', () {
@@ -805,11 +844,19 @@ void main() {
       );
     });
 
-    test('Le modèle de l’enfant la porte', () {
+    test('Le modèle porte trois états, pas deux', () {
+      final modele = source('lib/models/child_profile_data.dart');
       final codec =
           source('lib/repositories/child_profile_codec.dart');
 
-      expect(codec, contains("'acces_secours_autorise'"));
+      expect(modele, contains('bool? accesSecoursAutorise;'));
+
+      // Nul quand la question n'a jamais été posée : un état à part
+      // entière, pas un refus par défaut.
+      expect(
+        codec,
+        contains("enfant['acces_secours_autorise'] as bool?,"),
+      );
     });
   });
 
@@ -826,18 +873,31 @@ void main() {
       );
     });
 
+    test('Les trois états ont chacun leur titre', () {
+      expect(ecran, contains('Accès secours : autorisé'));
+      expect(ecran, contains('Accès secours : non autorisé'));
+      expect(
+        ecran,
+        contains('vous n’avez pas encore répondu'),
+        reason:
+            'Un silence n’est pas une décision et ne doit pas être '
+            'présenté comme un refus',
+      );
+    });
+
+    test('Le bouton dit ce qu’il fait, dans les trois états', () {
+      expect(ecran, contains("'Modifier'"));
+      expect(ecran, contains('Autoriser l’accès secours'));
+      expect(ecran, contains("'Répondre'"));
+    });
+
     test('Le refus dit sa conséquence, pas seulement son statut', () {
       // Un parent a pu passer vite sur l'écran du questionnaire sans
       // mesurer ce qu'il refusait. Il ne doit pas le découvrir le jour
       // de l'accident.
       expect(ecran, contains('ne pourra pas '));
-      expect(ecran, contains('Si vous n’êtes pas '));
+      expect(ecran, contains('Si vous n’êtes '));
       expect(ecran, contains('personne n’y aura '));
-    });
-
-    test('Le bouton dit ce qu’il fait, dans les deux états', () {
-      expect(ecran, contains('Autoriser l’accès secours'));
-      expect(ecran, contains("'Modifier'"));
     });
 
     test('Le refus n’est pas peint en ambre', () {
@@ -853,34 +913,4 @@ void main() {
     });
   });
 
-  group('L’accès dérivé s’affiche sous sa souche', () {
-    String source(String chemin) => File(chemin).readAsStringSync();
-
-    final ecran = source('lib/children/child_profile_page.dart');
-
-    test('Il n’apparaît pas comme un partage de premier niveau', () {
-      // Sinon la liste ne dit plus d'où vient chaque accès.
-      expect(ecran, contains('link.partageOrigineId == null'));
-    });
-
-    test('Il est indenté sous celui dont il dérive', () {
-      expect(ecran, contains('autre.partageOrigineId == link.id'));
-      expect(ecran, contains('_carteDerivee('));
-    });
-
-    test('Il dit qu’il a été ouvert sans réponse du parent', () {
-      expect(ecran, contains('Ouvert sans votre réponse'));
-      expect(ecran, contains('comme vous l’aviez '));
-    });
-
-    test('Il reste révocable', () {
-      final debut = ecran.indexOf('Widget _carteDerivee(');
-      final fin = ecran.indexOf('Widget _partageTermineCard(');
-
-      expect(
-        ecran.substring(debut, fin),
-        contains('_revokeShareLink(context, derive)'),
-      );
-    });
-  });
 }

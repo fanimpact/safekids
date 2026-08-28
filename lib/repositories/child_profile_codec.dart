@@ -129,8 +129,10 @@ class ChildProfileCodec {
     return ChildProfileData(
       childId: childId,
       userId: enfant['parent_id'] as String?,
+      // Nul quand la question n'a jamais ete posee : c'est un etat a
+      // part entiere, pas un refus par defaut.
       accesSecoursAutorise:
-          enfant['acces_secours_autorise'] as bool? ?? false,
+          enfant['acces_secours_autorise'] as bool?,
       consentementSanteLe: DateTime.tryParse(
         enfant['consentement_sante_le'] as String? ?? '',
       ),

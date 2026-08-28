@@ -884,8 +884,35 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
   /// choix légitime en anomalie à corriger. Ce qui rattrape le parent,
   /// c'est le texte, pas la couleur.
   Widget _ligneAccesSecours(BuildContext context) {
-    final autorise =
+    final reponse =
         child.essentialInformation.accesSecoursAutorise;
+
+    // Trois états, et deux textes seulement : « refusé » et « pas
+    // encore répondu » ont la même conséquence — aucun accès secours
+    // possible — donc la même phrase. Seuls le titre et le bouton
+    // diffèrent, parce qu'un silence n'est pas une décision et ne doit
+    // pas être présenté comme telle.
+    final titre = switch (reponse) {
+      true => 'Accès secours : autorisé',
+      false => 'Accès secours : non autorisé',
+      null => 'Accès secours : vous n’avez pas encore répondu',
+    };
+
+    final bouton = switch (reponse) {
+      true => 'Modifier',
+      false => 'Autoriser l’accès secours',
+      null => 'Répondre',
+    };
+
+    final consequence = reponse == true
+        ? 'Si $_displayName part avec les secours, la personne qui '
+            'l’accompagne pourra montrer les informations pour les '
+            'secours aux soignants et leur transmettre l’accès, sans '
+            'attendre votre réponse. Vous serez prévenu immédiatement.'
+        : 'Si $_displayName part avec les secours, la personne qui '
+            'l’accompagne ne pourra pas transmettre les informations '
+            'aux soignants sans attendre votre réponse. Si vous n’êtes '
+            'pas joignable à ce moment-là, personne n’y aura accès.';
 
     return Material(
       color: KidsRelayColors.lin,
@@ -899,9 +926,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              autorise
-                  ? 'Accès secours : autorisé'
-                  : 'Accès secours : non autorisé',
+              titre,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -911,18 +936,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
             const SizedBox(height: 8),
 
             Text(
-              autorise
-                  ? 'Si $_displayName part avec les secours, la '
-                      'personne qui l’accompagne pourra montrer les '
-                      'informations pour les secours aux soignants et '
-                      'leur transmettre l’accès, sans attendre votre '
-                      'réponse. Vous serez prévenu immédiatement.'
-                  : 'Si $_displayName part avec les secours, la '
-                      'personne qui l’accompagne ne pourra pas '
-                      'transmettre les informations aux soignants sans '
-                      'attendre votre réponse. Si vous n’êtes pas '
-                      'joignable à ce moment-là, personne n’y aura '
-                      'accès.',
+              consequence,
               style: const TextStyle(fontSize: 14, height: 1.45),
             ),
 
@@ -932,11 +946,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
               alignment: Alignment.centerLeft,
               child: TextButton(
                 onPressed: () => _modifierAccesSecours(context),
-                child: Text(
-                  autorise
-                      ? 'Modifier'
-                      : 'Autoriser l’accès secours',
-                ),
+                child: Text(bouton),
               ),
             ),
           ],
@@ -952,15 +962,14 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
       return;
     }
 
-    await Navigator.push<bool>(
+    await Navigator.push<ReponseAccesSecours>(
       context,
       MaterialPageRoute(
         builder: (context) => AccesSecoursPage(
           prenom: _displayName,
           valeurInitiale:
               child.essentialInformation.accesSecoursAutorise,
-          libelleBouton: 'Enregistrer',
-          onValider: (autorise) => ChildRepository.instance
+          onRepondre: (autorise) => ChildRepository.instance
               .setAccesSecours(childId: childId, autorise: autorise),
         ),
       ),
