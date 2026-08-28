@@ -55,6 +55,13 @@ void main() {
     // la base et un appel a l'Edge Function qui previent par email.
     'lib/suppression/suppression_compte_service.dart',
 
+    // L'acces secours declenche depuis un rattachement : trois
+    // fonctions de la base, accordees a `authenticated`. Le
+    // professionnel etant authentifie, aucune Edge Function n'est
+    // necessaire ici — contrairement au lien de partage, ou
+    // l'ouvreur est anonyme.
+    'lib/secours/service_acces_secours.dart',
+
     // Compteurs d'usage : un seul appel, a une fonction de la base
     // qui ne recoit que le nom d'une fonctionnalite.
     'lib/usage/compteur_usage.dart',

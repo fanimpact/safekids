@@ -95,6 +95,19 @@ class ShareLinkData {
   /// Le partage dont celui-ci descend. Rend l'arbre lisible.
   final String? partageOrigineId;
 
+  /// Le rattachement dont celui-ci descend, quand l'acces secours a
+  /// ete ouvert depuis l'application par un professionnel plutot que
+  /// depuis un lien. Exclusif de [partageOrigineId].
+  final String? rattachementOrigineId;
+
+  /// La fonction declaree de la personne qui a declenche, figee a cet
+  /// instant : « ATSEM », « Direction ».
+  ///
+  /// Jamais son nom. Le parent doit comprendre ce qui s'est passe, pas
+  /// surveiller nominativement le personnel d'une ecole (28/08/2026).
+  /// Nulle depuis un lien de partage, ou l'ouvreur est anonyme.
+  final String? declencheParFonction;
+
   const ShareLinkData({
     required this.id,
     required this.token,
@@ -110,6 +123,8 @@ class ShareLinkData {
     this.appareilsMax = 1,
     this.declencheEnSecours = false,
     this.partageOrigineId,
+    this.rattachementOrigineId,
+    this.declencheParFonction,
   });
 
   bool get estRevoque => revoqueLe != null;
@@ -161,6 +176,10 @@ class ShareLinkData {
       declencheEnSecours:
           row['declenche_en_secours'] as bool? ?? false,
       partageOrigineId: row['partage_origine_id'] as String?,
+      rattachementOrigineId:
+          row['rattachement_origine_id'] as String?,
+      declencheParFonction:
+          row['declenche_par_fonction'] as String?,
       revoqueLe:
           revoqueLe == null ? null : DateTime.parse(revoqueLe),
     );

@@ -182,6 +182,10 @@ export function depotPartagesSupabase(
         acces: {
           token: ligne.secours_token,
           expireLe: ligne.secours_expire_le,
+          // La base dit si elle a cree ou retrouve. Sans ce
+          // drapeau, une reprise notifierait le parent une
+          // seconde fois pour le meme acces.
+          creeMaintenant: ligne.secours_cree !== false,
         },
         erreur: null,
       };

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../care_info/care_info_sheet_page.dart';
 import '../emergency_info/emergency_info_sheet_page.dart';
 import '../models/complete_child_profile_data.dart';
+import '../secours/declenchement_acces_secours.dart';
 import '../questionnaire_recap/activity_questionnaire_recap_page.dart';
 import '../utils/treatment_audience.dart';
 import 'professional_child_repository.dart';
@@ -32,6 +33,27 @@ class ProfessionalChildDetailPage extends StatelessWidget {
     return (firstName == null || firstName.isEmpty)
         ? 'Enfant'
         : firstName;
+  }
+
+  /// Le geste « L'enfant part avec les secours », en bas de la fiche
+  /// secours et nulle part ailleurs.
+  ///
+  /// Absent si l'enfant n'a pas d'identifiant connu ou si aucun
+  /// etablissement n'est charge : mieux vaut pas de bouton qu'un
+  /// bouton qui echoue au pire moment.
+  Widget? _boutonSecours() {
+    final enfantId = child.childId;
+    final etablissementId =
+        ProfessionalChildRepository.instance.etablissementId;
+
+    if (enfantId == null || etablissementId == null) {
+      return null;
+    }
+
+    return BoutonAccesSecours(
+      enfantId: enfantId,
+      etablissementId: etablissementId,
+    );
   }
 
   void _openFiche(
@@ -84,6 +106,7 @@ class ProfessionalChildDetailPage extends StatelessWidget {
                   builder: (context) => EmergencyInfoSheetPage(
                     child: child,
                     audience: TreatmentAudience.professionnel,
+                    piedDePage: _boutonSecours(),
                   ),
                 ),
               ),

@@ -35,6 +35,14 @@ export interface PartageSource {
 export interface AccesSecoursCree {
   token: string;
   expireLe: string;
+
+  /// Faux quand la base a **retrouvé** un accès déjà ouvert au
+  /// lieu d'en créer un.
+  ///
+  /// Deux personnes peuvent appuyer en même temps — la maîtresse
+  /// et la directrice. Deux notifications et deux lignes dans la
+  /// liste du parent seraient du bruit au pire moment.
+  creeMaintenant: boolean;
 }
 
 /// Ce dont la logique a besoin, et rien de plus.
@@ -182,7 +190,12 @@ export async function declencherAccesSecours(
   // n'existe pas irait chercher dans sa liste quelque chose
   // d'introuvable. L'échec d'envoi ne remet pas l'accès en cause —
   // c'est une urgence, elle passe avant la notification.
-  await depot.notifierParent(partage.id, partage.enfant_id);
+  //
+  // Et une seule fois : sur une reprise, le parent a déjà été
+  // prévenu de cet accès-là.
+  if (acces.creeMaintenant) {
+    await depot.notifierParent(partage.id, partage.enfant_id);
+  }
 
   return { statut: 'ok', acces };
 }

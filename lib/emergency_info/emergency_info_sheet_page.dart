@@ -32,10 +32,20 @@ class EmergencyInfoSheetPage extends StatelessWidget {
   /// aux appels existants qui ne la précisent pas encore.
   final TreatmentAudience audience;
 
+  /// Pose en bas de la fiche, apres le dernier bloc. Sert au geste
+  /// « L'enfant part avec les secours » : Fanny l'a voulu la et pas
+  /// dans un menu, parce que c'est l'ecran qu'on a sous les yeux au
+  /// moment ou ca arrive (28/08/2026).
+  ///
+  /// Injecte plutot que construit ici : cette fiche ne connait ni les
+  /// etablissements ni les rattachements, et n'a pas a les connaitre.
+  final Widget? piedDePage;
+
   const EmergencyInfoSheetPage({
     super.key,
     required this.child,
     this.audience = TreatmentAudience.owner,
+    this.piedDePage,
   });
 
   String get _displayName {
@@ -1236,6 +1246,8 @@ class EmergencyInfoSheetPage extends StatelessWidget {
               lines: _contactLines,
               emptyMessage: 'Aucun contact renseigné.',
             ),
+
+            ?piedDePage,
           ],
         ),
       ),

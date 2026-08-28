@@ -25,6 +25,7 @@ import '../repositories/child_repository.dart';
 import '../sharing/consultation_journal_page.dart';
 import '../sharing/create_share_link_page.dart';
 import '../sharing/enfant_confiance_service.dart';
+import '../secours/ouvreur_acces_secours.dart';
 import '../sharing/establishment_attachment_service.dart';
 import '../sharing/notes_enfant_service.dart';
 import '../secours/acces_secours_page.dart';
@@ -603,7 +604,30 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
   /// Indenté sous sa souche et non posé à côté : le parent doit voir
   /// d'où il vient. En ambre, parce qu'il a été ouvert sans qu'on le
   /// lui demande — il doit sauter aux yeux dans la liste.
-  Widget _carteDerivee(BuildContext context, ShareLinkData derive) {
+  /// Ce que le parent lit sous un accès secours ouvert sans lui.
+  ///
+  /// Trois choses, dans cet ordre : d'où il vient, qu'il l'avait
+  /// autorisé, et jusqu'à quand il court. La provenance passe en
+  /// premier parce que c'est la question qu'on se pose en voyant la
+  /// ligne apparaître.
+  String _sousTitreAccesSecours(
+    ShareLinkData derive,
+    String? etablissement,
+  ) {
+    final provenance = texteOuvreurAccesSecours(
+      fonction: derive.declencheParFonction,
+      etablissement: etablissement,
+    );
+
+    return '$provenance Vous l’aviez autorisé. '
+        '${_shareLinkStatusLabel(derive)}';
+  }
+
+  Widget _carteDerivee(
+    BuildContext context,
+    ShareLinkData derive, {
+    String? etablissement,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(left: 24, top: 4),
       child: Card(
@@ -625,8 +649,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
           ),
           subtitle: Text(
             derive.declencheEnSecours
-                ? 'Ouvert sans votre réponse, comme vous l’aviez '
-                    'autorisé. ${_shareLinkStatusLabel(derive)}'
+                ? _sousTitreAccesSecours(derive, etablissement)
                 : _shareLinkStatusLabel(derive),
           ),
           trailing: TextButton(
@@ -1031,7 +1054,11 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
             // celui dont il dérive, jamais à côté. Sinon la liste ne
             // dit plus d'où vient chaque accès.
             final activeLinks = actifs
-                .where((link) => link.partageOrigineId == null)
+                .where(
+                  (link) =>
+                      link.partageOrigineId == null &&
+                      link.rattachementOrigineId == null,
+                )
                 .toList();
 
             // Révoqués et expirés, jamais mêlés aux actifs : un coup
@@ -1098,6 +1125,27 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                     onRevoke: () =>
                         _revokeAttachment(context, attachment),
                   ),
+
+                  // Un accès né d'un rattachement s'indente sous la
+                  // carte de son établissement, jamais remonté comme
+                  // une carte détachée : sinon le parent ne voit plus
+                  // d'où il vient.
+                  //
+                  // Il survit à la révocation du rattachement — la
+                  // carte au-dessus peut donc disparaître avant lui,
+                  // et l'accès remonte alors dans la liste. C'est
+                  // voulu : couper l'accès de l'école ne coupe pas
+                  // les soignants.
+                  for (final derive in actifs.where(
+                    (autre) =>
+                        autre.rattachementOrigineId == attachment.id,
+                  ))
+                    _carteDerivee(
+                      context,
+                      derive,
+                      etablissement: attachment.etablissementNom,
+                    ),
+
                   const SizedBox(height: 8),
                 ],
 

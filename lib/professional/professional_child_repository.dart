@@ -42,6 +42,12 @@ class ProfessionalChildRepository extends ChangeNotifier {
   List<CompleteChildProfileData> get children =>
       List.unmodifiable(_children);
 
+  /// L'etablissement dont le trombinoscope est charge. Le geste
+  /// « L'enfant part avec les secours » en a besoin : c'est au nom de
+  /// cet etablissement que l'acces est ouvert, et c'est lui que le
+  /// parent verra dans sa liste.
+  String? get etablissementId => _etablissementId;
+
   bool get isOffline => _isOffline;
 
   DateTime? get lastSyncAt => _lastSyncAt;

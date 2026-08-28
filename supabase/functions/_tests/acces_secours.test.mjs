@@ -28,6 +28,7 @@ function fauxDepot(etat = {}) {
     places = [],
     erreurCreation = null,
     autorise = true,
+    creeMaintenant = true,
   } = etat;
 
   const appels = [];
@@ -59,6 +60,7 @@ function fauxDepot(etat = {}) {
             acces: {
               token: 'jeton-secours',
               expireLe: '2026-08-29T14:00:00.000Z',
+              creeMaintenant,
             },
             erreur: null,
           };
@@ -309,6 +311,49 @@ describe('Le parent est prévenu', () => {
 
     assert.ok(
       noms.indexOf('creerAccesSecours') < noms.indexOf('notifierParent'),
+    );
+  });
+
+
+  // Décision de Fanny du 28/08/2026 : deux personnes peuvent appuyer
+  // en même temps — la maîtresse et la directrice. Un seul accès, une
+  // seule notification, une seule ligne dans la liste du parent.
+  test('Un accès retrouvé ne renotifie pas le parent', async () => {
+    const depot = fauxDepot({
+      places: [await placeDe('le-mien')],
+      creeMaintenant: false,
+    });
+
+    const resultat = await declencherAccesSecours(
+      depot,
+      'token-1',
+      'le-mien',
+      new Date('2026-08-28T14:00:00.000Z'),
+    );
+
+    assert.equal(resultat.statut, 'ok');
+    assert.equal(resultat.acces.token, 'jeton-secours');
+
+    assert.equal(
+      depot.appels.some((a) => a.nom === 'notifierParent'),
+      false,
+      'le parent a déjà été prévenu de cet accès-là',
+    );
+  });
+
+  test('Un accès réellement créé notifie, lui', async () => {
+    const depot = fauxDepot({ places: [await placeDe('le-mien')] });
+
+    await declencherAccesSecours(
+      depot,
+      'token-1',
+      'le-mien',
+      new Date('2026-08-28T14:00:00.000Z'),
+    );
+
+    assert.equal(
+      depot.appels.filter((a) => a.nom === 'notifierParent').length,
+      1,
     );
   });
 

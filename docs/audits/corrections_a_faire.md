@@ -599,6 +599,76 @@ cette mesure empêche exactement, à qui, et que fera la personne qu'elle
 gêne ? Si la réponse est « elle trouvera un autre chemin », la mesure
 est mauvaise.
 
+
+## L'accès secours depuis un rattachement — construit le 28/08/2026
+
+Le mécanisme ne se déclenchait que depuis la page publique d'un lien
+de partage. Or dans une école, l'enfant est là **par rattachement** :
+le professionnel passe par l'application et ne voyait jamais le
+bouton. Le mécanisme ne fonctionnait donc pas dans le scénario qui
+l'avait motivé — l'enfant part avec les pompiers, quelqu'un de l'école
+l'accompagne.
+
+Les décisions de Fanny, portées dans le code et protégées par des
+tests :
+
+1. **La préautorisation du parent vaut pour tous les canaux.** Il a
+   répondu une fois par enfant, après le questionnaire santé. On ne
+   lui redemande rien.
+2. **Tout membre actif peut déclencher**, pas seulement un directeur.
+   « On ne sait pas d'avance qui montera dans le camion. Réserver le
+   bouton à un rôle recréerait le problème qu'on cherche à résoudre. »
+3. **Un seul accès à la fois.** Deux déclenchements simultanés
+   retrouvent le même : une notification, une ligne dans la liste du
+   parent. Le drapeau `secours_cree` dit à l'appelant s'il doit
+   notifier.
+4. **Le parent voit la fonction et l'établissement, jamais le nom.**
+   « Ouvert depuis École les Tilleuls, par « ATSEM ». » Il doit
+   comprendre ce qui s'est passé, pas surveiller nominativement le
+   personnel.
+5. **L'accès secours survit à la révocation du rattachement.**
+   « Couper l'accès de l'école ne coupe pas les soignants. L'enfant
+   est aux urgences, la fiche doit rester entre leurs mains. » Le
+   parent garde un bouton distinct pour révoquer l'accès lui-même.
+6. **Le déclenchement abusif est plus facile, et c'est assumé.** « La
+   notification immédiate et la révocation sont les bonnes
+   protections, je ne veux pas d'un verrou de plus. »
+
+### La formulation retenue, et pourquoi elle diffère de l'exemple
+
+L'exemple donné était « ouvert par une ATSEM de l'École les Tilleuls ».
+La règle du 25/08/2026 (`fonction_professionnelle.dart`) interdit à
+l'application d'ajouter « une », « (e) » ou un féminin de
+circonstance : la personne écrit ce qu'elle est. « Ouvert par une
+Enseignant·e » serait faux, et l'article ne se généralise pas à toute
+la liste.
+
+La fonction est donc **citée entre guillemets**, ce qui marque un
+libellé rapporté et non un accord :
+
+> Ouvert depuis École les Tilleuls, par « ATSEM ». Vous l'aviez
+> autorisé. …
+
+Si la formulation ne convient pas, elle se change en un seul endroit :
+`texteOuvreurAccesSecours`, dans `lib/secours/ouvreur_acces_secours.dart`.
+
+### Ce qui reste ouvert dessus
+
+- **Le QR lui-même.** L'écran affiche l'adresse en toutes lettres,
+  copiable et transmissible. Le code à scanner reste à faire, et à
+  tester sur un vrai téléphone : un encodeur écrit à la main ne se
+  vérifie pas autrement.
+- **Le déploiement des deux Edge Functions** (`consulter-partage` et
+  `declencher-acces-secours`) reste à faire côté Fanny. La fonction
+  `declencher_acces_secours` en base rend désormais quatre colonnes au
+  lieu de trois — l'ancienne version déployée, s'il y en avait une,
+  serait incompatible.
+- **La fonction déclarée est figée au déclenchement.** Le membre de
+  l'équipe de test n'en a aucune : le parent lit alors « La fonction
+  de la personne n'était pas renseignée. » C'est volontaire — on
+  n'invente rien — mais cela vaut d'inviter les équipes à renseigner
+  leur fonction.
+
 ## Consigne permanente pour la suite de l'audit
 
 Ne plus créer de comptes ou d'enregistrements fictifs dans la base
