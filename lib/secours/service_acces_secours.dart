@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/service_exception.dart';
@@ -146,11 +148,38 @@ class ServiceAccesSecours {
         );
       }
 
-      return _lire(
+      final ouvert = _lire(
         Map<String, dynamic>.from(lignes.first as Map),
         creeParDefaut: true,
       );
+
+      if (ouvert.creeMaintenant) {
+        _prevenirLeParentMaintenant();
+      }
+
+      return ouvert;
     });
+  }
+
+  /// Demande que la notification du parent parte tout de suite.
+  ///
+  /// La ligne est écrite par la base, dans la même transaction que
+  /// l'accès. Sans cet appel, elle attendrait le passage horaire du
+  /// filet chez OVH — et dire à un parent que son enfant part avec
+  /// les pompiers cinquante minutes plus tard n'est pas acceptable.
+  ///
+  /// **Sans attendre, et sans jamais faire échouer le
+  /// déclenchement.** L'accès est ouvert, le professionnel a son
+  /// code : c'est une urgence, elle passe avant la notification. Si
+  /// l'appel échoue — réseau coupé dans un couloir d'école — le
+  /// filet horaire reprendra ce qui n'est pas parti. C'est
+  /// exactement ce pour quoi il existe.
+  void _prevenirLeParentMaintenant() {
+    unawaited(
+      _client.functions
+          .invoke('envoyer-notifications-maintenant')
+          .then((_) {}, onError: (Object _) {}),
+    );
   }
 
   /// Ajoute des places quand les dix premières sont prises.

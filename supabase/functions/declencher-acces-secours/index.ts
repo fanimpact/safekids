@@ -30,6 +30,8 @@ import { depotPartagesSupabase } from '../_enveloppe/depot_partages.mts';
 
 import { declencherAccesSecours } from '../_logique/acces_secours.mts';
 
+import { envoyerNotificationsEnFond } from '../_enveloppe/envoi_immediat.mts';
+
 /// Un seul message pour tous les refus qui touchent au lien lui-même.
 /// Distinguer « inconnu », « expiré » et « révoqué » apprendrait à
 /// l'appelant ce qu'il n'a pas à savoir.
@@ -79,6 +81,17 @@ Deno.serve(async (req) => {
 
   switch (resultat.statut) {
     case 'ok':
+      // Le parent est prevenu tout de suite, pas a la prochaine heure.
+      // L'envoi part derriere la reponse : la personne qui declenche
+      // attend son code a l'ecran, elle ne doit pas patienter
+      // pendant qu'un email part.
+      //
+      // Seulement si l'acces vient d'etre cree : sur une reprise, le
+      // parent a deja ete prevenu de celui-la.
+      if (resultat.acces.creeMaintenant) {
+        envoyerNotificationsEnFond();
+      }
+
       return reponseJson(
         {
           token: resultat.acces.token,

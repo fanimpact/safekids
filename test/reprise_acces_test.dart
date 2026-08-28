@@ -186,6 +186,8 @@ void main() {
     });
   });
 
+  mainEnvoiImmediat();
+
   group('Ce que voit la personne refusée', () {
     final page = _source('supabase/functions/_logique/page_partage.mts');
 
@@ -227,6 +229,122 @@ void main() {
 
     test('Le bouton redevient utilisable si la reprise échoue', () {
       expect(page, contains('boutonReprise.disabled = false'));
+    });
+  });
+}
+
+// L'envoi immédiat des notifications (28/08/2026).
+//
+// Le filet chez OVH ne passe qu'une fois par heure — limite de
+// l'hébergement mutualisé, pas un choix, vérifiée avant que Fanny y
+// passe du temps. Dire à un parent que son enfant part avec les
+// pompiers cinquante minutes plus tard n'est pas acceptable : le
+// canal normal est l'envoi immédiat, le filet ne fait que rattraper.
+
+void mainEnvoiImmediat() {
+  group('L’accès secours prévient le parent tout de suite', () {
+    test('Le chemin du lien envoie derrière sa réponse', () {
+      // La personne qui déclenche attend son code à l'écran. Elle ne
+      // doit pas patienter pendant qu'un email part.
+      final fonction = _source(
+        'supabase/functions/declencher-acces-secours/index.ts',
+      );
+
+      expect(fonction, contains('envoyerNotificationsEnFond()'));
+
+      final immediat = _source(
+        'supabase/functions/_enveloppe/envoi_immediat.mts',
+      );
+
+      expect(immediat, contains('EdgeRuntime.waitUntil'));
+    });
+
+    test('Il n’envoie que sur un accès réellement créé', () {
+      // Sur une reprise, le parent a déjà été prévenu de celui-là.
+      final fonction = _codeSansCommentaires(
+        'supabase/functions/declencher-acces-secours/index.ts',
+      );
+
+      expect(fonction, contains('if (resultat.acces.creeMaintenant)'));
+    });
+
+    test('Le chemin de l’application appelle la fonction dédiée', () {
+      // Là, la ligne est écrite par la base dans la même transaction
+      // que l'accès : aucune fonction serveur n'est en position
+      // d'envoyer, il faut que l'application le demande.
+      final service =
+          _codeSansCommentaires('lib/secours/service_acces_secours.dart');
+
+      expect(service, contains("'envoyer-notifications-maintenant'"));
+      expect(service, contains('if (ouvert.creeMaintenant)'));
+    });
+
+    test('L’appel n’attend pas et ne fait jamais échouer le geste', () {
+      // L'accès est ouvert, le professionnel a son code : c'est une
+      // urgence, elle passe avant la notification.
+      final service =
+          _codeSansCommentaires('lib/secours/service_acces_secours.dart');
+
+      expect(service, contains('unawaited('));
+      expect(service, contains('onError:'));
+    });
+  });
+
+  group('Les deux fonctions d’envoi ne se protègent pas pareil', () {
+    test('Le filet se protège par une clé partagée', () {
+      final filet = _source(
+        'supabase/functions/envoyer-notifications-parent/index.ts',
+      );
+
+      expect(filet, contains("'x-cle-planificateur'"));
+      expect(filet, contains('CLE_PLANIFICATEUR'));
+    });
+
+    test('Celle de l’application se protège par le compte connecté', () {
+      // Une application installée ne peut pas garder de clé : ce qui
+      // est dans l'application est public.
+      final maintenant = _source(
+        'supabase/functions/envoyer-notifications-maintenant/index.ts',
+      );
+
+      expect(maintenant, contains('enTeteAutorisation(requete)'));
+      expect(maintenant, isNot(contains('CLE_PLANIFICATEUR')));
+    });
+
+    test('Aucune des deux ne rend de donnée', () {
+      // Des compteurs, et rien d'autre : ni prénom, ni adresse.
+      for (final chemin in [
+        'supabase/functions/envoyer-notifications-parent/index.ts',
+        'supabase/functions/envoyer-notifications-maintenant/index.ts',
+      ]) {
+        expect(_source(chemin), contains('reponseJson(bilan, 200)'));
+      }
+    });
+  });
+
+  group('La tâche planifiée chez OVH', () {
+    test('La vraie clé n’entre pas dans git', () {
+      final ignore = _source('.gitignore');
+
+      expect(
+        ignore,
+        contains('hebergement_ovh/tache_notifications.php'),
+      );
+
+      final exemple =
+          _source('hebergement_ovh/tache_notifications.php.exemple');
+
+      expect(exemple, contains('REMPLACER_PAR_LA_CLE_PLANIFICATEUR'));
+    });
+
+    test('Le journal ne grossit pas et ne dit rien de personnel', () {
+      // Un fichier qui grossit sans fin sur un mutualisé finit par
+      // poser problème, et la fonction ne rend que des compteurs.
+      final exemple =
+          _source('hebergement_ovh/tache_notifications.php.exemple');
+
+      expect(exemple, contains('file_put_contents'));
+      expect(exemple, isNot(contains('FILE_APPEND')));
     });
   });
 }
