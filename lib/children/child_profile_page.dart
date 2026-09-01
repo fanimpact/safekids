@@ -15,6 +15,7 @@ import '../models/activity_profile_draft.dart';
 import '../models/child_profile_draft.dart';
 import '../models/complete_child_profile_data.dart';
 import '../models/enfant_confiance_data.dart';
+import '../models/demande_acces_data.dart';
 import '../models/enfant_etablissement_data.dart';
 import '../models/note_enfant_data.dart';
 import '../models/share_link_data.dart';
@@ -60,6 +61,12 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
   /// Vide tant qu'elles ne sont pas chargees : mieux vaut ne rien
   /// annoncer que d'annoncer a tort.
   List<TentativePartageData> _tentatives = [];
+
+  /// Les demandes d'un quatrième appareil, en attente de réponse.
+  ///
+  /// C'est le seul endroit où la raison saisie se lit : le mail qui
+  /// a prévenu le parent n'en dit rien.
+  List<DemandeAccesData> _demandes = [];
 
   // Copie résolue de _trustedPeopleFuture, utilisée pour savoir tout
   // de suite (sans reconstruire tout un FutureBuilder) si la personne
@@ -146,6 +153,8 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
         NotesEnfantService.instance.notesForChild(childId);
     final tentativesFuture =
         ShareLinkService.instance.tentativesForChild(childId);
+    final demandesFuture =
+        ShareLinkService.instance.demandesPourEnfant(childId);
 
     // `.ignore()` marque immédiatement ces futures comme "gérées" pour
     // Dart, en plus du traitement normal fait juste après par les
@@ -157,6 +166,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
     trustedPeopleFuture.ignore();
     notesFuture.ignore();
     tentativesFuture.ignore();
+    demandesFuture.ignore();
 
     tentativesFuture.then((tentatives) {
       if (mounted) {
@@ -168,6 +178,20 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
       if (mounted) {
         setState(() {
           _tentatives = [];
+        });
+      }
+    });
+
+    demandesFuture.then((demandes) {
+      if (mounted) {
+        setState(() {
+          _demandes = demandes;
+        });
+      }
+    }).catchError((error) {
+      if (mounted) {
+        setState(() {
+          _demandes = [];
         });
       }
     });
@@ -764,6 +788,113 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
   /// En ambre et non en rouge : ce n'est pas forcément un incident.
   /// Le cas le plus fréquent est le destinataire légitime qui a ouvert
   /// le lien depuis sa messagerie puis dans son navigateur.
+  /// Autorise **un** appareil, et un seul.
+  ///
+  /// Le cinquième redemandera. Pas de « ne plus me demander » :
+  /// l'application ne sait pas distinguer les appareils d'une
+  /// personne de ceux de plusieurs, et cette option ouvrirait
+  /// exactement la porte qu'on cherche à fermer.
+  Future<void> _autoriserAppareil(
+    BuildContext context,
+    DemandeAccesData demande,
+  ) async {
+    try {
+      await ShareLinkService.instance.autoriserAppareil(demande.id);
+    } catch (error) {
+      if (context.mounted) {
+        _showTemporaryMessage(
+          context: context,
+          message: 'Impossible d’autoriser cet appareil pour le '
+              'moment.',
+        );
+      }
+
+      return;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
+
+    _showTemporaryMessage(
+      context: context,
+      message: 'Cet appareil pourra ouvrir la fiche. Un appareil de '
+          'plus devra redemander.',
+    );
+
+    _loadPartages();
+  }
+
+  /// Les demandes en attente sur un partage, avec ce que la personne
+  /// a écrit pour se présenter.
+  ///
+  /// En ambre : le parent doit les voir, elles attendent une
+  /// décision de sa part. Rien ne se passe tant qu'il n'a pas
+  /// répondu — le silence ne vaut jamais accord.
+  Widget _bandeauDemandes(BuildContext context, ShareLinkData link) {
+    final demandes = _demandes
+        .where((d) => d.partageId == link.id && d.estEnAttente)
+        .toList();
+
+    if (demandes.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Material(
+        color: KidsRelayColors.ambreFond,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: KidsRelayColors.ambreBordure),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                libelleDemandes(demandes) ?? '',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              for (final demande in demandes) ...[
+                const SizedBox(height: 8),
+
+                Text(
+                  '« ${demande.raison} »',
+                  style: const TextStyle(fontSize: 15),
+                ),
+
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () =>
+                        _autoriserAppareil(context, demande),
+                    child: const Text('Autoriser cet appareil'),
+                  ),
+                ),
+              ],
+
+              const Text(
+                'Tant que vous ne répondez pas, l’accès reste fermé. '
+                'Une demande sans réponse disparaît au bout de 30 '
+                'jours.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: KidsRelayColors.ardoiseDouce,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _bandeauTentatives(
     BuildContext context,
     ShareLinkData link,
@@ -1119,6 +1250,8 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                   ),
 
                   _bandeauTentatives(context, link),
+
+                  _bandeauDemandes(context, link),
 
                   for (final derive in actifs.where(
                     (autre) => autre.partageOrigineId == link.id,

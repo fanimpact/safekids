@@ -124,6 +124,26 @@ export function construirePage(
     color: var(--muted);
   }
 
+  #raison-demande {
+    width: 100%;
+    padding: 14px;
+    font-size: 17px;
+    font-family: inherit;
+    border: 1px solid var(--bordure, #d9d5ce);
+    border-radius: 8px;
+    margin: 12px 0;
+  }
+
+  #erreur-demande,
+  #demande-envoyee {
+    display: none;
+  }
+
+  #erreur-demande {
+    color: var(--alerte-texte, #a4462f);
+    font-size: 15px;
+  }
+
   .note-verrouille {
     margin-top: 20px;
     font-size: 14px;
@@ -222,7 +242,7 @@ export function construirePage(
   #bouton-secours,
   #confirmer-secours,
   #annuler-secours,
-  #reprendre-acces {
+  #envoyer-demande {
     width: 100%;
     padding: 16px 18px;
     font-size: 17px;
@@ -299,26 +319,42 @@ export function construirePage(
   </div>
 
   <div id="estado-verrouille">
-    <h1>Cette fiche a déjà été ouverte sur un autre appareil</h1>
+    <h1>Cette fiche est déjà ouverte sur trois appareils</h1>
     <p>
-      <strong>Si c’est vous</strong> — par exemple parce que vous
-      l’aviez ouverte en scannant un code, et que vous l’ouvrez
-      maintenant depuis votre navigateur — reprenez l’accès ici.
-    </p>
-    <p>
-      Le parent en sera informé immédiatement, et pourra couper
-      l’accès s’il ne l’avait pas voulu.
+      Pour l’ouvrir sur celui-ci, le parent doit l’autoriser.
     </p>
 
-    <button id="reprendre-acces" type="button">
-      C’est moi, reprendre l’accès
-    </button>
+    <div id="bloc-demande">
+      <label for="raison-demande">
+        <strong>Dites simplement qui vous êtes.</strong> Rien d’autre.
+      </label>
+
+      <input
+        id="raison-demande"
+        type="text"
+        maxlength="60"
+        autocomplete="off"
+        placeholder="Par exemple : Mamie Denise"
+      />
+
+      <p id="erreur-demande"></p>
+
+      <button id="envoyer-demande" type="button">
+        Demander l’accès
+      </button>
+    </div>
+
+    <div id="demande-envoyee">
+      <p>
+        <strong>Votre demande est partie.</strong> Le parent va la
+        recevoir et décider. Revenez sur ce lien un peu plus tard.
+      </p>
+    </div>
 
     <p class="note-verrouille">
-      Si ce n’est pas vous, n’appuyez pas.
       <strong>Ce n’est pas la peine de demander qu’on vous le
-      renvoie</strong> : un nouveau lien ne changerait rien.
-      Rapprochez-vous du parent : il pourra vous donner accès.
+      renvoie</strong> : un nouveau lien ne changerait rien. C’est le
+      parent qui décide qui a accès.
     </p>
   </div>
 
@@ -957,9 +993,25 @@ ${bibliothequeQr}
     preparerAccesSecours(data);
   }
 
-  function afficherVerrouille() {
+  // Avec envoyee a vrai : la demande est partie, on remplace le
+  // formulaire par la confirmation. La personne ne doit pas pouvoir
+  // en envoyer une seconde.
+  function afficherDemande(envoyee) {
     document.getElementById('estado-chargement').style.display = 'none';
     document.getElementById('estado-verrouille').style.display = 'block';
+
+    document.getElementById('bloc-demande').style.display =
+      envoyee ? 'none' : 'block';
+
+    document.getElementById('demande-envoyee').style.display =
+      envoyee ? 'block' : 'none';
+  }
+
+  function direErreurDemande(message) {
+    var bloc = document.getElementById('erreur-demande');
+
+    bloc.textContent = message;
+    bloc.style.display = message ? 'block' : 'none';
   }
 
   // Quatre situations, quatre messages. La page les confondait toutes
@@ -1038,7 +1090,12 @@ ${bibliothequeQr}
   // Rejouable : la reprise refait exactement la meme demande, avec
   // un drapeau en plus. Une seule chaine de traitement pour les deux
   // cas, donc un seul endroit ou elle peut se tromper.
-  function ouvrirFiche(reprise) {
+  // Avec une raison non nulle : la personne repond au formulaire. La requete
+  // devient un POST, et la raison passe par le CORPS.
+  //
+  // Jamais par l'adresse : une adresse se retrouve dans les journaux
+  // du serveur, et ce champ est ecrit par une personne inconnue.
+  function ouvrirFiche(raison) {
     var urlFonction =
       '${cheminApi}?token=' + encodeURIComponent(token);
 
@@ -1046,15 +1103,56 @@ ${bibliothequeQr}
       urlFonction += '&secret=' + encodeURIComponent(secret);
     }
 
-    if (reprise) {
-      urlFonction += '&reprise=1';
-    }
+    var options = raison
+      ? {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ raison: raison }),
+        }
+      : undefined;
 
-    return fetch(urlFonction)
+    return fetch(urlFonction, options)
     .then(function (reponse) {
-      // 423 : le lien est pris par un autre appareil.
+      // 202 : la demande vient d'etre enregistree.
+      if (reponse.status === 202) {
+        throw { cas: 'demandeEnvoyee' };
+      }
+
+      // 429 : trois demandes attendent deja une reponse du parent.
+      if (reponse.status === 429) {
+        throw { cas: 'tropDeDemandes' };
+      }
+
+      // 423 : trois appareils sont pris. Ce n'est pas un refus
+      // definitif — la personne dit qui elle est, et le parent
+      // decide.
       if (reponse.status === 423) {
-        throw { cas: 'verrou' };
+        return reponse.json().then(
+          function (data) {
+            // Le secret arrive meme sans place : sans lui, la
+            // personne reviendrait en inconnue et sa demande serait
+            // orpheline. Il ne lui donne aucun acces.
+            if (data && data.secret) {
+              secret = data.secret;
+
+              try {
+                window.localStorage.setItem(cleSecret, data.secret);
+              } catch (e) {
+                // Sans stockage, elle redemandera. Rien de perdu.
+              }
+            }
+
+            throw {
+              cas:
+                data && data.code === 'demande_en_attente'
+                  ? 'demandeEnAttente'
+                  : 'demande',
+            };
+          },
+          function () {
+            throw { cas: 'demande' };
+          },
+        );
       }
 
       // 404 et 410 : jeton inconnu, lien expire ou revoque. Le
@@ -1099,41 +1197,75 @@ ${bibliothequeQr}
       afficherFiche(data);
     })
       .catch(function (erreur) {
-        if (erreur && erreur.cas === 'verrou') {
-          afficherVerrouille();
+        var cas = erreur && erreur.cas;
+
+        if (cas === 'demande') {
+          afficherDemande(false);
+          return;
+        }
+
+        if (cas === 'demandeEnAttente') {
+          afficherDemande(true);
+          return;
+        }
+
+        if (cas === 'demandeEnvoyee') {
+          afficherDemande(true);
+          return;
+        }
+
+        if (cas === 'tropDeDemandes') {
+          afficherDemande(false);
+          direErreurDemande(
+            'Trois demandes attendent déjà une réponse du parent. ' +
+              'Rapprochez-vous de lui directement.'
+          );
           return;
         }
 
         // Sans cas connu, l'echec vient du reseau : la requete a
         // echoue avant d'avoir vu une reponse. Ce n'est pas un lien
         // mort, et le dire serait faux.
-        afficherErreur(erreur && erreur.cas);
+        afficherErreur(cas);
       });
   }
 
-  var boutonReprise = document.getElementById('reprendre-acces');
+  var champRaison = document.getElementById('raison-demande');
+  var boutonDemande = document.getElementById('envoyer-demande');
 
-  if (boutonReprise) {
-    boutonReprise.onclick = function () {
-      boutonReprise.disabled = true;
-      boutonReprise.textContent = 'Reprise…';
+  if (boutonDemande) {
+    boutonDemande.onclick = function () {
+      var raison = (champRaison.value || '').trim();
 
-      document.getElementById('estado-verrouille').style.display =
-        'none';
-      document.getElementById('estado-chargement').style.display =
-        'block';
+      // Obligatoire : le parent doit savoir a qui il ouvre. On le dit
+      // ici plutot que de laisser le serveur refuser en silence.
+      if (!raison) {
+        direErreurDemande('Dites qui vous êtes pour que le parent puisse décider.');
+        champRaison.focus();
+        return;
+      }
 
-      ouvrirFiche(true).then(function () {
-        // Rendu utilisable quoi qu'il arrive : si la reprise a
-        // echoue, l'ecran de refus revient et le bouton doit
-        // pouvoir servir encore.
-        boutonReprise.disabled = false;
-        boutonReprise.textContent = 'C’est moi, reprendre l’accès';
+      direErreurDemande('');
+      boutonDemande.disabled = true;
+      boutonDemande.textContent = 'Envoi…';
+
+      ouvrirFiche(raison).then(function () {
+        boutonDemande.disabled = false;
+        boutonDemande.textContent = 'Demander l’accès';
       });
+    };
+
+    // La touche Entree vaut le bouton : sur un telephone, viser un
+    // bouton apres avoir tape est une manipulation de plus.
+    champRaison.onkeydown = function (evenement) {
+      if (evenement.key === 'Enter') {
+        evenement.preventDefault();
+        boutonDemande.onclick();
+      }
     };
   }
 
-  ouvrirFiche(false);
+  ouvrirFiche(null);
 })();
 </script>
 </body>

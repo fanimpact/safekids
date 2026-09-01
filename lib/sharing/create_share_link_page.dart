@@ -84,31 +84,26 @@ enum _ShareDuration {
   final Duration? duration;
 }
 
-/// Combien d'appareils peuvent consulter la fiche.
+/// Le nombre d'appareils autorisés sur un partage ordinaire.
 ///
-/// Trois choix, pas de saisie libre : un champ ouvert invite le 20, et
-/// 20 n'est plus un partage. **Une seule personne reste le defaut.**
+/// **Trois, pour tout le monde, sans réglage** (Fanny,
+/// 01/09/2026). Le sélecteur « 1 / 2 / 5 personnes » a disparu ce
+/// jour-là, et il faut savoir pourquoi.
 ///
-/// 1 couvre la nounou, un grand-parent, la maitresse. 2 couvre les
-/// couples. 5 couvre ce que le parent prevoit : une sortie, un
-/// week-end a plusieurs adultes. Au-dela, c'est le rattachement
-/// d'etablissement qui prend le relais, avec des professionnels
-/// identifies et des consultations nominatives.
+/// Il posait la question en **personnes** alors que le mécanisme
+/// compte des **navigateurs**. Un seul téléphone en fournit déjà
+/// deux — la fenêtre intégrée du lecteur de QR, puis Safari quand
+/// la personne rouvre plus tard. Une maîtresse avec téléphone,
+/// tablette et ordinateur atteignait quatre à six places sans rien
+/// faire d'anormal.
 ///
-/// Le choix s'applique **partout, QR compris** : restreindre le QR a
-/// un seul appareil pousserait la maitresse a photographier la fiche
-/// et a l'envoyer par messagerie — et la, plus de verrou, plus de
-/// revocation, plus de journal.
-enum _NombreAppareils {
-  un('Une seule personne', 1),
-  deux('Jusqu’à 2 personnes', 2),
-  cinq('Jusqu’à 5 personnes', 5);
-
-  const _NombreAppareils(this.label, this.nombre);
-
-  final String label;
-  final int nombre;
-}
+/// Deux mécanismes rendent le chiffre trois tenable : une place ne
+/// compte qu'au **retour** du navigateur, et au quatrième appareil
+/// c'est le parent qui décide.
+///
+/// La valeur vit en base — `partages.appareils_max`, défaut 3 — et
+/// monte d'une unité à chaque appareil que le parent autorise.
+/// L'écran de création n'a plus rien à en dire.
 
 class CreateShareLinkPage extends StatefulWidget {
   final CompleteChildProfileData? initialChild;
@@ -137,7 +132,6 @@ class _CreateShareLinkPageState
   /// refusee.
   DateTime? _dateChoisie;
 
-  _NombreAppareils _appareils = _NombreAppareils.un;
 
   bool _isGenerating = false;
   String? _generatedLink;
@@ -387,7 +381,6 @@ class _CreateShareLinkPageState
         nomDestinataire: nomDestinataire,
         dateExpiration: dateExpiration,
         permanent: permanent,
-        appareilsMax: _appareils.nombre,
         contenuFige: contenuFige,
         activiteId: _selectedActivity?.id,
       );
@@ -862,54 +855,16 @@ class _CreateShareLinkPageState
 
             const SizedBox(height: 20),
 
+            // Ce n'est pas un réglage, c'est une information : le
+            // parent doit savoir combien d'appareils son partage
+            // accepte, et ce qui se passe au-delà.
             const Text(
-              'Combien de personnes doivent pouvoir consulter la fiche ?',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 6),
-
-            // Pas un avertissement : ce qui explique le chiffre. Sans
-            // cette ligne, le parent qui choisit « 2 personnes » pour
-            // deux grands-parents sera surpris que la grand-mere
-            // consomme les deux places a elle seule.
-            const Text(
-              'Chaque appareil compte. Si la même personne ouvre le '
-              'partage sur son téléphone puis sur son ordinateur, cela '
-              'fait deux.',
+              'Trois appareils pourront ouvrir cette fiche. Au-delà, '
+              'la personne devra vous demander l’autorisation, et '
+              'vous recevrez sa demande ici.',
               style: TextStyle(
                 fontSize: 14,
                 color: KidsRelayColors.ardoiseDouce,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            RadioGroup<_NombreAppareils>(
-              groupValue: _appareils,
-              onChanged: (value) {
-                if (value == null) {
-                  return;
-                }
-
-                setState(() {
-                  _appareils = value;
-                  _generatedLink = null;
-                  _expirationGeneree = null;
-                });
-              },
-              child: Column(
-                children: [
-                  for (final choix in _NombreAppareils.values)
-                    RadioListTile<_NombreAppareils>(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(choix.label),
-                      value: choix,
-                    ),
-                ],
               ),
             ),
 

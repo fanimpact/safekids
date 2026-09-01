@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/supabase_config.dart';
+import '../models/demande_acces_data.dart';
 import '../models/share_link_data.dart';
 import '../services/service_exception.dart';
 import '../models/tentative_partage_data.dart';
@@ -147,6 +148,45 @@ class ShareLinkService {
   /// retransmettre.
   ///
   /// Le prochain appareil qui ouvre le lien reprend le verrou.
+  /// Les demandes d'accès déposées sur les partages d'un enfant.
+  ///
+  /// Le parent les lit — et lit la raison saisie — **uniquement
+  /// ici**. Le mail qui l'a prévenu n'en dit rien : elle est écrite
+  /// par une personne inconnue et pourrait contenir n'importe quoi.
+  Future<List<DemandeAccesData>> demandesPourEnfant(
+    String childId,
+  ) async {
+    final rows = await _client
+        .from('demandes_acces_partage')
+        .select('*, partages!inner(enfant_id)')
+        .eq('partages.enfant_id', childId)
+        .order('cree_le', ascending: false);
+
+    return (rows as List<dynamic>)
+        .map(
+          (row) => DemandeAccesData.fromRow(
+            row as Map<String, dynamic>,
+          ),
+        )
+        .toList();
+  }
+
+  /// Autorise **un** appareil, et un seul.
+  ///
+  /// Le plafond du partage monte d'une unité : le cinquième appareil
+  /// redemandera. Pas de « ne plus me demander » — l'application ne
+  /// sait pas distinguer les appareils d'une personne de ceux de
+  /// plusieurs, et cette option ouvrirait exactement la porte qu'on
+  /// cherche à fermer.
+  Future<int> autoriserAppareil(String demandeId) async {
+    final reponse = await _client.rpc(
+      'autoriser_appareil_partage',
+      params: {'p_demande_id': demandeId},
+    );
+
+    return (reponse as num).toInt();
+  }
+
   /// Libère la place la plus récemment prise, pour qu'un nouvel
   /// appareil puisse ouvrir le lien.
   ///
@@ -184,7 +224,6 @@ class ShareLinkService {
     String? activiteId,
     String? nomDestinataire,
     bool permanent = false,
-    int appareilsMax = 1,
   }) async {
     compteurUsage.marquer(FonctionnaliteUsage.lienPartageCree);
 
@@ -196,7 +235,6 @@ class ShareLinkService {
           'date_expiration':
               dateExpiration?.toUtc().toIso8601String(),
           'permanent': permanent,
-          'appareils_max': appareilsMax,
           'destinataire': destinataire,
           // Distinct de `destinataire`, qui porte le choix particulier /
           // structure d'accueil. Vide plutot que chaine vide : le

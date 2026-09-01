@@ -60,6 +60,11 @@ async function rendre(fiche, options = {}) {
     'titre-erreur': element(),
     'texte-erreur': element(),
     'estado-verrouille': element(),
+    'bloc-demande': element(),
+    'demande-envoyee': element(),
+    'erreur-demande': element(),
+    'raison-demande': element(),
+    'envoyer-demande': element(),
     contenu: element(),
     'bandeau-secours': element(),
     'titre-bandeau-secours': element(),
@@ -295,7 +300,11 @@ describe('Adresse interrogée', () => {
       const page = construirePage();
 
       assert.match(page, /pas la peine de demander qu’on vous le/);
-      assert.match(page, /Rapprochez-vous du parent/);
+
+      // « Rapprochez-vous du parent » etait une version d'attente,
+      // posee tant que la demande d'acces n'existait pas. Elle
+      // existe depuis le 01/09/2026 : la personne demande ici meme.
+      assert.match(page, /parent qui décide qui a accès/);
     });
 
   test('Une panne de réseau ne se fait pas passer pour un lien mort',
@@ -914,5 +923,79 @@ describe('Un code à scanner périmé a son propre message', () => {
       elements['titre-erreur'].textContent,
       'Ce lien ne fonctionne plus',
     );
+  });
+});
+
+// L'écran de demande d'accès (01/09/2026).
+//
+// Au quatrième appareil, la personne est arrêtée. Elle dit qui elle
+// est, et le parent décide. Ce n'est plus un refus sec : « Ce lien est
+// déjà utilisé par quelqu'un d'autre » ne laissait aucune issue.
+describe('La demande d’accès, sur la page publique', () => {
+  test('Le formulaire s’affiche, avec sa consigne', () => {
+    const page = construirePage();
+
+    assert.match(page, /déjà ouverte sur trois appareils/);
+    assert.match(page, /Dites simplement qui vous êtes/);
+    assert.match(page, /Demander l’accès/);
+  });
+
+  test('Le champ est borné à soixante caractères', () => {
+    // La même borne qu'en base : la contrainte SQL refuse au-delà, et
+    // l'écran ne doit pas laisser taper ce qui sera rejeté.
+    const page = construirePage();
+
+    assert.match(page, /maxlength="60"/);
+  });
+
+  test('La raison passe par le corps, jamais par l’adresse', () => {
+    // Une adresse se retrouve dans les journaux du serveur, et ce
+    // champ est écrit par une personne inconnue.
+    const page = construirePage();
+
+    assert.match(page, /method: 'POST'/);
+    assert.match(page, /JSON\.stringify\(\{ raison: raison \}\)/);
+    assert.ok(!page.includes("'&raison='"));
+  });
+
+  test('Le secret est rangé même sans place accordée', async () => {
+    // Sans lui, la personne reviendrait en inconnue et sa demande
+    // serait orpheline.
+    const { elements } = await rendre(
+      { error: 'plein', code: 'demande_requise', secret: 'secret-du-quatrieme' },
+      { reponseOk: false, statut: 423 },
+    );
+
+    assert.equal(elements['estado-verrouille'].style.display, 'block');
+    assert.equal(elements['bloc-demande'].style.display, 'block');
+  });
+
+  test('Une demande déjà déposée montre l’attente, pas le formulaire',
+    async () => {
+      // La personne ne doit pas pouvoir en envoyer une seconde.
+      const { elements } = await rendre(
+        { error: 'plein', code: 'demande_en_attente' },
+        { reponseOk: false, statut: 423 },
+      );
+
+      assert.equal(elements['bloc-demande'].style.display, 'none');
+      assert.equal(elements['demande-envoyee'].style.display, 'block');
+    });
+
+  test('La phrase à ne jamais retirer est toujours là', () => {
+    // Protégée par Fanny le 27/08/2026 : c'est elle qui évite l'appel
+    // au parent pour un renvoi inutile.
+    const page = construirePage();
+
+    assert.match(page, /un nouveau lien ne changerait rien/);
+  });
+
+  test('Aucune trace de la reprise explicite', () => {
+    // Retirée le 01/09 : elle dirait le contraire de la nouvelle
+    // règle sur le même écran.
+    const page = construirePage();
+
+    assert.ok(!page.includes('reprendre l’accès'));
+    assert.ok(!page.includes('reprise=1'));
   });
 });

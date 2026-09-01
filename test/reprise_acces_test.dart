@@ -25,17 +25,12 @@ String _codeSansCommentaires(String chemin) {
       })
       .join('\n');
 }
-
-TentativePartageData _tentative({
-  required bool toleree,
-  bool reprise = false,
-}) {
+TentativePartageData _tentative({required bool toleree}) {
   return TentativePartageData(
     id: 't1',
     partageId: 'p1',
     tenteeLe: DateTime(2026, 8, 28, 14),
     toleree: toleree,
-    reprise: reprise,
   );
 }
 
@@ -45,51 +40,35 @@ void main() {
       // C'est lui qui demande une décision.
       final libelle = libelleTentatives([
         _tentative(toleree: false),
-        _tentative(toleree: true, reprise: true),
+        _tentative(toleree: true),
       ]);
 
       expect(libelle, contains('refusée'));
     });
 
-    test('Une reprise se distingue d’une tolérance silencieuse', () {
-      // Le parent ne lit pas la même chose selon qu'un lien a été
-      // rouvert tout seul dans le quart d'heure ou que quelqu'un a
-      // repris la main des heures après.
-      final reprise = libelleTentatives([
-        _tentative(toleree: true, reprise: true),
-      ]);
-
-      final tolerance = libelleTentatives([
-        _tentative(toleree: true),
-      ]);
-
-      expect(reprise, contains('repris l’accès'));
-      expect(reprise, contains('c’était bien lui'));
+    test('Une ouverture tolérée se dit sans alarmer', () {
+      final tolerance = libelleTentatives([_tentative(toleree: true)]);
 
       expect(tolerance, contains('peu après'));
-      expect(tolerance, isNot(contains('repris')));
     });
 
-    test('Plusieurs reprises se comptent', () {
-      final libelle = libelleTentatives([
-        _tentative(toleree: true, reprise: true),
-        _tentative(toleree: true, reprise: true),
-      ]);
-
-      expect(libelle, contains('2 reprises'));
+    test('Aucune tentative ne produit aucune ligne', () {
+      expect(libelleTentatives([]), isNull);
     });
 
-    test('Une ligne d’avant le 28/08/2026 se relit sans reprise', () {
-      final ancienne = TentativePartageData.fromRow({
+    test('Une ligne se relit depuis la base', () {
+      final lue = TentativePartageData.fromRow({
         'id': 't1',
         'partage_id': 'p1',
         'tentee_le': '2026-08-25T10:00:00.000Z',
         'toleree': true,
       });
 
-      expect(ancienne.reprise, isFalse);
+      expect(lue.toleree, isTrue);
+      expect(lue.partageId, 'p1');
     });
   });
+
 
   group('Le déverrouillage par le parent, réparé', () {
     final service = _codeSansCommentaires('lib/sharing/share_link_service.dart');
@@ -129,108 +108,18 @@ void main() {
     });
   });
 
-  group('La reprise, côté serveur', () {
-    final verrou = _codeSansCommentaires(
-      'supabase/functions/_logique/verrou_partage.mts',
-    );
-
-    final consultation = _codeSansCommentaires(
-      'supabase/functions/_logique/partage_consultation.mts',
-    );
-
-    test('Elle ne prend la place que du refus', () {
-      // Les trois règles d'origine passent avant, dans leur ordre :
-      // même appareil, fenêtre de tolérance, place libre.
-      final regle4 = verrou.indexOf('repriseDemandee && derniere');
-      final placeLibre = verrou.indexOf('places.length < appareilsMax');
-      final refus = verrou.lastIndexOf("action: 'refuser'");
-
-      expect(placeLibre, lessThan(regle4));
-      expect(regle4, lessThan(refus));
-    });
-
-    test('Elle est demandée, jamais déduite', () {
-      // Sans geste explicite, un simple rechargement prendrait la
-      // place de quelqu'un d'autre.
-      final fonction = _source(
-        'supabase/functions/consulter-partage/index.ts',
-      );
-
-      expect(fonction, contains("parametres.get('reprise') === '1'"));
-    });
-
-    test('Elle remplace la place, elle n’en consomme pas une autre', () {
-      expect(verrou, contains("action: 'remplacer', placeId: derniere.id"));
-    });
-
-    test('Le parent est prévenu', () {
-      // C'est elle qui rend la reprise acceptable : sans notification,
-      // ce serait un affaiblissement muet.
-      expect(consultation, contains('notifierRepriseAcces('));
-      expect(consultation, contains('if (decision.reprise) {'));
-    });
-
-    test('Aucun compteur, aucun délai imposé', () {
-      // Décision de Fanny : « la notification et la révocation
-      // suffisent ». Un verrou de plus se retournerait contre la
-      // personne au pire moment.
-      expect(verrou, isNot(contains('maxReprises')));
-      expect(verrou, isNot(contains('delaiEntreReprises')));
-      expect(consultation, isNot(contains('nombreDeReprises')));
-    });
-
-    test('Le type d’événement est déclaré en base', () {
-      final sql = _source('supabase/schema_reprise_acces.sql');
-
-      expect(sql, contains("'acces_repris'"));
-    });
-  });
+  // Deux groupes vivaient ici : « La reprise, côté serveur » et « Ce
+  // que voit la personne refusée ». Tous deux décrivaient la reprise
+  // explicite, construite le 28/08/2026 et retirée le 01/09.
+  //
+  // Elle répondait au même problème — le navigateur intégré qui
+  // verrouille dehors une personne légitime — mais le comptage au
+  // retour le règle sans rien demander à personne. La garder aurait
+  // dit le contraire de la nouvelle règle sur le même écran.
+  //
+  // Ce qui la remplace est dans `test/trois_appareils_test.dart`.
 
   mainEnvoiImmediat();
-
-  group('Ce que voit la personne refusée', () {
-    final page = _source('supabase/functions/_logique/page_partage.mts');
-
-    test('L’écran propose de reprendre plutôt que de renvoyer chez le parent',
-        () {
-      expect(page, contains('C’est moi, reprendre l’accès'));
-      expect(
-        page,
-        contains('Cette fiche a déjà été ouverte sur un autre appareil'),
-      );
-    });
-
-    test('Il annonce que le parent sera informé', () {
-      expect(page, contains('Le parent en sera informé immédiatement'));
-    });
-
-    test('Il dit aussi quoi faire quand ce n’est pas vous', () {
-      expect(page, contains('Si ce n’est pas vous, n’appuyez pas.'));
-    });
-
-    test('La phrase à ne jamais retirer est toujours là', () {
-      // Protégée par Fanny le 27/08/2026 : c'est elle qui évite
-      // l'appel au parent pour un renvoi inutile, et tout le
-      // mécanisme de demande d'accès en dépend.
-      expect(
-        page,
-        contains('un nouveau lien ne changerait rien'),
-      );
-    });
-
-    test('Le bouton rejoue la même demande, avec un drapeau', () {
-      // Une seule chaîne de traitement pour les deux cas, donc un seul
-      // endroit où elle peut se tromper.
-      expect(page, contains('function ouvrirFiche(reprise)'));
-      expect(page, contains("urlFonction += '&reprise=1'"));
-      expect(page, contains('ouvrirFiche(true)'));
-      expect(page, contains('ouvrirFiche(false)'));
-    });
-
-    test('Le bouton redevient utilisable si la reprise échoue', () {
-      expect(page, contains('boutonReprise.disabled = false'));
-    });
-  });
 }
 
 // L'envoi immédiat des notifications (28/08/2026).
