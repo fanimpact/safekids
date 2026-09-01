@@ -13,11 +13,16 @@ Aucun n'est retiré avant que Fanny confirme elle-même l'avoir vérifié.
 résultat attendu pour chaque point, en vue d'une session unique sur un
 appareil Android.
 
-- **72 points** au total.
-- **Priorité haute : 14** — à faire en premier, ce sont ceux dont
+- **75 points** au total.
+- **Priorité haute : 17** — à faire en premier, ce sont ceux dont
   l'échec aurait des conséquences réelles.
 - **Priorité moyenne : 33**.
 - **Priorité basse : 20**.
+
+Les trois derniers (73, 74, 75) sont nés du chantier des trois
+appareils, terminé et mis en production le 01/09/2026. Ils sont tous
+de priorité haute : rien de ce qu'ils décrivent n'a jamais été exercé
+ailleurs que dans des tests.
 
 ---
 
@@ -730,43 +735,36 @@ puis rouvrir « Mes enfants ». À faire sur l'appareil de test
 uniquement.
 
 ## 71. Le lien ouvert depuis Gmail, puis rouvert dans Chrome
-*Refonte des partages, 27/08/2026 · priorité haute · demande deux appareils*
+*Refonte des partages, 27/08 · réécrit le 01/09/2026 · priorité haute*
 
 **Le cas le plus fréquent en usage réel**, et celui qui ne se reproduit
-pas sur un poste de développement : la personne qui reçoit le lien
-clique depuis sa boîte mail, et le téléphone ouvre d'abord un
-navigateur intégré à l'application de messagerie. Elle appuie ensuite
-sur « Ouvrir dans Chrome ». Ce sont **deux espaces de stockage
-distincts** — le destinataire légitime peut donc se verrouiller dehors
-tout seul.
+pas sur un poste de développement : la personne clique depuis sa boîte
+mail, le téléphone ouvre d'abord un navigateur intégré à l'application
+de messagerie, puis elle appuie sur « Ouvrir dans Chrome ». Ce sont
+**deux espaces de stockage distincts**.
 
-**À faire, dans cet ordre, sur le téléphone qui reçoit :**
+**La règle a changé le 01/09/2026.** La fenêtre de tolérance de quinze
+minutes a disparu. À la place : **une place n'est comptée qu'au retour
+du navigateur**. La fenêtre intégrée, qu'on ne rouvre jamais, ne
+consomme donc rien du tout — et sans délai, contrairement à avant.
 
-1. Ouvrir le lien **depuis Gmail** (ou l'application mail utilisée).
-   La fiche doit s'afficher.
-2. **Sans attendre**, appuyer sur « Ouvrir dans Chrome » ou
-   copier-coller le lien dans Chrome. La fiche doit **encore
-   s'afficher** — la fenêtre de tolérance de 15 minutes absorbe ce cas.
-3. Regarder la fiche de l'enfant côté parent : la ligne « Ce lien a été
-   rouvert depuis un autre appareil peu après la première ouverture »
-   doit apparaître, **sans bouton** (ce n'est pas un refus).
+**À faire, sur le téléphone qui reçoit :**
 
-**Puis, plus de 15 minutes après :**
+1. Ouvrir le lien **depuis Gmail**. La fiche doit s'afficher.
+2. Appuyer sur « Ouvrir dans Chrome ». La fiche doit **encore
+   s'afficher**.
+3. **Le lendemain** — ou après plusieurs heures, le délai n'a plus
+   d'importance : rouvrir depuis Chrome. La fiche doit toujours
+   s'afficher.
 
-4. Ouvrir le même lien depuis un **autre appareil**, ou une fenêtre de
-   navigation privée. Attendu : « **Ce lien est déjà utilisé.** »
-5. Côté parent : « Une ouverture a été refusée depuis un autre
-   appareil », avec le bouton **« Autoriser ce nouvel appareil »**.
-6. Appuyer dessus, puis rouvrir le lien depuis ce second appareil : la
-   fiche doit s'afficher.
+**Ce qui serait un défaut** : qu'une des trois étapes refuse. C'était
+le risque principal de cette fonctionnalité, et c'est ce que le
+comptage au retour est censé avoir supprimé.
 
-**Ce qui serait un défaut** : que l'étape 2 refuse déjà — la tolérance
-ne fonctionnerait pas, et tout destinataire passant par sa messagerie
-serait bloqué. C'est le risque principal de cette fonctionnalité.
-
-**Prérequis** : les fonctions `consulter-partage` et `voir-partage`
-doivent avoir été redéployées. Sans cela, aucun verrou n'est posé et
-tout s'ouvre partout.
+**Ce qui n'est plus attendu** : la ligne « Ce lien a été rouvert depuis
+un autre appareil peu après la première ouverture ». Elle appartenait
+à la fenêtre de tolérance. Si vous la voyez, dites-le : c'est du code
+mort qui aurait survécu.
 
 ## 72. Le verrou de l'appareil, et son repli
 *Connexion, 28/08/2026 · priorité haute · non testable en développement*
@@ -832,6 +830,108 @@ réponse du serveur sur ordinateur, pas à l'œil sur un téléphone. Voir
 Les notifications push : décision prise de les reporter au moment de
 la préparation de la publication sur les stores.
 
+## 73. Trois appareils, puis la demande au parent
+*Trois appareils, 01/09/2026 · priorité haute · demande trois appareils*
+
+**Le parcours entier du chantier, jamais exercé en conditions
+réelles.** C'est le plus long de cette liste, et le plus important :
+il vérifie d'un coup le comptage au retour, le plafond, l'écran de
+demande, le mail, et le geste d'autorisation.
+
+**Prévoir trois navigateurs différents** — par exemple Chrome sur le
+téléphone, Safari sur une tablette, et un navigateur sur l'ordinateur.
+Une fenêtre de navigation privée ne convient pas : elle perd son
+secret en se fermant, et la place ne se confirmera jamais.
+
+**À faire, dans cet ordre :**
+
+1. Créer un partage et récupérer le lien.
+2. L'ouvrir sur le **navigateur 1**. La fiche s'affiche.
+3. **Le refermer et le rouvrir** sur le même navigateur. C'est ce
+   second passage qui confirme la place — sans lui, elle ne compte
+   pas.
+4. Répéter les étapes 2 et 3 sur les **navigateurs 2 et 3**.
+5. Ouvrir le lien sur un **quatrième** navigateur. Attendu :
+   « **Cette fiche est déjà ouverte sur trois appareils** », avec un
+   champ pour se présenter.
+6. Laisser le champ **vide** et appuyer : il doit refuser et le dire.
+7. Écrire un nom court, envoyer. Attendu : « Votre demande est
+   partie. »
+8. **Regarder votre boîte mail** : un message « Une demande d'accès
+   attend votre réponse — [prénom] ». **Vérifier qu'il ne contient
+   pas le texte saisi** — il ne doit dire que le prénom.
+9. Dans l'application, fiche de l'enfant, section « Partages » : la
+   demande apparaît **avec le texte saisi**, et un seul bouton
+   « Autoriser cet appareil ».
+10. Appuyer. Puis rouvrir le lien depuis le quatrième navigateur : la
+    fiche doit s'afficher.
+11. Essayer un **cinquième** navigateur : il doit redemander.
+
+**Ce qui serait un défaut** : que l'étape 5 laisse passer — le plafond
+ne tiendrait pas ; que l'étape 8 montre le texte saisi — la règle sur
+le contenu des emails serait rompue ; que l'étape 11 passe sans
+demander — l'autorisation serait devenue permanente au lieu de valoir
+pour un seul appareil.
+
+## 74. Le QR de partage sur un vrai téléphone
+*QR de partage, 28/08/2026 · priorité haute · demande deux téléphones*
+
+Le code n'a jamais été scanné par un vrai appareil photo. Un encodeur
+ne se vérifie pas autrement.
+
+**À faire :**
+
+1. Créer un partage, choisir une durée, puis **« Montrer un code à
+   scanner »**.
+2. Le scanner avec **l'appareil photo** d'un second téléphone. La
+   fiche doit s'ouvrir.
+3. Vérifier que **l'adresse en clair** figure bien sous le code, et
+   qu'aucun bouton n'y propose d'imprimer, partager ou enregistrer.
+4. Quitter l'écran du code, y revenir : le décompte doit **repartir à
+   cinq minutes**, et le code affiché doit être **différent** — une
+   photo du précédent ne doit plus rien ouvrir.
+5. Afficher un code, attendre **plus de cinq minutes**, puis le
+   scanner. Attendu : « **Ce code n'est plus valable** », et non le
+   message générique d'un lien fini.
+6. Dans la liste des partages : pendant les cinq minutes, la ligne dit
+   « **En attente de scan** » ; après, sans scan, elle bascule dans
+   « Partages terminés » avec « **Code non scanné** ».
+
+**Le point qui compte le plus** : à l'étape 2, si le lecteur ouvre la
+page dans sa propre fenêtre et qu'on la referme, **aucune place ne
+doit être consommée**. On le vérifie en refaisant l'étape 2 trois fois
+de suite depuis trois lecteurs différents sans jamais revenir : le
+quatrième doit encore passer.
+
+## 75. Un email vers une adresse qui n'a jamais rien reçu
+*Notifications, 28/08/2026 · priorité haute · demande une adresse neuve*
+
+**Les essais du 28/08 ne prouvent rien** : l'expéditeur avait été
+marqué comme légitime sur la boîte de test, le message ne pouvait
+qu'arriver. Le seul test valable part vers une adresse vierge.
+
+**À faire :**
+
+1. Créer une **adresse Gmail neuve**, qui n'a jamais rien reçu de
+   `kidsrelay.fr`. Google est le fournisseur le plus répandu chez les
+   parents, et il se comporte autrement que Microsoft.
+2. Créer un compte parent avec cette adresse, ou s'y connecter depuis
+   un nouvel appareil pour déclencher l'email de code.
+3. Regarder **où** il arrive : boîte de réception, ou indésirables.
+4. Vérifier que la consigne « KidsRelay est une application récente… »
+   figure bien en pied du message.
+
+**Ce que ça décide** : si le message arrive en boîte de réception
+**sans que personne n'ait rien marqué**, la réputation du domaine est
+faite et la consigne « domaine jeune » peut être retirée. Deux
+drapeaux à passer à `false`, et un test refuse qu'ils diffèrent — voir
+`corrections_a_faire.md`.
+
+S'il arrive en indésirables, il n'y a **rien à réparer** :
+l'authentification est irréprochable, vérifiée dans les en-têtes de
+Microsoft le 28/08. C'est la jeunesse du domaine, et elle se corrige
+avec le temps.
+
 # Comment utiliser cette liste
 
 Dans l'ordre des priorités, pas dans l'ordre des numéros. Un point
@@ -840,8 +940,12 @@ discrétion de Fanny.
 
 Les points qui demandent **deux appareils ou deux comptes** : 1, 6, 7,
 11, 12, 13, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 40, 43,
-71.
+71, 74.
+
+Le point qui demande **trois navigateurs** : 73.
+
+Le point qui demande une **adresse email neuve** : 75.
 
 Les points qui demandent le **SQL Editor** : 10, 33, 62, 63.
 
-Les points qui demandent **du temps** (jours) : 20, 21, 62, 70.
+Les points qui demandent **du temps** (jours) : 20, 21, 62, 70, 71.
