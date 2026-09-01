@@ -99,7 +99,7 @@ export function depotPartagesSupabase(
     async placesDuPartage(partageId) {
       const { data, error } = await service
         .from('appareils_partage')
-        .select('id, empreinte, pris_le')
+        .select('id, empreinte, pris_le, confirme')
         .eq('partage_id', partageId);
 
       if (error) {
@@ -125,14 +125,55 @@ export function depotPartagesSupabase(
       return { erreur: error };
     },
 
-    async remplacerPlace(placeId, empreinte) {
-      // `pris_le` n'est pas touche : c'est la date de premiere
-      // occupation de la place, et la reecrire ferait glisser la
-      // fenetre de tolerance.
+    async confirmerPlace(placeId) {
+      // `pris_le` n'est pas touche : c'est la date de PREMIERE
+      // occupation de la place, et elle ne se reecrit jamais.
       const { error } = await service
         .from('appareils_partage')
-        .update({ empreinte })
+        .update({ confirme: true })
         .eq('id', placeId);
+
+      if (error) {
+        console.error(error);
+      }
+
+      return { erreur: error };
+    },
+
+    async demandePourEmpreinte(partageId, empreinte) {
+      const { data } = await service
+        .from('demandes_acces_partage')
+        .select('autorisee_le')
+        .eq('partage_id', partageId)
+        .eq('empreinte', empreinte)
+        .maybeSingle();
+
+      return {
+        existe: Boolean(data),
+        autorisee: Boolean(data?.autorisee_le),
+      };
+    },
+
+    async nombreDemandesEnAttente(partageId) {
+      const { count } = await service
+        .from('demandes_acces_partage')
+        .select('id', { count: 'exact', head: true })
+        .eq('partage_id', partageId)
+        .is('autorisee_le', null);
+
+      return count ?? 0;
+    },
+
+    async creerDemande(entree) {
+      // La raison est ecrite telle quelle, et ne quittera jamais
+      // l'application : le mail au parent n'en dit rien.
+      const { error } = await service
+        .from('demandes_acces_partage')
+        .insert({
+          partage_id: entree.partageId,
+          empreinte: entree.empreinte,
+          raison: entree.raison,
+        });
 
       if (error) {
         console.error(error);
@@ -191,14 +232,15 @@ export function depotPartagesSupabase(
       };
     },
 
-    async notifierRepriseAcces(partageId, enfantId) {
-      // C'est elle qui rend la reprise acceptable : sans notification,
-      // ce serait un affaiblissement muet. Le parent reste maitre — il
-      // coupe d'un geste depuis sa liste.
+    async notifierDemandeAcces(partageId, enfantId) {
+      // Le mail annonce seulement qu'une demande attend. **La raison
+      // saisie n'y figure pas** : quelqu'un pourrait y ecrire
+      // n'importe quoi, et la regle permanente interdit toute donnee
+      // de sante ou nom de famille dans un email. Elle se lit dans
+      // l'application.
       //
-      // Un echec d'ecriture ne remet pas l'acces en cause : la
-      // personne est deja devant la fiche, et la reprise figure de
-      // toute facon au journal des tentatives.
+      // Un echec d'ecriture ne perd pas la demande : elle est deja
+      // enregistree, et le parent la voit dans sa liste.
       const { data: enfant, error: erreurEnfant } = await service
         .from('enfants')
         .select('parent_id')
@@ -215,7 +257,7 @@ export function depotPartagesSupabase(
         .insert({
           parent_id: enfant.parent_id,
           enfant_id: enfantId,
-          type_evenement: 'acces_repris',
+          type_evenement: 'demande_acces_partage',
           donnees: { partageId },
         });
 
@@ -263,7 +305,6 @@ export function depotPartagesSupabase(
           partage_id: entree.partageId,
           tentee_le: entree.tenteeLe,
           toleree: entree.toleree,
-          reprise: entree.reprise === true,
         });
 
       if (error) {

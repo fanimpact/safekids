@@ -42,9 +42,23 @@ export const LIEN_INVALIDE = 'Lien expiré ou invalide.';
 /// n'a rien fait de mal, et doit comprendre quoi faire. « Lien
 /// invalide » l'aurait laisse croire a une panne, et il aurait
 /// reessaye au lieu de rappeler le parent.
-export const LIEN_VERROUILLE =
-  'Ce lien a déjà été ouvert depuis un autre appareil et ne peut plus ' +
-  'servir ailleurs. Demandez un nouveau lien au parent.';
+/// Trois appareils par partage, et au-delà le parent décide.
+///
+/// Ce message a remplacé « Ce lien a déjà été ouvert depuis un autre
+/// appareil » le 01/09/2026 : il n'y a plus de refus sec, il y a une
+/// demande à faire.
+export const TROIS_APPAREILS_ATTEINTS =
+  'Cette fiche est déjà ouverte sur trois appareils. Pour l’ouvrir ' +
+  'sur celui-ci, le parent doit l’autoriser.';
+
+/// Trois demandes en attente au maximum par partage — règle de Fanny
+/// du 25/08/2026, reprise telle quelle. Au-delà, le parent doit
+/// trancher celles qu'il a avant d'en recevoir d'autres.
+export const MAX_DEMANDES_EN_ATTENTE = 3;
+
+export const TROP_DE_DEMANDES =
+  'Trois demandes attendent déjà une réponse du parent pour ce ' +
+  'partage. Rapprochez-vous de lui directement.';
 
 /// Un code à scanner vaut cinq minutes. Passé ce délai sans avoir
 /// servi, il ne mène plus nulle part.
@@ -124,12 +138,33 @@ export interface DepotPartages {
     prisLe: string,
   ): Promise<{ erreur: unknown }>;
 
-  /// Remplace l'empreinte d'une place, **sans toucher a sa date**.
-  /// C'est ce qui empeche la fenetre de tolerance de glisser.
-  remplacerPlace(
-    placeId: string,
+  /// Confirme une place : le navigateur est revenu, elle compte.
+  ///
+  /// **Sans toucher a sa date.** `pris_le` reste celle de la
+  /// premiere occupation.
+  confirmerPlace(placeId: string): Promise<{ erreur: unknown }>;
+
+  /// La demande deja deposee par cet appareil, s'il y en a une.
+  demandePourEmpreinte(
+    partageId: string,
     empreinte: string,
-  ): Promise<{ erreur: unknown }>;
+  ): Promise<{ existe: boolean; autorisee: boolean }>;
+
+  nombreDemandesEnAttente(partageId: string): Promise<number>;
+
+  /// Enregistre la demande. La raison ne sort jamais de
+  /// l'application : le mail au parent n'en dit rien.
+  creerDemande(entree: {
+    partageId: string;
+    empreinte: string;
+    raison: string;
+  }): Promise<{ erreur: unknown }>;
+
+  /// Previent le parent qu'une demande attend sa reponse.
+  notifierDemandeAcces(
+    partageId: string,
+    enfantId: string,
+  ): Promise<void>;
 
   /// Une ouverture depuis un autre appareil. `toleree` distingue la
   /// reprise dans la fenetre des quinze minutes d'un vrai refus : le
@@ -138,23 +173,7 @@ export interface DepotPartages {
     partageId: string;
     tenteeLe: string;
     toleree: boolean;
-
-    /// La personne a demandé à reprendre l'accès. Le parent ne lit
-    /// pas la même chose selon qu'un lien a été rouvert tout seul
-    /// dans le quart d'heure ou que quelqu'un a repris la main des
-    /// heures après.
-    reprise?: boolean;
   }): Promise<void>;
-
-  /// Prévient le parent qu'un autre appareil a repris l'accès.
-  ///
-  /// C'est elle qui rend la reprise acceptable : sans notification,
-  /// ce serait un affaiblissement muet. Le parent reste maître — il
-  /// coupe d'un geste depuis sa liste.
-  notifierRepriseAcces(
-    partageId: string,
-    enfantId: string,
-  ): Promise<void>;
 
   /// La preautorisation de l'acces secours, portee par l'enfant.
   accesSecoursAutorise(
@@ -202,8 +221,18 @@ export type ResultatConsultation =
   | { statut: 'tokenInconnu' }
   | { statut: 'lienExpire' }
   | { statut: 'lienRevoque' }
-  | { statut: 'lienVerrouille' }
   | { statut: 'codeExpire' }
+  /// Trois appareils sont déjà pris : la personne doit dire qui
+  /// elle est. [secret] lui est remis pour qu'on la reconnaisse
+  /// quand elle reviendra — sans lui, sa demande serait orpheline.
+  | { statut: 'demandeRequise'; secret: string }
+  /// Elle a déjà demandé, le parent n'a pas encore répondu.
+  | { statut: 'demandeEnAttente' }
+  /// Sa demande vient d'être enregistrée.
+  | { statut: 'demandeEnregistree' }
+  /// Trois demandes attendent déjà : le parent doit trancher
+  /// celles-là avant d'en recevoir d'autres.
+  | { statut: 'tropDeDemandes' }
   | { statut: 'enfantIntrouvable' }
   | { statut: 'erreurBase' };
 
@@ -276,66 +305,107 @@ export async function consulterPartage(
     return { statut: 'codeExpire' };
   }
 
+  const empreintePresentee = secretPresente
+    ? await empreinteDuSecret(secretPresente)
+    : null;
+
   const decision = decisionVerrou({
     places,
     appareilsMax: partage.appareils_max,
-    empreintePresentee: secretPresente
-      ? await empreinteDuSecret(secretPresente)
-      : null,
-    maintenant,
-    toleranceMinutes: verrou.toleranceMinutes,
-    repriseDemandee: verrou.repriseDemandee,
+    empreintePresentee,
   });
 
-  if (decision.action === 'refuser') {
+  let secretADonner: string | undefined;
+
+  // Un appareil de trop : la personne est arretee, et c'est le parent
+  // qui decide. Des la PREMIERE visite — sinon un inconnu lirait la
+  // fiche une fois avant d'etre arrete, ce qui viderait la regle.
+  if (decision.action === 'demander') {
     await depot.journaliserTentative({
       partageId: partage.id,
       tenteeLe: maintenant.toISOString(),
       toleree: false,
     });
 
-    return { statut: 'lienVerrouille' };
+    // Un secret meme sans place : sans lui, la personne reviendrait
+    // en inconnue et sa demande serait orpheline. Il ne lui donne
+    // aucun acces, il la rend seulement reconnaissable.
+    const secret =
+      secretPresente ?? (verrou.genererSecret ?? genererSecretParDefaut)();
+
+    const empreinte =
+      empreintePresentee ?? (await empreinteDuSecret(secret));
+
+    const { existe } = await depot.demandePourEmpreinte(
+      partage.id,
+      empreinte,
+    );
+
+    if (existe) {
+      return { statut: 'demandeEnAttente' };
+    }
+
+    const raison = verrou.raisonDemande?.trim();
+
+    // Sans raison, on affiche le formulaire. La raison est
+    // obligatoire : le parent doit savoir a qui il ouvre.
+    if (!raison) {
+      return { statut: 'demandeRequise', secret };
+    }
+
+    const enAttente = await depot.nombreDemandesEnAttente(partage.id);
+
+    if (enAttente >= MAX_DEMANDES_EN_ATTENTE) {
+      return { statut: 'tropDeDemandes' };
+    }
+
+    const { erreur: erreurDemande } = await depot.creerDemande({
+      partageId: partage.id,
+      empreinte,
+      raison,
+    });
+
+    if (erreurDemande) {
+      return { statut: 'erreurBase' };
+    }
+
+    // Apres l'enregistrement, jamais avant : un parent prevenu d'une
+    // demande qui n'existe pas chercherait dans sa liste quelque
+    // chose d'introuvable.
+    await depot.notifierDemandeAcces(partage.id, partage.enfant_id);
+
+    return { statut: 'demandeEnregistree' };
   }
 
-  let secretADonner: string | undefined;
+  // Le navigateur revient : sa place se confirme et compte desormais.
+  if (decision.action === 'confirmer') {
+    const { erreur: erreurConfirmation } = await depot.confirmerPlace(
+      decision.placeId,
+    );
 
-  if (decision.action !== 'accepter') {
+    if (erreurConfirmation) {
+      return { statut: 'erreurBase' };
+    }
+  }
+
+  // Un inconnu, et il reste de la place : il en prend une, NON
+  // confirmee. Elle ne comptera qu'a son retour — la fenetre d'un
+  // lecteur de QR, qui ne revient jamais, n'occupera donc rien.
+  if (decision.action === 'prendre') {
     const nouveauSecret = (verrou.genererSecret ?? genererSecretParDefaut)();
     const empreinte = await empreinteDuSecret(nouveauSecret);
 
-    const { erreur: erreurPlace } =
-      decision.action === 'remplacer'
-        ? await depot.remplacerPlace(decision.placeId, empreinte)
-        : await depot.prendrePlace(
-            partage.id,
-            empreinte,
-            maintenant.toISOString(),
-          );
+    const { erreur: erreurPlace } = await depot.prendrePlace(
+      partage.id,
+      empreinte,
+      maintenant.toISOString(),
+    );
 
     if (erreurPlace) {
       return { statut: 'erreurBase' };
     }
 
     secretADonner = nouveauSecret;
-
-    // Le remplacement est enregistre : sans cela, la fenetre de
-    // tolerance serait un trou invisible pour le parent. Marque
-    // tolere — information, pas refus.
-    if (decision.action === 'remplacer') {
-      await depot.journaliserTentative({
-        partageId: partage.id,
-        tenteeLe: maintenant.toISOString(),
-        toleree: true,
-        reprise: decision.reprise === true,
-      });
-
-      // Apres la reprise, jamais avant : un parent prevenu d'une
-      // reprise qui a echoue chercherait dans sa liste quelque
-      // chose d'introuvable.
-      if (decision.reprise) {
-        await depot.notifierRepriseAcces(partage.id, partage.enfant_id);
-      }
-    }
   }
 
   const { enfant, erreur: erreurEnfant } = await depot.enfant(
@@ -412,14 +482,14 @@ export interface OptionsVerrou {
   /// Injectee pour les tests. En production, un alea du navigateur.
   genererSecret?: () => string;
 
-  toleranceMinutes?: number;
-
-  /// La personne a appuye sur « c'est moi, reprendre l'acces ».
+  /// Ce que la personne bloquée a écrit pour se présenter.
   ///
-  /// Jamais deduit : c'est un geste explicite, demande par la page
-  /// apres un refus. Sans cela, un simple rechargement suffirait a
-  /// prendre la place de quelqu'un d'autre sans que personne le veuille.
-  repriseDemandee?: boolean;
+  /// Soixante caractères, obligatoire, et **elle ne sort jamais de
+  /// l'application** : le mail au parent annonce seulement qu'une
+  /// demande attend. Quelqu'un pourrait écrire n'importe quoi dans
+  /// ce champ, et la règle permanente interdit toute donnée de santé
+  /// ou nom de famille dans un email.
+  raisonDemande?: string | null;
 }
 
 /// Un alea de 256 bits, en hexadecimal.

@@ -207,6 +207,40 @@ export function messageAccesSecours(
   };
 }
 
+/// Une demande d'accès attend la réponse du parent.
+///
+/// **La raison saisie n'y figure pas.** Elle est écrite par une
+/// personne inconnue et pourrait contenir n'importe quoi ; la règle
+/// permanente interdit toute donnée de santé ou nom de famille dans
+/// un email. Elle se lit dans l'application, et nulle part ailleurs.
+///
+/// Le prénom, lui, reste dans l'objet : sans lui, un parent de trois
+/// enfants ne saurait pas lequel est concerné. Même règle que pour
+/// l'accès secours.
+export function messageDemandeAcces(
+  destinataire: string,
+  prenomEnfant: string,
+): Message {
+  return {
+    destinataire,
+    sujet: `Une demande d’accès attend votre réponse — ${prenomEnfant}`,
+    html:
+      `<p>Quelqu’un demande à ouvrir la fiche de ` +
+      `<strong>${prenomEnfant}</strong> sur un appareil de plus.</p>` +
+      `<p>Ouvrez KidsRelay pour voir qui c’est, et autoriser ou non ` +
+      `cet appareil. Tant que vous ne répondez pas, l’accès reste ` +
+      `fermé.</p>`,
+    texte:
+      `Quelqu’un demande à ouvrir la fiche de ${prenomEnfant} sur ` +
+      `un appareil de plus.
+
+` +
+      `Ouvrez KidsRelay pour voir qui c’est, et autoriser ou non ` +
+      `cet appareil. Tant que vous ne répondez pas, l’accès reste ` +
+      `fermé.`,
+  };
+}
+
 /// Compose le message d'un événement, ou `null` si on ne sait pas.
 ///
 /// Rendre `null` plutôt que d'inventer un texte : un mail vague sur un
@@ -242,6 +276,16 @@ export async function composer(
       contexte?.expireLe ?? null,
       maintenant,
     );
+  }
+
+  if (evenement.typeEvenement === 'demande_acces_partage') {
+    const prenom = await depot.prenomEnfant(evenement.enfantId);
+
+    if (!prenom) {
+      return null;
+    }
+
+    return messageDemandeAcces(destinataire, prenom);
   }
 
   return null;

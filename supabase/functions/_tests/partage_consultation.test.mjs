@@ -25,7 +25,9 @@ const PARTAGE = {
   destinataire: 'structure_accueil',
   revoque_le: null,
   permanent: false,
-  appareils_max: 1,
+  // Trois, comme tout partage ordinaire depuis le 01/09/2026. Le
+  // reglage 1 / 2 / 5 a disparu.
+  appareils_max: 3,
   declenche_en_secours: false,
 };
 
@@ -50,6 +52,8 @@ function fauxDepot(etat = {}) {
     profilActivites = { transport: {} },
     places = [],
     accesSecoursAutorise = false,
+    demandeExistante = { existe: false, autorisee: false },
+    demandesEnAttente = 0,
   } = etat;
 
   const lectures = [];
@@ -96,8 +100,23 @@ function fauxDepot(etat = {}) {
       return { erreur: null };
     },
 
-    async remplacerPlace(placeId, empreinte) {
-      lectures.push({ nom: 'remplacerPlace', placeId, empreinte });
+    async confirmerPlace(placeId) {
+      lectures.push({ nom: 'confirmerPlace', placeId });
+      return { erreur: null };
+    },
+
+    async demandePourEmpreinte(partageId, empreinte) {
+      lectures.push({ nom: 'demandePourEmpreinte', partageId, empreinte });
+      return demandeExistante;
+    },
+
+    async nombreDemandesEnAttente(partageId) {
+      lectures.push({ nom: 'nombreDemandesEnAttente', partageId });
+      return demandesEnAttente;
+    },
+
+    async creerDemande(entree) {
+      lectures.push({ nom: 'creerDemande', ...entree });
       return { erreur: null };
     },
 
@@ -105,8 +124,8 @@ function fauxDepot(etat = {}) {
       lectures.push({ nom: 'journaliserTentative', ...entree });
     },
 
-    async notifierRepriseAcces(partageId, enfantId) {
-      lectures.push({ nom: 'notifierRepriseAcces', partageId, enfantId });
+    async notifierDemandeAcces(partageId, enfantId) {
+      lectures.push({ nom: 'notifierDemandeAcces', partageId, enfantId });
     },
 
     async accesSecoursAutorise(enfantId) {
@@ -289,8 +308,15 @@ describe('Refus', () => {
 
   const ANCIEN = '2026-08-23T09:00:00.000Z';
 
-  function place(empreinte, prisLe = ANCIEN, id = 'place-1') {
-    return { id, empreinte, pris_le: prisLe };
+  // `confirme` vaut vrai par defaut : une place qui compte. Les tests
+  // du comptage au retour la passent explicitement a faux.
+  function place(
+    empreinte,
+    prisLe = ANCIEN,
+    id = 'place-1',
+    confirme = true,
+  ) {
+    return { id, empreinte, pris_le: prisLe, confirme };
   }
 
   test('La première ouverture prend une place et rend le secret', async () => {
@@ -336,9 +362,8 @@ describe('Refus', () => {
     );
   });
 
-  test('Toutes les places prises : refusé, sans charger de données', async () => {
-    // Le point qui compte : le refus tombe AVANT la lecture de
-    // l'enfant, du profil de sante et du profil d'activites.
+  test('Un secret inconnu entre tant qu’il reste de la place', async () => {
+    // Une seule place prise sur trois : rien ne justifie de bloquer.
     const depot = fauxDepot({
       places: [place(await empreinteDuSecret('celui-du-premier'))],
     });
@@ -350,17 +375,19 @@ describe('Refus', () => {
       { secretPresente: 'un-autre' },
     );
 
-    assert.deepEqual(resultat, { statut: 'lienVerrouille' });
-    assert.deepEqual(depot.lectures.map((l) => l.nom), [
-      'partageParToken',
-      'placesDuPartage',
-      'journaliserTentative',
-    ]);
+    // Trois places, une seule prise : il entre. Le test porte
+    // desormais sur un plafond atteint.
+    assert.equal(resultat.statut, 'ok');
   });
 
   test('La tentative refusée est enregistrée, non tolérée', async () => {
+    // Il faut les trois places prises pour qu'il y ait refus.
     const depot = fauxDepot({
-      places: [place(await empreinteDuSecret('celui-du-premier'))],
+      places: [
+        place(await empreinteDuSecret('un'), ANCIEN, 'place-1'),
+        place(await empreinteDuSecret('deux'), ANCIEN, 'place-2'),
+        place(await empreinteDuSecret('trois'), ANCIEN, 'place-3'),
+      ],
     });
 
     await consulterPartage(depot, 'token-1', MAINTENANT, {
@@ -375,15 +402,15 @@ describe('Refus', () => {
     assert.equal(tentative.partageId, 'partage-1');
   });
 
-  test('Dans la fenêtre, la place est remplacée et non consommée', async () => {
-    // Le cas messagerie puis navigateur. Sans ce remplacement, la
-    // grand-mere mangerait deux places a elle seule.
+  test('Une place ne compte qu’au retour du navigateur', async () => {
+    // Le cas de la fenetre integree d'un lecteur de QR : elle ouvre
+    // la fiche une fois et ne revient jamais. Elle ne doit consommer
+    // aucune des trois places.
     const depot = fauxDepot({
       places: [
-        place(
-          await empreinteDuSecret('celui-du-premier'),
-          new Date(MAINTENANT.getTime() - 60000).toISOString(),
-        ),
+        place(await empreinteDuSecret('un'), ANCIEN, 'place-1', false),
+        place(await empreinteDuSecret('deux'), ANCIEN, 'place-2', false),
+        place(await empreinteDuSecret('trois'), ANCIEN, 'place-3', false),
       ],
     });
 
@@ -391,28 +418,40 @@ describe('Refus', () => {
       depot,
       'token-1',
       MAINTENANT,
-      { secretPresente: null, genererSecret: () => 'secret-repris' },
+      { secretPresente: null, genererSecret: () => 'secret-neuf' },
     );
 
     assert.equal(resultat.statut, 'ok');
-    assert.equal(resultat.secret, 'secret-repris');
+    assert.ok(depot.lectures.some((l) => l.nom === 'prendrePlace'));
+  });
 
-    const remplacement = depot.lectures.find(
-      (l) => l.nom === 'remplacerPlace',
+  test('Le retour du même navigateur confirme sa place', async () => {
+    const depot = fauxDepot({
+      places: [
+        place(await empreinteDuSecret('le-mien'), ANCIEN, 'place-1', false),
+      ],
+    });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+      { secretPresente: 'le-mien' },
     );
 
-    assert.equal(remplacement.placeId, 'place-1');
+    assert.equal(resultat.statut, 'ok');
+
+    const confirmation = depot.lectures.find(
+      (l) => l.nom === 'confirmerPlace',
+    );
+
+    assert.equal(confirmation.placeId, 'place-1');
+
     assert.equal(
       depot.lectures.some((l) => l.nom === 'prendrePlace'),
       false,
-      'une place occupée récemment se remplace, elle ne s’ajoute pas',
+      'un navigateur connu ne consomme pas une seconde place',
     );
-
-    const tentative = depot.lectures.find(
-      (l) => l.nom === 'journaliserTentative',
-    );
-
-    assert.equal(tentative.toleree, true);
   });
 
   test('La grand-mère mardi, le grand-père jeudi', async () => {
@@ -440,13 +479,15 @@ describe('Refus', () => {
     assert.ok(depot.lectures.find((l) => l.nom === 'prendrePlace'));
   });
 
-  test('La troisième personne est refusée quand deux places suffisent',
+  test('Le quatrième appareil doit demander au parent',
     async () => {
+      // Des la PREMIERE visite : sinon un inconnu lirait la fiche
+      // une fois avant d'etre arrete, ce qui viderait la regle.
       const depot = fauxDepot({
-        partage: { ...PARTAGE, appareils_max: 2 },
         places: [
           place(await empreinteDuSecret('un'), ANCIEN, 'place-1'),
           place(await empreinteDuSecret('deux'), ANCIEN, 'place-2'),
+          place(await empreinteDuSecret('trois'), ANCIEN, 'place-3'),
         ],
       });
 
@@ -454,10 +495,17 @@ describe('Refus', () => {
         depot,
         'token-1',
         MAINTENANT,
-        { secretPresente: null },
+        { secretPresente: null, genererSecret: () => 'secret-neuf' },
       );
 
-      assert.deepEqual(resultat, { statut: 'lienVerrouille' });
+      assert.equal(resultat.statut, 'demandeRequise');
+      assert.equal(resultat.secret, 'secret-neuf');
+
+      // Aucune donnee d'enfant n'est lue : le refus tombe avant.
+      assert.equal(
+        depot.lectures.some((l) => l.nom === 'enfant'),
+        false,
+      );
     });
 
   test('Un lien révoqué est refusé avant même les places', async () => {
@@ -840,197 +888,205 @@ describe('Le code à scanner et sa fenêtre de cinq minutes', () => {
   });
 });
 
-// La reprise d'accès (28/08/2026).
+// La demande d'accès au parent (01/09/2026).
 //
-// Le secret du verrou vit dans le `localStorage` du navigateur qui a
-// ouvert la fiche, et ce cloisonnement n'est pas le nôtre : c'est
-// celui du système. Un lecteur de QR qui ouvre la page dans son propre
-// navigateur intégré y range le secret, et la même personne se
-// présente ensuite comme une inconnue depuis Safari.
-//
-// Elle ne peut pas le deviner, et le moment où elle le découvre est le
-// pire : une maîtresse qui rouvre la fiche parce qu'il se passe
-// quelque chose avec l'enfant.
-describe('La reprise explicite d’un accès refusé', () => {
-  const ANCIENNE = {
-    id: 'place-1',
-    empreinte: 'empreinte-du-navigateur-integre',
-    pris_le: '2026-08-23T06:00:00.000Z',
-  };
+// Au quatrième appareil, la personne est arrêtée. Elle dit qui elle
+// est en soixante caractères, et le parent décide. Un seul bouton
+// « autoriser cet appareil » — pas de « ne plus me demander » :
+// l'application ne sait pas distinguer les appareils d'une personne de
+// ceux de plusieurs, et cette option ouvrirait exactement la porte
+// qu'on cherche à fermer.
+describe('La demande d’accès au parent', () => {
+  const ANCIEN = '2026-08-22T09:00:00.000Z';
 
-  test('Sans la demander, le refus reste un refus', async () => {
-    // Un simple rechargement ne doit pas prendre la place de
-    // quelqu'un d'autre : la reprise est un geste, pas un effet de
-    // bord.
-    const depot = fauxDepot({ places: [ANCIENNE] });
+  function troisPlacesPrises(un, deux, trois) {
+    return [
+      { id: 'place-1', empreinte: un, pris_le: ANCIEN, confirme: true },
+      { id: 'place-2', empreinte: deux, pris_le: ANCIEN, confirme: true },
+      { id: 'place-3', empreinte: trois, pris_le: ANCIEN, confirme: true },
+    ];
+  }
 
-    const resultat = await consulterPartage(
-      depot,
-      'token-1',
-      MAINTENANT,
-    );
+  async function depotPlein(etat = {}) {
+    return fauxDepot({
+      places: troisPlacesPrises(
+        await empreinteDuSecret('un'),
+        await empreinteDuSecret('deux'),
+        await empreinteDuSecret('trois'),
+      ),
+      ...etat,
+    });
+  }
 
-    assert.deepEqual(resultat, { statut: 'lienVerrouille' });
-  });
-
-  test('Demandée, elle rend la fiche et un secret neuf', async () => {
-    const depot = fauxDepot({ places: [ANCIENNE] });
-
-    const resultat = await consulterPartage(
-      depot,
-      'token-1',
-      MAINTENANT,
-      { repriseDemandee: true, genererSecret: () => 'secret-neuf' },
-    );
-
-    assert.equal(resultat.statut, 'ok');
-    assert.equal(resultat.secret, 'secret-neuf');
-  });
-
-  test('Elle remplace la place, elle n’en consomme pas une autre',
+  test('Sans raison, on demande à la personne de se présenter',
     async () => {
-      // Sinon le plafond d'appareils se viderait à chaque changement
-      // de navigateur, et le parent verrait son lien s'user tout seul.
-      const depot = fauxDepot({ places: [ANCIENNE] });
+      const depot = await depotPlein();
 
-      await consulterPartage(depot, 'token-1', MAINTENANT, {
-        repriseDemandee: true,
-      });
-
-      const remplacements = depot.lectures.filter(
-        (l) => l.nom === 'remplacerPlace',
+      const resultat = await consulterPartage(
+        depot,
+        'token-1',
+        MAINTENANT,
+        { genererSecret: () => 'secret-du-quatrieme' },
       );
 
-      assert.equal(remplacements.length, 1);
-      assert.equal(remplacements[0].placeId, 'place-1');
+      assert.equal(resultat.statut, 'demandeRequise');
+
+      // Le secret lui est remis alors qu'elle n'a aucune place : sans
+      // lui, elle reviendrait en inconnue et sa demande serait
+      // orpheline.
+      assert.equal(resultat.secret, 'secret-du-quatrieme');
 
       assert.equal(
-        depot.lectures.some((l) => l.nom === 'prendrePlace'),
+        depot.lectures.some((l) => l.nom === 'creerDemande'),
         false,
       );
     });
 
-  test('Le parent en est informé', async () => {
-    // C'est elle qui rend la reprise acceptable : sans notification,
-    // ce serait un affaiblissement muet.
-    const depot = fauxDepot({ places: [ANCIENNE] });
+  test('Aucune donnée d’enfant n’est lue avant la décision', async () => {
+    const depot = await depotPlein();
 
-    await consulterPartage(depot, 'token-1', MAINTENANT, {
-      repriseDemandee: true,
-    });
+    await consulterPartage(depot, 'token-1', MAINTENANT, {});
 
-    const notification = depot.lectures.find(
-      (l) => l.nom === 'notifierRepriseAcces',
-    );
-
-    assert.ok(notification);
-    assert.equal(notification.partageId, 'partage-1');
-    assert.equal(notification.enfantId, 'enfant-1');
+    for (const interdit of ['enfant', 'profilSante', 'profilActivites']) {
+      assert.equal(
+        depot.lectures.some((l) => l.nom === interdit),
+        false,
+        `${interdit} ne doit pas être lu`,
+      );
+    }
   });
 
-  test('Elle laisse une trace distincte d’une tolérance', async () => {
-    const depot = fauxDepot({ places: [ANCIENNE] });
+  test('Avec une raison, la demande est enregistrée', async () => {
+    const depot = await depotPlein();
 
-    await consulterPartage(depot, 'token-1', MAINTENANT, {
-      repriseDemandee: true,
-    });
-
-    const trace = depot.lectures.find(
-      (l) => l.nom === 'journaliserTentative',
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+      { secretPresente: 'le-quatrieme', raisonDemande: 'Mamie Denise' },
     );
 
-    assert.equal(trace.toleree, true);
-    assert.equal(trace.reprise, true);
+    assert.deepEqual(resultat, { statut: 'demandeEnregistree' });
+
+    const creation = depot.lectures.find((l) => l.nom === 'creerDemande');
+
+    assert.equal(creation.raison, 'Mamie Denise');
+    assert.equal(creation.partageId, 'partage-1');
+
+    // L'empreinte, jamais le secret : une fuite de la table ne
+    // donnerait à personne de quoi ouvrir un lien.
+    assert.equal(
+      creation.empreinte,
+      await empreinteDuSecret('le-quatrieme'),
+    );
+    assert.ok(!creation.empreinte.includes('le-quatrieme'));
   });
 
-  test('Une reprise dans la fenêtre ne notifie pas', async () => {
-    // La règle 2 passe avant : dans le quart d'heure, c'est une
-    // commodité silencieuse, pas une reprise.
-    const depot = fauxDepot({
-      places: [
-        {
-          ...ANCIENNE,
-          pris_le: '2026-08-23T11:50:00.000Z',
-        },
-      ],
-    });
+  test('Le parent est prévenu, après l’enregistrement', async () => {
+    // Jamais avant : un parent prévenu d'une demande qui n'existe pas
+    // chercherait dans sa liste quelque chose d'introuvable.
+    const depot = await depotPlein();
 
     await consulterPartage(depot, 'token-1', MAINTENANT, {
-      repriseDemandee: true,
+      secretPresente: 'le-quatrieme',
+      raisonDemande: 'Mamie Denise',
     });
+
+    const noms = depot.lectures.map((l) => l.nom);
+
+    assert.ok(
+      noms.indexOf('creerDemande') < noms.indexOf('notifierDemandeAcces'),
+    );
+  });
+
+  test('Une raison vide ne vaut pas une raison', async () => {
+    // Elle est obligatoire : le parent doit savoir à qui il ouvre.
+    const depot = await depotPlein();
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+      { secretPresente: 'le-quatrieme', raisonDemande: '   ' },
+    );
+
+    assert.equal(resultat.statut, 'demandeRequise');
+  });
+
+  test('Une deuxième demande du même appareil ne se duplique pas',
+    async () => {
+      const depot = await depotPlein({
+        demandeExistante: { existe: true, autorisee: false },
+      });
+
+      const resultat = await consulterPartage(
+        depot,
+        'token-1',
+        MAINTENANT,
+        { secretPresente: 'le-quatrieme', raisonDemande: 'encore moi' },
+      );
+
+      assert.deepEqual(resultat, { statut: 'demandeEnAttente' });
+
+      assert.equal(
+        depot.lectures.some((l) => l.nom === 'creerDemande'),
+        false,
+      );
+    });
+
+  test('Trois demandes en attente, et la porte se ferme', async () => {
+    // Règle de Fanny du 25/08/2026, reprise telle quelle : au-delà, le
+    // parent doit trancher celles qu'il a.
+    const depot = await depotPlein({ demandesEnAttente: 3 });
+
+    const resultat = await consulterPartage(
+      depot,
+      'token-1',
+      MAINTENANT,
+      { secretPresente: 'le-quatrieme', raisonDemande: 'Mamie Denise' },
+    );
+
+    assert.deepEqual(resultat, { statut: 'tropDeDemandes' });
 
     assert.equal(
-      depot.lectures.some((l) => l.nom === 'notifierRepriseAcces'),
+      depot.lectures.some((l) => l.nom === 'creerDemande'),
       false,
     );
-
-    const trace = depot.lectures.find(
-      (l) => l.nom === 'journaliserTentative',
-    );
-
-    assert.equal(trace.reprise, false);
   });
 
-  test('Une place libre passe avant la reprise', async () => {
-    // Rien à reprendre quand il reste de la place : personne ne doit
-    // être évincé pour rien.
-    const depot = fauxDepot({
-      partage: { ...PARTAGE, appareils_max: 2 },
-      places: [ANCIENNE],
+  test('Le plafond relevé par le parent laisse entrer l’appareil',
+    async () => {
+      // « Autoriser cet appareil » monte le plafond d'une unité. Le
+      // cinquième redemandera.
+      const depot = await depotPlein({
+        partage: { ...PARTAGE, appareils_max: 4 },
+      });
+
+      const resultat = await consulterPartage(
+        depot,
+        'token-1',
+        MAINTENANT,
+        { secretPresente: 'le-quatrieme', genererSecret: () => 'neuf' },
+      );
+
+      assert.equal(resultat.statut, 'ok');
+      assert.ok(depot.lectures.some((l) => l.nom === 'prendrePlace'));
     });
 
-    await consulterPartage(depot, 'token-1', MAINTENANT, {
-      repriseDemandee: true,
-    });
-
-    assert.equal(
-      depot.lectures.some((l) => l.nom === 'prendrePlace'),
-      true,
-    );
-
-    assert.equal(
-      depot.lectures.some((l) => l.nom === 'notifierRepriseAcces'),
-      false,
-    );
-  });
-
-  test('Un lien révoqué ne se reprend pas', async () => {
+  test('Un lien révoqué ne se demande pas', async () => {
     // La révocation passe avant tout : c'est le seul geste par lequel
     // le parent coupe, et il ne se contourne pas.
-    const depot = fauxDepot({
-      partage: {
-        ...PARTAGE,
-        revoque_le: '2026-08-23T11:00:00.000Z',
-      },
-      places: [ANCIENNE],
+    const depot = await depotPlein({
+      partage: { ...PARTAGE, revoque_le: '2026-08-24T09:00:00.000Z' },
     });
 
     const resultat = await consulterPartage(
       depot,
       'token-1',
       MAINTENANT,
-      { repriseDemandee: true },
+      { secretPresente: 'le-quatrieme', raisonDemande: 'Mamie' },
     );
 
     assert.deepEqual(resultat, { statut: 'lienRevoque' });
-  });
-
-  test('Un lien expiré ne se reprend pas non plus', async () => {
-    const depot = fauxDepot({
-      partage: {
-        ...PARTAGE,
-        date_expiration: '2026-08-22T12:00:00.000Z',
-      },
-      places: [ANCIENNE],
-    });
-
-    const resultat = await consulterPartage(
-      depot,
-      'token-1',
-      MAINTENANT,
-      { repriseDemandee: true },
-    );
-
-    assert.deepEqual(resultat, { statut: 'lienExpire' });
   });
 });

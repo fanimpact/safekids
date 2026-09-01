@@ -17,7 +17,6 @@
 //
 // Ce module vérifie **qui a le droit de déclencher**, et rien de plus.
 
-import { decisionVerrou } from './verrou_partage.mts';
 import { empreinteDuSecret } from './verrou_partage.mts';
 
 import type { PlacePartage } from './verrou_partage.mts';
@@ -166,16 +165,21 @@ export async function declencherAccesSecours(
     ? await empreinteDuSecret(secretPresente)
     : null;
 
-  const decision = decisionVerrou({
-    places,
-    // Le déclenchement ne prend pas de place et n'en libère pas : on
-    // demande seulement « ce secret est-il l'un des nôtres ? ».
-    appareilsMax: places.length,
-    empreintePresentee,
-    maintenant,
-  });
+  // Une seule question ici : « ce secret est-il l'un des nôtres ? ».
+  //
+  // Le déclenchement ne prend pas de place et n'en libère pas, et il
+  // ne passe donc PAS par `decisionVerrou` — dont le rôle est de
+  // décider qui entre, avec un plafond et des demandes au parent.
+  //
+  // **Une place non confirmée compte ici**, à la différence du
+  // plafond : quelqu'un qui a ouvert la fiche une seule fois détient
+  // bien le lien, et c'est tout ce qu'on lui demande. L'accès secours
+  // ne bloque jamais (décision de Fanny, 01/09/2026).
+  const detenteur =
+    empreintePresentee !== null &&
+    places.some((place) => place.empreinte === empreintePresentee);
 
-  if (decision.action !== 'accepter') {
+  if (!detenteur) {
     return { statut: 'pasDetenteur' };
   }
 

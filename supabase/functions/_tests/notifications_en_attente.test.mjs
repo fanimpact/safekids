@@ -7,6 +7,7 @@ import {
   dejaTermine,
   envoyerNotificationsEnAttente,
   messageAccesSecours,
+  messageDemandeAcces,
 } from '../_logique/notifications_en_attente.mts';
 
 // Les notifications parent qui attendaient d'être envoyées.
@@ -400,5 +401,54 @@ describe('Un accès déjà terminé se dit autrement', () => {
       dejaTermine(MAINTENANT.toISOString(), MAINTENANT),
       true,
     );
+  });
+});
+
+// Le mail de demande d'accès (01/09/2026).
+describe('Ce que le mail de demande a le droit de dire', () => {
+  const message = messageDemandeAcces('parent@exemple.test', 'Théo');
+
+  test('Il ne dit pas la raison saisie', () => {
+    // Elle est écrite par une personne inconnue et pourrait contenir
+    // n'importe quoi. Elle se lit dans l'application, nulle part
+    // ailleurs.
+    for (const bloc of [message.html, message.texte, message.sujet]) {
+      assert.ok(!bloc.includes('raison'));
+      assert.ok(!bloc.includes('Mamie'));
+    }
+  });
+
+  test('Le prénom est là, le reste ne l’est pas', () => {
+    // Sans lui, un parent de trois enfants ne saurait pas lequel est
+    // concerné. Mais rien de plus : ni nom, ni donnée de santé.
+    assert.match(message.sujet, /Théo/);
+
+    for (const interdit of ['allergie', 'traitement', 'Dupont']) {
+      assert.ok(!message.html.includes(interdit));
+    }
+  });
+
+  test('Il dit que l’accès reste fermé sans réponse', () => {
+    // Le silence du parent ne vaut jamais accord.
+    assert.match(message.html, /l’accès reste/);
+    assert.match(message.html, /fermé/);
+  });
+
+  test('Il existe aussi en texte simple', () => {
+    assert.ok(message.texte);
+    assert.ok(!message.texte.includes('<p>'));
+  });
+
+  test('Une demande devient un mail', async () => {
+    const depot = fauxDepot();
+
+    const compose = await composer(
+      depot,
+      { ...EVENEMENT, typeEvenement: 'demande_acces_partage' },
+      MAINTENANT,
+    );
+
+    assert.ok(compose);
+    assert.match(compose.sujet, /demande d’accès/);
   });
 });

@@ -1,6 +1,6 @@
-// Le verrouillage d'un lien de partage à sa première ouverture.
+// Le verrouillage d'un lien de partage.
 //
-// Pourquoi il existe.
+// POURQUOI IL EXISTE
 //
 // Un lien de partage est un jeton porteur : qui l'a, l'ouvre. Le
 // plafond de 7 jours essayait de compenser cela en limitant la durée,
@@ -10,15 +10,13 @@
 // à compenser, pas durée à plafonner.** Le verrou est cette
 // compensation, et c'est lui qui a permis de libérer les durées.
 //
-// Comment l'appareil est identifié — et comment il ne l'est pas.
+// COMMENT L'APPAREIL EST IDENTIFIÉ — ET COMMENT IL NE L'EST PAS
 //
 // **Aucune empreinte de navigateur.** Ni adresse IP, ni User-Agent, ni
-// langue, ni résolution. La fonction serveur ne les lit même pas, et
-// c'est une décision déjà tenue ailleurs (voir `depot_partages.mts`,
-// journalisation des ouvertures). Collecter une empreinte sur un
-// accompagnant anonyme pour protéger les données d'un enfant serait un
-// mauvais échange — et fragile en plus : un changement de réseau change
-// l'adresse IP.
+// langue, ni résolution. La fonction serveur ne les lit même pas.
+// Collecter une empreinte sur un accompagnant anonyme pour protéger
+// les données d'un enfant serait un mauvais échange — et fragile en
+// plus : un changement de réseau change l'adresse IP.
 //
 // À la place : **un secret opaque que nous fabriquons nous-mêmes.** À
 // la première ouverture, le serveur tire un aléa, en stocke le
@@ -27,170 +25,114 @@
 // rien sur l'appareil : nous y déposons une valeur sans signification,
 // que nous avons créée.
 //
-// Ce que cette méthode ne sait pas faire, et qu'il faut savoir :
+// TROIS PLACES, ET ELLES NE SE COMPTENT QU'AU RETOUR (01/09/2026)
 //
-//   - **navigateur intégré d'un client mail, puis « ouvrir dans
-//     Chrome »** : deux espaces de stockage distincts, et le
-//     destinataire légitime se verrouille dehors tout seul. C'est le
-//     cas le plus courant, et c'est ce que la fenêtre de tolérance
-//     absorbe ;
-//   - **navigation privée** : le secret meurt avec la fenêtre ;
+// Le stockage local est cloisonné **par navigateur**, et ce
+// cloisonnement n'est pas le nôtre : c'est celui du système. Un
+// lecteur de QR ouvre souvent la page dans sa propre fenêtre intégrée,
+// qu'on referme et qu'on ne rouvre jamais. Un seul téléphone
+// fournissait donc deux places, et une maîtresse avec téléphone,
+// tablette et ordinateur en atteignait six sans rien faire d'anormal.
+//
+// On ne peut pas **deviner** si un navigateur va rester : aucune
+// détection n'est fiable, et Apple rend volontairement ses fenêtres
+// intégrées indiscernables de Safari. **On attend donc de voir s'il
+// revient.**
+//
+//   - première visite : la place est créée, elle ne compte pas ;
+//   - deuxième visite du même navigateur : elle est confirmée.
+//
+// La fenêtre de tolérance de quinze minutes a disparu le même jour :
+// elle n'existait que pour absorber ce cas, le comptage au retour le
+// règle mieux et sans délai. La garder aurait été pire que l'enlever —
+// elle laissait un navigateur inconnu **remplacer** la place la plus
+// récente, donc voler celle de quelqu'un.
+//
+// CE QUE CETTE MÉTHODE NE SAIT TOUJOURS PAS FAIRE
+//
+//   - **navigation privée** : le secret meurt avec la fenêtre, et la
+//     place ne se confirme jamais ;
 //   - **effacement des données de site** : même effet ;
-//   - **téléphone puis ordinateur** : refusé, ce qui est l'intention,
-//     mais touche aussi un usage légitime ;
+//   - **un lien transféré à vingt personnes qui lisent chacune une
+//     fois** : aucune place confirmée, aucun signal. Angle mort assumé
+//     — c'est le prix du comptage au retour ;
 //   - **changement de réseau, 4G ↔ wifi** : aucun effet, et c'est
 //     l'avantage décisif sur l'empreinte.
-//
-// Les deux amortisseurs, décidés avec Fanny : la fenêtre de tolérance
-// ci-dessous, et le déverrouillage par le parent depuis sa liste.
-
-/// La fenêtre de tolérance, en minutes.
-///
-/// Un appareil qui se présente sans secret reconnu **remplace** la
-/// place occupée le plus récemment, si elle l'a été il y a moins de ce
-/// délai. Le cas « webview puis navigateur » se produit toujours dans
-/// la minute ; quelqu'un qui reçoit le lien le lendemain, jamais.
-export const TOLERANCE_MINUTES = 15;
 
 /// Une place occupée sur un partage : un appareil.
 ///
 /// [pris_le] est la date de **première** occupation, et n'est jamais
-/// réécrite. Un remplacement change l'empreinte, pas la date — sans
-/// quoi la fenêtre glisserait et deviendrait renouvelable sans fin.
-/// C'est le défaut constaté en production le 27/08/2026.
+/// réécrite.
+///
+/// [confirme] dit si le navigateur est revenu. Une place non confirmée
+/// existe — on garde son secret pour la reconnaître — mais elle ne
+/// compte pas dans le plafond.
 export interface PlacePartage {
   id: string;
   empreinte: string;
   pris_le: string;
+  confirme: boolean;
 }
 
 export type ActionVerrou =
-  /// Le secret présenté correspond à une place : même appareil.
+  /// Le secret présenté correspond à une place déjà confirmée.
   | { action: 'accepter' }
-  /// Un autre appareil, dans la fenêtre : il remplace cette place-là
-  /// au lieu d'en consommer une nouvelle.
+  /// Le navigateur revient : sa place se confirme et compte désormais.
   ///
-  /// [reprise] distingue le remplacement **demandé** de celui qui se
-  /// fait tout seul dans le quart d'heure : le premier doit prévenir
-  /// le parent, le second est une commodité silencieuse.
-  | { action: 'remplacer'; placeId: string; reprise?: true }
-  /// Une place est libre : il la prend.
+  /// **Même si le plafond est atteint entre-temps.** Il avait commencé
+  /// avant qu'il le soit, et bloquer quelqu'un qui a déjà lu la fiche
+  /// une fois est incompréhensible de son point de vue (décision de
+  /// Fanny, 01/09/2026). Le dépassement est d'au plus un ou deux, et
+  /// le parent le voit dans sa liste.
+  | { action: 'confirmer'; placeId: string }
+  /// Un navigateur inconnu, et il reste de la place : il en prend une,
+  /// non confirmée. Elle ne comptera qu'à son retour.
   | { action: 'prendre' }
-  /// Toutes les places sont prises, hors fenêtre.
-  | { action: 'refuser' };
+  /// Un navigateur inconnu, et les places confirmées sont toutes
+  /// prises. La personne est arrêtée et le parent décide.
+  ///
+  /// **Dès la première visite**, et non à la seconde : sinon un
+  /// inconnu lirait la fiche une fois avant d'être arrêté, ce qui
+  /// viderait la règle de son sens.
+  | { action: 'demander' };
 
 /// Décide, sans rien lire ni écrire.
 ///
-/// **L'ordre des trois règles est décidé, pas accidentel** (Fanny,
-/// 27/08/2026) : remplacement d'abord, place libre ensuite, refus en
-/// dernier.
-///
-/// Dans l'autre ordre, la grand-mère qui ouvre le partage depuis sa
-/// messagerie puis dans son navigateur consommerait **deux** places au
-/// lieu d'une, et le grand-père serait refusé le surlendemain sans que
-/// personne comprenne pourquoi.
+/// **L'ordre des règles est décidé, pas accidentel.** Reconnaître
+/// d'abord, puis chercher de la place, puis demander. Dans l'autre
+/// ordre, un navigateur déjà connu serait envoyé demander une
+/// autorisation qu'il a déjà.
 export function decisionVerrou(entree: {
   places: PlacePartage[];
   appareilsMax: number;
   empreintePresentee: string | null;
-  maintenant: Date;
-  toleranceMinutes?: number;
-
-  /// La personne a appuyé sur « c'est moi ». Elle ne change rien
-  /// aux trois premières règles : la reprise n'intervient qu'à la
-  /// place du refus, jamais avant.
-  repriseDemandee?: boolean;
 }): ActionVerrou {
-  const { places, appareilsMax, empreintePresentee, maintenant } = entree;
+  const { places, appareilsMax, empreintePresentee } = entree;
 
-  const tolerance = entree.toleranceMinutes ?? TOLERANCE_MINUTES;
-
-  // 1. Le même appareil repasse.
+  // 1. Ce navigateur, on le connaît.
   if (empreintePresentee) {
     const connue = places.find(
       (place) => place.empreinte === empreintePresentee,
     );
 
     if (connue) {
-      return { action: 'accepter' };
+      return connue.confirme
+        ? { action: 'accepter' }
+        : { action: 'confirmer', placeId: connue.id };
     }
   }
 
-  // 2. La place la plus récemment occupée, si elle est encore dans la
-  //    fenêtre. Avant la recherche d'une place libre, délibérément.
-  const derniere = placeLaPlusRecente(places);
+  // 2. Un inconnu, et il reste de la place. Seules les places
+  //    confirmées comptent : la fenêtre d'un lecteur de QR qui ne
+  //    reviendra jamais n'en occupe aucune.
+  const confirmees = places.filter((place) => place.confirme).length;
 
-  if (derniere) {
-    const minutes = minutesEcoulees(derniere.pris_le, maintenant);
-
-    if (minutes !== null && minutes >= 0 && minutes <= tolerance) {
-      return { action: 'remplacer', placeId: derniere.id };
-    }
-  }
-
-  // 3. Une place libre.
-  if (places.length < appareilsMax) {
+  if (confirmees < appareilsMax) {
     return { action: 'prendre' };
   }
 
-  // 4. La reprise demandée, à la place du refus (28/08/2026).
-  //
-  // Le secret vit dans le `localStorage` du navigateur qui a ouvert
-  // la fiche, et ce cloisonnement n'est pas le nôtre : c'est celui
-  // du système. Un lecteur de QR qui ouvre la page dans son propre
-  // navigateur intégré y range le secret, et la même personne se
-  // présente ensuite comme une inconnue depuis Safari.
-  //
-  // Elle ne peut pas le deviner, et le moment où elle le découvre
-  // est le pire : une maîtresse qui rouvre la fiche parce qu'il se
-  // passe quelque chose avec l'enfant.
-  //
-  // Ce n'est pas un affaiblissement en trompe-l'oeil : la règle 2
-  // permet **déjà** cette reprise dans les quinze minutes, et en
-  // silence. Ce qui change ici, c'est que le parent est prévenu.
-  if (entree.repriseDemandee && derniere) {
-    return { action: 'remplacer', placeId: derniere.id, reprise: true };
-  }
-
-  return { action: 'refuser' };
-}
-
-/// `null` si la date est illisible — on ne tolère pas ce qu'on ne sait
-/// pas situer dans le temps. Négatif si la pose est dans le futur :
-/// un écart d'horloge ne doit pas ouvrir une fenêtre.
-function minutesEcoulees(
-  date: string,
-  maintenant: Date,
-): number | null {
-  const pose = new Date(date);
-
-  if (Number.isNaN(pose.getTime())) {
-    return null;
-  }
-
-  return (maintenant.getTime() - pose.getTime()) / 60000;
-}
-
-function placeLaPlusRecente(
-  places: PlacePartage[],
-): PlacePartage | null {
-  let derniere: PlacePartage | null = null;
-  let meilleure = Number.NEGATIVE_INFINITY;
-
-  for (const place of places) {
-    const instant = new Date(place.pris_le).getTime();
-
-    if (Number.isNaN(instant)) {
-      continue;
-    }
-
-    if (instant > meilleure) {
-      meilleure = instant;
-      derniere = place;
-    }
-  }
-
-  return derniere;
+  // 3. Un inconnu de trop.
+  return { action: 'demander' };
 }
 
 /// Le hachage d'un secret, en hexadécimal.

@@ -23,6 +23,7 @@
 
 import {
   estPreflight,
+  lireCorpsJson,
   reponseJson,
   reponsePreflight,
 } from '../_enveloppe/http.mts';
@@ -36,7 +37,8 @@ import { depotPartagesSupabase } from '../_enveloppe/depot_partages.mts';
 import {
   LIEN_INVALIDE,
   CODE_EXPIRE,
-  LIEN_VERROUILLE,
+  TROIS_APPAREILS_ATTEINTS,
+  TROP_DE_DEMANDES,
   consulterPartage,
 } from '../_logique/partage_consultation.mts';
 
@@ -51,7 +53,7 @@ Deno.serve(async (req) => {
 
   let token: string | null;
   let secretPresente: string | null = null;
-  let repriseDemandee = false;
+  let raisonDemande: string | null = null;
 
   try {
     const parametres = new URL(req.url).searchParams;
@@ -63,10 +65,19 @@ Deno.serve(async (req) => {
     // ete transfere.
     secretPresente = parametres.get('secret');
 
-    // La personne a appuye sur « c'est moi » apres un refus. Jamais
-    // deduit : sans ce geste explicite, un simple rechargement
-    // prendrait la place de quelqu'un d'autre.
-    repriseDemandee = parametres.get('reprise') === '1';
+    // La raison passe par le CORPS d'un POST, jamais par l'adresse.
+    //
+    // Une adresse se retrouve dans les journaux d'acces du serveur ;
+    // ce champ est ecrit par une personne inconnue et peut contenir
+    // n'importe quoi. Il n'a rien a faire dans un journal.
+    if (req.method === 'POST') {
+      const corps = await lireCorpsJson(req);
+
+      if (corps && typeof corps === 'object') {
+        const brut = (corps as Record<string, unknown>).raison;
+        raisonDemande = typeof brut === 'string' ? brut : null;
+      }
+    }
   } catch {
     return erreur(400);
   }
@@ -88,7 +99,7 @@ Deno.serve(async (req) => {
     depotPartagesSupabase(clientServiceRole(base)),
     token,
     new Date(),
-    { secretPresente, repriseDemandee },
+    { secretPresente, raisonDemande },
   );
 
   switch (resultat.statut) {
@@ -121,12 +132,40 @@ Deno.serve(async (req) => {
     case 'lienRevoque':
       return erreur(410);
 
-    // Message a part, et non le message generique : celui qui tient le
-    // lien doit comprendre qu'il n'a rien fait de mal et qu'il faut en
-    // demander un nouveau. Un « lien invalide » l'aurait laisse croire
-    // a une panne.
-    case 'lienVerrouille':
-      return reponseJson({ error: LIEN_VERROUILLE }, 423);
+    // Trois appareils sont pris. Ce n'est pas un refus definitif :
+    // la personne dit qui elle est, et le parent decide. Le code 423
+    // est conserve, la page le reconnait deja.
+    //
+    // `secret` accompagne la reponse pour que la page le range :
+    // sans lui, la personne reviendrait en inconnue et sa demande
+    // serait orpheline. Il ne donne aucun acces.
+    case 'demandeRequise':
+      return reponseJson(
+        {
+          error: TROIS_APPAREILS_ATTEINTS,
+          code: 'demande_requise',
+          secret: resultat.secret,
+        },
+        423,
+      );
+
+    case 'demandeEnAttente':
+      return reponseJson(
+        {
+          error: TROIS_APPAREILS_ATTEINTS,
+          code: 'demande_en_attente',
+        },
+        423,
+      );
+
+    case 'demandeEnregistree':
+      return reponseJson({ code: 'demande_enregistree' }, 202);
+
+    case 'tropDeDemandes':
+      return reponseJson(
+        { error: TROP_DE_DEMANDES, code: 'trop_de_demandes' },
+        429,
+      );
 
     // Meme raison : celui qui vient de scanner n'a rien fait de mal,
     // et le parent est a cote de lui. Lui dire d'en demander un
