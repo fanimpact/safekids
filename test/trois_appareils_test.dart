@@ -234,6 +234,8 @@ void main() {
     });
   });
 
+  mainPurge();
+
   group('L’accès secours ne bloque jamais', () {
     test('Il ne passe plus par la décision du verrou', () {
       // Décision de Fanny : on ne bloque pas ce qui peut sauver
@@ -260,6 +262,45 @@ void main() {
 
       expect(sql, contains('declenche_en_secours = true'));
       expect(sql, contains('appareils_max >= 1 and appareils_max <= 50'));
+    });
+  });
+}
+
+// Le ménage des demandes sans réponse (01/09/2026).
+//
+// La fonction existait en base et **personne ne l'appelait**. Une
+// purge que rien ne déclenche, c'est une règle qui n'existe pas —
+// exactement le mode d'échec traqué toute la semaine, cette fois dans
+// mon propre travail.
+void mainPurge() {
+  group('Les demandes sans réponse sont bien effacées', () {
+    test('Le passage horaire appelle la purge', () {
+      final fonction = _source(
+        'supabase/functions/envoyer-notifications-parent/index.ts',
+      );
+
+      expect(fonction, contains("'purger_demandes_acces_partage'"));
+    });
+
+    test('Un échec de ménage ne remet pas les envois en cause', () {
+      // Ils sont déjà faits, et le passage suivant reprendra.
+      final fonction = _source(
+        'supabase/functions/envoyer-notifications-parent/index.ts',
+      );
+
+      expect(fonction, contains('erreurPurge'));
+      expect(fonction, contains('console.error(erreurPurge)'));
+    });
+
+    test('Seul le rôle de service peut la déclencher', () {
+      // Ce n'est pas un geste d'utilisateur.
+      final sql = _source('supabase/schema_trois_appareils.sql');
+
+      expect(sql, contains('to service_role'));
+      expect(
+        sql,
+        contains('purger_demandes_acces_partage()\n  from authenticated'),
+      );
     });
   });
 }

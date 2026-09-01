@@ -286,3 +286,9 @@ revoke all on function public.purger_demandes_acces_partage() from public;
 revoke all on function public.purger_demandes_acces_partage() from anon;
 revoke all on function public.purger_demandes_acces_partage()
   from authenticated;
+
+-- Appelee par la fonction serveur `envoyer-notifications-parent`, qui
+-- passe deja toutes les heures. Le role de service est le seul a
+-- pouvoir la declencher : ce n'est pas un geste d'utilisateur.
+grant execute on function public.purger_demandes_acces_partage()
+  to service_role;

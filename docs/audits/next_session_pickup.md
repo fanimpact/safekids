@@ -638,61 +638,97 @@ Déployer maintenant mettrait en ligne un écran qu'on va retirer. Voir
 la section correspondante de `corrections_a_faire.md`.
 
 
-## Ce qui est déployé, et ce qui ne l'est pas — 28/08/2026, minuit
+## Ce qui est déployé — 01/09/2026
+
+**Tout est en production.** Plus rien n'attend de déploiement, à une
+exception près, signalée plus bas.
 
 ### Fonctions serveur
 
-| Fonction | Déployée | À jour |
-|---|---|---|
-| `envoyer-code-verification` | oui | **oui** |
-| `envoyer-notifications-parent` | oui | **non** — il lui manque `7fe3725` |
-| `envoyer-notifications-maintenant` | oui | **non** — il lui manque `7fe3725` |
-| `consulter-partage` | oui, version ancienne | **non**, et **à ne pas déployer** |
-| `declencher-acces-secours` | **jamais déployée** | — |
-| `notifier-note-ajoutee` | oui | oui, inchangée |
-| `verifier-code`, `confirmer-suppression-compte` | oui | oui, inchangées |
+| Fonction | À jour |
+|---|---|
+| `consulter-partage` | oui |
+| `declencher-acces-secours` | oui — **première mise en ligne**, l'accès secours depuis un lien ne fonctionnait pas avant |
+| `envoyer-code-verification` | oui |
+| `envoyer-notifications-maintenant` | oui |
+| `envoyer-notifications-parent` | **non** — voir ci-dessous |
+| `notifier-note-ajoutee`, `verifier-code`, `confirmer-suppression-compte` | oui, inchangées |
 
-**Les deux commandes à lancer en reprenant :**
+**Une commande reste à lancer, sans urgence :**
 
 ```
 supabase functions deploy envoyer-notifications-parent --no-verify-jwt
-supabase functions deploy envoyer-notifications-maintenant
 ```
 
-Sans elles, un accès secours dont l'échéance est déjà passée
-annoncerait encore une date au lieu de dire qu'il est terminé.
+Elle branche le ménage des demandes d'accès sans réponse. La fonction
+`purger_demandes_acces_partage()` existait en base et **personne ne
+l'appelait** — une purge que rien ne déclenche est une règle qui
+n'existe pas. C'est branché dans le code, pas encore en ligne.
 
-### Ce qu'il ne faut PAS déployer, et pourquoi
-
-`consulter-partage` et `index.html` chez OVH portent l'écran
-« C'est moi, reprendre l'accès ». Fanny a décidé le 28/08 que cette
-reprise **disparaît**, au profit du blocage au quatrième appareil avec
-demande au parent. Les déployer maintenant mettrait en ligne un écran
-qu'on va retirer.
-
-**Conséquence à connaître** : le QR de partage et sa fenêtre de cinq
-minutes ne fonctionnent pas encore en production, puisqu'ils
-attendent le même déploiement.
-
-`declencher-acces-secours` n'a jamais été déployée : **l'accès secours
-depuis un lien de partage ne fonctionne donc pas en production.**
-Celui depuis l'application, lui, passe par la base et fonctionne.
-
-### Base de données
-
-Tous les scripts SQL sont **appliqués et vérifiés** en production, y
-compris `schema_code_partage.sql` et `schema_reprise_acces.sql`. La
-table `evenements_notification_parent` est vide — les deux lignes de
-test de la soirée ont été supprimées.
+Aucune urgence : la règle des trente jours ne mord qu'au bout de
+trente jours.
 
 ### Chez OVH
 
 | | |
 |---|---|
-| `taches/tache_notifications.php` | déposé, 3 080 octets |
-| Tâche planifiée | créée, `18 * * * *`, PHP 8.2, active, sans compte-rendu |
-| `fiche/index.html` | version ancienne — **à ne pas remplacer** pour l'instant |
+| `fiche/index.html` | à jour, 92 513 octets |
+| `taches/tache_notifications.php` | déposé, tâche active, `18 * * * *`, PHP 8.2 |
 | Zone DNS | correcte, **ne pas y toucher** |
+
+Le journal `taches/dernier_passage.txt` a confirmé le fonctionnement le
+01/09 à 10h18 : `code 200`, quatre zéros. Le silence des premières
+heures venait du délai d'activation d'OVH, pas d'un défaut.
+
+### Base de données
+
+Tous les scripts sont appliqués et vérifiés, y compris
+`schema_trois_appareils.sql`. La table
+`evenements_notification_parent` est vide.
+
+## Ce qui reste à vérifier en vrai
+
+**1. Le vrai test de délivrabilité.** Créer une adresse **Gmail
+neuve**, qui n'a jamais rien reçu de `kidsrelay.fr`, et y envoyer un
+message. Les tests du 28/08 ne prouvent rien : l'expéditeur avait été
+marqué comme légitime, le message ne pouvait qu'arriver.
+
+**2. Le parcours complet des trois appareils**, jamais exercé en
+production : ouvrir la fiche depuis trois navigateurs, revenir sur
+chacun pour confirmer les places, puis tenter un quatrième et vérifier
+que l'écran de demande s'affiche, que le mail arrive, et que le bouton
+« Autoriser cet appareil » ouvre bien la porte.
+
+**3. Le QR de partage sur un vrai téléphone** : scanner, vérifier que
+la fenêtre du lecteur ne consomme pas de place, et que le code cesse
+de fonctionner après cinq minutes.
+
+## Ce qui reste à décider ou à faire
+
+**Retirer la consigne « domaine jeune »**, le jour venu. Deux drapeaux
+à passer à `false` — `lib/textes/consigne_domaine_jeune.dart` et
+`supabase/functions/_logique/consigne_domaine_jeune.mts`. Un test
+refuse qu'ils diffèrent.
+
+**Le critère, écrit pour ne pas avoir à le redécider** : un mail de
+test vers une boîte neuve arrive en boîte de réception **sans que
+personne ait rien marqué**.
+
+**Le nom d'expéditeur** s'affiche « Kidsrelay » au lieu de
+« KidsRelay ». Une ligne dans les secrets Supabase :
+`BREVO_SENDER_NAME`.
+
+**Les places non confirmées s'accumulent.** Chaque navigateur qui
+ouvre une fiche sans revenir laisse une ligne dans
+`appareils_partage`. Elles ne comptent dans aucun plafond et ne
+gênent rien, mais rien ne les efface. À surveiller si le volume
+grandit.
+
+**Les notifications sur écran verrouillé.** Le vrai sujet, et il est
+entier. Pour un message annonçant qu'un enfant part avec les pompiers,
+**l'email ne sera jamais une garantie** : le classement appartient au
+fournisseur du destinataire. Les colonnes de push existent déjà en
+base, prêtes.
 
 ## État du dépôt au 26/08/2026
 

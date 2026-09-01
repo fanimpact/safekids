@@ -16,7 +16,9 @@
 //
 // QUI L'APPELLE
 //
-// Une tache planifiee chez OVH, toutes les cinq minutes. Choix de
+// Une tache planifiee chez OVH, toutes les heures — c'est le plus
+// fin que l'hebergement mutualise accepte, on ne peut meme pas y
+// regler les minutes. Choix de
 // Fanny (28/08/2026) : le planificateur de Supabase reposerait sur
 // deux extensions Postgres et une cle rangee dans le coffre de la
 // base, ce qui pese sur son dossier d'hebergement de donnees de sante.
@@ -68,7 +70,7 @@ import { envoyerNotificationsEnAttente } from '../_logique/notifications_en_atte
 ///
 /// Cinquante : bien au-dela du volume reel, et assez bas pour qu'un
 /// passage ne depasse jamais le temps alloue a une fonction serveur.
-/// Ce qui reste part au passage suivant, cinq minutes plus tard.
+/// Ce qui reste part au passage suivant, une heure plus tard.
 const LIMITE_PAR_PASSAGE = 50;
 
 Deno.serve(async (requete) => {
@@ -103,14 +105,31 @@ Deno.serve(async (requete) => {
     return reponseJson({ error: 'Configuration incomplete.' }, 500);
   }
 
+  const service = clientServiceRole(base);
+
   const bilan = await envoyerNotificationsEnAttente(
-    depotNotificationsEnAttenteSupabase(
-      clientServiceRole(base),
-      email,
-    ),
+    depotNotificationsEnAttenteSupabase(service, email),
     new Date(),
     LIMITE_PAR_PASSAGE,
   );
+
+  // Le menage des demandes d'acces sans reponse, sur le meme
+  // passage horaire. Trente jours, puis effacement : le silence du
+  // parent ne vaut ni refus ni acceptation, la demande disparait
+  // simplement et la personne peut redemander.
+  //
+  // Une tache planifiee de plus n'apporterait rien, et OVH n'en
+  // accepte de toute facon qu'une par heure.
+  //
+  // Un echec ici ne remet pas les envois en cause : ils sont deja
+  // faits, et le passage suivant reprendra le menage.
+  const { error: erreurPurge } = await service.rpc(
+    'purger_demandes_acces_partage',
+  );
+
+  if (erreurPurge) {
+    console.error(erreurPurge);
+  }
 
   // Le bilan est rendu pour que la tache planifiee puisse le
   // journaliser. Il ne contient aucun prenom, aucune adresse : des
